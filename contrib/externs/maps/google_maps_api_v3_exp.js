@@ -3889,8 +3889,9 @@ google.maps.GeometryLibrary.prototype.spherical;
  * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @param {string} url
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral|null} bounds
- * @param {?google.maps.GroundOverlayOptions=} opts
+ * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null}
+ *     bounds
+ * @param {!google.maps.GroundOverlayOptions|null=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -3898,13 +3899,13 @@ google.maps.GroundOverlay = function(url, bounds, opts) {};
 
 /**
  * Gets the <code>LatLngBounds</code> of this overlay.
- * @return {?google.maps.LatLngBounds}
+ * @return {!google.maps.LatLngBounds|null}
  */
 google.maps.GroundOverlay.prototype.getBounds = function() {};
 
 /**
  * Returns the map on which this ground overlay is displayed.
- * @return {?google.maps.Map}
+ * @return {!google.maps.Map|null}
  */
 google.maps.GroundOverlay.prototype.getMap = function() {};
 
@@ -3923,15 +3924,15 @@ google.maps.GroundOverlay.prototype.getUrl = function() {};
 /**
  * Renders the ground overlay on the specified map. If map is set to
  * <code>null</code>, the overlay is removed.
- * @param {?google.maps.Map} map
- * @return {undefined}
+ * @param {!google.maps.Map|null} map
+ * @return {void}
  */
 google.maps.GroundOverlay.prototype.setMap = function(map) {};
 
 /**
  * Sets the opacity of this ground overlay.
  * @param {number} opacity
- * @return {undefined}
+ * @return {void}
  */
 google.maps.GroundOverlay.prototype.setOpacity = function(opacity) {};
 
@@ -7967,14 +7968,14 @@ google.maps.OverlayView.preventMapHitsFrom = function(element) {};
 google.maps.OverlayView.prototype.draw = function() {};
 
 /**
- * @return {!google.maps.Map|!google.maps.StreetViewPanorama}
+ * @return {!google.maps.Map|!google.maps.StreetViewPanorama|null|undefined}
  */
 google.maps.OverlayView.prototype.getMap = function() {};
 
 /**
  * Returns the panes in which this OverlayView can be rendered. The panes are
  * not initialized until <code>onAdd</code> is called by the API.
- * @return {!google.maps.MapPanes|null}
+ * @return {!google.maps.MapPanes|null|undefined}
  */
 google.maps.OverlayView.prototype.getPanes = function() {};
 
@@ -19642,7 +19643,7 @@ google.maps.places.AutocompletionRequest.prototype.radius;
  * Access by calling `const {BasicPlaceAutocompleteElement} = await
  * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {!google.maps.places.BasicPlaceAutocompleteElementOptions} options
+ * @param {!google.maps.places.BasicPlaceAutocompleteElementOptions=} options
  * @implements {google.maps.places.BasicPlaceAutocompleteElementOptions}
  * @extends {HTMLElement}
  * @constructor
@@ -19917,11 +19918,9 @@ google.maps.places.BasicPlaceAutocompleteElementOptions.prototype
 google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.unitSystem;
 
 /**
- * The operational status of the Place, if it is a business, returned in a
- * PlaceResult (indicates whether the place is operational, or closed either
- * temporarily or permanently). Specify these by value, or the constant&#39;s
- * name (example: <code>&#39;OPERATIONAL&#39;</code> or
- * <code>google.maps.places.BusinessStatus.OPERATIONAL</code>).
+ * Business status for the place. See the <a
+ * href="https://developers.google.com/maps/documentation/javascript/reference/places-service#BusinessStatus">web
+ * service documentation</a> for more information.
  *
  * Access by calling `const {BusinessStatus} = await
  * google.maps.importLibrary("places");`. See
@@ -19930,19 +19929,27 @@ google.maps.places.BasicPlaceAutocompleteElementOptions.prototype.unitSystem;
  */
 google.maps.places.BusinessStatus = {
   /**
-   * The business is closed permanently.
+   * The establishment is permanently closed. See the <a
+   * href="https://developers.google.com/maps/documentation/javascript/reference/places-service#BusinessStatus">web
+   * service documentation</a> for more information.
    */
   CLOSED_PERMANENTLY: 'CLOSED_PERMANENTLY',
   /**
-   * The business is closed temporarily.
+   * The establishment is temporarily closed. See the <a
+   * href="https://developers.google.com/maps/documentation/javascript/reference/places-service#BusinessStatus">web
+   * service documentation</a> for more information.
    */
   CLOSED_TEMPORARILY: 'CLOSED_TEMPORARILY',
   /**
-   * The business will open in the future.
+   * The establishment will open in the future. See the <a
+   * href="https://developers.google.com/maps/documentation/javascript/reference/places-service#BusinessStatus">web
+   * service documentation</a> for more information.
    */
   FUTURE_OPENING: 'FUTURE_OPENING',
   /**
-   * The business is operating normally.
+   * The establishment is operational, not necessarily open now. See the <a
+   * href="https://developers.google.com/maps/documentation/javascript/reference/places-service#BusinessStatus">web
+   * service documentation</a> for more information.
    */
   OPERATIONAL: 'OPERATIONAL',
 };
@@ -20076,6 +20083,9 @@ google.maps.places.ConsumerAlertDetails.prototype.title;
 
 /**
  * Defines the spatial relationship between the target location and the area.
+ * See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#containment">web
+ * service documentation</a> for more information.
  *
  * Access by calling `const {Containment} = await
  * google.maps.importLibrary("places");`. See
@@ -20084,15 +20094,23 @@ google.maps.places.ConsumerAlertDetails.prototype.title;
  */
 google.maps.places.Containment = {
   /**
-   * The target location is outside the area region, but close by.
+   * The target location is outside the area region, but close by. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#containment">web
+   * service documentation</a> for more information.
    */
   NEAR: 'NEAR',
   /**
-   * The target location is within the area region, close to the edge.
+   * The target location is within the area region, close to the edge. See the
+   * <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#containment">web
+   * service documentation</a> for more information.
    */
   OUTSKIRTS: 'OUTSKIRTS',
   /**
-   * The target location is within the area region, close to the center.
+   * The target location is within the area region, close to the center. See the
+   * <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#containment">web
+   * service documentation</a> for more information.
    */
   WITHIN: 'WITHIN',
 };
@@ -20206,7 +20224,11 @@ google.maps.places.EVChargeOptions.prototype.connectorAggregations;
 google.maps.places.EVChargeOptions.prototype.connectorCount;
 
 /**
- * EV charging connector types.
+ * See <a
+ * href="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6872107">http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6872107</a>
+ * for additional information/context on EV charging connector types. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+ * service documentation</a> for more information.
  *
  * Access by calling `const {EVConnectorType} = await
  * google.maps.importLibrary("places");`. See
@@ -20215,48 +20237,64 @@ google.maps.places.EVChargeOptions.prototype.connectorCount;
  */
 google.maps.places.EVConnectorType = {
   /**
-   * Combined Charging System (AC and DC). Based on SAE Type-1 J-1772 connector.
+   * Combined Charging System (AC and DC). See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+   * service documentation</a> for more information.
    */
   CCS_COMBO_1: 'CCS_COMBO_1',
   /**
-   * Combined Charging System (AC and DC). Based on Type-2 Mennekes connector.
+   * Combined Charging System (AC and DC). See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+   * service documentation</a> for more information.
    */
   CCS_COMBO_2: 'CCS_COMBO_2',
   /**
-   * CHAdeMO type connector.
+   * CHAdeMO type connector. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+   * service documentation</a> for more information.
    */
   CHADEMO: 'CHADEMO',
   /**
-   * J1772 type 1 connector.
+   * J1772 type 1 connector. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+   * service documentation</a> for more information.
    */
   J1772: 'J1772',
   /**
-   * The North American Charging System (NACS), standardized as SAE J3400.
+   * The North American Charging System (NACS), standardized as SAE J3400. See
+   * the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+   * service documentation</a> for more information.
    */
   NACS: 'NACS',
   /**
-   * Other connector types.
+   * Other connector types. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+   * service documentation</a> for more information.
    */
   OTHER: 'OTHER',
   /**
-   * The generic TESLA connector. This is NACS in the North America but can be
-   * non-NACS in other parts of the world (e.g. CCS Combo 2 (CCS2) or GB/T).
-   * This value is less representative of an actual connector type, and more
-   * represents the ability to charge a Tesla brand vehicle at a Tesla owned
-   * charging station.
+   * The generic TESLA connector. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+   * service documentation</a> for more information.
    */
   TESLA: 'TESLA',
   /**
-   * IEC 62196 type 2 connector. Often referred to as MENNEKES.
+   * IEC 62196 type 2 connector. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+   * service documentation</a> for more information.
    */
   TYPE_2: 'TYPE_2',
   /**
-   * GB/T type corresponds to the GB/T standard in China. This type covers all
-   * GB_T types.
+   * GB/T type corresponds to the GB/T standard in China. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+   * service documentation</a> for more information.
    */
   UNSPECIFIED_GB_T: 'UNSPECIFIED_GB_T',
   /**
-   * Unspecified wall outlet.
+   * Unspecified wall outlet. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#evconnectortype">web
+   * service documentation</a> for more information.
    */
   UNSPECIFIED_WALL_OUTLET: 'UNSPECIFIED_WALL_OUTLET',
 };
@@ -20467,7 +20505,9 @@ google.maps.places.FuelPrice.prototype.type;
 google.maps.places.FuelPrice.prototype.updateTime;
 
 /**
- * Types of fuel.
+ * Types of fuel. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+ * service documentation</a> for more information.
  *
  * Access by calling `const {FuelType} = await
  * google.maps.importLibrary("places");`. See
@@ -20476,83 +20516,123 @@ google.maps.places.FuelPrice.prototype.updateTime;
  */
 google.maps.places.FuelType = {
   /**
-   * Bio-diesel.
+   * Bio-diesel. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   BIO_DIESEL: 'BIO_DIESEL',
   /**
-   * Diesel fuel.
+   * Diesel fuel. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   DIESEL: 'DIESEL',
   /**
-   * Diesel plus fuel.
+   * Diesel plus fuel. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   DIESEL_PLUS: 'DIESEL_PLUS',
   /**
-   * E 100.
+   * E 100. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   E100: 'E100',
   /**
-   * E 80.
+   * E 80. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   E80: 'E80',
   /**
-   * E 85.
+   * E 85. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   E85: 'E85',
   /**
-   * LPG.
+   * Liquefied Petroleum Gas. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   LPG: 'LPG',
   /**
-   * Methane.
+   * Methane. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   METHANE: 'METHANE',
   /**
-   * Midgrade.
+   * Midgrade. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   MIDGRADE: 'MIDGRADE',
   /**
-   * Premium.
+   * Premium. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   PREMIUM: 'PREMIUM',
   /**
-   * Regular unleaded.
+   * Regular unleaded. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   REGULAR_UNLEADED: 'REGULAR_UNLEADED',
   /**
-   * SP 100.
+   * SP 100. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   SP100: 'SP100',
   /**
-   * SP 91.
+   * SP 91. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   SP91: 'SP91',
   /**
-   * SP 91 E10.
+   * SP 91 E10. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   SP91_E10: 'SP91_E10',
   /**
-   * SP 92.
+   * SP 92. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   SP92: 'SP92',
   /**
-   * SP 95.
+   * SP 95. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   SP95: 'SP95',
   /**
-   * SP95 E10.
+   * SP95 E10. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   SP95_E10: 'SP95_E10',
   /**
-   * SP 98.
+   * SP 98. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   SP98: 'SP98',
   /**
-   * SP 99.
+   * SP 99. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   SP99: 'SP99',
   /**
-   * Truck diesel.
+   * Truck diesel. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#fueltype">web
+   * service documentation</a> for more information.
    */
   TRUCK_DIESEL: 'TRUCK_DIESEL',
 };
@@ -21845,7 +21925,7 @@ google.maps.places.PlaceAttributionElementOptions.prototype.lightSchemeColor;
  * Access by calling `const {PlaceAutocompleteElement} = await
  * google.maps.importLibrary("places");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {!google.maps.places.PlaceAutocompleteElementOptions} options
+ * @param {!google.maps.places.PlaceAutocompleteElementOptions=} options
  * @implements {google.maps.places.PlaceAutocompleteElementOptions}
  * @extends {HTMLElement}
  * @constructor
@@ -24715,7 +24795,9 @@ google.maps.places.PredictionTerm.prototype.offset;
 google.maps.places.PredictionTerm.prototype.value;
 
 /**
- * Price level for a Place.
+ * Price level of the place. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#pricelevel">web
+ * service documentation</a> for more information.
  *
  * Access by calling `const {PriceLevel} = await
  * google.maps.importLibrary("places");`. See
@@ -24723,10 +24805,35 @@ google.maps.places.PredictionTerm.prototype.value;
  * @enum {string}
  */
 google.maps.places.PriceLevel = {
+  /**
+   * Place provides expensive services. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#pricelevel">web
+   * service documentation</a> for more information.
+   */
   EXPENSIVE: 'EXPENSIVE',
+  /**
+   * Place provides free services. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#pricelevel">web
+   * service documentation</a> for more information.
+   */
   FREE: 'FREE',
+  /**
+   * Place provides inexpensive services. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#pricelevel">web
+   * service documentation</a> for more information.
+   */
   INEXPENSIVE: 'INEXPENSIVE',
+  /**
+   * Place provides moderately priced services. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#pricelevel">web
+   * service documentation</a> for more information.
+   */
   MODERATE: 'MODERATE',
+  /**
+   * Place provides very expensive services. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#pricelevel">web
+   * service documentation</a> for more information.
+   */
   VERY_EXPENSIVE: 'VERY_EXPENSIVE',
 };
 
@@ -25047,7 +25154,9 @@ google.maps.places.SearchBoxOptions = function() {};
 google.maps.places.SearchBoxOptions.prototype.bounds;
 
 /**
- * RankPreference enum for SearchByTextRequest.
+ * How results will be ranked in the response. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#rankpreference_1">web
+ * service documentation</a> for more information.
  *
  * Access by calling `const {SearchByTextRankPreference} = await
  * google.maps.importLibrary("places");`. See
@@ -25056,11 +25165,15 @@ google.maps.places.SearchBoxOptions.prototype.bounds;
  */
 google.maps.places.SearchByTextRankPreference = {
   /**
-   * Ranks results by distance.
+   * Ranks results by distance. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#rankpreference_1">web
+   * service documentation</a> for more information.
    */
   DISTANCE: 'DISTANCE',
   /**
-   * Ranks results by relevance.
+   * Ranks results by relevance. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#rankpreference_1">web
+   * service documentation</a> for more information.
    */
   RELEVANCE: 'RELEVANCE',
 };
@@ -25229,7 +25342,9 @@ google.maps.places.SearchByTextRequest.prototype.query;
 google.maps.places.SearchByTextRequest.prototype.rankBy;
 
 /**
- * RankPreference enum for SearchNearbyRequest.
+ * How results will be ranked in the response. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#rankpreference">web
+ * service documentation</a> for more information.
  *
  * Access by calling `const {SearchNearbyRankPreference} = await
  * google.maps.importLibrary("places");`. See
@@ -25238,11 +25353,15 @@ google.maps.places.SearchByTextRequest.prototype.rankBy;
  */
 google.maps.places.SearchNearbyRankPreference = {
   /**
-   * Ranks results by distance.
+   * Ranks results by distance. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#rankpreference">web
+   * service documentation</a> for more information.
    */
   DISTANCE: 'DISTANCE',
   /**
-   * Ranks results by popularity.
+   * Ranks results by popularity. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#rankpreference">web
+   * service documentation</a> for more information.
    */
   POPULARITY: 'POPULARITY',
 };
@@ -25388,7 +25507,10 @@ google.maps.places.SecondaryOpeningHours = function() {};
 google.maps.places.SecondaryOpeningHours.prototype.type;
 
 /**
- * Defines the spatial relationship between the target location and the landmark
+ * Defines the spatial relationship between the target location and the
+ * landmark. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#spatialrelationship">web
+ * service documentation</a> for more information.
  *
  * Access by calling `const {SpatialRelationship} = await
  * google.maps.importLibrary("places");`. See
@@ -25398,31 +25520,48 @@ google.maps.places.SecondaryOpeningHours.prototype.type;
 google.maps.places.SpatialRelationship = {
   /**
    * The target is directly opposite the landmark on the other side of the road.
+   * See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#spatialrelationship">web
+   * service documentation</a> for more information.
    */
   ACROSS_THE_ROAD: 'ACROSS_THE_ROAD',
   /**
-   * Not on the same route as the landmark but a single turn away.
+   * Not on the same route as the landmark but a single turn away. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#spatialrelationship">web
+   * service documentation</a> for more information.
    */
   AROUND_THE_CORNER: 'AROUND_THE_CORNER',
   /**
    * Close to the landmark&#39;s structure but further away from its street
-   * entrances.
+   * entrances. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#spatialrelationship">web
+   * service documentation</a> for more information.
    */
   BEHIND: 'BEHIND',
   /**
-   * The target is directly adjacent to the landmark.
+   * The target is directly adjacent to the landmark. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#spatialrelationship">web
+   * service documentation</a> for more information.
    */
   BESIDE: 'BESIDE',
   /**
-   * On the same route as the landmark but not besides or across.
+   * On the same route as the landmark but not besides or across. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#spatialrelationship">web
+   * service documentation</a> for more information.
    */
   DOWN_THE_ROAD: 'DOWN_THE_ROAD',
   /**
-   * The default relationship when nothing more specific below applies.
+   * This is the default relationship when nothing more specific below applies.
+   * See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#spatialrelationship">web
+   * service documentation</a> for more information.
    */
   NEAR: 'NEAR',
   /**
    * The landmark has a spatial geometry and the target is within its bounds.
+   * See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#spatialrelationship">web
+   * service documentation</a> for more information.
    */
   WITHIN: 'WITHIN',
 };
@@ -25863,7 +26002,9 @@ google.maps.places.TransitStop.prototype.stopCode;
 google.maps.places.TransitStop.prototype.stopCodeLanguageCode;
 
 /**
- * The type of a transit vehicle.
+ * The type of vehicle for a transit line. See the <a
+ * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+ * service documentation</a> for more information.
  *
  * Access by calling `const {TransitVehicleType} = await
  * google.maps.importLibrary("places");`. See
@@ -25872,87 +26013,129 @@ google.maps.places.TransitStop.prototype.stopCodeLanguageCode;
  */
 google.maps.places.TransitVehicleType = {
   /**
-   * Airplane.
+   * Airplane. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   AIRPLANE: 'AIRPLANE',
   /**
-   * Bus.
+   * Bus. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   BUS: 'BUS',
   /**
-   * Cable car.
+   * Cable car. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   CABLE_CAR: 'CABLE_CAR',
   /**
-   * Coach.
+   * Coach. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   COACH: 'COACH',
   /**
-   * Commuter train.
+   * Commuter train. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   COMMUTER_TRAIN: 'COMMUTER_TRAIN',
   /**
-   * Ferry.
+   * Ferry. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   FERRY: 'FERRY',
   /**
-   * Funicular.
+   * Funicular. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   FUNICULAR: 'FUNICULAR',
   /**
-   * Gondola lift.
+   * Gondola lift. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   GONDOLA_LIFT: 'GONDOLA_LIFT',
   /**
-   * Heavy rail.
+   * Heavy rail. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   HEAVY_RAIL: 'HEAVY_RAIL',
   /**
-   * High speed train.
+   * High speed train. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   HIGH_SPEED_TRAIN: 'HIGH_SPEED_TRAIN',
   /**
-   * Horse carriage.
+   * Horse carriage. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   HORSE_CARRIAGE: 'HORSE_CARRIAGE',
   /**
-   * Intercity bus.
+   * Intercity bus. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   INTERCITY_BUS: 'INTERCITY_BUS',
   /**
-   * Long distance train.
+   * Long distance train. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   LONG_DISTANCE_TRAIN: 'LONG_DISTANCE_TRAIN',
   /**
-   * Metro rail.
+   * Metro rail. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   METRO_RAIL: 'METRO_RAIL',
   /**
-   * Monorail.
+   * Monorail. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   MONORAIL: 'MONORAIL',
   /**
-   * Rail.
+   * Rail. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   RAIL: 'RAIL',
   /**
-   * Share taxi.
+   * Share taxi. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   SHARE_TAXI: 'SHARE_TAXI',
   /**
-   * Special.
+   * Special. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   SPECIAL: 'SPECIAL',
   /**
-   * Subway.
+   * Subway. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   SUBWAY: 'SUBWAY',
   /**
-   * Tram.
+   * Tram. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   TRAM: 'TRAM',
   /**
-   * Trolleybus.
+   * Trolleybus. See the <a
+   * href="https://developers.google.com/maps/documentation/places/web-service/reference/rpc/google.maps.places.v1#vehicletype">web
+   * service documentation</a> for more information.
    */
   TROLLEYBUS: 'TROLLEYBUS',
 };
