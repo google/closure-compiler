@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static com.google.javascript.jscomp.serialization.TypePointers.isAxiomatic;
 import static com.google.javascript.jscomp.serialization.TypePointers.trimOffset;
@@ -30,6 +31,7 @@ import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -155,6 +157,32 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
     assertThat(compileToTypes("const /** * */ x = /** @type {?} */ (0);"))
         .ignoringFieldDescriptors(BRITTLE_TYPE_FIELDS)
         .containsExactlyElementsIn(nativeObjects());
+  }
+
+  @Test
+  public void testNativeTypes_serializesFunctionToTopFunction() {
+    var unused =
+        compileToTypePool(
+            "function foo() {} /** @type {!Function} */ var goo; FOO: foo; GOO: goo;");
+    int fooPointer = pointerForLabel("FOO");
+    int gooPointer = pointerForLabel("GOO");
+    assertThat(isAxiomatic(fooPointer)).isTrue();
+    assertThat(isAxiomatic(gooPointer)).isTrue();
+    assertThat(TypePointers.OFFSET_TO_AXIOMATIC_COLOR.get(fooPointer))
+        .isEqualTo(StandardColors.TOP_FUNCTION);
+    assertThat(TypePointers.OFFSET_TO_AXIOMATIC_COLOR.get(gooPointer))
+        .isEqualTo(StandardColors.TOP_FUNCTION);
+  }
+
+  @Test
+  public void testNativeTypes_serializesGbigint() {
+    var unused =
+        compileToTypePool(
+            "/** @interface */ function gbigint() {} /** @type {!gbigint} */ var gb; GB: gb;");
+    int gbPointer = pointerForLabel("GB");
+    assertThat(isAxiomatic(gbPointer)).isTrue();
+    assertThat(TypePointers.OFFSET_TO_AXIOMATIC_COLOR.get(gbPointer))
+        .isEqualTo(StandardColors.GBIGINT);
   }
 
   @Test

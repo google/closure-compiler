@@ -115,9 +115,9 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
     assertThat(barResultType).isEqualTo(StandardColors.NUMBER);
     assertThat(bazResultType).isEqualTo(StandardColors.NULL_OR_VOID);
 
-    assertThat(fooType).isEqualTo(StandardColors.TOP_OBJECT);
-    assertThat(barType).isEqualTo(StandardColors.TOP_OBJECT);
-    assertThat(bazType).isEqualTo(StandardColors.TOP_OBJECT);
+    assertThat(fooType).isEqualTo(StandardColors.TOP_FUNCTION);
+    assertThat(barType).isEqualTo(StandardColors.TOP_FUNCTION);
+    assertThat(bazType).isEqualTo(StandardColors.TOP_FUNCTION);
   }
 
   private Node getLabelledExpression(String label) {

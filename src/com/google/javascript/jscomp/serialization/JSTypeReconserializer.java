@@ -67,7 +67,7 @@ final class JSTypeReconserializer {
 
   // Cache some commonly used types.
   private final SeenTypeRecord unknownRecord;
-  private final SeenTypeRecord topObjectRecord;
+  private final SeenTypeRecord topFunctionRecord;
 
   private final LinkedIdentityHashMap<JSType, SeenTypeRecord> typeToRecordCache =
       new LinkedIdentityHashMap<>();
@@ -88,16 +88,18 @@ final class JSTypeReconserializer {
           // Map all the primitives in the obvious way.
           .put(JSTypeNative.BIGINT_TYPE, StandardColors.BIGINT)
           .put(JSTypeNative.BOOLEAN_TYPE, StandardColors.BOOLEAN)
+          .put(JSTypeNative.GBIGINT_TYPE, StandardColors.GBIGINT)
           .put(JSTypeNative.NULL_TYPE, StandardColors.NULL_OR_VOID)
           .put(JSTypeNative.NUMBER_TYPE, StandardColors.NUMBER)
           .put(JSTypeNative.STRING_TYPE, StandardColors.STRING)
           .put(JSTypeNative.SYMBOL_TYPE, StandardColors.SYMBOL)
           .put(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID)
+          // Smoosh top-like function types into a single type.
+          .put(JSTypeNative.FUNCTION_FUNCTION_TYPE, StandardColors.TOP_FUNCTION)
+          .put(JSTypeNative.FUNCTION_TYPE, StandardColors.TOP_FUNCTION)
           // Smoosh top-like objects into a single type.
-          .put(JSTypeNative.FUNCTION_FUNCTION_TYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.FUNCTION_PROTOTYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.FUNCTION_INSTANCE_PROTOTYPE, StandardColors.TOP_OBJECT)
-          .put(JSTypeNative.FUNCTION_TYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.OBJECT_FUNCTION_TYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.OBJECT_PROTOTYPE, StandardColors.TOP_OBJECT)
           .put(JSTypeNative.OBJECT_TYPE, StandardColors.TOP_OBJECT)
@@ -125,7 +127,7 @@ final class JSTypeReconserializer {
     this.seedCachesWithAxiomaticTypes();
 
     this.unknownRecord = this.seenTypeRecords.get(StandardColors.UNKNOWN.getId());
-    this.topObjectRecord = this.seenTypeRecords.get(StandardColors.TOP_OBJECT.getId());
+    this.topFunctionRecord = this.seenTypeRecords.get(StandardColors.TOP_FUNCTION.getId());
   }
 
   /**
@@ -190,7 +192,7 @@ final class JSTypeReconserializer {
       // are a constructor/interface or have a @closurePrimitive tag associated. Optimization colors
       // don't track function parameter/return/template types, and function literals are all
       // invalidating types during property disambiguation.
-      return this.topObjectRecord;
+      return this.topFunctionRecord;
     }
 
     SeenTypeRecord jstypeRecord = this.typeToRecordCache.get(type);

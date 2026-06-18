@@ -127,6 +127,13 @@ enum PrimitiveType {
   // Top object type (supertype of all objects and invalidating). Corresponds to
   // the TS "{}" type.
   TOP_OBJECT = 7;
+
+  // Top function type (supertype of all functions).
+  TOP_FUNCTION = 8;
+
+  // Type of `gbigint`, an abstraction over the native bigint and a string-based
+  // shim.
+  GBIGINT_TYPE = 9;
 }
 
 // Used for testing only and possibly only temporary. Wraps type pools from

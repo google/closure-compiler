@@ -27,9 +27,10 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
       Equality.$same = function(opt_a, opt_b) {};
       String.m_equals__java_lang_String__java_lang_Object__boolean =
         function(opt_a, opt_b) {};
+      /** @interface */ function gbigint() {}
       """;
 
-  private static boolean useTypes;
+  private boolean useTypes;
 
   public J2clEqualitySameRewriterPassTest() {
     super(MINIMAL_EXTERNS + EXTERN);
@@ -41,6 +42,8 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
     super.setUp();
     useTypes = false;
     enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
   }
 
   @Override
@@ -246,6 +249,89 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
         String.m_equals__java_lang_String__java_lang_Object__boolean(b, null);
         String.m_equals__java_lang_String__java_lang_Object__boolean(null, b);
         String.m_equals__java_lang_String__java_lang_Object__boolean(c, d);
+        """);
+  }
+
+  @Test
+  public void testRewriteFunction() {
+    useTypes = true;
+    replaceTypesWithColors();
+    test(
+        """
+        function f() {}
+        /** @type {!Function} */
+        let g;
+        Equality.$same(f, null);
+        Equality.$same(g, null);
+        """,
+        """
+        function f() {}
+        let g;
+        !f;
+        !g;
+        """);
+  }
+
+  @Test
+  public void testRewriteTopObject_skippedToAvoidRewritingGBigint() {
+    useTypes = true;
+    replaceTypesWithColors();
+    test(
+        """
+        /** @type {!Object} */
+        var x;
+        /** @type {!gbigint} */
+        var someGBigint;
+        /** @type {!Object} */
+        var y = someGBigint;
+        Equality.$same(x, null);
+        Equality.$same(y, null);
+        """,
+        """
+        /** @type {!Object} */
+        var x;
+        /** @type {!gbigint} */
+        var someGBigint;
+        /** @type {!Object} */
+        var y = someGBigint;
+        x == null;
+        y == null;
+        """);
+  }
+
+  @Test
+  public void testRewriteGBigInt_skipped() {
+    useTypes = true;
+    replaceTypesWithColors();
+    test(
+        """
+        /** @type {!gbigint} */
+        var x;
+        Equality.$same(x, null);
+        """,
+        """
+        /** @type {!gbigint} */
+        var x;
+        x == null;
+        """);
+  }
+
+  @Test
+  public void testRewriteInterface_optimized() {
+    useTypes = true;
+    replaceTypesWithColors();
+    test(
+        """
+        /** @interface */ function Foo() {}
+        /** @type {!Foo} */
+        var x;
+        Equality.$same(x, null);
+        """,
+        """
+        /** @interface */ function Foo() {}
+        /** @type {!Foo} */
+        var x;
+        !x;
         """);
   }
 }

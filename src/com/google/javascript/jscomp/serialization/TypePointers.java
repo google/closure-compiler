@@ -39,7 +39,9 @@ final class TypePointers {
           StandardColors.NULL_OR_VOID,
           StandardColors.SYMBOL,
           StandardColors.BIGINT,
-          StandardColors.TOP_OBJECT);
+          StandardColors.TOP_OBJECT,
+          StandardColors.TOP_FUNCTION,
+          StandardColors.GBIGINT);
 
   static final int AXIOMATIC_COLOR_COUNT = OFFSET_TO_AXIOMATIC_COLOR.size();
 

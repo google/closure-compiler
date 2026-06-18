@@ -2224,7 +2224,7 @@ function f(first, ...$jscomp$destructuring$var0) {
 
     Node jscompArrayFromIterator =
         getNodeMatchingQName(lastCompiler.getJsRoot(), "$jscomp.arrayFromIterator");
-    assertNode(jscompArrayFromIterator).hasColorThat().isEqualTo(StandardColors.TOP_OBJECT);
+    assertNode(jscompArrayFromIterator).hasColorThat().isEqualTo(StandardColors.TOP_FUNCTION);
 
     Node jscompArrayFromIteratorCall = jscompArrayFromIterator.getParent();
     assertNode(jscompArrayFromIteratorCall)

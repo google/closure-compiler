@@ -104,12 +104,27 @@ public final class StandardColors {
           .setInvalidating(true)
           .buildAxiomatic();
 
+  /** The supertype of all functions. */
+  public static final Color TOP_FUNCTION =
+      Color.singleBuilder()
+          .setId(ColorId.fromUnsigned(0x283b5838))
+          .setBoxId(null)
+          .setInvalidating(true)
+          .buildAxiomatic();
+
   /** Analagous to Closure '*'/'?' and TS unknown/any */
   public static final Color UNKNOWN =
       Color.singleBuilder()
           .setBoxId(null)
           .setId(ColorId.fromUnsigned(0)) // Make UNKNOWN the "default" numerical value.
           .setInvalidating(true)
+          .buildAxiomatic();
+
+  public static final Color GBIGINT =
+      Color.singleBuilder()
+          .setId(ColorId.fromUnsigned(0xaaae3678))
+          .setBoxId(null)
+          .setInvalidating(false)
           .buildAxiomatic();
 
   /**
@@ -131,6 +146,8 @@ public final class StandardColors {
           .put(SYMBOL.getId(), SYMBOL)
           .put(TOP_OBJECT.getId(), TOP_OBJECT)
           .put(UNKNOWN.getId(), UNKNOWN)
+          .put(GBIGINT.getId(), GBIGINT)
+          .put(TOP_FUNCTION.getId(), TOP_FUNCTION)
           .buildOrThrow();
 
   /**
@@ -146,6 +163,7 @@ public final class StandardColors {
           .put(NUMBER.getId(), NUMBER)
           .put(STRING.getId(), STRING)
           .put(SYMBOL.getId(), SYMBOL)
+          .put(GBIGINT.getId(), GBIGINT)
           .buildOrThrow();
 
   /**

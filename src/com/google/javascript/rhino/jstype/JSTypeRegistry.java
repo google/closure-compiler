@@ -905,6 +905,10 @@ public final class JSTypeRegistry {
     ObjectType symbolObjectType = symbolObjectFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE, symbolObjectType);
 
+    FunctionType gbigintFunctionType = nativeInterface("gbigint");
+    gbigintFunctionType.getPrototype(); // Force initialization
+    registerNativeType(JSTypeNative.GBIGINT_TYPE, gbigintFunctionType.getInstanceType());
+
     // (null|void)
     JSType nullVoid = createUnionType(nullType, voidType);
     registerNativeType(JSTypeNative.NULL_VOID, nullVoid);
@@ -1034,6 +1038,7 @@ public final class JSTypeRegistry {
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_GENERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BIGINT_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BIGINT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.GBIGINT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.I_ARRAY_LIKE_TYPE));

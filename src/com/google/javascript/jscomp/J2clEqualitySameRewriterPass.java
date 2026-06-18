@@ -128,7 +128,13 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
     }
 
     // In theory we could allow unions of multiple objects here
-    return !color.isUnion() && !color.isPrimitive() && !color.equals(StandardColors.UNKNOWN);
+    return !color.isUnion()
+        && !color.isPrimitive()
+        && !color.equals(StandardColors.UNKNOWN)
+        // Avoid TOP_OBJECT because the `gbigint` interface type is assignable to it, so might end
+        // up here. In practice `gbigint` is actually a primitive (bigint or string) and its
+        // interface definition is a (useful) lie to the typechecker.
+        && !color.equals(StandardColors.TOP_OBJECT);
   }
 
   private Node rewriteAsStrictEq(Node firstExpr, Node secondExpr) {

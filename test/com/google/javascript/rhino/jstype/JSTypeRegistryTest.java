@@ -139,6 +139,23 @@ public class JSTypeRegistryTest {
   }
 
   @Test
+  public void testGetBuiltInType_gbigint() {
+    assertType(registry.getGlobalType("gbigint"))
+        .isEqualTo(registry.getNativeType(JSTypeNative.GBIGINT_TYPE));
+  }
+
+  @Test
+  public void testGetBuiltInType_gbigint_unification() {
+    // This simulates what happens when the compiler parses: /** @interface */ function gbigint() {}
+    FunctionType interfaceType =
+        FunctionType.builder(registry).forInterface().withName("gbigint").build();
+    registry.declareType(null, "gbigint", interfaceType.getInstanceType());
+
+    assertType(registry.getGlobalType("gbigint"))
+        .isEqualTo(registry.getNativeType(JSTypeNative.GBIGINT_TYPE));
+  }
+
+  @Test
   public void testGetBuildInType_iTemplateArray() {
     assertType(registry.getGlobalType("ITemplateArray"))
         .isEqualTo(registry.getNativeType(I_TEMPLATE_ARRAY_TYPE));
