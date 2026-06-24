@@ -687,7 +687,7 @@ public class Scanner {
 
   private Token scanPostZero(int beginToken) {
     boolean isBigInt;
-    switch (peekChar()) {
+    return switch (peekChar()) {
       case 'b', 'B' -> {
         // binary
         nextChar();
@@ -699,7 +699,7 @@ public class Scanner {
         if (isBigInt) {
           nextChar();
         }
-        return new LiteralToken(
+        yield new LiteralToken(
             isBigInt ? TokenType.BIGINT : TokenType.NUMBER,
             getTokenString(beginToken),
             getTokenRange(beginToken));
@@ -718,7 +718,7 @@ public class Scanner {
         if (isBigInt) {
           nextChar();
         }
-        return new LiteralToken(
+        yield new LiteralToken(
             isBigInt ? TokenType.BIGINT : TokenType.NUMBER,
             getTokenString(beginToken),
             getTokenRange(beginToken));
@@ -733,17 +733,13 @@ public class Scanner {
         if (isBigInt) {
           nextChar();
         }
-        return new LiteralToken(
+        yield new LiteralToken(
             isBigInt ? TokenType.BIGINT : TokenType.NUMBER,
             getTokenString(beginToken),
             getTokenRange(beginToken));
       }
-      case 'e', 'E' -> {
-        return scanExponentOfNumericLiteral(beginToken);
-      }
-      case '.' -> {
-        return scanFractionalNumericLiteral(beginToken);
-      }
+      case 'e', 'E' -> scanExponentOfNumericLiteral(beginToken);
+      case '.' -> scanFractionalNumericLiteral(beginToken);
       case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
         skipDecimalDigits();
         if (peek('.')) {
@@ -753,19 +749,17 @@ public class Scanner {
         if (peek('n')) {
           reportError("SyntaxError: nonzero BigInt can't have leading zero");
         }
-        return new LiteralToken(
+        yield new LiteralToken(
             TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
       }
       case 'n' -> {
         nextChar();
-        return new LiteralToken(
+        yield new LiteralToken(
             TokenType.BIGINT, getTokenString(beginToken), getTokenRange(beginToken));
       }
-      default -> {
-        return new LiteralToken(
-            TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
-      }
-    }
+      default ->
+          new LiteralToken(TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
+    };
   }
 
   private Token createToken(TokenType type, int beginToken) {

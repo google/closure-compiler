@@ -339,25 +339,22 @@ final class ClosureRewriteModule implements CompilerPass {
   private class ScriptPreprocessor extends NodeTraversal.AbstractPreOrderCallback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      switch (n.getToken()) {
-        case ROOT, MODULE_BODY -> {
-          return true;
-        }
+      return switch (n.getToken()) {
+        case ROOT, MODULE_BODY -> true;
         case SCRIPT -> {
           if (NodeUtil.isGoogModuleFile(n)) {
             checkAndSetStrictModeDirective(t, n);
           }
-          return true;
+          yield true;
         }
         case NAME -> {
           preprocessExportDeclaration(t, n);
-          return true;
+          yield true;
         }
-        default -> {
-          // Don't traverse into non-module scripts.
-          return !parent.isScript();
-        }
-      }
+        default ->
+            // Don't traverse into non-module scripts.
+            !parent.isScript();
+      };
     }
   }
 
@@ -698,10 +695,8 @@ final class ClosureRewriteModule implements CompilerPass {
   private class UnwrapGoogLoadModule extends NodeTraversal.AbstractPreOrderCallback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      switch (n.getToken()) {
-        case ROOT, SCRIPT -> {
-          return true;
-        }
+      return switch (n.getToken()) {
+        case ROOT, SCRIPT -> true;
         case EXPR_RESULT -> {
           Node call = n.getFirstChild();
           if (NodeUtil.isCallTo(call, GOOG_LOADMODULE) && call.getLastChild().isFunction()) {
@@ -721,12 +716,10 @@ final class ClosureRewriteModule implements CompilerPass {
             }
             t.reportCodeChange();
           }
-          return false;
+          yield false;
         }
-        default -> {
-          return false;
-        }
-      }
+        default -> false;
+      };
     }
   }
 

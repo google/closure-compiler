@@ -458,7 +458,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
    * <p>This has some false positive cases, to allow for patterns like goog.abstractMethod.
    */
   private boolean isJSDocOnFunctionNode(Node n, JSDocInfo info) {
-    switch (n.getToken()) {
+    return switch (n.getToken()) {
       case FUNCTION,
           GETTER_DEF,
           SETTER_DEF,
@@ -467,32 +467,29 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
           COMPUTED_PROP,
           EXPORT,
           MEMBER_FIELD_DEF,
-          COMPUTED_FIELD_DEF -> {
-        return true;
-      }
+          COMPUTED_FIELD_DEF ->
+          true;
       case GETELEM, GETPROP -> {
         if (n.getFirstChild().isQualifiedName()) {
           // assume qualified names may be function declarations
-          return true;
+          yield true;
         }
-        return false;
+        yield false;
       }
       case VAR, LET, CONST, ASSIGN -> {
         Node lhs = n.getFirstChild();
         Node rhs = NodeUtil.getRValueOfLValue(lhs);
         if (rhs != null && isClass(rhs) && !info.isConstructor()) {
-          return false;
+          yield false;
         }
 
         // TODO(b/124081098): Check that the RHS of the assignment is a
         // function. Note that it can be a FUNCTION node, but it can also be
         // a call to goog.abstractMethod, goog.functions.constant, etc.
-        return true;
+        yield true;
       }
-      default -> {
-        return false;
-      }
-    }
+      default -> false;
+    };
   }
 
   /**

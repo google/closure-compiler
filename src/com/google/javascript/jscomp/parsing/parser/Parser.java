@@ -1026,59 +1026,29 @@ public class Parser {
 
   /** This function reflects the ECMA standard. Most places use peekStatement instead. */
   private ParseTree parseStatementStandard() {
-    switch (peekType()) {
-      case OPEN_CURLY -> {
-        return parseBlock();
-      }
-      case CONST, VAR -> {
-        return parseVariableStatement();
-      }
-      case SEMI_COLON -> {
-        return parseEmptyStatement();
-      }
-      case IF -> {
-        return parseIfStatement();
-      }
-      case DO -> {
-        return parseDoWhileStatement();
-      }
-      case WHILE -> {
-        return parseWhileStatement();
-      }
-      case FOR -> {
-        return parseForStatement();
-      }
-      case CONTINUE -> {
-        return parseContinueStatement();
-      }
-      case BREAK -> {
-        return parseBreakStatement();
-      }
-      case RETURN -> {
-        return parseReturnStatement();
-      }
-      case WITH -> {
-        return parseWithStatement();
-      }
-      case SWITCH -> {
-        return parseSwitchStatement();
-      }
-      case THROW -> {
-        return parseThrowStatement();
-      }
-      case TRY -> {
-        return parseTryStatement();
-      }
-      case DEBUGGER -> {
-        return parseDebuggerStatement();
-      }
+    return switch (peekType()) {
+      case OPEN_CURLY -> parseBlock();
+      case CONST, VAR -> parseVariableStatement();
+      case SEMI_COLON -> parseEmptyStatement();
+      case IF -> parseIfStatement();
+      case DO -> parseDoWhileStatement();
+      case WHILE -> parseWhileStatement();
+      case FOR -> parseForStatement();
+      case CONTINUE -> parseContinueStatement();
+      case BREAK -> parseBreakStatement();
+      case RETURN -> parseReturnStatement();
+      case WITH -> parseWithStatement();
+      case SWITCH -> parseSwitchStatement();
+      case THROW -> parseThrowStatement();
+      case TRY -> parseTryStatement();
+      case DEBUGGER -> parseDebuggerStatement();
       default -> {
         if (peekLabelledStatement()) {
-          return parseLabelledStatement();
+          yield parseLabelledStatement();
         }
-        return parseExpressionStatement();
+        yield parseExpressionStatement();
       }
-    }
+    };
   }
 
   /** In V8 all source elements may appear where statements appear in the grammar. */

@@ -49,16 +49,16 @@ public final class SourceMapConsumerFactory {
       SourceMapObject sourceMapObject = SourceMapObjectParser.parse(contents);
 
       // Check basic assertions about the format.
-      switch (sourceMapObject.getVersion()) {
+      return switch (sourceMapObject.getVersion()) {
         case 3 -> {
           SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
           consumer.parse(sourceMapObject, supplier);
-          return consumer;
+          yield consumer;
         }
         default ->
             throw new SourceMapParseException(
                 "Unknown source map version:" + sourceMapObject.getVersion());
-      }
+      };
     }
 
     throw new SourceMapParseException("unable to detect source map format");

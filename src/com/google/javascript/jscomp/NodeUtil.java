@@ -554,17 +554,16 @@ public final class NodeUtil {
   public static @Nullable Node getNameNode(Node n) {
     checkState(n.isFunction() || n.isClass(), n);
     Node parent = n.getParent();
-    switch (parent.getToken()) {
-      case NAME -> {
-        // var name = function() ...
-        // var name2 = function name1() ...
-        return parent;
-      }
+    return switch (parent.getToken()) {
+      case NAME ->
+          // var name = function() ...
+          // var name2 = function name1() ...
+          parent;
       case ASSIGN -> {
         // qualified.name = function() ...
         // qualified.name2 = function name1() ...
         Node firstChild = parent.getFirstChild();
-        return firstChild.isQualifiedName() ? firstChild : null;
+        yield firstChild.isQualifiedName() ? firstChild : null;
       }
       default -> {
         // function name() ...
@@ -575,9 +574,9 @@ public final class NodeUtil {
         // TODO(tbreisacher): Currently we do two kinds of "empty" checks because
         // anonymous classes have an EMPTY name node while anonymous functions
         // have a STRING node with an empty string. Consider making these the same.
-        return (funNameNode.isEmpty() || funNameNode.getString().isEmpty()) ? null : funNameNode;
+        yield (funNameNode.isEmpty() || funNameNode.getString().isEmpty()) ? null : funNameNode;
       }
-    }
+    };
   }
 
   /** Set the given function/class node to an empty name */
@@ -733,26 +732,24 @@ public final class NodeUtil {
    * @param includeFunctions If true, all function expressions will be treated as literals.
    */
   public static boolean isLiteralValue(Node n, boolean includeFunctions) {
-    switch (n.getToken()) {
-      case CAST -> {
-        return isLiteralValue(n.getFirstChild(), includeFunctions);
-      }
+    return switch (n.getToken()) {
+      case CAST -> isLiteralValue(n.getFirstChild(), includeFunctions);
       case ARRAYLIT -> {
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           if ((!child.isEmpty()) && !isLiteralValue(child, includeFunctions)) {
-            return false;
+            yield false;
           }
         }
-        return true;
+        yield true;
       }
       case REGEXP -> {
         // Return true only if all descendants are const.
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           if (!isLiteralValue(child, includeFunctions)) {
-            return false;
+            yield false;
           }
         }
-        return true;
+        yield true;
       }
       case OBJECTLIT -> {
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
@@ -762,7 +759,7 @@ public final class NodeUtil {
               // { get propertyName() {...} }
               // { set propertyName(value) {...} }
               if (!includeFunctions) {
-                return false;
+                yield false;
               }
               // keep going
             }
@@ -774,14 +771,14 @@ public final class NodeUtil {
               // { set [key_expression](args) {...}, ... }
               if (!isLiteralValue(child.getFirstChild(), includeFunctions)
                   || !isLiteralValue(child.getLastChild(), includeFunctions)) {
-                return false;
+                yield false;
               }
               // keep going
             }
 
             case OBJECT_SPREAD -> {
               if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
-                return false;
+                yield false;
               }
               // keep going
             }
@@ -790,7 +787,7 @@ public final class NodeUtil {
               // { key: value, ... }
               // { "quoted_key": value, ... }
               if (!isLiteralValue(child.getOnlyChild(), includeFunctions)) {
-                return false;
+                yield false;
               }
               // keep going
             }
@@ -800,25 +797,21 @@ public final class NodeUtil {
                     "Unexpected child of OBJECTLIT: " + child.toStringTree());
           }
         }
-        return true;
+        yield true;
       }
-      case FUNCTION -> {
-        return includeFunctions && !NodeUtil.isFunctionDeclaration(n);
-      }
+      case FUNCTION -> includeFunctions && !NodeUtil.isFunctionDeclaration(n);
       case TEMPLATELIT -> {
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           if (child.isTemplateLitSub()) {
             if (!isLiteralValue(child.getFirstChild(), includeFunctions)) {
-              return false;
+              yield false;
             }
           }
         }
-        return true;
+        yield true;
       }
-      default -> {
-        return isImmutableValue(n);
-      }
-    }
+      default -> isImmutableValue(n);
+    };
   }
 
   /**
@@ -2181,23 +2174,19 @@ public final class NodeUtil {
    * @return Whether the node creates a block scope.
    */
   static boolean createsBlockScope(Node n) {
-    switch (n.getToken()) {
+    return switch (n.getToken()) {
       case BLOCK -> {
         if (n.isSyntheticBlock()) {
           // Don't create block scope for synthetic blocks.
-          return false;
+          yield false;
         }
         Node parent = n.getParent();
         // Don't create block scope for switch cases or catch blocks.
-        return parent != null && !isSwitchCase(parent) && !parent.isCatch();
+        yield parent != null && !isSwitchCase(parent) && !parent.isCatch();
       }
-      case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, SWITCH_BODY, CLASS -> {
-        return true;
-      }
-      default -> {
-        return false;
-      }
-    }
+      case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, SWITCH_BODY, CLASS -> true;
+      default -> false;
+    };
   }
 
   static boolean createsScope(Node n) {
@@ -3097,16 +3086,14 @@ public final class NodeUtil {
       parent = checkNotNull(targetNode.getParent());
       targetIsFirstChild = targetNode == parent.getFirstChild();
     }
-    switch (parent.getToken()) {
-      case ARRAY_PATTERN -> {
-        // e.g. ([targetNode] = something)
-        return parent;
-      }
+    return switch (parent.getToken()) {
+      case ARRAY_PATTERN ->
+          // e.g. ([targetNode] = something)
+          parent;
 
-      case OBJECT_PATTERN -> {
-        // e.g. ({...rest} = something);
-        return parent;
-      }
+      case OBJECT_PATTERN ->
+          // e.g. ({...rest} = something);
+          parent;
 
       case COMPUTED_PROP -> {
         // e.g. ({[expression]: targetNode} = something)
@@ -3116,66 +3103,63 @@ public final class NodeUtil {
         checkState(!targetIsFirstChild, parent);
         Node grandparent = checkNotNull(parent.getParent(), parent);
         checkState(grandparent.isObjectPattern(), grandparent);
-        return grandparent;
+        yield grandparent;
       }
       case STRING_KEY -> {
         // e.g. ({parent: targetNode} = something)
         Node grandparent = checkNotNull(parent.getParent(), parent);
         checkState(grandparent.isObjectPattern(), grandparent);
-        return grandparent;
+        yield grandparent;
       }
 
-      case PARAM_LIST, LET, CONST, VAR -> {
-        // e.g. `function foo(targetNode) {}`
-        // or non-destructured declarations
-        // e.g. `let targetNode = 3;`
-        return null;
-      }
+      case PARAM_LIST, LET, CONST, VAR ->
+          // e.g. `function foo(targetNode) {}`
+          // or non-destructured declarations
+          // e.g. `let targetNode = 3;`
+          null;
 
       case FUNCTION, CLASS -> {
         // e.g. `function targetNode() {}`
         // e.g. `class targetNode {}`
         checkState(targetIsFirstChild, targetNode);
-        return null;
+        yield null;
       }
 
       case FOR_IN, FOR_OF, FOR_AWAIT_OF -> {
         // e.g. `for ({length} in obj) {}` // targetNode is `{length}`
         // e.g. `for ({length} of obj) {}` // targetNode is `{length}`
         checkState(targetIsFirstChild, targetNode);
-        return null;
+        yield null;
       }
 
       case DESTRUCTURING_LHS -> {
         // destructured declarations
         // e.g. `let [a] = 3`; // targetNode is `[a]`
         checkState(targetIsFirstChild, targetNode);
-        return null;
+        yield null;
       }
 
-      case IMPORT -> {
-        // e.g. `import targetNode from './foo/bar';`
-        return null;
-      }
+      case IMPORT ->
+          // e.g. `import targetNode from './foo/bar';`
+          null;
 
       case IMPORT_SPEC -> {
         // e.g. `import {bar as targetNode} from './foo/bar';`
         // e.g. `import {targetNode} from './foo/bar';` // AST will have {targetNode as targetNode}
         checkState(!targetIsFirstChild, parent);
-        return null;
+        yield null;
       }
 
-      case CATCH -> {
-        // e.g. `try {} catch (foo) {}`
-        return null;
-      }
+      case CATCH ->
+          // e.g. `try {} catch (foo) {}`
+          null;
 
       default -> {
         // e.g. targetNode = something
         checkState(isAssignmentOp(parent) && targetIsFirstChild, parent);
-        return null;
+        yield null;
       }
-    }
+    };
   }
 
   /**
@@ -3895,16 +3879,14 @@ public final class NodeUtil {
 
   static boolean isPropertyAbsenceTest(Node propAccess) {
     Node parent = propAccess.getParent();
-    switch (parent.getToken()) {
+    return switch (parent.getToken()) {
       case EQ, SHEQ -> {
         Node other =
             parent.getFirstChild() == propAccess ? parent.getSecondChild() : parent.getFirstChild();
-        return isUndefined(other) || (parent.isEQ() && other.isNull());
+        yield isUndefined(other) || (parent.isEQ() && other.isNull());
       }
-      default -> {
-        return false;
-      }
-    }
+      default -> false;
+    };
   }
 
   /**
@@ -4472,82 +4454,61 @@ public final class NodeUtil {
    * side-effect, "local values" may escape.
    */
   static boolean evaluatesToLocalValue(Node value) {
-    switch (value.getToken()) {
-      case ASSIGN -> {
-        // A result that is aliased by a non-local name, is the effectively the
-        // same as returning a non-local name, but this doesn't matter if the
-        // value is immutable.
-        return NodeUtil.isImmutableValue(value.getLastChild());
-      }
-      case COMMA -> {
-        return evaluatesToLocalValue(value.getLastChild());
-      }
-      case AND, OR, COALESCE -> {
-        return evaluatesToLocalValue(value.getFirstChild())
-            && evaluatesToLocalValue(value.getLastChild());
-      }
-      case HOOK -> {
-        return evaluatesToLocalValue(value.getSecondChild())
-            && evaluatesToLocalValue(value.getLastChild());
-      }
-      case DYNAMIC_IMPORT -> {
-        // Dynamic import always returns a newly created Promise.
-        return true;
-      }
-      case THIS, SUPER -> {
-        return false;
-      }
-      case NAME -> {
-        return isImmutableValue(value);
-      }
-      case GETELEM, GETPROP, OPTCHAIN_GETELEM, OPTCHAIN_GETPROP -> {
-        // There is no information about the locality of object properties.
-        return false;
-      }
-      case CALL, OPTCHAIN_CALL -> {
-        return isToStringMethodCall(value);
-      }
-      case TAGGED_TEMPLATELIT -> {
-        // No information about local values for tagged template literals
-        return false;
-      }
-      case NEW -> {
-        return newHasLocalResult(value);
-      }
-      case DELPROP, INC, DEC, CLASS, FUNCTION, REGEXP, EMPTY, ARRAYLIT, OBJECTLIT, TEMPLATELIT -> {
-        return true;
-      }
-      case CAST -> {
-        return evaluatesToLocalValue(value.getFirstChild());
-      }
-      case ITER_SPREAD, OBJECT_SPREAD, NEW_TARGET -> {
-        // TODO(johnlenz): remove this case.
-        // Returns an alias of a constructor (current or subclass).
-        return false;
-      }
-      case YIELD, AWAIT -> {
-        // TODO(johnlenz): we can do better for await if we use type information.  That is,
-        // if we know the promise being awaited on is a immutable value type (string, etc)
-        // we could return true here.
-        return false;
-      }
+    return switch (value.getToken()) {
+      case ASSIGN ->
+          // A result that is aliased by a non-local name, is the effectively the
+          // same as returning a non-local name, but this doesn't matter if the
+          // value is immutable.
+          NodeUtil.isImmutableValue(value.getLastChild());
+      case COMMA -> evaluatesToLocalValue(value.getLastChild());
+      case AND, OR, COALESCE ->
+          evaluatesToLocalValue(value.getFirstChild())
+              && evaluatesToLocalValue(value.getLastChild());
+      case HOOK ->
+          evaluatesToLocalValue(value.getSecondChild())
+              && evaluatesToLocalValue(value.getLastChild());
+      case DYNAMIC_IMPORT ->
+          // Dynamic import always returns a newly created Promise.
+          true;
+      case THIS, SUPER -> false;
+      case NAME -> isImmutableValue(value);
+      case GETELEM, GETPROP, OPTCHAIN_GETELEM, OPTCHAIN_GETPROP ->
+          // There is no information about the locality of object properties.
+          false;
+      case CALL, OPTCHAIN_CALL -> isToStringMethodCall(value);
+      case TAGGED_TEMPLATELIT ->
+          // No information about local values for tagged template literals
+          false;
+      case NEW -> newHasLocalResult(value);
+      case DELPROP, INC, DEC, CLASS, FUNCTION, REGEXP, EMPTY, ARRAYLIT, OBJECTLIT, TEMPLATELIT ->
+          true;
+      case CAST -> evaluatesToLocalValue(value.getFirstChild());
+      case ITER_SPREAD, OBJECT_SPREAD, NEW_TARGET ->
+          // TODO(johnlenz): remove this case.
+          // Returns an alias of a constructor (current or subclass).
+          false;
+      case YIELD, AWAIT ->
+          // TODO(johnlenz): we can do better for await if we use type information.  That is,
+          // if we know the promise being awaited on is a immutable value type (string, etc)
+          // we could return true here.
+          false;
       default -> {
         // A logical assignment could evaluate to either the assignment target or the
         // right-hand side, and we generally have no information about the locality of the lhs.
         if (isLogicalAssignmentOp(value)) {
-          return false;
+          yield false;
         }
         // Other non-logical assignment ops force a local value:
         //  '' + g (a local string)
         //  x -= g (x is now an local number)
         if (isAssignmentOp(value) || isSimpleOperator(value) || isImmutableValue(value)) {
-          return true;
+          yield true;
         }
 
         throw new IllegalStateException(
             "Unexpected expression node: " + value + "\n parent:" + value.getParent());
       }
-    }
+    };
   }
 
   /**
@@ -4563,24 +4524,19 @@ public final class NodeUtil {
    *     default value expressions.
    */
   static boolean isDefinedValue(Node value) {
-    switch (value.getToken()) {
-      case ASSIGN, CAST, COMMA -> {
-        // Only the assigned value matters here.
-        return isDefinedValue(value.getLastChild());
-      }
-      case COALESCE -> {
-        // 'null' is a "defined" value so we can only trust the RHS.
-        // NOTE: consider creating and using a "isDefinedAndNotNull" that would allow us to
-        // trust the tested value.
-        return isDefinedValue(value.getSecondChild());
-      }
-      case AND, OR -> {
-        return isDefinedValue(value.getFirstChild()) && isDefinedValue(value.getLastChild());
-      }
-      case HOOK -> {
-        return isDefinedValue(value.getSecondChild()) && isDefinedValue(value.getLastChild());
-        // Assume undefined leaks in this and call results.
-      }
+    return switch (value.getToken()) {
+      case ASSIGN, CAST, COMMA ->
+          // Only the assigned value matters here.
+          isDefinedValue(value.getLastChild());
+      case COALESCE ->
+          // 'null' is a "defined" value so we can only trust the RHS.
+          // NOTE: consider creating and using a "isDefinedAndNotNull" that would allow us to
+          // trust the tested value.
+          isDefinedValue(value.getSecondChild());
+      case AND, OR -> isDefinedValue(value.getFirstChild()) && isDefinedValue(value.getLastChild());
+      case HOOK ->
+          // Assume undefined leaks in this and call results.
+          isDefinedValue(value.getSecondChild()) && isDefinedValue(value.getLastChild());
       case CALL,
           OPTCHAIN_CALL,
           GETELEM,
@@ -4591,9 +4547,8 @@ public final class NodeUtil {
           THIS,
           YIELD,
           AWAIT,
-          VOID -> {
-        return false;
-      }
+          VOID ->
+          false;
       case DELPROP,
           INC,
           DEC,
@@ -4610,30 +4565,27 @@ public final class NodeUtil {
           NULL,
           TRUE,
           FALSE,
-          NEW -> {
-        return true;
-      }
-      case TEMPLATELIT_STRING -> {
-        return value.getCookedString() != null;
-      }
+          NEW ->
+          true;
+      case TEMPLATELIT_STRING -> value.getCookedString() != null;
       case NAME -> {
         String name = value.getString();
         // We assume here that programs don't change the value of the keyword
         // undefined to something other than the value undefined.
-        return "Infinity".equals(name) || "NaN".equals(name);
+        yield "Infinity".equals(name) || "NaN".equals(name);
       }
       default -> {
         // Other op force a local value:
         //  '' + g (a  string)
         //  x -= g (x is now an number)
         if (isAssignmentOp(value) || isSimpleOperator(value)) {
-          return true;
+          yield true;
         }
 
         throw new IllegalStateException(
             "Unexpected expression node: " + value + "\n parent:" + value.getParent());
       }
-    }
+    };
   }
 
   /**

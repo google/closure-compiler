@@ -2511,25 +2511,19 @@ public class Node {
    *     properties.
    */
   public final @Nullable String getQualifiedName() {
-    switch (token) {
+    return switch (token) {
       case NAME -> {
         String name = getString();
-        return name.isEmpty() ? null : name;
+        yield name.isEmpty() ? null : name;
       }
       case GETPROP -> {
         StringBuilder builder = getQualifiedNameForGetProp(0);
-        return builder != null ? builder.toString() : null;
+        yield builder != null ? builder.toString() : null;
       }
-      case THIS -> {
-        return "this";
-      }
-      case SUPER -> {
-        return "super";
-      }
-      default -> {
-        return null;
-      }
-    }
+      case THIS -> "this";
+      case SUPER -> "super";
+      default -> null;
+    };
   }
 
   public final @Nullable QualifiedName getQualifiedNameObject() {

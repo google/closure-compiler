@@ -2153,7 +2153,7 @@ public final class JsDocInfoParser {
     // Save the source position before we consume additional tokens.
     int lineno = stream.getLineno();
     int charno = stream.getCharno();
-    switch (token) {
+    return switch (token) {
       case QMARK -> {
         // A QMARK could mean that a type is nullable, or that it's unknown.
         // We use look-ahead 1 to determine whether it's unknown. Otherwise,
@@ -2180,14 +2180,12 @@ public final class JsDocInfoParser {
             || token == JsDocToken.EOL
             || token == JsDocToken.EOF) {
           restoreLookAhead(token);
-          return newNode(Token.QMARK);
+          yield newNode(Token.QMARK);
         }
 
-        return wrapNode(Token.QMARK, parseBasicTypeExpression(token), lineno, charno);
+        yield wrapNode(Token.QMARK, parseBasicTypeExpression(token), lineno, charno);
       }
-      case BANG -> {
-        return wrapNode(Token.BANG, parseBasicTypeExpression(next()), lineno, charno);
-      }
+      case BANG -> wrapNode(Token.BANG, parseBasicTypeExpression(next()), lineno, charno);
       default -> {
         Node basicTypeExpr = parseBasicTypeExpression(token);
         lineno = stream.getLineno();
@@ -2195,16 +2193,16 @@ public final class JsDocInfoParser {
         if (basicTypeExpr != null) {
           if (match(JsDocToken.QMARK)) {
             next();
-            return wrapNode(Token.QMARK, basicTypeExpr, lineno, charno);
+            yield wrapNode(Token.QMARK, basicTypeExpr, lineno, charno);
           } else if (match(JsDocToken.BANG)) {
             next();
-            return wrapNode(Token.BANG, basicTypeExpr, lineno, charno);
+            yield wrapNode(Token.BANG, basicTypeExpr, lineno, charno);
           }
         }
 
-        return basicTypeExpr;
+        yield basicTypeExpr;
       }
-    }
+    };
   }
 
   /**

@@ -151,27 +151,24 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
    * whether it creates a new "control flow scope" from the parent scope (the global scope).
    */
   private boolean isInGlobalControlFlowScope(Node n) {
-    switch (n.getToken()) {
-      case SCRIPT, ROOT -> {
-        return true;
-      }
-      case MODULE_BODY, BLOCK -> {
-        // class static blocks need to create a new cfg root
-        return false;
-      }
+    return switch (n.getToken()) {
+      case SCRIPT, ROOT -> true;
+      case MODULE_BODY, BLOCK ->
+          // class static blocks need to create a new cfg root
+          false;
       case FUNCTION -> {
         if (controlFlowScopeDepth > 0) {
-          return false;
+          yield false;
         }
         // Check for functions invoked immediately within the global scope - so IIFEs or
         // goog.scope callees.
         if (isGoogScopeBody(NodeUtil.getFunctionBody(n))) {
-          return true;
+          yield true;
         }
-        return isIIFE(n);
+        yield isIIFE(n);
       }
       default -> throw new AssertionError("Unexpected control flow root: " + n);
-    }
+    };
   }
 
   private static boolean isIIFE(Node n) {

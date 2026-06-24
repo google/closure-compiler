@@ -305,13 +305,13 @@ final class ModuleImportResolver {
         binding.isModuleNamespace()
             ? binding.metadata()
             : binding.originatingExport().moduleMetadata();
-    switch (originalMetadata.moduleType()) {
+    return switch (originalMetadata.moduleType()) {
       case ES6_MODULE -> {
         Node scriptNode = originalMetadata.rootNode();
         // Imports of nonexistent modules have a null 'root node'. Imports of names from scripts are
         // meaningless.
         checkState(scriptNode == null || scriptNode.isScript(), scriptNode);
-        return ScopedName.of(name, scriptNode != null ? scriptNode.getOnlyChild() : null);
+        yield ScopedName.of(name, scriptNode != null ? scriptNode.getOnlyChild() : null);
       }
       case GOOG_MODULE, GOOG_PROVIDE, LEGACY_GOOG_MODULE -> {
         ScopedName closureModuleObject =
@@ -319,24 +319,22 @@ final class ModuleImportResolver {
         if (closureModuleObject == null) {
           // This is an error, but one that should be reported elsewhere. assume the module is
           // a goog.provide for legacy compatibility.
-          return ScopedName.of(binding.closureNamespace(), null);
+          yield ScopedName.of(binding.closureNamespace(), null);
         }
         if (binding.isModuleNamespace()) {
-          return closureModuleObject;
+          yield closureModuleObject;
         }
-        return ScopedName.of(
+        yield ScopedName.of(
             closureModuleObject.getName() + "." + binding.originatingExport().exportName(),
             closureModuleObject.getScopeRoot());
       }
-      case SCRIPT -> {
-        // Importing SCRIPTs should not allow you to look up names in scope.
-        // we also don't really support CommonJs.
-        return ScopedName.of(name, null);
-      }
+      case SCRIPT ->
+          // Importing SCRIPTs should not allow you to look up names in scope.
+          // we also don't really support CommonJs.
+          ScopedName.of(name, null);
       case COMMON_JS ->
           throw new IllegalStateException("Typechecking CommonJS modules is not supported");
-    }
-    throw new AssertionError();
+    };
   }
 
   /** Returns the {@link Module} corresponding to this scope root, or null if not a module root. */

@@ -2116,56 +2116,50 @@ public final class JSTypeRegistry {
    */
   public JSType createTypeFromCommentNode(
       Node n, String sourceName, @Nullable StaticTypedScope scope) {
-    switch (n.getToken()) {
-      case LC -> {
-        // Record type.
-        return createRecordTypeFromNodes(n.getFirstChild(), sourceName, scope);
-      }
+    return switch (n.getToken()) {
+      case LC ->
+          // Record type.
+          createRecordTypeFromNodes(n.getFirstChild(), sourceName, scope);
       case BANG -> {
         // Not nullable
         JSType child = createTypeFromCommentNode(n.getFirstChild(), sourceName, scope);
         if (child instanceof NamedType namedType) {
-          return namedType.getBangType();
+          yield namedType.getBangType();
         }
-        return child.restrictByNotNullOrUndefined();
+        yield child.restrictByNotNullOrUndefined();
       }
       case QMARK -> {
         // Nullable or unknown
         Node firstChild = n.getFirstChild();
         if (firstChild == null) {
-          return getNativeType(UNKNOWN_TYPE);
+          yield getNativeType(UNKNOWN_TYPE);
         }
-        return createNullableType(createTypeFromCommentNode(firstChild, sourceName, scope));
+        yield createNullableType(createTypeFromCommentNode(firstChild, sourceName, scope));
       }
-      case EQUALS -> {
-        // Optional
-        // TODO(b/117162687): stop automatically converting {string=} to {(string|undefined)]}
-        return createOptionalType(createTypeFromCommentNode(n.getFirstChild(), sourceName, scope));
-      }
-      case ITER_REST -> {
-        // Var args
-        return createTypeFromCommentNode(n.getFirstChild(), sourceName, scope);
-      }
-      case STAR -> {
-        // The AllType
-        return getNativeType(ALL_TYPE);
-      }
+      case EQUALS ->
+          // Optional
+          // TODO(b/117162687): stop automatically converting {string=} to {(string|undefined)]}
+          createOptionalType(createTypeFromCommentNode(n.getFirstChild(), sourceName, scope));
+      case ITER_REST ->
+          // Var args
+          createTypeFromCommentNode(n.getFirstChild(), sourceName, scope);
+      case STAR ->
+          // The AllType
+          getNativeType(ALL_TYPE);
       case PIPE -> {
         // Union type
         ImmutableList.Builder<JSType> builder = ImmutableList.builder();
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           builder.add(createTypeFromCommentNode(child, sourceName, scope));
         }
-        return createUnionType(builder.build());
+        yield createUnionType(builder.build());
       }
-      case EMPTY -> {
-        // When the return value of a function is not specified
-        return getNativeType(UNKNOWN_TYPE);
-      }
-      case VOID -> {
-        // Only allowed in the return value of a function.
-        return getNativeType(VOID_TYPE);
-      }
+      case EMPTY ->
+          // When the return value of a function is not specified
+          getNativeType(UNKNOWN_TYPE);
+      case VOID ->
+          // Only allowed in the return value of a function.
+          getNativeType(VOID_TYPE);
       case TYPEOF -> {
         String name = n.getFirstChild().getString();
         // TODO(sdh): require var to be const?
@@ -2177,7 +2171,7 @@ public final class JSTypeRegistry {
         if (type == null || type.isUnknownType() || rootSlot.getScope() != declarationScope) {
           // Create a NamedType via getType so that it will be added to the list of types to
           // eventually resolve if necessary.
-          return NamedType.builder(this, "typeof " + name)
+          yield NamedType.builder(this, "typeof " + name)
               .setScope(scope)
               .setResolutionKind(ResolutionKind.TYPEOF)
               .setErrorReportingLocationFrom(n)
@@ -2191,7 +2185,7 @@ public final class JSTypeRegistry {
                   .setReferencedType(scopeType)
                   .build();
         }
-        return type;
+        yield type;
       }
       case STRINGLIT -> {
         JSType nominalType =
@@ -2204,20 +2198,20 @@ public final class JSTypeRegistry {
             nominalType =
                 nominalType.toMaybeNamedType().toBuilder().setTemplateTypes(templateArgs).build();
           }
-          return addNullabilityBasedOnParseContext(n, nominalType, scope);
+          yield addNullabilityBasedOnParseContext(n, nominalType, scope);
         }
 
         if (!(nominalType instanceof ObjectType objectType)) {
-          return nominalType;
+          yield nominalType;
         }
 
         if (templateArgs == null || !nominalType.isRawTypeOfTemplatizedType()) {
           // TODO(nickreid): This case leaves template parameters unbound if users fail to
           // specify any arguments, allowing raw types to leak into programs.
-          return addNullabilityBasedOnParseContext(n, nominalType, scope);
+          yield addNullabilityBasedOnParseContext(n, nominalType, scope);
         }
 
-        return addNullabilityBasedOnParseContext(
+        yield addNullabilityBasedOnParseContext(
             n, createTemplatizedType(objectType, templateArgs), scope);
       }
       case FUNCTION -> {
@@ -2283,7 +2277,7 @@ public final class JSTypeRegistry {
 
         JSType returnType = createTypeFromCommentNode(current, sourceName, scope);
 
-        return FunctionType.builder(this)
+        yield FunctionType.builder(this)
             .withParameters(paramBuilder.build())
             .withReturnType(returnType)
             .withTypeOfThis(thisType)
@@ -2291,7 +2285,7 @@ public final class JSTypeRegistry {
             .build();
       }
       default -> throw new IllegalStateException("Unexpected node in type expression: " + n);
-    }
+    };
   }
 
   private JSType addNullabilityBasedOnParseContext(Node n, JSType type, StaticScope scope) {

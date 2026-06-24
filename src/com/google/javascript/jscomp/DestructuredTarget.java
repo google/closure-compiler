@@ -294,22 +294,21 @@ public final class DestructuredTarget {
     if (patternType == null || patternType.isUnknownType()) {
       return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
-    switch (objectPatternKey.getToken()) {
+    return switch (objectPatternKey.getToken()) {
       case STRING_KEY -> {
         JSType propertyType = patternType.findPropertyType(objectPatternKey.getString());
-        return propertyType != null
+        yield propertyType != null
             ? propertyType
             : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
       }
-      case COMPUTED_PROP -> {
-        return patternType != null
-            ? patternType
-                .getTemplateTypeMap()
-                .getResolvedTemplateType(registry.getObjectElementKey())
-            : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-      }
+      case COMPUTED_PROP ->
+          patternType != null
+              ? patternType
+                  .getTemplateTypeMap()
+                  .getResolvedTemplateType(registry.getObjectElementKey())
+              : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
       default -> throw new IllegalStateException("Unexpected key " + objectPatternKey);
-    }
+    };
   }
 
   private JSType inferArrayPatternTargetType() {

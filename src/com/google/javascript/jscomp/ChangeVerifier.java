@@ -193,19 +193,17 @@ public class ChangeVerifier {
 
   String getNameForNode(Node n) {
     String sourceName = NodeUtil.getSourceName(n);
-    switch (n.getToken()) {
-      case SCRIPT -> {
-        return "SCRIPT: " + sourceName;
-      }
+    return switch (n.getToken()) {
+      case SCRIPT -> "SCRIPT: " + sourceName;
       case FUNCTION -> {
         String fnName = NodeUtil.getNearestFunctionName(n);
         if (fnName == null) {
           fnName = "anonymous@" + n.getLineno() + ":" + n.getCharno();
         }
-        return "FUNCTION: " + fnName + " in " + sourceName;
+        yield "FUNCTION: " + fnName + " in " + sourceName;
       }
       default -> throw new IllegalStateException("unexpected Node type");
-    }
+    };
   }
 
   /** Returns the path from the ancestor to the child node. */

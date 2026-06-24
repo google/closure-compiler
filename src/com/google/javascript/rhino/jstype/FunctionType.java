@@ -270,27 +270,21 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     if (!hasInstanceType() || this.propAccess == null) {
       return false;
     }
-    switch (this.propAccess) {
-      case STRUCT -> {
-        return true;
-      }
-      case DICT -> {
-        return false;
-      }
-      case ANY_EXPLICIT -> {
-        // For anything EXPLICITLY marked as @unresticted do not look to the super type.
-        return false;
-      }
+    return switch (this.propAccess) {
+      case STRUCT -> true;
+      case DICT -> false;
+      case ANY_EXPLICIT ->
+          // For anything EXPLICITLY marked as @unresticted do not look to the super type.
+          false;
       case ANY -> {
         FunctionType superc = getSuperClassConstructor();
         if (superc != null && superc.makesStructs()) {
           setStruct();
-          return true;
+          yield true;
         }
-        return false;
+        yield false;
       }
-    }
-    throw new AssertionError();
+    };
   }
 
   /**
@@ -301,27 +295,21 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
     if (!isConstructor() || this.propAccess == null) {
       return false;
     }
-    switch (this.propAccess) {
-      case DICT -> {
-        return true;
-      }
-      case STRUCT -> {
-        return false;
-      }
-      case ANY_EXPLICIT -> {
-        // For anything EXPLICITLY marked as @unresticted do not look to the super type.
-        return false;
-      }
+    return switch (this.propAccess) {
+      case DICT -> true;
+      case STRUCT -> false;
+      case ANY_EXPLICIT ->
+          // For anything EXPLICITLY marked as @unresticted do not look to the super type.
+          false;
       case ANY -> {
         FunctionType superc = getSuperClassConstructor();
         if (superc != null && superc.makesDicts()) {
           setDict();
-          return true;
+          yield true;
         }
-        return false;
+        yield false;
       }
-    }
-    throw new AssertionError();
+    };
   }
 
   public final void setStruct() {

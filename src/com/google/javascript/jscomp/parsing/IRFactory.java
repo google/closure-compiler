@@ -1522,20 +1522,18 @@ class IRFactory {
     }
 
     private Node processObjectPatternElement(ParseTree child) {
-      switch (child.type) {
-        case DEFAULT_PARAMETER -> {
-          // shorthand with a default value
-          // let { /** inlineType */ name = default } = something;
-          return processObjectPatternShorthandWithDefault(child.asDefaultParameter());
-        }
-        case PROPERTY_NAME_ASSIGNMENT -> {
-          return processObjectPatternPropertyNameAssignment(child.asPropertyNameAssignment());
-        }
+      return switch (child.type) {
+        case DEFAULT_PARAMETER ->
+            // shorthand with a default value
+            // let { /** inlineType */ name = default } = something;
+            processObjectPatternShorthandWithDefault(child.asDefaultParameter());
+        case PROPERTY_NAME_ASSIGNMENT ->
+            processObjectPatternPropertyNameAssignment(child.asPropertyNameAssignment());
         case COMPUTED_PROPERTY_DEFINITION -> {
           // let {[expression]: /** inlineType */ name} = something;
           ComputedPropertyDefinitionTree computedPropertyDefinition =
               child.asComputedPropertyDefinition();
-          return processObjectPatternComputedPropertyDefinition(computedPropertyDefinition);
+          yield processObjectPatternComputedPropertyDefinition(computedPropertyDefinition);
         }
         case OBJECT_REST -> {
           // let {...restObject} = someObject;
@@ -1543,10 +1541,10 @@ class IRFactory {
           Node target = transformNodeWithInlineComments(child.asObjectRest().assignmentTarget);
           Node rest = newNode(Token.OBJECT_REST, target);
           setSourceInfo(rest, child);
-          return rest;
+          yield rest;
         }
         default -> throw new IllegalStateException("Unexpected object pattern element: " + child);
-      }
+      };
     }
 
     /**
@@ -4077,10 +4075,8 @@ class IRFactory {
     if (value.charAt(0) == '.') {
       return Double.parseDouble('0' + value);
     } else if (value.charAt(0) == '0' && length > 1) {
-      switch (value.charAt(1)) {
-        case '.', 'e', 'E' -> {
-          return Double.parseDouble(value);
-        }
+      return switch (value.charAt(1)) {
+        case '.', 'e', 'E' -> Double.parseDouble(value);
         case 'b', 'B' -> {
           maybeWarnForFeature(token, Feature.BINARY_LITERALS);
           double v = 0;
@@ -4088,7 +4084,7 @@ class IRFactory {
           while (++c < length) {
             v = (v * 2) + binarydigit(value.charAt(c));
           }
-          return v;
+          yield v;
         }
         case 'o', 'O' -> {
           maybeWarnForFeature(token, Feature.OCTAL_LITERALS);
@@ -4097,7 +4093,7 @@ class IRFactory {
           while (++c < length) {
             v = (v * 8) + octaldigit(value.charAt(c));
           }
-          return v;
+          yield v;
         }
         case 'x', 'X' -> {
           double v = 0;
@@ -4105,7 +4101,7 @@ class IRFactory {
           while (++c < length) {
             v = (v * 0x10) + hexdigit(value.charAt(c));
           }
-          return v;
+          yield v;
         }
         case '0', '1', '2', '3', '4', '5', '6', '7' -> {
           double v = 0;
@@ -4117,7 +4113,7 @@ class IRFactory {
             } else {
               errorReporter.error(
                   INVALID_OCTAL_DIGIT, sourceName, lineno(location.start), charno(location.start));
-              return 0;
+              yield 0;
             }
           }
           if (inStrictContext()) {
@@ -4133,17 +4129,17 @@ class IRFactory {
                 lineno(location.start),
                 charno(location.start));
           }
-          return v;
+          yield v;
         }
         case '8', '9' -> {
           errorReporter.error(
               INVALID_OCTAL_DIGIT, sourceName, lineno(location.start), charno(location.start));
-          return 0;
+          yield 0;
         }
         default ->
             throw new IllegalStateException(
                 "Unexpected character in number literal: " + value.charAt(1));
-      }
+      };
     } else {
       return Double.parseDouble(value);
     }

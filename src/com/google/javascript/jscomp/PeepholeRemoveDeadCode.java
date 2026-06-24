@@ -39,73 +39,42 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
   @Override
   Node optimizeSubtree(Node subtree) {
-    switch (subtree.getToken()) {
-      case ASSIGN -> {
-        return tryFoldAssignment(subtree);
-      }
-      case COMMA -> {
-        return tryFoldComma(subtree);
-      }
-      case SCRIPT, BLOCK -> {
-        return tryOptimizeBlock(subtree);
-      }
-      case EXPR_RESULT -> {
-        return tryFoldExpr(subtree);
-      }
-      case HOOK -> {
-        return tryFoldHook(subtree);
-      }
-      case SWITCH -> {
-        return tryOptimizeSwitch(subtree);
-      }
-      case IF -> {
-        return tryFoldIf(subtree);
-      }
-      case WHILE -> {
-        // This pass gets run both before and after denormalize. Hence, the AST could potentially
-        // contain WHILE (denormalized).
-        // TODO: Ideally, we should optimize this case instead of returning
-        return subtree;
-      }
+    return switch (subtree.getToken()) {
+      case ASSIGN -> tryFoldAssignment(subtree);
+      case COMMA -> tryFoldComma(subtree);
+      case SCRIPT, BLOCK -> tryOptimizeBlock(subtree);
+      case EXPR_RESULT -> tryFoldExpr(subtree);
+      case HOOK -> tryFoldHook(subtree);
+      case SWITCH -> tryOptimizeSwitch(subtree);
+      case IF -> tryFoldIf(subtree);
+      case WHILE ->
+          // This pass gets run both before and after denormalize. Hence, the AST could potentially
+          // contain WHILE (denormalized).
+          // TODO: Ideally, we should optimize this case instead of returning
+          subtree;
       case FOR -> {
         Node condition = NodeUtil.getConditionExpression(subtree);
         if (condition != null) {
           tryFoldForCondition(condition);
         }
-        return tryFoldFor(subtree);
+        yield tryFoldFor(subtree);
       }
       case DO -> {
         Node foldedDo = tryFoldDoAway(subtree);
         if (foldedDo.isDo()) {
-          return tryFoldEmptyDo(foldedDo);
+          yield tryFoldEmptyDo(foldedDo);
         }
-        return foldedDo;
+        yield foldedDo;
       }
-      case TRY -> {
-        return tryFoldTry(subtree);
-      }
-      case LABEL -> {
-        return tryFoldLabel(subtree);
-      }
-      case ARRAY_PATTERN -> {
-        return tryOptimizeArrayPattern(subtree);
-      }
-      case OBJECT_PATTERN -> {
-        return tryOptimizeObjectPattern(subtree);
-      }
-      case VAR, CONST, LET -> {
-        return tryOptimizeNameDeclaration(subtree);
-      }
-      case DEFAULT_VALUE -> {
-        return tryRemoveDefaultValue(subtree);
-      }
-      case OPTCHAIN_GETPROP, OPTCHAIN_CALL, OPTCHAIN_GETELEM -> {
-        return tryRemoveOptionalChaining(subtree);
-      }
-      default -> {
-        return subtree;
-      }
-    }
+      case TRY -> tryFoldTry(subtree);
+      case LABEL -> tryFoldLabel(subtree);
+      case ARRAY_PATTERN -> tryOptimizeArrayPattern(subtree);
+      case OBJECT_PATTERN -> tryOptimizeObjectPattern(subtree);
+      case VAR, CONST, LET -> tryOptimizeNameDeclaration(subtree);
+      case DEFAULT_VALUE -> tryRemoveDefaultValue(subtree);
+      case OPTCHAIN_GETPROP, OPTCHAIN_CALL, OPTCHAIN_GETELEM -> tryRemoveOptionalChaining(subtree);
+      default -> subtree;
+    };
   }
 
   private Node tryRemoveDefaultValue(Node defaultValue) {

@@ -99,25 +99,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     // If we've reached here, node is truly a binary operator.
-    switch (subtree.getToken()) {
-      case GETELEM, OPTCHAIN_GETELEM -> {
-        return tryFoldGetElem(subtree, left, right);
-      }
-      case INSTANCEOF -> {
-        return tryFoldInstanceof(subtree, left, right);
-      }
-      case AND, OR -> {
-        return tryFoldAndOr(subtree, left, right);
-      }
-      case COALESCE -> {
-        return tryFoldCoalesce(subtree, left, right);
-      }
-      case LSH, RSH, URSH -> {
-        return tryFoldShift(subtree, left, right);
-      }
-      case ASSIGN -> {
-        return tryFoldAssign(subtree, left, right);
-      }
+    return switch (subtree.getToken()) {
+      case GETELEM, OPTCHAIN_GETELEM -> tryFoldGetElem(subtree, left, right);
+      case INSTANCEOF -> tryFoldInstanceof(subtree, left, right);
+      case AND, OR -> tryFoldAndOr(subtree, left, right);
+      case COALESCE -> tryFoldCoalesce(subtree, left, right);
+      case LSH, RSH, URSH -> tryFoldShift(subtree, left, right);
+      case ASSIGN -> tryFoldAssign(subtree, left, right);
       case ASSIGN_BITOR,
           ASSIGN_BITXOR,
           ASSIGN_BITAND,
@@ -129,29 +117,20 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           ASSIGN_MUL,
           ASSIGN_DIV,
           ASSIGN_MOD,
-          ASSIGN_EXPONENT -> {
-        return tryUnfoldAssignOp(subtree, left, right);
-      }
-      case ADD -> {
-        return tryFoldAdd(subtree, left, right);
-      }
-      case SUB, DIV, MOD, MUL, EXPONENT -> {
-        return tryFoldArithmeticOp(subtree, left, right);
-      }
+          ASSIGN_EXPONENT ->
+          tryUnfoldAssignOp(subtree, left, right);
+      case ADD -> tryFoldAdd(subtree, left, right);
+      case SUB, DIV, MOD, MUL, EXPONENT -> tryFoldArithmeticOp(subtree, left, right);
       case BITAND, BITOR, BITXOR -> {
         Node result = tryFoldArithmeticOp(subtree, left, right);
         if (result != subtree) {
-          return result;
+          yield result;
         }
-        return tryFoldLeftChildOp(subtree, left, right);
+        yield tryFoldLeftChildOp(subtree, left, right);
       }
-      case LT, GT, LE, GE, EQ, NE, SHEQ, SHNE -> {
-        return tryFoldComparison(subtree, left, right);
-      }
-      default -> {
-        return subtree;
-      }
-    }
+      case LT, GT, LE, GE, EQ, NE, SHEQ, SHNE -> tryFoldComparison(subtree, left, right);
+      default -> subtree;
+    };
   }
 
   @CanIgnoreReturnValue
@@ -296,28 +275,28 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    switch (n.getToken()) {
+    return switch (n.getToken()) {
       case NOT -> {
         // Don't fold !0 and !1 back to false.
         if (late && left.isNumber()) {
           double numValue = left.getDouble();
           if (numValue == 0 || numValue == 1) {
-            return n;
+            yield n;
           }
         }
         Node replacementNode = NodeUtil.booleanNode(!leftVal.toBoolean(true));
         n.replaceWith(replacementNode);
         reportChangeToEnclosingScope(parent);
-        return replacementNode;
+        yield replacementNode;
       }
       case POS -> {
         if (NodeUtil.isNumericResult(left)) {
           // POS does nothing to numeric values.
           n.replaceWith(left.detach());
           reportChangeToEnclosingScope(parent);
-          return left;
+          yield left;
         }
-        return n;
+        yield n;
       }
       case NEG -> {
         Node result = null;
@@ -333,9 +312,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         if (result != null) {
           n.replaceWith(result);
           reportChangeToEnclosingScope(parent);
-          return result;
+          yield result;
         }
-        return n;
+        yield n;
       }
       case BITNOT -> {
         Double doubleVal = this.getSideEffectFreeNumberValue(left);
@@ -345,10 +324,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             Node notIntValNode = NodeUtil.numberNode(~intVal, left);
             n.replaceWith(notIntValNode);
             reportChangeToEnclosingScope(parent);
-            return notIntValNode;
+            yield notIntValNode;
           } else {
             report(FRACTIONAL_BITWISE_OPERAND, left);
-            return n;
+            yield n;
           }
         }
 
@@ -357,15 +336,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           Node bigintNotNode = bigintNode(bigintVal, n);
           n.replaceWith(bigintNotNode);
           reportChangeToEnclosingScope(parent);
-          return bigintNotNode;
+          yield bigintNotNode;
         }
 
-        return n;
+        yield n;
       }
-      default -> {
-        return n;
-      }
-    }
+      default -> n;
+    };
   }
 
   private boolean isReasonableDoubleValue(@Nullable Double x) {
@@ -867,43 +844,41 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // handle the operations that have algebraic identities, since we can simplify the tree without
     // actually knowing the value statically.
-    switch (n.getToken()) {
+    return switch (n.getToken()) {
       case ADD -> {
         if (lVal != null && lVal.equals(BigInteger.ZERO)) {
-          return right.cloneTree(/* cloneTypeExprs= */ true);
+          yield right.cloneTree(/* cloneTypeExprs= */ true);
         } else if (rVal != null && rVal.equals(BigInteger.ZERO)) {
-          return left.cloneTree(/* cloneTypeExprs= */ true);
+          yield left.cloneTree(/* cloneTypeExprs= */ true);
         }
-        return null;
+        yield null;
       }
       case SUB -> {
         if (lVal != null && lVal.equals(BigInteger.ZERO)) {
           // 0n - x -> -x
-          return IR.neg(right.cloneTree(/* cloneTypeExprs= */ true));
+          yield IR.neg(right.cloneTree(/* cloneTypeExprs= */ true));
         } else if (rVal != null && rVal.equals(BigInteger.ZERO)) {
           // x - 0n -> x
-          return left.cloneTree(/* cloneTypeExprs= */ true);
+          yield left.cloneTree(/* cloneTypeExprs= */ true);
         }
-        return null;
+        yield null;
       }
       case MUL -> {
         if (lVal != null && lVal.equals(BigInteger.ONE)) {
-          return right.cloneTree(/* cloneTypeExprs= */ true);
+          yield right.cloneTree(/* cloneTypeExprs= */ true);
         } else if (rVal != null && rVal.equals(BigInteger.ONE)) {
-          return left.cloneTree(/* cloneTypeExprs= */ true);
+          yield left.cloneTree(/* cloneTypeExprs= */ true);
         }
-        return null;
+        yield null;
       }
       case DIV -> {
         if (rVal != null && rVal.equals(BigInteger.ONE)) {
-          return left.cloneTree(/* cloneTypeExprs= */ true);
+          yield left.cloneTree(/* cloneTypeExprs= */ true);
         }
-        return null;
+        yield null;
       }
-      default -> {
-        return null;
-      }
-    }
+      default -> null;
+    };
   }
 
   private boolean isNumeric(Node n) {

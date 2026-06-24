@@ -133,7 +133,7 @@ class MinimizedCondition {
    * @return a MinimizedCondition object representing that tree.
    */
   private static MinimizedCondition computeMinimizedCondition(Node n) {
-    switch (n.getToken()) {
+    return switch (n.getToken()) {
       case NOT -> {
         MinimizedCondition subtree = computeMinimizedCondition(n.getFirstChild());
         MeasuredNode positive =
@@ -144,7 +144,7 @@ class MinimizedCondition {
                     .negate(), // since parent node `n` is a NOT, we need to negate the subtree's
                 // computed `negative` to obtain the parent `n`'s real negative.
                 subtree.positive);
-        return new MinimizedCondition(positive, negative);
+        yield new MinimizedCondition(positive, negative);
       }
       case AND, OR -> {
         Node complementNode = new Node(n.isAnd() ? Token.OR : Token.AND).srcref(n);
@@ -160,7 +160,7 @@ class MinimizedCondition {
                 MeasuredNode.addNode(n, leftSubtree.positive, rightSubtree.positive).negate(),
                 MeasuredNode.addNode(complementNode, leftSubtree.negative, rightSubtree.negative)
                     .change());
-        return new MinimizedCondition(positive, negative);
+        yield new MinimizedCondition(positive, negative);
       }
       case HOOK -> {
         Node cond = n.getFirstChild();
@@ -174,7 +174,7 @@ class MinimizedCondition {
         MeasuredNode negative =
             MeasuredNode.addNode(
                 n, MeasuredNode.forNode(cond), thenSubtree.negative, elseSubtree.negative);
-        return new MinimizedCondition(positive, negative);
+        yield new MinimizedCondition(positive, negative);
       }
       case COMMA -> {
         Node lhs = n.getFirstChild();
@@ -183,14 +183,14 @@ class MinimizedCondition {
             MeasuredNode.addNode(n, MeasuredNode.forNode(lhs), rhsSubtree.positive);
         MeasuredNode negative =
             MeasuredNode.addNode(n, MeasuredNode.forNode(lhs), rhsSubtree.negative);
-        return new MinimizedCondition(positive, negative);
+        yield new MinimizedCondition(positive, negative);
       }
       default -> {
         MeasuredNode pos = MeasuredNode.forNode(n);
         MeasuredNode neg = pos.negate();
-        return new MinimizedCondition(pos, neg);
+        yield new MinimizedCondition(pos, neg);
       }
-    }
+    };
   }
 
   /** An AST-node along with some additional metadata. */

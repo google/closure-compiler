@@ -436,20 +436,20 @@ class ReplaceCssNames implements CompilerPass {
       checkNotNull(callNode.getParent(), "already replaced: %s", callNode);
       final int childCount = callNode.getChildCount();
       final Node firstArg = checkNotNull(callNode.getSecondChild(), callNode);
-      switch (childCount) {
+      return switch (childCount) {
         case 2 -> {
           checkState(firstArg.isStringLit(), "not a string literal: %s", firstArg);
-          return firstArg.getString();
+          yield firstArg.getString();
         }
         case 3 -> {
           final Node secondArg = checkNotNull(firstArg.getNext(), firstArg);
           checkState(secondArg.isStringLit(), "not a string literal: %s", secondArg);
-          return secondArg.getString();
+          yield secondArg.getString();
         }
         default ->
             throw new IllegalStateException(
                 String.format("invalid number of children: %s for: %s", childCount, callNode));
-      }
+      };
     }
   }
 

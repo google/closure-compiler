@@ -157,31 +157,31 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
       return false;
     }
 
-    switch (node.getToken()) {
+    return switch (node.getToken()) {
       case MEMBER_FUNCTION_DEF -> {
         if (NodeUtil.isEs6ConstructorMemberFunctionDef(node)) {
-          return false; // Constructors aren't methods.
+          yield false; // Constructors aren't methods.
         }
 
-        return true;
+        yield true;
       }
       case GETPROP -> {
         // Case: `Foo.prototype.bar = function() { };
         if (!node.isFirstChildOf(parent)
             || !NodeUtil.isExprAssign(grandparent)
             || !parent.getLastChild().isFunction()) {
-          return false;
+          yield false;
         }
 
         if (NodeUtil.isPrototypeProperty(node)) {
-          return true;
+          yield true;
         }
 
         if (isDefinitelyCtorOrInterface(node.getFirstChild())) {
-          return true;
+          yield true;
         }
 
-        return false;
+        yield false;
       }
       case STRING_KEY -> {
         // Case: `Foo.prototype = {
@@ -192,15 +192,13 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
         if (!parent.isSecondChildOf(grandparent)
             || !NodeUtil.isPrototypeAssignment(grandparent.getFirstChild())
             || !node.getFirstChild().isFunction()) {
-          return false;
+          yield false;
         }
 
-        return true;
+        yield true;
       }
-      default -> {
-        return false;
-      }
-    }
+      default -> false;
+    };
   }
 
   private boolean isDefinitelyCtorOrInterface(Node receiver) {

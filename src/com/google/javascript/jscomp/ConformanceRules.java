@@ -841,42 +841,34 @@ public final class ConformanceRules {
     }
 
     private @Nullable JSType extractType(Node n) {
-      switch (n.getToken()) {
-        case GETELEM, GETPROP -> {
-          return n.getFirstChild().getJSType();
-        }
+      return switch (n.getToken()) {
+        case GETELEM, GETPROP -> n.getFirstChild().getJSType();
         case STRING_KEY, COMPUTED_PROP -> {
           Node parent = n.getParent();
-          return switch (parent.getToken()) {
+          yield switch (parent.getToken()) {
             case OBJECT_PATTERN, OBJECTLIT -> parent.getJSType();
             case CLASS_MEMBERS -> null;
             default -> throw new AssertionError();
           };
         }
-        default -> {
-          return null;
-        }
-      }
+        default -> null;
+      };
     }
 
     private @Nullable String extractName(Node n) {
 
-      switch (n.getToken()) {
-        case GETPROP, STRING_KEY -> {
-          return n.getString();
-        }
+      return switch (n.getToken()) {
+        case GETPROP, STRING_KEY -> n.getString();
         case GETELEM -> {
           Node string = n.getSecondChild();
-          return string.isStringLit() ? string.getString() : null;
+          yield string.isStringLit() ? string.getString() : null;
         }
         case COMPUTED_PROP -> {
           Node string = n.getFirstChild();
-          return string.isStringLit() ? string.getString() : null;
+          yield string.isStringLit() ? string.getString() : null;
         }
-        default -> {
-          return null;
-        }
-      }
+        default -> null;
+      };
     }
   }
 

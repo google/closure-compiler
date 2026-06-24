@@ -1586,7 +1586,7 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
   }
 
   private FlowScope traverseClassMemberRhs(Node member, FlowScope scope) {
-    switch (member.getToken()) {
+    return switch (member.getToken()) {
       case MEMBER_FIELD_DEF, COMPUTED_FIELD_DEF -> {
         Node rhs = getRhsOfField(member);
         if (rhs != null) {
@@ -1597,34 +1597,32 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
               traverse(rhs, computedFieldDefFlowScope)
                   .withSyntacticScope(scope.getDeclarationScope());
           if (member.isStaticMember()) {
-            return rhsScope;
+            yield rhsScope;
           }
         }
-        return scope;
+        yield scope;
       }
-      case MEMBER_FUNCTION_DEF, COMPUTED_PROP, BLOCK, GETTER_DEF, SETTER_DEF -> {
-        return scope;
-      }
+      case MEMBER_FUNCTION_DEF, COMPUTED_PROP, BLOCK, GETTER_DEF, SETTER_DEF -> scope;
       default -> throw new AssertionError();
-    }
+    };
   }
 
   private static @Nullable Node getRhsOfField(Node fieldNode) {
-    switch (fieldNode.getToken()) {
+    return switch (fieldNode.getToken()) {
       case MEMBER_FIELD_DEF -> {
         if (fieldNode.hasOneChild()) {
-          return fieldNode.getFirstChild();
+          yield fieldNode.getFirstChild();
         }
-        return null;
+        yield null;
       }
       case COMPUTED_FIELD_DEF -> {
         if (fieldNode.hasTwoChildren()) {
-          return fieldNode.getSecondChild();
+          yield fieldNode.getSecondChild();
         }
-        return null;
+        yield null;
       }
       default -> throw new AssertionError();
-    }
+    };
   }
 
   /** Traverse each element of the array. */

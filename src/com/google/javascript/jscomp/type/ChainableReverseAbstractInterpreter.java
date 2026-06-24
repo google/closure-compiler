@@ -162,25 +162,22 @@ public abstract class ChainableReverseAbstractInterpreter
    */
   @CheckReturnValue
   protected FlowScope declareNameInScope(FlowScope scope, Node node, JSType type) {
-    switch (node.getToken()) {
-      case NAME -> {
-        return scope.inferSlotType(node.getString(), type);
-      }
+    return switch (node.getToken()) {
+      case NAME -> scope.inferSlotType(node.getString(), type);
       case GETPROP -> {
         String qualifiedName = node.getQualifiedName();
         checkNotNull(qualifiedName);
 
         JSType origType = node.getJSType();
         origType = origType == null ? getNativeType(UNKNOWN_TYPE) : origType;
-        return scope.inferQualifiedSlot(node, qualifiedName, origType, type, false);
+        yield scope.inferQualifiedSlot(node, qualifiedName, origType, type, false);
       }
-      case THIS -> {
-        // "this" references aren't currently modeled in the CFG.
-        return scope;
-      }
+      case THIS ->
+          // "this" references aren't currently modeled in the CFG.
+          scope;
       default ->
           throw new IllegalArgumentException("Node cannot be refined. \n" + node.toStringTree());
-    }
+    };
   }
 
   /**

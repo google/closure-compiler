@@ -57,49 +57,46 @@ class PeepholeMinimizeConditions
   /** Tries to apply our various peephole minimizations on the passed in node. */
   @Override
   public Node optimizeSubtree(Node node) {
-    switch (node.getToken()) {
+    return switch (node.getToken()) {
       case THROW, RETURN -> {
         Node result = tryRemoveRedundantExit(node);
         if (result != node) {
-          return result;
+          yield result;
         }
-        return tryReplaceExitWithBreak(node);
+        yield tryReplaceExitWithBreak(node);
         // TODO(johnlenz): Maybe remove redundant BREAK and CONTINUE. Overlaps
         // with MinimizeExitPoints.
       }
       case NOT -> {
         tryMinimizeCondition(node.getFirstChild());
-        return tryMinimizeNot(node);
+        yield tryMinimizeNot(node);
       }
       case IF -> {
         performConditionSubstitutions(node.getFirstChild());
-        return tryMinimizeIf(node);
+        yield tryMinimizeIf(node);
       }
       case EXPR_RESULT -> {
         performConditionSubstitutions(node.getFirstChild());
-        return tryMinimizeExprResult(node);
+        yield tryMinimizeExprResult(node);
       }
       case HOOK -> {
         performConditionSubstitutions(node.getFirstChild());
-        return tryMinimizeHook(node);
+        yield tryMinimizeHook(node);
       }
       case WHILE, DO -> {
         tryMinimizeCondition(NodeUtil.getConditionExpression(node));
-        return node;
+        yield node;
       }
       case FOR -> {
         tryJoinForCondition(node);
         tryMinimizeCondition(NodeUtil.getConditionExpression(node));
-        return node;
+        yield node;
       }
-      case BLOCK -> {
-        return tryReplaceIf(node);
-      }
-      default -> {
-        return node;
-        // Nothing changed
-      }
-    }
+      case BLOCK -> tryReplaceIf(node);
+      default ->
+          // Nothing changed
+          node;
+    };
   }
 
   private void tryJoinForCondition(Node n) {
@@ -995,7 +992,7 @@ class PeepholeMinimizeConditions
   private Node performConditionSubstitutions(Node n) {
     Node parent = n.getParent();
 
-    switch (n.getToken()) {
+    return switch (n.getToken()) {
       case OR, AND -> {
         Node left = n.getFirstChild();
         Node right = n.getLastChild();
@@ -1045,10 +1042,10 @@ class PeepholeMinimizeConditions
             n.detachChildren();
             n.replaceWith(replacement);
             reportChangeToEnclosingScope(parent);
-            return replacement;
+            yield replacement;
           }
         }
-        return n;
+        yield n;
       }
       case HOOK -> {
         Node condition = n.getFirstChild();
@@ -1102,7 +1099,7 @@ class PeepholeMinimizeConditions
           n = replacement;
         }
 
-        return n;
+        yield n;
       }
       default -> {
         // while(true) --> while(1)
@@ -1110,12 +1107,12 @@ class PeepholeMinimizeConditions
         if (nVal != Tri.UNKNOWN) {
           boolean result = nVal.toBoolean(true);
           int equivalentResult = result ? 1 : 0;
-          return maybeReplaceChildWithNumber(n, equivalentResult);
+          yield maybeReplaceChildWithNumber(n, equivalentResult);
         }
         // We can't do anything else currently.
-        return n;
+        yield n;
       }
-    }
+    };
   }
 
   /**

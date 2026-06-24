@@ -346,13 +346,13 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     private boolean visitNode(Node n, Node parent) {
-      switch (n.getToken()) {
+      return switch (n.getToken()) {
         case GETPROP -> {
           // Handle potential getters/setters.
           if (n.isGetProp() && skiplistedPropNames.contains(n.getString())) {
             // We treat getters/setters as if they were a call, thus we mark all properties as read.
             markAllPropsRead();
-            return true;
+            yield true;
           }
 
           if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
@@ -360,7 +360,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
             // We'll handle this write in the visit() method
             // We need to continue traversing, because there could be a function call
             // child.
-            return true;
+            yield true;
           }
           Property property = getOrCreateProperty(n);
           if (property != null) {
@@ -374,7 +374,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
               property.markChildrenRead();
             }
           }
-          return true;
+          yield true;
         }
         case THIS, NAME -> {
           Property nameProp = checkNotNull(getOrCreateProperty(n));
@@ -382,26 +382,26 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
           if (!parent.isGetProp()) {
             nameProp.markChildrenRead();
           }
-          return true;
+          yield true;
         }
         case THROW, FOR, FOR_IN, SWITCH -> {
           // TODO(kevinoconnor): Switch/for statements need special consideration since they may
           // execute out of order.
           markAllPropsRead();
-          return false;
+          yield false;
         }
         case BLOCK -> {
           visitBlock(n);
-          return true;
+          yield true;
         }
         default -> {
           if (isConditionalExpression(n)) {
             markAllPropsRead();
-            return false;
+            yield false;
           }
-          return true;
+          yield true;
         }
-      }
+      };
     }
 
     private void markAllPropsRead() {

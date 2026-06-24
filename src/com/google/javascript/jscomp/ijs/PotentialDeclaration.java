@@ -367,24 +367,23 @@ abstract class PotentialDeclaration {
       //   1. EXPR_RESULT: goog.define('foo', 1);
       //   2. ASSIGN: a.b = goog.define('c', 2);
       //   3. NAME: var x = goog.define('d', 3);
-      switch (callNode.getParent().getToken()) {
-        case EXPR_RESULT -> {
-          return new DefineDeclaration(
-              callNode.getSecondChild().getString(), callNode, callNode.getLastChild());
-        }
+      return switch (callNode.getParent().getToken()) {
+        case EXPR_RESULT ->
+            new DefineDeclaration(
+                callNode.getSecondChild().getString(), callNode, callNode.getLastChild());
         case ASSIGN -> {
           Node previous = callNode.getPrevious();
-          return new DefineDeclaration(
+          yield new DefineDeclaration(
               previous.getQualifiedName(), previous, callNode.getLastChild());
         }
         case NAME -> {
           Node parent = callNode.getParent();
-          return new DefineDeclaration(parent.getString(), parent, callNode.getLastChild());
+          yield new DefineDeclaration(parent.getString(), parent, callNode.getLastChild());
         }
         default ->
             throw new IllegalStateException(
                 "Unexpected parent: " + callNode.getParent().getToken());
-      }
+      };
     }
 
     static @Nullable Node makeEmptyValueNode(JSTypeExpression type) {

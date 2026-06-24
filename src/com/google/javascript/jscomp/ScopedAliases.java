@@ -638,19 +638,15 @@ class ScopedAliases implements CompilerPass {
 
     /** Returns whether the rhs contains any goog.module.get calls to inexistent namespaces */
     private boolean containsInvalidGoogModuleGet(Node expression) {
-      switch (expression.getToken()) {
-        case NAME -> {
-          return false;
-        }
-        case GETPROP -> {
-          return containsInvalidGoogModuleGet(expression.getFirstChild());
-        }
+      return switch (expression.getToken()) {
+        case NAME -> false;
+        case GETPROP -> containsInvalidGoogModuleGet(expression.getFirstChild());
         case CALL -> {
           String namespace = expression.getSecondChild().getString();
-          return !closureNamespaces.contains(namespace);
+          yield !closureNamespaces.contains(namespace);
         }
         default -> throw new IllegalStateException("Unrecognized alias rhs " + expression);
-      }
+      };
     }
 
     /** Find out if there are any local shadows of namespaces. */
