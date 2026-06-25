@@ -58,7 +58,7 @@ jobs:
         # Clone closure-compiler repo from the commit under test into current directory.
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ inputs.ref || github.sha }}
 
@@ -117,7 +117,7 @@ jobs:
         # Clone closure-compiler-npm repo from master into the current directory.
       - name: Checkout Current closure-compiler-npm Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           repository: chadkillingsworth/closure-compiler-npm
           ref: master
@@ -126,7 +126,7 @@ jobs:
         # submodule
       - name: Checkout Current closure-compiler Commit
         # https://github.com/marketplace/actions/checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           path: compiler
           ref: ${{ inputs.ref || github.sha }}
