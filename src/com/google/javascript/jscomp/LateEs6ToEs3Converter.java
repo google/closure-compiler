@@ -48,9 +48,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
   private final Es6TemplateLiterals templateLiteralConverter;
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(
-          Feature.COMPUTED_PROPERTIES,
-          Feature.MEMBER_DECLARATIONS,
-          Feature.TEMPLATE_LITERALS);
+          Feature.COMPUTED_PROPERTIES, Feature.MEMBER_DECLARATIONS, Feature.TEMPLATE_LITERALS);
 
   // We want to insert the call to `var tagFnFirstArg = $jscomp.createTemplateTagFirstArg...` just
   // before this node. For the first script, this node is right after the runtime injected function
@@ -152,18 +150,20 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
   }
 
   /**
-   * Transpiles an object node with computed property,
-   * and add type information to the new nodes if this pass ran after type checking.
-   * For example,<pre>   {@code
-   *   var obj = {a: 1, [i++]: 2}
-   *   is transpiled to
-   *   var $jscomp$compprop0 = {};
-   *   var obj = ($jscomp$compprop0.a = 1, ($jscomp$compprop0[i++] = 2, $jscomp$compprop0));
+   * Transpiles an object node with computed property, and add type information to the new nodes if
+   * this pass ran after type checking. For example,
+   *
+   * <pre>{@code
+   * var obj = {a: 1, [i++]: 2}
+   * is transpiled to
+   * var $jscomp$compprop0 = {};
+   * var obj = ($jscomp$compprop0.a = 1, ($jscomp$compprop0[i++] = 2, $jscomp$compprop0));
    * }</pre>
-   * Note that when adding type information to the nodes, the NAME node $jscomp$compprop0
-   * would always be assigned the type of the entire object (in the above example {a: number}).
-   * This is because we do not have sufficient type information during transpilation to know,
-   * for example, $jscomp$compprop0 has type Object{} in the expression $jscomp$compprop0.a = 1
+   *
+   * Note that when adding type information to the nodes, the NAME node $jscomp$compprop0 would
+   * always be assigned the type of the entire object (in the above example {a: number}). This is
+   * because we do not have sufficient type information during transpilation to know, for example,
+   * $jscomp$compprop0 has type Object{} in the expression $jscomp$compprop0.a = 1
    */
   private void visitObjectWithComputedProperty(Node obj) {
     checkArgument(obj.isObjectLit());
