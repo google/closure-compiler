@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Before;
@@ -48,6 +49,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   @Before
   public void customSetUp() {
     enableNormalize();
+    setGenericNameReplacements(ImmutableMap.of("SPREAD_ARGS", "$jscomp$spread$args"));
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeInfoValidation();
@@ -356,9 +358,9 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
         srcs("testClassFactory().testMethod(...stringIterable);"),
         expected(
             """
-            var $jscomp$spread$args0;
-            ($jscomp$spread$args0 = testClassFactory()).testMethod.apply(
-                $jscomp$spread$args0, (0, $jscomp.arrayFromIterable)(stringIterable));
+            var SPREAD_ARGS$0;
+            (SPREAD_ARGS$0 = testClassFactory()).testMethod.apply(
+                SPREAD_ARGS$0, (0, $jscomp.arrayFromIterable)(stringIterable));
             """));
   }
 
@@ -421,9 +423,9 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
         srcs("var x = b ? testClassFactory().testMethod(...stringIterable) : null;"),
         expected(
             """
-            var $jscomp$spread$args0;
-            var x = b ? ($jscomp$spread$args0 = testClassFactory()).testMethod.apply(
-                $jscomp$spread$args0, (0, $jscomp.arrayFromIterable)(stringIterable))
+            var SPREAD_ARGS$0;
+            var x = b ? (SPREAD_ARGS$0 = testClassFactory()).testMethod.apply(
+                SPREAD_ARGS$0, (0, $jscomp.arrayFromIterable)(stringIterable))
                     : null;
             """));
   }
@@ -457,9 +459,9 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
             """),
         expected(
             """
-            var $jscomp$spread$args0;
-            var x = b ? ($jscomp$spread$args0 = testClassFactory()).testMethod.apply(
-                $jscomp$spread$args0, (0, $jscomp.arrayFromIterable)(stringIterable))
+            var SPREAD_ARGS$0;
+            var x = b ? (SPREAD_ARGS$0 = testClassFactory()).testMethod.apply(
+                SPREAD_ARGS$0, (0, $jscomp.arrayFromIterable)(stringIterable))
                     : null;
             """));
   }
@@ -492,12 +494,12 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
             """),
         expected(
             """
-            var $jscomp$spread$args0;
-            ($jscomp$spread$args0 = testClassFactory()).testMethod.apply(
-                $jscomp$spread$args0, (0, $jscomp.arrayFromIterable)(stringIterable));
-            var $jscomp$spread$args1;
-            ($jscomp$spread$args1 = testClassFactory()).testMethod.apply(
-                $jscomp$spread$args1, (0, $jscomp.arrayFromIterable)(stringIterable));
+            var SPREAD_ARGS$0;
+            (SPREAD_ARGS$0 = testClassFactory()).testMethod.apply(
+                SPREAD_ARGS$0, (0, $jscomp.arrayFromIterable)(stringIterable));
+            var SPREAD_ARGS$1;
+            (SPREAD_ARGS$1 = testClassFactory()).testMethod.apply(
+                SPREAD_ARGS$1, (0, $jscomp.arrayFromIterable)(stringIterable));
             """));
   }
 

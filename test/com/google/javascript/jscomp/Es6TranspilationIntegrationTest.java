@@ -91,6 +91,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         ImmutableMap.<String, String>builder()
             .putAll(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS)
             .put("KEY", "$jscomp$key$")
+            .put("ITER", "$jscomp$iter$")
+            .put("COMP_PROP", "$jscomp$compprop")
             .buildOrThrow());
   }
 
@@ -2179,9 +2181,9 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "var x = {[Symbol.iterator]: function() { return this; }};",
         """
-        var $jscomp$compprop0 = {};
-        var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},
-                 $jscomp$compprop0)
+        var COMP_PROP$0 = {};
+        var x = (COMP_PROP$0[Symbol.iterator] = function() {return this;},
+                 COMP_PROP$0)
         """);
   }
 
@@ -2210,14 +2212,14 @@ $jscomp.inherits(FooPromise, Promise);
         "var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);",
         """
         var i = 'outer';
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
+        var ITER$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
         // Normalize runs before for-of rewriting. Therefore, first Normalize renames the
         // `let i` to `let i$jscomp$1` to avoid conficting it with outer `i`. Then, the
         // for-of rewriting prepends the unique ID `$jscomp$key$m123..456$0` to its declared
         // name as it does to all for-of loop keys.
-        var KEY$0$i$jscomp$1 = $jscomp$iter$0.next();
-        for (; !KEY$0$i$jscomp$1.done; KEY$0$i$jscomp$1 = $jscomp$iter$0.next()) {
-          var i$jscomp$1 = KEY$0$i$jscomp$1.value;
+        var KEY$1$i$jscomp$1 = ITER$0.next();
+        for (; !KEY$1$i$jscomp$1.done; KEY$1$i$jscomp$1 = ITER$0.next()) {
+          var i$jscomp$1 = KEY$1$i$jscomp$1.value;
           {
             alert(i$jscomp$1);
           }
@@ -2233,15 +2235,15 @@ $jscomp.inherits(FooPromise, Promise);
     test(
         "for(const i of [1,2]) {i;}",
         """
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1, 2]);
+        var ITER$0 = (0, $jscomp.makeIterator)([1, 2]);
         // Normalize runs before for-of rewriting. Normalize does not rename the `const i`
         // if there is no other conflicting `i` declaration. Then, the  for-of rewriting
         // prepends `$jscomp$key$m123..456$0` to its declared name as it does to all for-of
         // loop keys.
-        var KEY$0$i = $jscomp$iter$0.next();
-        for (; !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
+        var KEY$1$i = ITER$0.next();
+        for (; !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
           /** @const */
-          var i = KEY$0$i.value; // marked as const name
+          var i = KEY$1$i.value; // marked as const name
           {
             i; // marked as const name
           }
@@ -2266,39 +2268,39 @@ $jscomp.inherits(FooPromise, Promise);
 """
 function inorder1(t) {
   var x;
-  var $jscomp$iter$0;
-  var KEY$0$x; // key for first for-of loop
-  var $jscomp$iter$1;
-  var KEY$1$x;
-  return $jscomp.generator.createGenerator(inorder1, function($jscomp$generator$context$m1146332801$2) {
-    switch($jscomp$generator$context$m1146332801$2.getNextAddressJsc()) {
+  var ITER$0;
+  var KEY$1$x; // key for first for-of loop
+  var ITER$2;
+  var KEY$3$x;
+  return $jscomp.generator.createGenerator(inorder1, function($jscomp$generator$context$m1146332801$4) {
+    switch($jscomp$generator$context$m1146332801$4.getNextAddressJsc()) {
       case 1:
-        $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);
-        KEY$0$x = $jscomp$iter$0.next();
+        ITER$0 = (0, $jscomp.makeIterator)([]);
+        KEY$1$x = ITER$0.next();
       case 2:
-        if (!!KEY$0$x.done) {
-          $jscomp$generator$context$m1146332801$2.jumpTo(4);
-          break;
-        }
-        x = KEY$0$x.value;
-        return $jscomp$generator$context$m1146332801$2.yield(x, 3);
-      case 3:
-        KEY$0$x = $jscomp$iter$0.next();
-        $jscomp$generator$context$m1146332801$2.jumpTo(2);
-        break;
-      case 4:
-        $jscomp$iter$1 = (0, $jscomp.makeIterator)([]);
-        KEY$1$x = $jscomp$iter$1.next();
-      case 6:
         if (!!KEY$1$x.done) {
-          $jscomp$generator$context$m1146332801$2.jumpTo(0);
+          $jscomp$generator$context$m1146332801$4.jumpTo(4);
           break;
         }
         x = KEY$1$x.value;
-        return $jscomp$generator$context$m1146332801$2.yield(x, 7);
+        return $jscomp$generator$context$m1146332801$4.yield(x, 3);
+      case 3:
+        KEY$1$x = ITER$0.next();
+        $jscomp$generator$context$m1146332801$4.jumpTo(2);
+        break;
+      case 4:
+        ITER$2 = (0, $jscomp.makeIterator)([]);
+        KEY$3$x = ITER$2.next();
+      case 6:
+        if (!!KEY$3$x.done) {
+          $jscomp$generator$context$m1146332801$4.jumpTo(0);
+          break;
+        }
+        x = KEY$3$x.value;
+        return $jscomp$generator$context$m1146332801$4.yield(x, 7);
       case 7:
-        KEY$1$x = $jscomp$iter$1.next();
-        $jscomp$generator$context$m1146332801$2.jumpTo(6);
+        KEY$3$x = ITER$2.next();
+        $jscomp$generator$context$m1146332801$4.jumpTo(6);
         break;
     }
   });}
@@ -2314,10 +2316,10 @@ function inorder1(t) {
         }
         """,
         """
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([]);
-        var KEY$0$x = $jscomp$iter$0.next();
-        for (; !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {
-          var x = KEY$0$x.value;
+        var ITER$0 = (0, $jscomp.makeIterator)([]);
+        var KEY$1$x = ITER$0.next();
+        for (; !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+          var x = KEY$1$x.value;
           {
             var x$jscomp$1 = 0;
           }
@@ -2351,10 +2353,10 @@ function inorder1(t) {
     test(
         "var obj = { ['f' + 1]: 1, m() {}, ['g' + 1]: 1, };",
         """
-        var $jscomp$compprop0 = {};
-        var obj = ($jscomp$compprop0['f' + 1] = 1,
-          ($jscomp$compprop0.m = function() {},
-             ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0)));
+        var COMP_PROP$0 = {};
+        var obj = (COMP_PROP$0['f' + 1] = 1,
+          (COMP_PROP$0.m = function() {},
+             (COMP_PROP$0['g' + 1] = 1, COMP_PROP$0)));
         """);
   }
 
@@ -2363,99 +2365,99 @@ function inorder1(t) {
     test(
         "var obj = { ['f' + 1] : 1, ['g' + 1] : 1 };",
         """
-        var $jscomp$compprop0 = {};
-        var obj = ($jscomp$compprop0['f' + 1] = 1,
-          ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0));
+        var COMP_PROP$0 = {};
+        var obj = (COMP_PROP$0['f' + 1] = 1,
+          (COMP_PROP$0['g' + 1] = 1, COMP_PROP$0));
         """);
 
     test(
         "var obj = { ['f'] : 1};",
         """
-        var $jscomp$compprop0 = {};
-        var obj = ($jscomp$compprop0['f'] = 1,
-          $jscomp$compprop0);
+        var COMP_PROP$0 = {};
+        var obj = (COMP_PROP$0['f'] = 1,
+          COMP_PROP$0);
         """);
 
     test(
         "var o = { ['f'] : 1}; var p = { ['g'] : 1};",
         """
-        var $jscomp$compprop0 = {};
-        var o = ($jscomp$compprop0['f'] = 1,
-          $jscomp$compprop0);
-        var $jscomp$compprop1 = {};
-        var p = ($jscomp$compprop1['g'] = 1,
-          $jscomp$compprop1);
+        var COMP_PROP$0 = {};
+        var o = (COMP_PROP$0['f'] = 1,
+          COMP_PROP$0);
+        var COMP_PROP$1 = {};
+        var p = (COMP_PROP$1['g'] = 1,
+          COMP_PROP$1);
         """);
 
     test(
         "({['f' + 1] : 1})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0['f' + 1] = 1,
-          $jscomp$compprop0)
+        var COMP_PROP$0 = {};
+        (COMP_PROP$0['f' + 1] = 1,
+          COMP_PROP$0)
         """);
 
     test(
         "({'a' : 2, ['f' + 1] : 1})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0['a'] = 2,
-          ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));
+        var COMP_PROP$0 = {};
+        (COMP_PROP$0['a'] = 2,
+          (COMP_PROP$0['f' + 1] = 1, COMP_PROP$0));
         """);
 
     test(
         "({['f' + 1] : 1, 'a' : 2})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0['f' + 1] = 1,
-          ($jscomp$compprop0['a'] = 2, $jscomp$compprop0));
+        var COMP_PROP$0 = {};
+        (COMP_PROP$0['f' + 1] = 1,
+          (COMP_PROP$0['a'] = 2, COMP_PROP$0));
         """);
 
     test(
         "({'a' : 1, ['f' + 1] : 1, 'b' : 1})", //
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0['a'] = 1,
-          ($jscomp$compprop0['f' + 1] = 1,
-            ($jscomp$compprop0['b'] = 1,
-              $jscomp$compprop0)));
+        var COMP_PROP$0 = {};
+        (COMP_PROP$0['a'] = 1,
+          (COMP_PROP$0['f' + 1] = 1,
+            (COMP_PROP$0['b'] = 1,
+              COMP_PROP$0)));
         """);
 
     test(
         "({'a' : x++, ['f' + x++] : 1, 'b' : x++})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0['a'] = x++, ($jscomp$compprop0['f' + x++] = 1,
-          ($jscomp$compprop0['b'] = x++, $jscomp$compprop0)))
+        var COMP_PROP$0 = {};
+        (COMP_PROP$0['a'] = x++, (COMP_PROP$0['f' + x++] = 1,
+          (COMP_PROP$0['b'] = x++, COMP_PROP$0)))
         """);
 
     test(
         "({a : x++, ['f' + x++] : 1, b : x++})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0.a = x++, ($jscomp$compprop0['f' + x++] = 1,
-          ($jscomp$compprop0.b = x++, $jscomp$compprop0)))
+        var COMP_PROP$0 = {};
+        (COMP_PROP$0.a = x++, (COMP_PROP$0['f' + x++] = 1,
+          (COMP_PROP$0.b = x++, COMP_PROP$0)))
         """);
 
     test(
         "({a, ['f' + 1] : 1})",
         """
-        var $jscomp$compprop0 = {};
-          ($jscomp$compprop0.a = a, ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0))
+        var COMP_PROP$0 = {};
+          (COMP_PROP$0.a = a, (COMP_PROP$0['f' + 1] = 1, COMP_PROP$0))
         """);
 
     test(
         "({['f' + 1] : 1, a})",
         """
-        var $jscomp$compprop0 = {};
-          ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0.a = a, $jscomp$compprop0))
+        var COMP_PROP$0 = {};
+          (COMP_PROP$0['f' + 1] = 1, (COMP_PROP$0.a = a, COMP_PROP$0))
         """);
 
     test(
         "var obj = { [foo]() {}}",
         """
-        var $jscomp$compprop0 = {};
-        var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)
+        var COMP_PROP$0 = {};
+        var obj = (COMP_PROP$0[foo] = function(){}, COMP_PROP$0)
         """);
   }
 
@@ -2468,15 +2470,15 @@ function inorder1(t) {
     test(
         "var obj = {'a' : 2, get l () {return null;}, ['f' + 1] : 1}",
         """
-        var $jscomp$compprop0 = {get l () {return null;}};
-        var obj = ($jscomp$compprop0['a'] = 2,
-          ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));
+        var COMP_PROP$0 = {get l () {return null;}};
+        var obj = (COMP_PROP$0['a'] = 2,
+          (COMP_PROP$0['f' + 1] = 1, COMP_PROP$0));
         """);
     test(
         "var obj = {['a' + 'b'] : 2, set l (str) {}}",
         """
-        var $jscomp$compprop0 = {set l (str) {}};
-        var obj = ($jscomp$compprop0['a' + 'b'] = 2, $jscomp$compprop0);
+        var COMP_PROP$0 = {set l (str) {}};
+        var obj = (COMP_PROP$0['a' + 'b'] = 2, COMP_PROP$0);
         """);
   }
 

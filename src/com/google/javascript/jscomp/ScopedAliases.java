@@ -687,7 +687,7 @@ class ScopedAliases implements CompilerPass {
 
     private void renameBleedingFunctionName(NodeTraversal t, final Node fnName) {
       final String name = fnName.getString();
-      final String suffix = compiler.getUniqueNameIdSupplier().get();
+      final String suffix = compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
       NodeTraversal.Callback cb =
           new AbstractPostOrderCallback() {
             @Override

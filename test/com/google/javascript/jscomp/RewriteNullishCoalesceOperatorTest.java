@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,6 +28,7 @@ public final class RewriteNullishCoalesceOperatorTest extends CompilerTestCase {
   @Before
   public void customSetUp() throws Exception {
     enableNormalize();
+    setGenericNameReplacements(ImmutableMap.of("NULLISH_TMP", "$jscomp$nullish$tmp"));
     enableTypeCheck();
     enableTypeInfoValidation();
     replaceTypesWithColors();
@@ -44,8 +46,8 @@ public final class RewriteNullishCoalesceOperatorTest extends CompilerTestCase {
         srcs("a ?? b"),
         expected(
             """
-            let $jscomp$nullish$tmp0;
-            ($jscomp$nullish$tmp0 = a) != null ? $jscomp$nullish$tmp0 : b
+            let NULLISH_TMP$0;
+            (NULLISH_TMP$0 = a) != null ? NULLISH_TMP$0 : b
             """));
   }
 
@@ -55,8 +57,8 @@ public final class RewriteNullishCoalesceOperatorTest extends CompilerTestCase {
         srcs("(x + y) ?? (a && b)"),
         expected(
             """
-            let $jscomp$nullish$tmp0;
-            ($jscomp$nullish$tmp0 = x + y) != null ? $jscomp$nullish$tmp0 : (a && b)
+            let NULLISH_TMP$0;
+            (NULLISH_TMP$0 = x + y) != null ? NULLISH_TMP$0 : (a && b)
             """));
   }
 
@@ -67,8 +69,8 @@ public final class RewriteNullishCoalesceOperatorTest extends CompilerTestCase {
         expected(
             """
             () => {
-              let $jscomp$nullish$tmp0;
-              return ($jscomp$nullish$tmp0 = x + y) != null ? $jscomp$nullish$tmp0 : (a && b)
+              let NULLISH_TMP$0;
+              return (NULLISH_TMP$0 = x + y) != null ? NULLISH_TMP$0 : (a && b)
             }
             """));
   }
@@ -79,9 +81,9 @@ public final class RewriteNullishCoalesceOperatorTest extends CompilerTestCase {
         srcs("a ?? b ?? c"),
         expected(
 """
-let $jscomp$nullish$tmp0; let $jscomp$nullish$tmp1;
-($jscomp$nullish$tmp1 = ($jscomp$nullish$tmp0 = a) != null ? $jscomp$nullish$tmp0 : b) != null
-? $jscomp$nullish$tmp1 : c;
+let NULLISH_TMP$0; let NULLISH_TMP$1;
+(NULLISH_TMP$1 = (NULLISH_TMP$0 = a) != null ? NULLISH_TMP$0 : b) != null
+? NULLISH_TMP$1 : c;
 """));
   }
 }

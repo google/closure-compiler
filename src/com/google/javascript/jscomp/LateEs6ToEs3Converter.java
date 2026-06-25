@@ -109,7 +109,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
           }
         }
       }
-      case OBJECTLIT -> visitObject(n);
+      case OBJECTLIT -> visitObject(t, n);
       case MEMBER_FUNCTION_DEF -> {
         if (parent.isObjectLit()) {
           visitMemberFunctionDefInObjectLit(n);
@@ -140,10 +140,10 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
     compiler.reportChangeToEnclosingScope(stringKey);
   }
 
-  private void visitObject(Node obj) {
+  private void visitObject(NodeTraversal t, Node obj) {
     for (Node child = obj.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isComputedProp()) {
-        visitObjectWithComputedProperty(obj);
+        visitObjectWithComputedProperty(t, obj);
         return;
       }
     }
@@ -165,7 +165,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
    * because we do not have sufficient type information during transpilation to know, for example,
    * $jscomp$compprop0 has type Object{} in the expression $jscomp$compprop0.a = 1
    */
-  private void visitObjectWithComputedProperty(Node obj) {
+  private void visitObjectWithComputedProperty(NodeTraversal t, Node obj) {
     checkArgument(obj.isObjectLit());
     List<Node> props = new ArrayList<>();
     Node currElement = obj.getFirstChild();
@@ -192,7 +192,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
       }
     }
 
-    String objName = FRESH_COMP_PROP_VAR + compiler.getUniqueNameIdSupplier().get();
+    String objName = FRESH_COMP_PROP_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
 
     props = Lists.reverse(props);
     Node result = astFactory.createName(objName, objectType);

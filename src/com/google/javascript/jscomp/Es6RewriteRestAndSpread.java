@@ -66,7 +66,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       case ARRAYLIT, NEW, CALL -> {
         for (Node child = current.getFirstChild(); child != null; child = child.getNext()) {
           if (child.isSpread()) {
-            visitArrayLitOrCallWithSpread(current);
+            visitArrayLitOrCallWithSpread(traversal, current);
             break;
           }
         }
@@ -129,11 +129,11 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
    *       [null].concat($jscomp.arrayFromIterable(args)))
    * </ul>
    */
-  private void visitArrayLitOrCallWithSpread(Node spreadParent) {
+  private void visitArrayLitOrCallWithSpread(NodeTraversal t, Node spreadParent) {
     if (spreadParent.isArrayLit()) {
       visitArrayLitContainingSpread(spreadParent);
     } else if (spreadParent.isCall()) {
-      visitCallContainingSpread(spreadParent);
+      visitCallContainingSpread(t, spreadParent);
     } else {
       checkArgument(spreadParent.isNew(), spreadParent);
       visitNewWithSpread(spreadParent);
@@ -256,7 +256,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
    * f(...arr, b) => f.apply(null, [].concat($jscomp.arrayFromIterable(arr), [b]))
    * </code></pre>
    */
-  private void visitCallContainingSpread(Node spreadParent) {
+  private void visitCallContainingSpread(NodeTraversal t, Node spreadParent) {
     checkArgument(spreadParent.isCall());
 
     Node callee = spreadParent.getFirstChild();
@@ -310,7 +310,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       // (freshVar = foo()).method.apply(freshVar, [a, b, c])
       Node freshVar =
           astFactory.createName(
-              FRESH_SPREAD_VAR + compiler.getUniqueNameIdSupplier().get(),
+              FRESH_SPREAD_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput()),
               // Type of `foo()`.
               type(callee.getFirstChild()));
       Node freshVarDeclaration = IR.var(freshVar.cloneTree());

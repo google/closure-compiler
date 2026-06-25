@@ -46,7 +46,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     enableTypeInfoValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
-    setGenericNameReplacements(ImmutableMap.of("KEY", "$jscomp$key$"));
+    setGenericNameReplacements(ImmutableMap.of("KEY", "$jscomp$key$", "ITER", "$jscomp$iter$"));
   }
 
   @Override
@@ -66,11 +66,11 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "for (var i of [1,2,3]) { console.log(i); }",
         """
         var i;
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);
-        var KEY$0$i = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
+        var KEY$1$i = ITER$0.next();
         for (;
-            !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
-           i = KEY$0$i.value;
+            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+           i = KEY$1$i.value;
           {
             console.log(i);
           }
@@ -81,11 +81,11 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     test(
         "for (i of [1,2,3]) { console.log(i); }",
         """
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])
-        var KEY$0$i = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2,3])
+        var KEY$1$i = ITER$0.next();
         for (;
-            !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
-          i = KEY$0$i.value;
+            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+          i = KEY$1$i.value;
           {
             console.log(i);
           }
@@ -97,11 +97,11 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "for (var i of arr) { console.log(i); }",
         """
         var i;
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)(arr)
-        var KEY$0$i = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)(arr)
+        var KEY$1$i = ITER$0.next();
         for (;
-            !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
-           i = KEY$0$i.value;
+            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+           i = KEY$1$i.value;
           {
             console.log(i);
           }
@@ -112,11 +112,11 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     test(
         "for (const i of [1,2,3]) { console.log(i); }",
         """
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);
-        var KEY$0$i = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
+        var KEY$1$i = ITER$0.next();
         for (;
-            !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
-          const i = KEY$0$i.value;
+            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+          const i = KEY$1$i.value;
           {
             console.log(i);
           }
@@ -127,20 +127,20 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     test(
         "for (const i of [1,2,3]) { console.log(i); } for (const i of [4,5,6]) { console.log(i); }",
         """
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);
-        var KEY$0$i = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
+        var KEY$1$i = ITER$0.next();
         for (;
-            !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
-          const i = KEY$0$i.value;
+            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+          const i = KEY$1$i.value;
           {
             console.log(i);
           }
         }
-        var $jscomp$iter$1 = (0, $jscomp.makeIterator)([4, 5, 6]);
-        var KEY$1$i$jscomp$1 = $jscomp$iter$1.next();
+        var ITER$2 = (0, $jscomp.makeIterator)([4, 5, 6]);
+        var KEY$3$i$jscomp$1 = ITER$2.next();
         for (;
-            !KEY$1$i$jscomp$1.done; KEY$1$i$jscomp$1 = $jscomp$iter$1.next()) {
-          const i$jscomp$1 = KEY$1$i$jscomp$1.value;
+            !KEY$3$i$jscomp$1.done; KEY$3$i$jscomp$1 = ITER$2.next()) {
+          const i$jscomp$1 = KEY$3$i$jscomp$1.value;
           {
             console.log(i$jscomp$1);
           }
@@ -152,11 +152,11 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "for (var i of [1,2,3]);",
         """
         var i;
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])
-        var KEY$0$i = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2,3])
+        var KEY$1$i = ITER$0.next();
         for (;
-            !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
-           i = KEY$0$i.value;
+            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+           i = KEY$1$i.value;
           {}
         }
         """);
@@ -166,11 +166,11 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "for (var i of [1,2,3]) console.log(i);",
         """
         var i;
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);
-        var KEY$0$i = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
+        var KEY$1$i = ITER$0.next();
         for (;
-            !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
-           i = KEY$0$i.value;
+            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+           i = KEY$1$i.value;
           {
             console.log(i);
           }
@@ -182,11 +182,11 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         "var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);",
         """
         var i = 'outer';
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])
-        var KEY$0$i$jscomp$1 = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2,3])
+        var KEY$1$i$jscomp$1 = ITER$0.next();
         for (;
-            !KEY$0$i$jscomp$1.done; KEY$0$i$jscomp$1 = $jscomp$iter$0.next()) {
-          let i$jscomp$1 = KEY$0$i$jscomp$1.value;
+            !KEY$1$i$jscomp$1.done; KEY$1$i$jscomp$1 = ITER$0.next()) {
+          let i$jscomp$1 = KEY$1$i$jscomp$1.value;
           {
             alert(i$jscomp$1);
           }
@@ -200,11 +200,11 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     test(
         "for (let CID of [1, 2, 3]) { alert(CID); }",
 """
-var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])
-var $jscomp$key$m1146332801$0$CID = $jscomp$iter$0.next();
+var ITER$0 = (0, $jscomp.makeIterator)([1,2,3])
+var KEY$1$CID = ITER$0.next();
 for (;
-    !$jscomp$key$m1146332801$0$CID.done; $jscomp$key$m1146332801$0$CID = $jscomp$iter$0.next()) {
-  let CID = $jscomp$key$m1146332801$0$CID.value;
+    !KEY$1$CID.done; KEY$1$CID = ITER$0.next()) {
+  let CID = KEY$1$CID.value;
   {
     alert(CID);
   }
@@ -232,11 +232,11 @@ for (;
         }
         """,
         """
-        var $jscomp$iter$0=(0, $jscomp.makeIterator)([]);
-        var KEY$0$x=$jscomp$iter$0.next();
+        var ITER$0=(0, $jscomp.makeIterator)([]);
+        var KEY$1$x=ITER$0.next();
         for(;
-            !KEY$0$x.done; KEY$0$x=$jscomp$iter$0.next()) {
-          let x = KEY$0$x.value;
+            !KEY$1$x.done; KEY$1$x=ITER$0.next()) {
+          let x = KEY$1$x.value;
           {
             let x$jscomp$1 = 0;
           }
@@ -249,22 +249,22 @@ for (;
     test(
         "for (/** @type {string} */ let x of []) {}",
         """
-        var $jscomp$iter$0=(0, $jscomp.makeIterator)([]);
-        var KEY$0$x=$jscomp$iter$0.next();
+        var ITER$0=(0, $jscomp.makeIterator)([]);
+        var KEY$1$x=ITER$0.next();
         for(;
-            !KEY$0$x.done;KEY$0$x=$jscomp$iter$0.next()) {
-          let x = KEY$0$x.value;
+            !KEY$1$x.done;KEY$1$x=ITER$0.next()) {
+          let x = KEY$1$x.value;
           {}
         }
         """);
     test(
         "for (/** @type {string} */ x of []) {}",
         """
-        var $jscomp$iter$0=(0, $jscomp.makeIterator)([]);
-        var KEY$0$x=$jscomp$iter$0.next();
+        var ITER$0=(0, $jscomp.makeIterator)([]);
+        var KEY$1$x=ITER$0.next();
         for(;
-            !KEY$0$x.done;KEY$0$x=$jscomp$iter$0.next()) {
-          x = KEY$0$x.value;
+            !KEY$1$x.done;KEY$1$x=ITER$0.next()) {
+          x = KEY$1$x.value;
           {}
         }
         """);
@@ -291,11 +291,11 @@ for (;
         "a: for(var i of [1,2]){console.log(i)}",
         """
         var i;
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2]);
-        var KEY$0$i = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2]);
+        var KEY$1$i = ITER$0.next();
         a: for (;
-            !KEY$0$i.done; KEY$0$i = $jscomp$iter$0.next()) {
-           i = KEY$0$i.value;
+            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+           i = KEY$1$i.value;
           {
             console.log(i);
           }
@@ -306,11 +306,11 @@ for (;
         "a: b: for(var x of [1,2]){console.log(x)}",
         """
         var x;
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2]);
-        var KEY$0$x = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2]);
+        var KEY$1$x = ITER$0.next();
         a: b: for(;
-            !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {
-           x = KEY$0$x.value;
+            !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+           x = KEY$1$x.value;
           {
             console.log(x);
           }
@@ -324,11 +324,11 @@ for (;
         "var obj = {a: 0}; for (obj.a of [1,2,3]) { console.log(obj.a); }",
         """
         var obj = {a: 0};
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3])
-        var KEY$0$a = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2,3])
+        var KEY$1$a = ITER$0.next();
         for (;
-            !KEY$0$a.done; KEY$0$a = $jscomp$iter$0.next()) {
-          obj.a = KEY$0$a.value;
+            !KEY$1$a.done; KEY$1$a = ITER$0.next()) {
+          obj.a = KEY$1$a.value;
           {
             console.log(obj.a);
           }
@@ -342,11 +342,11 @@ for (;
         "function f() { return {}; } for (f()['x' + 1] of [1,2,3]) {}",
         """
         function f() { return {}; }
-        var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);
-        var KEY$0$a = $jscomp$iter$0.next();
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
+        var KEY$1$a = ITER$0.next();
         for (;
-            !KEY$0$a.done; KEY$0$a = $jscomp$iter$0.next()) {
-          f()['x' + 1] = KEY$0$a.value;
+            !KEY$1$a.done; KEY$1$a = ITER$0.next()) {
+          f()['x' + 1] = KEY$1$a.value;
           {}
         }
         """);
@@ -370,11 +370,11 @@ for (;
         srcs("for (let x of [1, 2, 3]) {}"),
         expected(
             """
-            var $jscomp$iter$0 = (0, $jscomp.makeIterator)([1,2,3]);
-            var KEY$0$x = $jscomp$iter$0.next();
+            var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
+            var KEY$1$x = ITER$0.next();
             for (;
-                !KEY$0$x.done; KEY$0$x = $jscomp$iter$0.next()) {
-              let x = KEY$0$x.value;
+                !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+              let x = KEY$1$x.value;
               {}
             }
             """));

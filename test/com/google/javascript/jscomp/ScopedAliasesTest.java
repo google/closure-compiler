@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -55,6 +56,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     enableRunTypeCheckAfterProcessing();
     enableCreateModuleMap();
     this.invalidModuleGetHandling = InvalidModuleGetHandling.GIVE_UNIQUE_NAME;
+    setGenericNameReplacements(ImmutableMap.of("SCOPED_ALIASES", "jscomp$scopedAliases$"));
   }
 
   private void testScoped(String code, String expected, Postcondition... postconditions) {
@@ -1239,8 +1241,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         """
         var ns = {};
         var y = 1;
-        ns.fact = function y$jscomp$scopedAliases$0(n) {
-          return n == 1 ? 1 : n * y$jscomp$scopedAliases$0(n - 1);
+        ns.fact = function y$SCOPED_ALIASES$0(n) {
+          return n == 1 ? 1 : n * y$SCOPED_ALIASES$0(n - 1);
         };
         """);
   }
@@ -1263,8 +1265,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         var ns = {};
         var y = 1;
         var $jscomp$scope$m1146332801$0$x = function (y) {};
-        ns.fact = function y$jscomp$scopedAliases$0(n) {
-          return n == 1 ? 1 : n * y$jscomp$scopedAliases$0(n - 1);
+        ns.fact = function y$SCOPED_ALIASES$1(n) {
+          return n == 1 ? 1 : n * y$SCOPED_ALIASES$1(n - 1);
         };
         """);
   }
@@ -1282,8 +1284,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         """,
         """
         foo(() => {
-          const y = function y$jscomp$scopedAliases$0() {
-            use(y$jscomp$scopedAliases$0);
+          const y = function y$SCOPED_ALIASES$0() {
+            use(y$SCOPED_ALIASES$0);
           };
         });
         """);

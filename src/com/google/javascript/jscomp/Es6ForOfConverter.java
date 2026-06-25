@@ -56,12 +56,12 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isForOf()) {
-      visitForOf(n);
+      visitForOf(t, n);
     }
   }
 
   // TODO(lharker): break up this method
-  private void visitForOf(Node node) {
+  private void visitForOf(NodeTraversal t, Node node) {
     // `var v` or `let v` or v any valid lhs
     Node variable = node.removeFirstChild();
     Node iterable = node.removeFirstChild();
@@ -70,7 +70,8 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     // `$jscomp$iter$0`
     Node iterName =
         astFactory.createName(
-            ITER_BASE + compiler.getUniqueNameIdSupplier().get(), type(StandardColors.ITERATOR_ID));
+            ITER_BASE + compiler.getUniqueIdSupplier().getUniqueId(t.getInput()),
+            type(StandardColors.ITERATOR_ID));
     iterName.makeNonIndexable();
     // `$jscomp$iter$0.next()`
     Node getNext =
@@ -79,11 +80,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     // generate a unique iterator result name for every for-of loop getting rewritten to avoid
     // conflicts
     String iteratorResultName =
-        ITER_RESULT
-            + compiler
-                .getUniqueIdSupplier()
-                .getUniqueId(compiler.getInput(NodeUtil.getEnclosingScript(node).getInputId()))
-            + "$";
+        ITER_RESULT + compiler.getUniqueIdSupplier().getUniqueId(t.getInput()) + "$";
 
     if (NodeUtil.isNameDeclaration(variable)) {
       iteratorResultName += variable.getFirstChild().getString();

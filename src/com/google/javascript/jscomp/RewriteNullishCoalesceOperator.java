@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.AstFactory.type;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
-import java.util.function.Supplier;
 
 /** Replaces the ES2020 `??` operator with conditional (?:). */
 public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callback, CompilerPass {
@@ -29,12 +28,12 @@ public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callb
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
-  private final Supplier<String> uniqueNameIdSuppier;
+  private final UniqueIdSupplier uniqueIdSupplier;
 
   public RewriteNullishCoalesceOperator(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
-    this.uniqueNameIdSuppier = compiler.getUniqueNameIdSupplier();
+    this.uniqueIdSupplier = compiler.getUniqueIdSupplier();
   }
 
   @Override
@@ -64,7 +63,7 @@ public final class RewriteNullishCoalesceOperator implements NodeTraversal.Callb
     // a() ?? b()
     // let temp;
     // ((temp = a()) != null) ? temp : b()
-    String tempVarName = TEMP_VAR_NAME_PREFIX + uniqueNameIdSuppier.get();
+    String tempVarName = TEMP_VAR_NAME_PREFIX + uniqueIdSupplier.getUniqueId(t.getInput());
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
 
     Node left = n.removeFirstChild();

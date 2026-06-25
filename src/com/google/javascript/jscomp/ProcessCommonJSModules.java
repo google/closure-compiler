@@ -1106,7 +1106,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           }
           needsRetraverse = true;
           String factoryLabel =
-              modulePath.toModuleName() + "_factory" + compiler.getUniqueNameIdSupplier().get();
+              modulePath.toModuleName()
+                  + "_factory"
+                  + compiler.getUniqueIdSupplier().getUniqueId(ci);
 
           FunctionToBlockMutator mutator =
               new FunctionToBlockMutator(compiler, compiler.getUniqueNameIdSupplier());
@@ -1140,7 +1142,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             if (expr.isAssign() && expr.getSecondChild().isCall()) {
               call = expr.getSecondChild();
               assignedName =
-                  modulePath.toModuleName() + "_iife" + compiler.getUniqueNameIdSupplier().get();
+                  modulePath.toModuleName()
+                      + "_iife"
+                      + compiler.getUniqueIdSupplier().getUniqueId(ci);
             } else if (expr.isCall()) {
               call = expr;
             }

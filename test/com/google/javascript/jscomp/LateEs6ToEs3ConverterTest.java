@@ -33,7 +33,9 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
   // $jscomp$templatelit$12345}. Use generic name `TAGGED_TEMPLATE_TMP_VAR` in test sources for
   // readability.
   private static final ImmutableMap<String, String> REPLACEMENT_PREFIXES =
-      ImmutableMap.of("TAGGED_TEMPLATE_TMP_VAR", "$jscomp$templatelit$");
+      ImmutableMap.of(
+          "TAGGED_TEMPLATE_TMP_VAR", "$jscomp$templatelit$",
+          "COMP_PROP_VAR", "$jscomp$compprop");
 
   private static final String RUNTIME_STUBS =
       """
@@ -83,9 +85,9 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         srcs("var x = {[Symbol.iterator]: function() { return this; }};"),
         expected(
             """
-            var $jscomp$compprop0 = {};
-            var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},
-                     $jscomp$compprop0)
+            var COMP_PROP_VAR$0 = {};
+            var x = (COMP_PROP_VAR$0[Symbol.iterator] = function() {return this;},
+                     COMP_PROP_VAR$0)
             """));
   }
 
@@ -101,10 +103,10 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "var obj = { ['f' + 1]: 1, m() {}, ['g' + 1]: 1, };",
         """
-        var $jscomp$compprop0 = {};
-        var obj = ($jscomp$compprop0['f' + 1] = 1,
-          ($jscomp$compprop0.m = function() {},
-             ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0)));
+        var COMP_PROP_VAR$0 = {};
+        var obj = (COMP_PROP_VAR$0['f' + 1] = 1,
+          (COMP_PROP_VAR$0.m = function() {},
+             (COMP_PROP_VAR$0['g' + 1] = 1, COMP_PROP_VAR$0)));
         """);
   }
 
@@ -113,97 +115,97 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "var obj = { ['f' + 1] : 1, ['g' + 1] : 1 };",
         """
-        var $jscomp$compprop0 = {};
-        var obj = ($jscomp$compprop0['f' + 1] = 1,
-          ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0));
+        var COMP_PROP_VAR$0 = {};
+        var obj = (COMP_PROP_VAR$0['f' + 1] = 1,
+          (COMP_PROP_VAR$0['g' + 1] = 1, COMP_PROP_VAR$0));
         """);
 
     test(
         "var obj = { ['f'] : 1};",
         """
-        var $jscomp$compprop0 = {};
-        var obj = ($jscomp$compprop0['f'] = 1,
-          $jscomp$compprop0);
+        var COMP_PROP_VAR$0 = {};
+        var obj = (COMP_PROP_VAR$0['f'] = 1,
+          COMP_PROP_VAR$0);
         """);
 
     test(
         "var o = { ['f'] : 1}; var p = { ['g'] : 1};",
         """
-        var $jscomp$compprop0 = {};
-        var o = ($jscomp$compprop0['f'] = 1,
-          $jscomp$compprop0);
-        var $jscomp$compprop1 = {};
-        var p = ($jscomp$compprop1['g'] = 1,
-          $jscomp$compprop1);
+        var COMP_PROP_VAR$0 = {};
+        var o = (COMP_PROP_VAR$0['f'] = 1,
+          COMP_PROP_VAR$0);
+        var COMP_PROP_VAR$1 = {};
+        var p = (COMP_PROP_VAR$1['g'] = 1,
+          COMP_PROP_VAR$1);
         """);
 
     test(
         "({['f' + 1] : 1})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0['f' + 1] = 1,
-          $jscomp$compprop0)
+        var COMP_PROP_VAR$0 = {};
+        (COMP_PROP_VAR$0['f' + 1] = 1,
+          COMP_PROP_VAR$0)
         """);
 
     test(
         "({'a' : 2, ['f' + 1] : 1})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0['a'] = 2,
-          ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));
+        var COMP_PROP_VAR$0 = {};
+        (COMP_PROP_VAR$0['a'] = 2,
+          (COMP_PROP_VAR$0['f' + 1] = 1, COMP_PROP_VAR$0));
         """);
 
     test(
         "({['f' + 1] : 1, 'a' : 2})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0['f' + 1] = 1,
-          ($jscomp$compprop0['a'] = 2, $jscomp$compprop0));
+        var COMP_PROP_VAR$0 = {};
+        (COMP_PROP_VAR$0['f' + 1] = 1,
+          (COMP_PROP_VAR$0['a'] = 2, COMP_PROP_VAR$0));
         """);
 
     test(
         "({'a' : 1, ['f' + 1] : 1, 'b' : 1})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0['a'] = 1,
-          ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0['b'] = 1, $jscomp$compprop0)));
+        var COMP_PROP_VAR$0 = {};
+        (COMP_PROP_VAR$0['a'] = 1,
+          (COMP_PROP_VAR$0['f' + 1] = 1, (COMP_PROP_VAR$0['b'] = 1, COMP_PROP_VAR$0)));
         """);
 
     test(
         "({'a' : x++, ['f' + x++] : 1, 'b' : x++})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0['a'] = x++, ($jscomp$compprop0['f' + x++] = 1,
-          ($jscomp$compprop0['b'] = x++, $jscomp$compprop0)))
+        var COMP_PROP_VAR$0 = {};
+        (COMP_PROP_VAR$0['a'] = x++, (COMP_PROP_VAR$0['f' + x++] = 1,
+          (COMP_PROP_VAR$0['b'] = x++, COMP_PROP_VAR$0)))
         """);
 
     test(
         "({a : x++, ['f' + x++] : 1, b : x++})",
         """
-        var $jscomp$compprop0 = {};
-        ($jscomp$compprop0.a = x++, ($jscomp$compprop0['f' + x++] = 1,
-          ($jscomp$compprop0.b = x++, $jscomp$compprop0)))
+        var COMP_PROP_VAR$0 = {};
+        (COMP_PROP_VAR$0.a = x++, (COMP_PROP_VAR$0['f' + x++] = 1,
+          (COMP_PROP_VAR$0.b = x++, COMP_PROP_VAR$0)))
         """);
 
     test(
         "({a, ['f' + 1] : 1})",
         """
-        var $jscomp$compprop0 = {};
-          ($jscomp$compprop0.a = a, ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0))
+        var COMP_PROP_VAR$0 = {};
+          (COMP_PROP_VAR$0.a = a, (COMP_PROP_VAR$0['f' + 1] = 1, COMP_PROP_VAR$0))
         """);
 
     test(
         "({['f' + 1] : 1, a})",
         """
-        var $jscomp$compprop0 = {};
-          ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0.a = a, $jscomp$compprop0))
+        var COMP_PROP_VAR$0 = {};
+          (COMP_PROP_VAR$0['f' + 1] = 1, (COMP_PROP_VAR$0.a = a, COMP_PROP_VAR$0))
         """);
 
     test(
         "var obj = { [foo]() {}}",
         """
-        var $jscomp$compprop0 = {};
-        var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)
+        var COMP_PROP_VAR$0 = {};
+        var obj = (COMP_PROP_VAR$0[foo] = function(){}, COMP_PROP_VAR$0)
         """);
   }
 
@@ -216,15 +218,15 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "var obj = {'a' : 2, get l () {return null;}, ['f' + 1] : 1}",
         """
-        var $jscomp$compprop0 = {get l () {return null;}};
-        var obj = ($jscomp$compprop0['a'] = 2,
-          ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));
+        var COMP_PROP_VAR$0 = {get l () {return null;}};
+        var obj = (COMP_PROP_VAR$0['a'] = 2,
+          (COMP_PROP_VAR$0['f' + 1] = 1, COMP_PROP_VAR$0));
         """);
     test(
         "var obj = {['a' + 'b'] : 2, set l (strParam) {}}",
         """
-        var $jscomp$compprop0 = {set l (strParam) {}};
-        var obj = ($jscomp$compprop0['a' + 'b'] = 2, $jscomp$compprop0);
+        var COMP_PROP_VAR$0 = {set l (strParam) {}};
+        var obj = (COMP_PROP_VAR$0['a' + 'b'] = 2, COMP_PROP_VAR$0);
         """);
   }
 
