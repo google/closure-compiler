@@ -3423,9 +3423,9 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
             i: -1, v: void 0
           }
         };
-        $jscomp.ASSUME_ES5 = false;
-        $jscomp.ASSUME_ES6 = false;
         $jscomp.ASSUME_ES2020 = false;
+        $jscomp.ASSUME_ES6 = $jscomp.ASSUME_ES2020;
+        $jscomp.ASSUME_ES5 = $jscomp.ASSUME_ES6;
         $jscomp.ASSUME_NO_NATIVE_MAP = false;
         $jscomp.ASSUME_NO_NATIVE_SET = false;
         $jscomp.ISOLATE_POLYFILLS = false;

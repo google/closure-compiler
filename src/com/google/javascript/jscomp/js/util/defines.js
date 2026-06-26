@@ -16,27 +16,26 @@
 
 'require base';
 
-
-/**
- * Whether to assume ES5 is available.  This enables removing several
- * internal polyfills, which must otherwise be detected at runtime.
- * @define {boolean}
- */
-$jscomp.ASSUME_ES5 = false;
-
-/**
- * Whether to assume ES6 is available.  This enables removing several
- * internal polyfills, which must otherwise be detected at runtime.
- * @define {boolean}
- */
-$jscomp.ASSUME_ES6 = false;
-
 /**
  * Whether to assume ES2020 is available.  This enables removing several
  * internal polyfills, which must otherwise be detected at runtime.
  * @define {boolean}
  */
 $jscomp.ASSUME_ES2020 = false;
+
+/**
+ * Whether to assume ES6 is available.  This enables removing several
+ * internal polyfills, which must otherwise be detected at runtime.
+ * @define {boolean}
+ */
+$jscomp.ASSUME_ES6 = $jscomp.ASSUME_ES2020;
+
+/**
+ * Whether to assume ES5 is available.  This enables removing several
+ * internal polyfills, which must otherwise be detected at runtime.
+ * @define {boolean}
+ */
+$jscomp.ASSUME_ES5 = $jscomp.ASSUME_ES6;
 
 
 
