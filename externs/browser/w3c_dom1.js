@@ -390,13 +390,24 @@ Document.prototype.createCDATASection = function(data) {};
 Document.prototype.createDocumentFragment = function() {};
 
 /**
+ * @record
+ */
+function ElementCreationOptions() {}
+
+/** @type {CustomElementRegistry|null|undefined} */
+ElementCreationOptions.prototype.customElementRegistry;
+
+/** @type {string|undefined} */
+ElementCreationOptions.prototype.is;
+
+/**
  * Create a DOM element.
  *
  * Web components introduced the second parameter as a way of extending existing
  * tags (e.g. document.createElement('button', {is: 'fancy-button'})).
  *
  * @param {string} tagName
- * @param {({is: string}|string)=} opt_typeExtension
+ * @param {({is: string}|string|!ElementCreationOptions)=} opt_typeExtension
  * @return {!Element}
  * @nosideeffects
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createElement
@@ -974,6 +985,7 @@ var CSSMatrixComponentOptions;
  * @constructor
  * @extends {CSSStyleValue}
  * @implements {IArrayLike<!CSSTransformComponent>}
+ * @implements {Iterable<!CSSTransformComponent>}
  * @param {!Array<!CSSTransformComponent>} transforms
  */
 function CSSTransformValue(transforms) {}
@@ -994,6 +1006,30 @@ CSSTransformValue.prototype.toMatrix = function() {};
  * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
  */
 CSSTransformValue.prototype.forEach = function(callbackfn, thisArg) {};
+
+/**
+ * @override
+ * @return {!IteratorIterable<!CSSTransformComponent>}
+ */
+CSSTransformValue.prototype[Symbol.iterator] = function() {};
+
+/**
+ * @return {!IteratorIterable<!Array<number|!CSSTransformComponent>>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSTransformValue/entries
+ */
+CSSTransformValue.prototype.entries = function() {};
+
+/**
+ * @return {!IteratorIterable<number>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSTransformValue/keys
+ */
+CSSTransformValue.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<!CSSTransformComponent>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSTransformValue/values
+ */
+CSSTransformValue.prototype.values = function() {};
 
 /**
  * @constructor
@@ -1028,6 +1064,7 @@ var CSSUnparsedSegment;
  * @constructor
  * @extends {CSSStyleValue}
  * @implements {IArrayLike<!CSSUnparsedSegment>}
+ * @implements {Iterable<!CSSUnparsedSegment>}
  * @param {!Array<!CSSUnparsedSegment>} members
  */
 function CSSUnparsedValue(members) {}
@@ -1044,8 +1081,33 @@ CSSUnparsedValue.prototype.length;
 CSSUnparsedValue.prototype.forEach = function(callbackfn, thisArg) {};
 
 /**
+ * @override
+ * @return {!IteratorIterable<!CSSUnparsedSegment>}
+ */
+CSSUnparsedValue.prototype[Symbol.iterator] = function() {};
+
+/**
+ * @return {!IteratorIterable<!Array<number|!CSSUnparsedSegment>>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSUnparsedValue/entries
+ */
+CSSUnparsedValue.prototype.entries = function() {};
+
+/**
+ * @return {!IteratorIterable<number>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSUnparsedValue/keys
+ */
+CSSUnparsedValue.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<!CSSUnparsedSegment>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSUnparsedValue/values
+ */
+CSSUnparsedValue.prototype.values = function() {};
+
+/**
  * @constructor
  * @implements {IArrayLike<!CSSNumericValue>}
+ * @implements {Iterable<!CSSNumericValue>}
  */
 function CSSNumericArray() {}
 
@@ -1059,6 +1121,30 @@ CSSNumericArray.prototype.forEach = function(callbackfn, thisArg) {};
 
 /** @type {number} */
 CSSNumericArray.prototype.length;
+
+/**
+ * @override
+ * @return {!IteratorIterable<!CSSNumericValue>}
+ */
+CSSNumericArray.prototype[Symbol.iterator] = function() {};
+
+/**
+ * @return {!IteratorIterable<!Array<number|!CSSNumericValue>>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSNumericArray/entries
+ */
+CSSNumericArray.prototype.entries = function() {};
+
+/**
+ * @return {!IteratorIterable<number>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSNumericArray/keys
+ */
+CSSNumericArray.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<!CSSNumericValue>}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSNumericArray/values
+ */
+CSSNumericArray.prototype.values = function() {};
 
 /**
  * @constructor
@@ -1168,9 +1254,13 @@ function CSSSkewY(ay) {}
 
 /**
  * @constructor
+ * @implements {Iterable<!Array<string|!Iterable<!CSSStyleValue>>>}
  * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly
  */
 function StylePropertyMapReadOnly() {}
+
+/** @override */
+StylePropertyMapReadOnly.prototype[Symbol.iterator] = function() {};
 
 /**
  * @const {number}
@@ -1207,6 +1297,21 @@ StylePropertyMapReadOnly.prototype.has = function(property) {}
 StylePropertyMapReadOnly.prototype.forEach = function(callbackfn, opt_thisArg) {}
 
 /**
+ * @return {!IteratorIterable<!Array<string|!Iterable<!CSSStyleValue>>>}
+ */
+StylePropertyMapReadOnly.prototype.entries = function() {};
+
+/**
+ * @return {!IteratorIterable<string>}
+ */
+StylePropertyMapReadOnly.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<!Iterable<!CSSStyleValue>>}
+ */
+StylePropertyMapReadOnly.prototype.values = function() {};
+
+/**
  * @typedef {{
  *   serializableShadowRoots: (boolean|undefined),
  *   shadowRoots: (!Array<!ShadowRoot>|undefined)
@@ -1227,6 +1332,12 @@ function Element() {}
  * @see https://developer.mozilla.org/docs/Web/API/Element/part
  */
 Element.prototype.part;
+
+/**
+ * @type {?CustomElementRegistry}
+ * @see https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry
+ */
+Element.prototype.customElementRegistry;
 
 /**
  * @type {string}
@@ -1354,6 +1465,7 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 /** @type {?function (Event)} */ Element.prototype.onfocusin;
 /** @type {?function (Event)} */ Element.prototype.onfocusout;
 /** @type {?function (Event)} */ Element.prototype.oninput;
+/** @type {?function (Event)} */ Element.prototype.oncommand;
 /** @type {?function (Event)} */ Element.prototype.onkeydown;
 /** @type {?function (Event)} */ Element.prototype.onkeypress;
 /** @type {?function (Event)} */ Element.prototype.onkeyup;
@@ -1507,6 +1619,8 @@ Window.prototype.onerror;
 /** @type {?function (!Event)} */ Window.prototype.onpagereveal;
 /** @type {?function (Event)} */ Window.prototype.onfocus;
 /** @type {?function (Event)} */ Window.prototype.onhashchange;
+/** @type {?function (Event)} */ Window.prototype.oninput;
+/** @type {?function (Event)} */ Window.prototype.oncommand;
 /** @type {?function (Event)} */ Window.prototype.onkeydown;
 /** @type {?function (Event)} */ Window.prototype.onkeypress;
 /** @type {?function (Event)} */ Window.prototype.onkeyup;

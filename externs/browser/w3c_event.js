@@ -663,3 +663,31 @@ function BeforeUnloadEvent() {}
 
 /** @type {?} */
 BeforeUnloadEvent.prototype.returnValue;
+
+/**
+ * @record
+ * @extends {EventInit}
+ */
+function CommandEventInit() {}
+
+/** @type {string|undefined} */
+CommandEventInit.prototype.command;
+
+/** @type {Element|null|undefined} */
+CommandEventInit.prototype.source;
+
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {CommandEventInit=} opt_eventInitDict
+ * @see https://developer.mozilla.org/docs/Web/API/CommandEvent
+ */
+function CommandEvent(type, opt_eventInitDict) {}
+
+/** @type {string} */
+CommandEvent.prototype.command;
+
+/** @type {!Element|null} */
+CommandEvent.prototype.source;

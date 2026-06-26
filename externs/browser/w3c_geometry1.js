@@ -262,6 +262,7 @@ DOMQuad.prototype.getBounds = function() {};
 /**
  * @constructor
  * @implements {IArrayLike<!DOMRect>}
+ * @implements {Iterable<!DOMRect>}
  */
 function DOMRectList() {}
 
@@ -273,6 +274,12 @@ DOMRectList.prototype.length;
  * @return {?DOMRect}
  */
 DOMRectList.prototype.item = function(index) {};
+
+/**
+ * @override
+ * @return {!IteratorIterable<!DOMRect>}
+ */
+DOMRectList.prototype[Symbol.iterator] = function() {};
 
 /**
  * @constructor

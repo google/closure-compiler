@@ -35,7 +35,7 @@ Document.prototype.getElementById = function(s) {};
 /**
  * @param {?string} namespaceURI
  * @param {string} qualifiedName
- * @param {string=} opt_typeExtension
+ * @param {(string|!ElementCreationOptions)=} opt_typeExtension
  * @return {!Element}
  * @see https://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/core.html#ID-DocCrElNS
  */
@@ -489,6 +489,21 @@ HTMLElement.prototype.outerText;
  */
 HTMLElement.prototype.popover;
 
+/** @record */
+function ShowPopoverOptions() {}
+
+/** @type {!HTMLElement|undefined} */
+ShowPopoverOptions.prototype.source;
+
+/**
+ * @record
+ * @extends {ShowPopoverOptions}
+ */
+function TogglePopoverOptions() {}
+
+/** @type {boolean|undefined} */
+TogglePopoverOptions.prototype.force;
+
 /**
  * @return {undefined}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/hidePopover
@@ -496,17 +511,19 @@ HTMLElement.prototype.popover;
 HTMLElement.prototype.hidePopover = function() {};
 
 /**
+ * @param {!ShowPopoverOptions=} opt_options
  * @return {undefined}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/showPopover
  */
-HTMLElement.prototype.showPopover = function() {};
+HTMLElement.prototype.showPopover = function(opt_options) {};
 
 /**
- * @param {boolean=} force
+ * @param {(!TogglePopoverOptions|boolean)=} opt_options
  * @return {boolean}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/togglePopover
  */
-HTMLElement.prototype.togglePopover = function(force) {};
+HTMLElement.prototype.togglePopover = function(opt_options) {};
+
 
 /**
  * @type {number}
@@ -798,9 +815,17 @@ HTMLFormControlsCollection.prototype.namedItem = function(name) {};
 /**
  * @constructor
  * @extends {HTMLElement}
+ * @implements {Iterable<!Element>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-40002357
  */
 function HTMLFormElement() {}
+
+/**
+ * @return {!IteratorIterable<!Element>}
+ * @nosideeffects
+ * @override
+ */
+HTMLFormElement.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {!HTMLFormControlsCollection<!HTMLElement>}
@@ -866,9 +891,17 @@ HTMLFormElement.prototype.reset = function() {};
 /**
  * @constructor
  * @extends {HTMLElement}
+ * @implements {Iterable<!HTMLOptionElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-94282980
  */
 function HTMLSelectElement() {}
+
+/**
+ * @return {!IteratorIterable<!HTMLOptionElement>}
+ * @nosideeffects
+ * @override
+ */
+HTMLSelectElement.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {string}
@@ -1826,8 +1859,12 @@ HTMLAnchorElement.prototype.attributionSrc;
 /**
  * @constructor
  * @implements {IArrayLike<!Element>}
+ * @implements {Iterable<!Element>}
  */
 function HTMLAllCollection() {}
+
+/** @override */
+HTMLAllCollection.prototype[Symbol.iterator] = function() {};
 
 /** @type {number} */
 HTMLAllCollection.prototype.length;
