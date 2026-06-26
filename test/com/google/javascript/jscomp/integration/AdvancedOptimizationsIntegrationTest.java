@@ -3489,4 +3489,152 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         }
         """);
   }
+
+  @Test
+  public void testTsickleReExportStaticMethodCall_es2021() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    options.setPrettyPrint(true);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    options.setGeneratePseudoNames(true);
+    options.setDisambiguateProperties(true);
+    options.setAmbiguateProperties(true);
+    WarningLevel.QUIET.setOptionsForWarningLevel(options);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addClosureExterns()
+                .buildExternsFile("externs.js"));
+
+    // ES2021: static field is inside class in input, transpiled in output
+    String def =
+        """
+        goog.module('google3.def');
+        class MyService {
+          static run(x) {
+            return x + 1;
+          }
+          static myStaticField = 'field';
+        }
+        exports.MyService = MyService;
+        """;
+
+    String index =
+        """
+        goog.module('google3.index');
+        const def = goog.require('google3.def');
+        exports.MyService = def.MyService;
+        """;
+
+    String app =
+        """
+        goog.module('google3.app');
+        const index = goog.require('google3.index');
+        console.log(index.MyService.run(1));
+        console.log(index.MyService.myStaticField);
+        """;
+
+    String trigger =
+        """
+        goog.module('google3.trigger');
+        const index = goog.require('google3.index');
+        console.log(index, 'MyService');
+        """;
+
+    // NOTE: This test asserts the CURRENT INCORRECT BEHAVIOR to pass, documenting the bug.
+    test(
+        options,
+        new String[] {def, index, app, trigger},
+        new String[] {
+          "", // def
+          "", // index
+          """
+          var module$exports$google3$index = {$MyService$:class {}};
+          console.log(module$exports$google3$index.$MyService$.$run$(1));
+          console.log(module$exports$google3$index.$MyService$.$myStaticField$);
+          """,
+          """
+          console.log(module$exports$google3$index, "MyService");
+          """
+        });
+  }
+
+  @Test
+  public void testTsickleReExportStaticMethodCall_es2022() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2022);
+    options.setPrettyPrint(true);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    options.setGeneratePseudoNames(true);
+    options.setDisambiguateProperties(true);
+    options.setAmbiguateProperties(true);
+    WarningLevel.QUIET.setOptionsForWarningLevel(options);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addClosureExterns()
+                .buildExternsFile("externs.js"));
+
+    // ES2022: static field is inside class (native)
+    String def =
+        """
+        goog.module('google3.def');
+        class MyService {
+          static run(x) {
+            return x + 1;
+          }
+          static myStaticField = 'field';
+        }
+        exports.MyService = MyService;
+        """;
+
+    String index =
+        """
+        goog.module('google3.index');
+        const def = goog.require('google3.def');
+        exports.MyService = def.MyService;
+        """;
+
+    String app =
+        """
+        goog.module('google3.app');
+        const index = goog.require('google3.index');
+        console.log(index.MyService.run(1));
+        console.log(index.MyService.myStaticField);
+        """;
+
+    String trigger =
+        """
+        goog.module('google3.trigger');
+        const index = goog.require('google3.index');
+        console.log(index);
+        """;
+
+    // NOTE: This test asserts the CURRENT INCORRECT BEHAVIOR to pass, documenting the bug.
+    test(
+        options,
+        new String[] {def, index, app, trigger},
+        new String[] {
+          "", // def
+          "", // index
+          """
+          var module$exports$google3$index = {$MyService$:class {}};
+          console.log(module$exports$google3$index.$MyService$.$run$(1));
+          console.log(module$exports$google3$index.$MyService$.$myStaticField$);
+          """,
+          """
+          console.log(module$exports$google3$index);
+          """
+        });
+  }
 }
