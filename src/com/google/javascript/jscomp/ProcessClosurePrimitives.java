@@ -241,7 +241,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements Comp
         }
       }
       case "setCssNameMapping" -> {
-        var unused = processSetCssNameMapping(compiler, call, call.getParent());
+        var _ = processSetCssNameMapping(compiler, call, call.getParent());
       }
       case "forwardDeclare" -> {
         if (validatePrimitiveCallWithMessage(

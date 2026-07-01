@@ -120,7 +120,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       var context =
           n.isGeneratorFunction()
               ? needsInstrumentation.computeIfAbsent(
-                  n, (unused) -> createNewFunctionContext(t.getInput()))
+                  n, (_) -> createNewFunctionContext(t.getInput()))
               : needsInstrumentation.get(n);
       if (context == null) {
         return;
@@ -167,7 +167,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     // enclosing function or try block.
     FunctionContext functionContext =
         needsInstrumentation.computeIfAbsent(
-            enclosingFunction, (unused) -> createNewFunctionContext(t.getInput()));
+            enclosingFunction, (_) -> createNewFunctionContext(t.getInput()));
     if (enclosingTry != null) {
       needsInstrumentation.put(enclosingTry, functionContext);
     }

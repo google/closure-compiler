@@ -1115,7 +1115,7 @@ public final class ReplaceMessages {
           // or it may be a normal `goog.getMsg()` message.
           jsMessageBuilder.appendParts(JsMessageVisitor.parseJsMessageTextIntoParts(messageText));
         }
-      } catch (PlaceholderFormatException unused) {
+      } catch (PlaceholderFormatException _) {
         // Somehow we stored the protected message text incorrectly, which should never
         // happen 🙏
         throw new IllegalStateException(

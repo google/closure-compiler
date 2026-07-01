@@ -99,7 +99,7 @@ public final class StringPool {
         this.maxLength = string.length();
       }
 
-      return this.pool.computeIfAbsent(string, (unused) -> this.pool.size());
+      return this.pool.computeIfAbsent(string, (_) -> this.pool.size());
     }
 
     @CanIgnoreReturnValue

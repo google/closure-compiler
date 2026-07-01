@@ -390,7 +390,7 @@ public final class JSDocSerializer {
           continue;
         }
         case JSDOC_USED_VIA_DOT_CONSTRUCTOR -> {
-          var unused = builder.recordUsedViaDotConstructor();
+          var _ = builder.recordUsedViaDotConstructor();
           continue;
         }
         case JSDOC_UNSPECIFIED, UNRECOGNIZED ->

@@ -206,7 +206,7 @@ public final class ColorPool {
       for (ColorId colorId : ColorRegistry.REQUIRED_IDS) {
         this.registry.setNativeColor(
             this.idToColor.computeIfAbsent(
-                colorId, (unused) -> Color.singleBuilder().setId(colorId).build()));
+                colorId, (_) -> Color.singleBuilder().setId(colorId).build()));
       }
 
       this.forEachShard(
@@ -231,7 +231,7 @@ public final class ColorPool {
     }
 
     private void forEachShard(Consumer<ShardView> fn) {
-      this.protoToShard.forEach((unused, shard) -> fn.accept(shard));
+      this.protoToShard.forEach((_, shard) -> fn.accept(shard));
     }
 
     private Color lookupOrReconcileColor(ColorId id) {

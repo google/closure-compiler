@@ -1371,6 +1371,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     assertThat(src).isNotEmpty();
 
     Class<?> clazz = (src.charAt(0) == '{') ? LinkedHashMap.class : ArrayList.class;
-    var unused = new Gson().fromJson(src, clazz); // Throws if invalid
+    var _ = new Gson().fromJson(src, clazz); // Throws if invalid
   }
 }

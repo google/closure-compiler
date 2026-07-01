@@ -237,7 +237,7 @@ final class InstanceObjectType extends PrototypeObjectType {
     // always resolve to itself - it's never a forward reference because to create this
     // InstanceObjectType, we must have the constructor first. But we do need to call resolve on
     // the constructor to resolve its fields and implemented/extended interfaces, if any.
-    var unused = safeResolve(constructor, reporter);
+    var _ = safeResolve(constructor, reporter);
     return resolved;
   }
 }

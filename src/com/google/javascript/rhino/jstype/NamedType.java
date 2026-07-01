@@ -266,7 +266,7 @@ public final class NamedType extends ProxyObjectType {
     // TODO(user): Investigate whether it is really necessary to keep two
     // different mechanisms for resolving named types, and if so, which order
     // makes more sense.
-    boolean unused = resolveTypeof(reporter) || resolveViaRegistry(reporter);
+    var _ = resolveTypeof(reporter) || resolveViaRegistry(reporter);
 
     super.resolveInternal(reporter);
     if (detectInheritanceCycle()) {
@@ -333,7 +333,7 @@ public final class NamedType extends ProxyObjectType {
         // when `ImportedType` is not defined in the files it can see.
         setReferencedType(new NoResolvedType(registry, getReferenceName(), getTemplateTypes()));
         if (validator != null) {
-          var unused = validator.apply(getReferencedType());
+          var _ = validator.apply(getReferencedType());
         }
       } else {
         warning(reporter, "Missing type for `typeof` value. The value must be declared and const.");
@@ -362,7 +362,7 @@ public final class NamedType extends ProxyObjectType {
       type = type.restrictByNotNullOrUndefined();
     }
     if (validator != null) {
-      var unused = validator.apply(type);
+      var _ = validator.apply(type);
     }
     setReferencedType(type);
     checkEnumElementCycle(reporter);
@@ -408,7 +408,7 @@ public final class NamedType extends ProxyObjectType {
     } else {
       setReferencedType(new NoResolvedType(registry, getReferenceName(), getTemplateTypes()));
       if (validator != null) {
-        var unused = validator.apply(getReferencedType());
+        var _ = validator.apply(getReferencedType());
       }
     }
   }
