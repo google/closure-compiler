@@ -57,6 +57,7 @@ def _typedast_impl(ctx):
     )
 
     ctx.actions.run_shell(
+        mnemonic = "Typedast",
         outputs = [typedast_file],
         inputs = [typedast_gz_file],
         command = "gunzip -c '%s' > '%s'" % (typedast_gz_file.path, typedast_file.path),

@@ -120,6 +120,7 @@ sonatype_artifact_bundle = rule(
 def _copy_file(ctx, file, name):
     copy = _declare_file(ctx, name)
     ctx.actions.run_shell(
+        mnemonic = "CopyFile",
         outputs = [copy],
         inputs = [file],
         command = "cp $@",
