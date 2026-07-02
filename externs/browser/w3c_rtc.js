@@ -3947,11 +3947,18 @@ RTCErrorEvent.prototype.message;
  * @template T
  * @record
  * @struct
+ * @see https://www.w3.org/TR/mediacapture-transform/#track-processor-interface
  */
 function MediaStreamTrackProcessor() {}
 
 /** @const {!ReadableStream<T>} */
 MediaStreamTrackProcessor.prototype.readable;
+
+/** @const {number} */
+MediaStreamTrackProcessor.prototype.discardedFrames;
+
+/** @const {number} */
+MediaStreamTrackProcessor.prototype.totalFrames;
 
 /**
  * @typedef {{kind: string}}
