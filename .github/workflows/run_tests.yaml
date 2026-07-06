@@ -61,9 +61,10 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
 
       # https://github.com/bazel-contrib/setup-bazel
-      - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # v0.19.0
+      - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
         with:
           # Avoid downloading Bazel every time.
           bazelisk-cache: true
@@ -121,6 +122,7 @@ jobs:
         with:
           repository: chadkillingsworth/closure-compiler-npm
           ref: master
+          persist-credentials: false
 
         # Clone closure-compiler repo from the commit under test into the npm repo compiler
         # submodule
@@ -130,6 +132,7 @@ jobs:
         with:
           path: compiler
           ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
 
         # Grab the compiler binary that was shared from `build-and-test` and put the file into
         # ./compiler/bazel-bin.
