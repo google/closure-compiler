@@ -1504,7 +1504,7 @@ public class AstFactoryTest {
     globalScope.declare("x", IR.name("x"), getNativeType(JSTypeNative.NUMBER_TYPE), null, true);
     TypedScope localScope = new TypedScope(globalScope, block);
 
-    var _ = astFactory.createQNameUsingJSTypeInfo(globalScope, "x");
+    var unused = astFactory.createQNameUsingJSTypeInfo(globalScope, "x");
     assertThrows(
         IllegalArgumentException.class,
         () -> astFactory.createQNameUsingJSTypeInfo(localScope, "x"));

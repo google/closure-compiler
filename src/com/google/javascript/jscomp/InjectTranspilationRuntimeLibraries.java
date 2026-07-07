@@ -64,7 +64,7 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
     // Check for references to class `extends` clauses
     if (!outputFeatures.contains(used)) {
       NodeUtil.visitPostOrder(
-          root, this::checkForClassExtends, (_) -> !this.injectedClassExtendsLibraries);
+          root, this::checkForClassExtends, (unused) -> !this.injectedClassExtendsLibraries);
     }
 
     FeatureSet mustBeCompiledAway = used.without(outputFeatures);

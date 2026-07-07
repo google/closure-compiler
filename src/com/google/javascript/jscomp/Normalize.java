@@ -258,7 +258,7 @@ final class Normalize implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (makeDeclaredNamesUnique != null) {
-        var _ = makeDeclaredNamesUnique.shouldTraverse(t, n, parent);
+        var unused = makeDeclaredNamesUnique.shouldTraverse(t, n, parent);
       }
 
       Node oldParent = n.getParent();

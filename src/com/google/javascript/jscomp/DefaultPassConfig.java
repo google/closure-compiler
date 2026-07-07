@@ -1897,7 +1897,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.INFER_TYPES)
           .setInternalFactory(
               (compiler) ->
-                  ((Node _, Node srcRoot) -> {
+                  ((Node unused, Node srcRoot) -> {
                     Node globalRoot = srcRoot.getParent();
 
                     TypeInferencePass inferencePass =

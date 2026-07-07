@@ -87,7 +87,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
     this.enableTypeCheck();
     this.replaceTypesWithColors();
     this.disableCompareJsDoc();
-    this.externsCallback = (_) -> {};
+    this.externsCallback = (Node unused) -> {};
   }
 
   @Override

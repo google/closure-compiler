@@ -622,7 +622,7 @@ public class CompilerInput implements DependencyInfo {
   }
 
   public FeatureSet getFeatures(AbstractCompiler compiler) {
-    var _ = this.ast.getAstRoot(compiler); // parse if required
+    var unused = this.ast.getAstRoot(compiler); // parse if required
     return this.ast.features;
   }
 

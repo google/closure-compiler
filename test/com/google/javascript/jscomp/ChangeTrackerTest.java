@@ -70,7 +70,7 @@ public class ChangeTrackerTest {
     IR.root(IR.script(function1, function2));
 
     // Mark original baseline.
-    var _ = changeTracker.getChangedScopeNodesForPass("FunctionInliner");
+    var unused = changeTracker.getChangedScopeNodesForPass("FunctionInliner");
 
     // Mark both functions changed.
     changeTracker.reportChangeToChangeScope(function1);
@@ -89,7 +89,7 @@ public class ChangeTrackerTest {
     IR.root(IR.script(function1, function2));
 
     // Mark original baseline.
-    var _ = changeTracker.getChangedScopeNodesForPass("FunctionInliner");
+    var unused = changeTracker.getChangedScopeNodesForPass("FunctionInliner");
 
     // Mark both functions changed, then delete function2 and mark it deleted.
     changeTracker.reportChangeToChangeScope(function1);
@@ -111,7 +111,7 @@ public class ChangeTrackerTest {
     IR.root(IR.script(function1, function2));
 
     // Mark original baseline.
-    var _ = changeTracker.getChangedScopeNodesForPass("FunctionInliner");
+    var unused = changeTracker.getChangedScopeNodesForPass("FunctionInliner");
 
     // Mark function1 changed and function2 deleted, then try to mark function2 changed.
     changeTracker.reportChangeToChangeScope(function1);
@@ -133,7 +133,7 @@ public class ChangeTrackerTest {
     IR.root(IR.script(function1, function2));
 
     // Mark original baseline.
-    var _ = changeTracker.getChangedScopeNodesForPass("FunctionInliner");
+    var unused = changeTracker.getChangedScopeNodesForPass("FunctionInliner");
 
     // Mark function1 changed and function2 deleted.
     changeTracker.reportChangeToChangeScope(function1);

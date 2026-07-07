@@ -161,7 +161,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
 
   @Test
   public void testNativeTypes_serializesFunctionToTopFunction() {
-    var _ =
+    var unused =
         compileToTypePool(
             "function foo() {} /** @type {!Function} */ var goo; FOO: foo; GOO: goo;");
     int fooPointer = pointerForLabel("FOO");
@@ -176,7 +176,7 @@ public final class JSTypeReconserializerTest extends CompilerTestCase {
 
   @Test
   public void testNativeTypes_serializesGbigint() {
-    var _ =
+    var unused =
         compileToTypePool(
             "/** @interface */ function gbigint() {} /** @type {!gbigint} */ var gb; GB: gb;");
     int gbPointer = pointerForLabel("GB");

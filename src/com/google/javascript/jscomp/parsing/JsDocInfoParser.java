@@ -1096,7 +1096,7 @@ public final class JsDocInfoParser {
           return token;
         }
         case LOG_TYPE_IN_COMPILER -> {
-          var _ = jsdocBuilder.recordLogTypeInCompiler();
+          var unused = jsdocBuilder.recordLogTypeInCompiler();
           return eatUntilEOLIfNotAnnotation();
         }
         case NOT_IMPLEMENTED,

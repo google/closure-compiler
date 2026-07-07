@@ -329,7 +329,7 @@ abstract class IntegrationTestCase {
     Compiler compiler = createCompiler(new BlackHoleErrorManager());
 
     lastCompiler = compiler;
-    var _ = compiler.compileChunks(externs, chunks, options);
+    var unused = compiler.compileChunks(externs, chunks, options);
     return compiler;
   }
 

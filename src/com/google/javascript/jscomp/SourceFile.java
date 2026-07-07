@@ -134,7 +134,7 @@ public final class SourceFile implements StaticSourceFile {
       // A negative value means we need to read in the code and calculate this information.
       // Otherwise, assume the file hasn't changed since we read it.
       try {
-        var _ = getCode();
+        var unused = getCode();
       } catch (IOException e) {
         // this is consistent with old behavior of this method.
         return 0;
@@ -158,7 +158,7 @@ public final class SourceFile implements StaticSourceFile {
       // A negative value means we need to read in the code and calculate this information.
       // Otherwise, assume the file hasn't changed since we read it.
       try {
-        var _ = getCode();
+        var unused = getCode();
       } catch (IOException e) {
         // this is consistent with old behavior of this method.
         return 0;

@@ -1096,7 +1096,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
 
     Compiler compiler = new Compiler();
-    var _ =
+    var unused =
         compiler.compileChunks(
             ImmutableList.of(externsInput), ImmutableList.copyOf(chunks), options);
     return compiler;

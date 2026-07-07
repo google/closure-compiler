@@ -587,6 +587,6 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
     assertThat(src).isNotEmpty();
 
     Class<?> clazz = (src.charAt(0) == '{') ? LinkedHashMap.class : ArrayList.class;
-    var _ = new Gson().fromJson(src, clazz); // Throws if invalid
+    var unused = new Gson().fromJson(src, clazz); // Throws if invalid
   }
 }

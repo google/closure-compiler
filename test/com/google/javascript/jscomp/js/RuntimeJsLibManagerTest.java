@@ -386,7 +386,7 @@ public class RuntimeJsLibManagerTest {
 
     RuntimeJsLibManager.JsLibField field = manager.getJsLibField("$jscomp.inherits");
 
-    var _ = field.assertInjected().qualifiedName();
+    var unused = field.assertInjected().qualifiedName();
   }
 
   @Test
@@ -400,7 +400,7 @@ public class RuntimeJsLibManagerTest {
 
     RuntimeJsLibManager.JsLibField field = manager.getJsLibField("$jscomp.inherits");
 
-    var _ = field.assertInjected().qualifiedName();
+    var unused = field.assertInjected().qualifiedName();
   }
 
   @Test

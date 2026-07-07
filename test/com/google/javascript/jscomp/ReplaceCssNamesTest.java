@@ -420,7 +420,7 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
     compiler.setErrorManager(errorMan);
     Node root = compiler.parseTestCode(input);
     useReplacementMap = false;
-    ReplaceCssNames replacer = new ReplaceCssNames(compiler, null, _ -> {}, null);
+    ReplaceCssNames replacer = new ReplaceCssNames(compiler, null, unused -> {}, null);
     replacer.process(null, root);
     assertThat(compiler.toSource(root)).isEqualTo("[\"test\",base+\"-active\"]");
     assertWithMessage("There should be no errors").that(errorMan.getErrorCount()).isEqualTo(0);

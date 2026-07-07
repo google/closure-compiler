@@ -284,7 +284,7 @@ final class JSTypeReconserializer {
     SeenTypeRecord record =
         this.seenTypeRecords.computeIfAbsent(
             id,
-            (_) -> {
+            (unused) -> {
               int pointer = this.seenTypeRecords.size();
               return new SeenTypeRecord(id, pointer);
             });

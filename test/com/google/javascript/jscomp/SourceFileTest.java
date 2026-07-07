@@ -445,7 +445,7 @@ public final class SourceFileTest {
   @Test
   public void testGetProto_withGetCodeCalls() throws IOException {
     SourceFile sourceFile = SourceFile.fromCode("file.js", "42");
-    var _ = sourceFile.getCode();
+    var unused = sourceFile.getCode();
 
     SourceFileProto sourceFileProto = sourceFile.getProto();
 
@@ -481,7 +481,7 @@ public final class SourceFileTest {
   @Test
   public void testGetProto_withGetCodeCalls_andClearCachedSource() throws IOException {
     SourceFile sourceFile = SourceFile.fromCode("file.js", "42");
-    var _ = sourceFile.getCode();
+    var unused = sourceFile.getCode();
     sourceFile.clearCachedSource();
 
     SourceFileProto sourceFileProto = sourceFile.getProto();

@@ -89,7 +89,7 @@ public class JSTypeRegistryTest {
   @Before
   @SuppressWarnings({"MustBeClosedChecker"})
   public void setUp() throws Exception {
-    var _ = registry.getResolver().openForDefinition();
+    JSTypeResolver.Closer unused = registry.getResolver().openForDefinition();
   }
 
   @Test
