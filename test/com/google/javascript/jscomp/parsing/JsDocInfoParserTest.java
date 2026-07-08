@@ -22,6 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -490,6 +491,19 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseUnionType19() {
     JSDocInfo info = parse("@type {(?)} */");
     assertTypeEquals(UNKNOWN_TYPE, info.getType());
+  }
+
+  @Test
+  public void testParseUnionType_functionReturn_threeAlts() {
+    // Verify that this is parsed as a union of three types, not a function type returning a union.
+    JSType type =
+        testParseType("function(): string|number|boolean", "(boolean|function(): string|number)");
+    assertType(type).isUnionType();
+    var alts = type.toMaybeUnionType().getAlternates();
+    assertThat(alts).hasSize(3);
+    assertType(alts.get(0)).isFunctionTypeThat().hasReturnTypeThat().isString();
+    assertType(alts.get(1)).isNumber();
+    assertType(alts.get(2)).isBoolean();
   }
 
   @Test
