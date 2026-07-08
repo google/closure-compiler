@@ -2453,7 +2453,7 @@ Object.getOwnPropertyDescriptors = function(obj) {};
 
 /**
  * @param {!Iterable<T>} items
- * @param {function(T, number=): string|symbol|number} callbackFn
+ * @param {function(T, number=): (string|symbol|number)} callbackFn
  * @return {!Object<string|symbol|number, !Array<T>>}
  * @template T
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/groupBy
