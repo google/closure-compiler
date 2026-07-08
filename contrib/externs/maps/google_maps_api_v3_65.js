@@ -12097,6 +12097,13 @@ google.maps.addressValidation.AddressValidationRequest = function() {};
 google.maps.addressValidation.AddressValidationRequest.prototype.address;
 
 /**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.addressValidation.AddressValidationRequest.prototype
+    .internalUsageAttributionIds;
+
+/**
  * If using a PlaceAutocompleteElement, include it here to link the
  * AddressValidation API calls with the autocomplete session token.
  * @type {!google.maps.places.PlaceAutocompleteElement|undefined}
@@ -27181,8 +27188,9 @@ google.maps.routes.Route.prototype.createPolylines = function(options) {};
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  * Creates a popover for the route based on the data available for the route,
  * configured in a way suitable for annotating a route on a map. Currently
- * uses {@link google.maps.routes.Route.localizedValues} and {@link
- * google.maps.routes.Route.path}, if available.
+ * uses {@link google.maps.routes.Route.localizedValues}, {@link
+ * google.maps.routes.Route.path}, and {@link google.maps.routes.Route.legs}, if
+ * available.
  * @return {!Promise<!google.maps.maps3d.PopoverElement>}
  */
 google.maps.routes.Route.prototype.createPopover = function() {};
