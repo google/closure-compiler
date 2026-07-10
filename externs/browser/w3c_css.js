@@ -3608,6 +3608,7 @@ Highlight.prototype.forEach = function(callbackfn, thisArg) {};
 
 /**
  * @interface
+ * @see https://www.w3.org/TR/css-highlight-api-1/#registration
  */
 function HighlightRegistry () {}
 
@@ -3617,6 +3618,39 @@ function HighlightRegistry () {}
  * @return {undefined}
  */
 HighlightRegistry.prototype.forEach = function(callbackfn, thisArg) {};
+
+/**
+ * @param {string} key
+ * @param {!Highlight} value
+ * @return {!HighlightRegistry}
+ */
+HighlightRegistry.prototype.set = function(key, value) {};
+
+/**
+ * @param {string} key
+ * @return {boolean}
+ */
+HighlightRegistry.prototype.delete = function(key) {};
+
+/**
+ * @return {void}
+ */
+HighlightRegistry.prototype.clear = function() {};
+
+/**
+ * @param {string} key
+ * @return {boolean}
+ */
+HighlightRegistry.prototype.has = function(key) {};
+
+/**
+ * @param {string} key
+ * @return {?Highlight}
+ */
+HighlightRegistry.prototype.get = function(key) {};
+
+/** @type {number} */
+HighlightRegistry.prototype.size;
 
 
 /** @type {!HighlightRegistry} */
