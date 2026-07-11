@@ -222,6 +222,24 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testProcessDefinesInModuleWithoutGoogDefine() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setDefineToBooleanLiteral("module$exports$X.USE", false);
+    test(
+        options,
+        """
+        goog.module('X');
+        /** @define {boolean} */
+        const USE = true;
+        /** @const {boolean} */
+        exports.USE = USE;
+        """,
+        "var module$exports$X={};module$exports$X.USE=false");
+  }
+
+  @Test
   public void testStaticMemberClass() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
