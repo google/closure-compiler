@@ -46,6 +46,8 @@ jobs:
           .github/piper-cut-cl.json
           .github/ci_support/tag_release_version.sh
         sparse-checkout-cone-mode: false
+        # TODO: b/533555133 - Re-enable this once we have a way to pass back tokens.
+        # persist-credentials: false
 
     - id: set_piper_json_vars
       # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#steps-context
@@ -63,6 +65,8 @@ jobs:
         # a depth of 0 triggers a fetch of all historical commits/branches/tags
         # https://github.com/marketplace/actions/checkout#Fetch-all-history-for-all-tags-and-branches
         fetch-depth: 0
+        # TODO: b/533555133 - Re-enable this once we have a way to pass back tokens.
+        # persist-credentials: false
 
     - name: Tag cut CL
       id: tag_cut_cl
