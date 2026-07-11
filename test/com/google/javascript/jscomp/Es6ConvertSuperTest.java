@@ -58,7 +58,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     enableTypeCheck();
     enableTypeInfoValidation();
-    enableScriptFeatureValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
   }

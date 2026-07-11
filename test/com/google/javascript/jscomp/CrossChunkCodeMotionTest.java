@@ -38,7 +38,6 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
 
-    disableScriptFeatureValidation();
     parentChunkCanSeeSymbolsDeclaredInChildren = false;
   }
 

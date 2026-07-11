@@ -60,7 +60,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableTypeCheck();
     enableTypeInfoValidation();
-    enableScriptFeatureValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
     setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);

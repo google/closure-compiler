@@ -33,7 +33,6 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
 
-    disableScriptFeatureValidation();
     enableNormalize();
   }
 

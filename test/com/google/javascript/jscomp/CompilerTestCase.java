@@ -215,12 +215,6 @@ public abstract class CompilerTestCase {
    */
   private boolean typeInfoValidationEnabled;
 
-  /**
-   * Whether we should verify that for every SCRIPT node, all features present in its AST are also
-   * present in its FeatureSet property.
-   */
-  private boolean scriptFeatureValidationEnabled;
-
   private final Set<DiagnosticType> ignoredWarnings = new LinkedHashSet<>();
 
   private final Map<String, String> webpackModulesById = new LinkedHashMap<>();
@@ -296,7 +290,6 @@ public abstract class CompilerTestCase {
     this.allowSourcelessWarnings = false;
     this.astValidationEnabled = true;
     this.typeInfoValidationEnabled = false;
-    this.scriptFeatureValidationEnabled = true;
     this.checkAccessControls = false;
     this.checkAstChangeMarking = true;
     this.closurePassEnabled = false;
@@ -745,18 +738,6 @@ public abstract class CompilerTestCase {
     typeInfoValidationEnabled = false;
   }
 
-  /** Enable validating script featuresets after each run of the pass. */
-  protected final void enableScriptFeatureValidation() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    scriptFeatureValidationEnabled = true;
-  }
-
-  /** Disable validating script featuresets after each run of the pass. */
-  protected final void disableScriptFeatureValidation() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    scriptFeatureValidationEnabled = false;
-  }
-
   /**
    * Disable comparing the expected output as a tree or string. 99% of the time you want to compare
    * as a tree. There are a few special cases where you don't, like if you want to test the code
@@ -1120,7 +1101,7 @@ public abstract class CompilerTestCase {
     if (astValidationEnabled) {
       // NOTE: We do not enable type validation here, because type information never exists
       // immediately after parsing.
-      (new AstValidator(compiler, scriptFeatureValidationEnabled)).validateRoot(root);
+      new AstValidator(compiler, /* validateScriptFeatures= */ true).validateRoot(root);
     }
 
     // Save the tree for later comparison.
@@ -1307,7 +1288,7 @@ public abstract class CompilerTestCase {
                       ? TypeInfoValidation.COLOR
                       : TypeInfoValidation.JSTYPE
                   : TypeInfoValidation.NONE;
-          new AstValidator(compiler, scriptFeatureValidationEnabled)
+          new AstValidator(compiler, /* validateScriptFeatures= */ true)
               .setTypeValidationMode(typeValidationMode)
               .validateRoot(root);
         }
