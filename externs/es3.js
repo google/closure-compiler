@@ -176,6 +176,23 @@ Iterable.prototype[Symbol.iterator] = function() {};
 /**
  * TODO(b/142881197): TReturn and TNext are not yet used for anything.
  * https://github.com/google/closure-compiler/issues/3489
+ * @record
+ * @template T, TReturn, TNext
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/The_Iterator_protocol
+ */
+function IteratorLike() {}
+
+/**
+ * @param {?=} opt_value
+ * @return {!IIterableResult<T>}
+ */
+IteratorLike.prototype.next = function(opt_value) {};
+
+
+
+/**
+ * TODO(b/142881197): TReturn and TNext are not yet used for anything.
+ * https://github.com/google/closure-compiler/issues/3489
  * @interface
  * @template T, TReturn, TNext
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/The_Iterator_protocol
