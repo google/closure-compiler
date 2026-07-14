@@ -1629,7 +1629,7 @@ Window.prototype.importScripts = function(urls) {};
  *
  * @param {string} encodedData
  * @return {string}
- * @nosideeffects
+ * @throws {DOMException}
  * @see https://html.spec.whatwg.org/multipage/webappapis.html#dom-atob
  */
 function atob(encodedData) {}
@@ -1637,7 +1637,7 @@ function atob(encodedData) {}
 /**
  * @param {string} stringToEncode
  * @return {string}
- * @nosideeffects
+ * @throws {DOMException}
  * @see https://html.spec.whatwg.org/multipage/webappapis.html#dom-btoa
  */
 function btoa(stringToEncode) {}
