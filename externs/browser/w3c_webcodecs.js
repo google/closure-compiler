@@ -325,6 +325,15 @@ function EncodedVideoChunkOutputCallback() {}
 /**
  * @record
  * @struct
+ */
+function SvcOutputMetadata() {}
+
+/** @type {number|undefined} */
+SvcOutputMetadata.prototype.temporalLayerId;
+
+/**
+ * @record
+ * @struct
  * @see https://www.w3.org/TR/webcodecs/#encoded-video-chunk-metadata
  */
 function EncodedVideoChunkMetadata() {}
@@ -335,6 +344,8 @@ EncodedVideoChunkMetadata.prototype.decoderConfig;
 /** @type {number|undefined} */
 EncodedVideoChunkMetadata.prototype.temporalLayerId;
 
+/** @type {!SvcOutputMetadata|undefined} */
+EncodedVideoChunkMetadata.prototype.svc;
 
 /**
  * @record
@@ -705,6 +716,9 @@ EncodedAudioChunkMetadata.prototype.decoderConfig;
  */
 function AudioEncoderConfig() {}
 
+/** @type {!AacEncoderConfig|undefined} */
+AudioEncoderConfig.prototype.aac;
+
 /**
  * @type {string}
  * @see https://www.w3.org/TR/webcodecs/#dom-audioencoderconfig-codec
@@ -737,6 +751,15 @@ AudioEncoderConfig.prototype.bitrateMode;
 
 /** @type {!OpusEncoderConfig|undefined} */
 AudioEncoderConfig.prototype.opus;
+
+/**
+ * @record
+ * @struct
+ */
+function AacEncoderConfig() {}
+
+/** @type {!AacBitstreamFormat|undefined} */
+AacEncoderConfig.prototype.format;
 
 /**
  * @record
@@ -1146,6 +1169,12 @@ var ColorSpaceConversion;
 
 /**
  * @typedef {string}
+ * Valid values are 'aac' and 'adts'.
+ */
+var AacBitstreamFormat;
+
+/**
+ * @typedef {string}
  */
 var OpusBitstreamFormat;
 
@@ -1447,6 +1476,7 @@ ImageTrack.prototype.selected;
 
 /**
  * @constructor
+ * @implements {Iterable<!ImageTrack>}
  * @see https://www.w3.org/TR/webcodecs/#imagetracklist
  */
 function ImageTrackList() {}
@@ -1474,3 +1504,9 @@ ImageTrackList.prototype.selectedIndex;
  * @see https://www.w3.org/TR/webcodecs/#dom-imagetracklist-selectedtrack
  */
 ImageTrackList.prototype.selectedTrack;
+
+/**
+ * @override
+ * @return {!IteratorIterable<!ImageTrack>}
+ */
+ImageTrackList.prototype[Symbol.iterator] = function() {};

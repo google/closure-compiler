@@ -492,6 +492,24 @@ function FormData(form) {}
 FormData.prototype[Symbol.iterator] = function() {};
 
 /**
+ * @return {!IteratorIterable<!Array<string|!FormDataEntryValue>>}
+ * @nosideeffects
+ */
+FormData.prototype.entries = function() {};
+
+/**
+ * @return {!IteratorIterable<string>}
+ * @nosideeffects
+ */
+FormData.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<!FormDataEntryValue>}
+ * @nosideeffects
+ */
+FormData.prototype.values = function() {};
+
+/**
  * @param {string} name
  * @param {?Blob|string} value
  * @param {string=} filename

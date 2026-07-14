@@ -47,6 +47,15 @@ webCrypto.Algorithm;
  */
 webCrypto.AlgorithmIdentifier;
 
+
+/**
+ * @typedef {string}
+ * Valid values: 'decrypt', 'deriveBits', 'deriveKey', 'encrypt', 'sign',
+ *               'unwrapKey', 'verify', 'wrapKey'.
+ * @see http://www.w3.org/TR/WebCryptoAPI/#dfn-KeyUsage
+ */
+webCrypto.KeyUsage;
+
 /**
  * @typedef {webCrypto.AlgorithmIdentifier}
  * @see http://www.w3.org/TR/WebCryptoAPI/#dfn-HashAlgorithmIdentifier
@@ -691,9 +700,9 @@ webCrypto.SubtleCrypto.prototype.digest = function(algorithm, data) {};
  *     algorithm Supported values are: SHA-1, SHA-256, SHA-384, and SHA-512.
  * @param {boolean} extractable If the key can be extracted from the CryptoKey
  *     object at a later stage.
- * @param {!Array<string>} keyUsages Indication of new key options i.e.
- *     encrypt, decrypt, sign, verify, deriveKey, deriveBits, wrapKey,
- *     unwrapKey.
+ * @param {(!Array<string>|!Iterable<!webCrypto.KeyUsage>)} keyUsages Indication
+ *     of new key options i.e. encrypt, decrypt, sign, verify, deriveKey,
+ *     deriveBits, wrapKey, unwrapKey.
  * @return {!Promise<!webCrypto.CryptoKey|!webCrypto.CryptoKeyPair>} returns the
  *     generated key.
  */
@@ -710,8 +719,8 @@ webCrypto.SubtleCrypto.prototype.generateKey = function(algorithm,
  *     derivation algorithm to use.
  * @param {boolean} extractable Indicates if the key can be extracted from the
  *     CryptoKey object at a later stage.
- * @param {!Array<string>} keyUsages Indicates what can be done with the
- *     derivated key.
+ * @param {(!Array<string>|!Iterable<!webCrypto.KeyUsage>)} keyUsages Indicates
+ *     what can be done with the derivated key.
  * @return {!Promise<!webCrypto.CryptoKey|!webCrypto.CryptoKeyPair>} returns the
  *     generated key.
  */
@@ -741,9 +750,9 @@ webCrypto.SubtleCrypto.prototype.deriveBits = function(algorithm,
  *     AES-KW, HMAC, RSASSA-PKCS1-v1_5, ECDSA, ECDH, DH.
  * @param {boolean} extractable If the key can be extracted from the CryptoKey
  *     object at a later stage.
- * @param {!Array<string>} keyUsages Indication of new key options i.e.
- *     encrypt, decrypt, sign, verify, deriveKey, deriveBits, wrapKey,
- *     unwrapKey.
+ * @param {(!Array<string>|!Iterable<!webCrypto.KeyUsage>)} keyUsages Indication
+ *     of new key options i.e. encrypt, decrypt, sign, verify, deriveKey,
+ *     deriveBits, wrapKey, unwrapKey.
  * @return {!Promise<!webCrypto.CryptoKey>} returns the generated key.
  */
 webCrypto.SubtleCrypto.prototype.importKey = function(format, keyData,
@@ -790,8 +799,8 @@ webCrypto.SubtleCrypto.prototype.wrapKey = function(format,
  *     Represents the algorithm of the wrapped key.
  * @param {boolean} extractable Indicates if the key can be extracted from the
  *     CryptoKey object at a later stage.
- * @param {!Array<string>} keyUsages Indicates what can be done with the
- *     derivated key.
+ * @param {(!Array<string>|!Iterable<!webCrypto.KeyUsage>)} keyUsages Indicates
+ *     what can be done with the derivated key.
  * @return {!Promise<!webCrypto.CryptoKey>} returns the unwrapped key.
  */
 webCrypto.SubtleCrypto.prototype.unwrapKey = function(format, wrappedKey,

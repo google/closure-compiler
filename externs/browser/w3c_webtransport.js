@@ -42,6 +42,7 @@ var WebTransportCloseInfo;
  * @typedef {{
  *   allowPooling: (boolean|undefined),
  *   congestionControl: (string|undefined),
+ *   protocols: (!Array<string>|undefined),
  *   requireUnreliable: (boolean|undefined),
  *   serverCertificateHashes: (!Array<!WebTransportHash>|undefined),
  * }}

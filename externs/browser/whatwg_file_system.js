@@ -158,19 +158,24 @@ FileSystemDirectoryHandle.prototype.removeEntry = function(name, opt_options) {}
 FileSystemDirectoryHandle.prototype.resolve = function(possibleDescendant) {};
 
 /**
- * @return {!AsyncIterable<!Array<string|!FileSystemHandle>>}
+ * @return {!AsyncIteratorIterable<!Array<string|!FileSystemHandle|!FileSystemDirectoryHandle|!FileSystemFileHandle>>}
+ */
+FileSystemDirectoryHandle.prototype[Symbol.asyncIterator] = function() {};
+
+/**
+ * @return {!AsyncIteratorIterable<!Array<string|!FileSystemHandle|!FileSystemDirectoryHandle|!FileSystemFileHandle>>}
  * @see https://fs.spec.whatwg.org/#api-filesystemdirectoryhandle-asynciterable
  */
 FileSystemDirectoryHandle.prototype.entries = function() {};
 
 /**
- * @return {!AsyncIterable<!FileSystemHandle>}
+ * @return {!AsyncIteratorIterable<!FileSystemHandle|!FileSystemDirectoryHandle|!FileSystemFileHandle>}
  * @see https://fs.spec.whatwg.org/#api-filesystemdirectoryhandle-asynciterable
  */
 FileSystemDirectoryHandle.prototype.values = function() {};
 
 /**
- * @return {!AsyncIterable<string>}
+ * @return {!AsyncIteratorIterable<string>}
  * @see https://fs.spec.whatwg.org/#api-filesystemdirectoryhandle-asynciterable
  */
 FileSystemDirectoryHandle.prototype.keys = function() {};

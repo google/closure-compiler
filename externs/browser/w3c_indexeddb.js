@@ -269,7 +269,7 @@ var IDBTransactionOptions = function() {};
 IDBTransactionOptions.prototype.durability;
 
 /**
- * @param {(string|!Array<string>|!DOMStringList)} storeNames The stores to open
+ * @param {(string|!Array<string>|!Iterable<string>|!DOMStringList)} storeNames The stores to open
  *     in this transaction.
  * @param {!IDBTransactionMode=} mode The mode for opening the object stores.
  * @param {!IDBTransactionOptions=} options Extra options, like durability.
@@ -395,7 +395,7 @@ IDBObjectStore.prototype.openCursor = function(range, direction) {};
 
 /**
  * @param {string} name The name of the index.
- * @param {string|!Array<string>} keyPath The path to the index key.
+ * @param {string|!Array<string>|!Iterable<string>} keyPath The path to the index key.
  * @param {!IDBIndexParameters=} opt_paramters Optional parameters
  *     for the created index.
  * @return {!IDBIndex} The IDBIndex object.

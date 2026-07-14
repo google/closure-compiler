@@ -31,7 +31,7 @@ var VibratePattern;
 
 
 /**
- * @param {!VibratePattern} pattern
+ * @param {!VibratePattern|!Iterable<number>} pattern
  * @return {boolean}
  * @see https://www.w3.org/TR/2016/REC-vibration-20161018/#idl-def-navigator-vibrate(vibratepattern)
  */

@@ -139,6 +139,9 @@ PointerEvent.prototype.tiltX;
 /** @type {number} */
 PointerEvent.prototype.tiltY;
 
+/** @type {number} */
+PointerEvent.prototype.persistentDeviceId;
+
 /** @type {string} */
 PointerEvent.prototype.pointerType;
 

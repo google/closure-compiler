@@ -41,91 +41,17 @@ var MIDIOptions;
 
 /**
  * @interface
+ * @extends {ReadonlyMap<string, !MIDIInput>}
  */
 var MIDIInputMap = function() {};
-
-
-/**
- * @const {number}
- */
-MIDIInputMap.prototype.size;
-
-
-/**
- * @param {function(string)} iterator
- */
-MIDIInputMap.prototype.keys = function(iterator) {};
-
-
-/**
- * @param {function(!Array.<*>)} iterator
- */
-MIDIInputMap.prototype.entries = function(iterator) {};
-
-
-/**
- * @param {function(!MIDIInput)} iterator
- */
-MIDIInputMap.prototype.values = function(iterator) {};
-
-
-/**
- * @param {string} key
- * @return {!MIDIInput}
- */
-MIDIInputMap.prototype.get = function(key) {};
-
-
-/**
- * @param {string} key
- * @return {boolean}
- */
-MIDIInputMap.prototype.has = function(key) {};
 
 
 
 /**
  * @interface
+ * @extends {ReadonlyMap<string, !MIDIOutput>}
  */
 var MIDIOutputMap = function() {};
-
-
-/**
- * @const {number}
- */
-MIDIOutputMap.prototype.size;
-
-
-/**
- * @param {function(string)} iterator
- */
-MIDIOutputMap.prototype.keys = function(iterator) {};
-
-
-/**
- * @param {function(!Array.<*>)} iterator
- */
-MIDIOutputMap.prototype.entries = function(iterator) {};
-
-
-/**
- * @param {function(!MIDIOutput)} iterator
- */
-MIDIOutputMap.prototype.values = function(iterator) {};
-
-
-/**
- * @param {string} key
- * @return {!MIDIOutput}
- */
-MIDIOutputMap.prototype.get = function(key) {};
-
-
-/**
- * @param {string} key
- * @return {boolean}
- */
-MIDIOutputMap.prototype.has = function(key) {};
 
 
 

@@ -27,6 +27,9 @@
  * @externs
  */
 
+/** @typedef {number} */
+var DOMHighResTimeStamp;
+
 /** @constructor */
 function PerformanceTiming() {}
 /** @type {number} */ PerformanceTiming.prototype.navigationStart;
@@ -104,7 +107,7 @@ function PerformanceServerTiming() {}
  * See https://w3c.github.io/navigation-timing/#sec-performance-navigation-types
  * @typedef {string}
  */
-var NavigationType;
+var NavigationTimingType;
 
 /**
  * https://w3c.github.io/navigation-timing/#sec-PerformanceNavigationTiming
@@ -122,7 +125,7 @@ function PerformanceNavigationTiming() {}
 /** @type {number} */ PerformanceNavigationTiming.prototype.domComplete;
 /** @type {number} */ PerformanceNavigationTiming.prototype.loadEventStart;
 /** @type {number} */ PerformanceNavigationTiming.prototype.loadEventEnd;
-/** @type {NavigationType} */ PerformanceNavigationTiming.prototype.type;
+/** @type {NavigationTimingType} */ PerformanceNavigationTiming.prototype.type;
 /** @type {number} */ PerformanceNavigationTiming.prototype.redirectCount;
 // https://wicg.github.io/nav-speculation/prerendering.html#performance-navigation-timing-extension
 /** @type {number} */ PerformanceNavigationTiming.prototype.activationStart;
@@ -133,6 +136,19 @@ function PerformanceNavigationTiming() {}
  * @extends {PerformanceEntry}
  */
 function PerformancePaintTiming() {}
+// from PaintTimingMixin
+/** @type {!DOMHighResTimeStamp} */ PerformancePaintTiming.prototype.paintTime;
+/** @type {!DOMHighResTimeStamp|null} */ PerformancePaintTiming.prototype
+    .presentationTime;
+
+/**
+ * Differing from TS .d.ts definition (which has 0 parameters) to match
+ * Object.prototype.toJSON(opt_key) in es5.js.
+ * @override
+ * @param {*=} opt_key
+ * @return {*}
+ */
+PerformancePaintTiming.prototype.toJSON = function(opt_key) {};
 
 /** @constructor */
 function PerformanceNavigation() {}
@@ -199,6 +215,10 @@ function LargestContentfulPaint() {}
 /** @type {string} */ LargestContentfulPaint.prototype.id;
 /** @type {string} */ LargestContentfulPaint.prototype.url;
 /** @type {?Element} */ LargestContentfulPaint.prototype.element;
+// from PaintTimingMixin
+/** @type {!DOMHighResTimeStamp} */ LargestContentfulPaint.prototype.paintTime;
+/** @type {!DOMHighResTimeStamp|null} */ LargestContentfulPaint.prototype
+    .presentationTime;
 
 /**
  * https://wicg.github.io/event-timing/#sec-performance-event-timing
@@ -210,6 +230,7 @@ function PerformanceEventTiming() {}
 /** @type {number} */ PerformanceEventTiming.prototype.processingEnd;
 /** @type {boolean} */ PerformanceEventTiming.prototype.cancelable;
 /** @type {?Node} */ PerformanceEventTiming.prototype.target;
+/** @type {number} */ PerformanceEventTiming.prototype.interactionId;
 
 /**
  * @record
@@ -232,16 +253,10 @@ function PerformanceMeasureOptions() {}
 
 /**
  * @see https://developer.mozilla.org/docs/Web/API/EventCounts
- * @constructor
+ * @interface
+ * @extends {ReadonlyMap<string, number>}
  */
 function EventCounts() {}
-
-/**
- * @param {function(number, string, !EventCounts): void} callback
- * @param {*} thisArg
- * @return {void}
- */
-EventCounts.prototype.forEach = function(callback, thisArg) {}
 
 /** @constructor */
 function Performance() {}
@@ -258,6 +273,8 @@ Performance.prototype.navigation;
 /** @type {number} */
 Performance.prototype.timeOrigin;
 
+/** @type {number} */
+Performance.prototype.interactionCount;
 
 /**
  * Clears the buffer used to store the current list of

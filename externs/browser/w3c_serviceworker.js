@@ -505,7 +505,7 @@ Cache.prototype.matchAll = function(opt_request, opt_options) {};
 Cache.prototype.add = function(request) {};
 
 /**
- * @param {!Array<!RequestInfo>} requests
+ * @param {!Array<!RequestInfo>|!Iterable<!RequestInfo>} requests
  * @return {!Promise<void>}
  */
 Cache.prototype.addAll = function(requests) {};

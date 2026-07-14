@@ -146,8 +146,12 @@ Document.prototype.createTouch = function(view, target, identifier, pageX,
  * @see http://www.w3.org/TR/touch-events/#touchlist-interface
  * @constructor
  * @implements {IArrayLike<!Touch>}
+ * @implements {Iterable<!Touch>}
  */
 function TouchList() {}
+
+/** @override */
+TouchList.prototype[Symbol.iterator] = function() {};
 
 /**
  * The number of Touch objects in this TouchList object.
