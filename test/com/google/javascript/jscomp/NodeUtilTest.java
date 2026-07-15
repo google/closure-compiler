@@ -4372,6 +4372,36 @@ public final class NodeUtilTest {
       IR.script(exprResult); // Call this for its side effect of modifying `exprResult`.
       assertThat(NodeUtil.isBundledGoogModuleCall(callNode)).isTrue();
     }
+
+    @Test
+    public void testGetOriginalName_string() {
+      // No rename artifacts
+      assertThat(NodeUtil.getOriginalName("foo")).isEqualTo("foo");
+
+      // Unique name suffix
+      assertThat(NodeUtil.getOriginalName("foo$$1")).isEqualTo("foo");
+      assertThat(NodeUtil.getOriginalName("foo$$123")).isEqualTo("foo");
+      assertThat(NodeUtil.getOriginalName("foo_bar$$1")).isEqualTo("foo_bar");
+
+      // Contextual rename suffix
+      assertThat(NodeUtil.getOriginalName("foo$jscomp$1")).isEqualTo("foo");
+      assertThat(NodeUtil.getOriginalName("foo_bar$jscomp$123")).isEqualTo("foo_bar");
+
+      // Module exports prefix
+      assertThat(NodeUtil.getOriginalName("module$exports$foo$Bar")).isEqualTo("Bar");
+      assertThat(NodeUtil.getOriginalName("module$exports$foo$bar$Baz")).isEqualTo("Baz");
+      assertThat(NodeUtil.getOriginalName("module$exports$foo$bar$PREVENT_CSN_PROPERTY"))
+          .isEqualTo("PREVENT_CSN_PROPERTY");
+
+      // Module contents prefix (without underscores in module name)
+      assertThat(NodeUtil.getOriginalName("module$contents$foo$Bar_baz")).isEqualTo("baz");
+      assertThat(NodeUtil.getOriginalName("module$contents$foo$Bar_baz_qux")).isEqualTo("qux");
+
+      // Suffix and prefix combined
+      assertThat(NodeUtil.getOriginalName("module$exports$foo$Bar$$1")).isEqualTo("Bar");
+      assertThat(NodeUtil.getOriginalName("module$contents$foo$Bar_baz$$123")).isEqualTo("baz");
+      assertThat(NodeUtil.getOriginalName("module$exports$foo$Bar$jscomp$1$$1")).isEqualTo("Bar");
+    }
   }
 
   @RunWith(JUnit4.class)

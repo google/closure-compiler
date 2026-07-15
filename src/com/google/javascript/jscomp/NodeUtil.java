@@ -5800,4 +5800,32 @@ public final class NodeUtil {
     // trailing newline
     return current.getLineno() + 1;
   }
+
+  /**
+   * Returns the original name of a renamed variable by stripping unique suffixes and module
+   * prefixes.
+   */
+  public static String getOriginalName(String name) {
+    // Strip unique name suffix: "foo$$1" -> "foo"
+    name = name.replaceAll("\\$\\$\\d+$", "");
+
+    // Strip contextual rename suffix: "foo$jscomp$1" -> "foo"
+    name = MakeDeclaredNamesUnique.ContextualRenameInverter.getOriginalName(name);
+
+    // Strip module exports prefix: "module$exports$foo$Bar" -> "Bar"
+    if (name.startsWith("module$exports$")) {
+      int lastDollar = name.lastIndexOf('$');
+      if (lastDollar != -1) {
+        name = name.substring(lastDollar + 1);
+      }
+    }
+    // Strip module contents prefix: "module$contents$foo$Bar_baz" -> "baz"
+    else if (name.startsWith("module$contents$")) {
+      int lastUnderscore = name.lastIndexOf('_');
+      if (lastUnderscore != -1) {
+        name = name.substring(lastUnderscore + 1);
+      }
+    }
+    return name;
+  }
 }
