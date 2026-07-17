@@ -443,10 +443,7 @@ class RenameProperties implements CompilerPass {
      * @param t The traversal
      */
     private void countCallCandidates(NodeTraversal t, Node callNode) {
-      String fnName = callNode.getFirstChild().getOriginalName();
-      if (fnName == null) {
-        fnName = callNode.getFirstChild().getString();
-      }
+      String fnName = callNode.getFirstChild().getString();
       Node firstArg = callNode.getSecondChild();
       if (!firstArg.isStringLit()) {
         t.report(callNode, BAD_CALL, fnName);
