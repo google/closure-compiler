@@ -1449,13 +1449,26 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         @Nullable String optionalProperty,
         TypedScope scopeToDeclareIn) {
       if (importedModuleObject == null) {
-        // We could not find the module defining this import. Just declare the name as unknown.
+        // We could not find the module defining this import. If the compiler is assuming forward
+        // declared types (or if explicitly forward declared), create a NamedType so it resolves to
+        // NoResolvedType. Otherwise, fall back to unknownType to avoid spurious type check errors.
+        JSType fallbackType =
+            compiler.getOptions().assumeForwardDeclaredForMissingTypes()
+                ? typeRegistry.createNamedType(
+                    currentScope,
+                    localNameNode.getString(),
+                    localNameNode.getSourceFileName(),
+                    localNameNode.getLineno(),
+                    localNameNode.getCharno())
+                : unknownType;
         new SlotDefiner()
             .forDeclarationNode(localNameNode)
             .forVariableName(localNameNode.getString())
             .inScope(scopeToDeclareIn)
-            .withType(unknownType)
-            .allowLaterTypeInference(true)
+            .withType(fallbackType)
+            .allowLaterTypeInference(
+                fallbackType.isUnknownType()
+                    && !compiler.getOptions().assumeForwardDeclaredForMissingTypes())
             .defineSlot();
         return;
       }
@@ -1657,7 +1670,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (ctorType != null) {
         if (ctorType.isConstructor() || ctorType.isInterface()) {
           return ctorType.toMaybeFunctionType().getInstanceType();
-        } else if (ctorType.isUnknownType()) {
+        } else if (ctorType.isUnknownType() || ctorType.isNoResolvedType()) {
           // The constructor could have an unknown type for cases where it is dynamically
           // created or passed in from elsewhere.
           // e.g. with a mixin pattern
@@ -1665,6 +1678,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           //   return class extends ctor { ... };
           // }
           // In that case consider the super class instance type to be unknown.
+          // On the other hand, the constructor can be a NoResolvedType if running in Clutz's
+          // partial compilation mode.
           return ctorType.toMaybeObjectType();
         }
       }

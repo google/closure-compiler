@@ -1096,7 +1096,8 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
                 && var.getNameNode().isName() // ignore redeclarations of implicit globals
                 && NodeUtil.isConstantDeclaration(var.getJSDocInfo(), var.getNameNode())
                 && !(var.getJSDocInfo() != null
-                    && var.getJSDocInfo().containsDeclarationExcludingTypelessConst());
+                    && var.getJSDocInfo().containsDeclarationExcludingTypelessConst())
+                && !(var.getType() != null && var.getType().isNoResolvedType());
 
         // When looking at VAR initializers for declared VARs, we tend
         // to use the declared type over the type it's being

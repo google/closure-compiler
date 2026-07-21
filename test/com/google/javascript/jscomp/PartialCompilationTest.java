@@ -15,12 +15,14 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.NamedType;
+import com.google.javascript.rhino.jstype.NoResolvedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
@@ -44,6 +46,11 @@ public class PartialCompilationTest {
    * DiagnosticGroups#MISSING_SOURCES_WARNINGS} category.
    */
   private void assertPartialCompilationSucceeds(String code) throws Exception {
+    assertPartialCompilationSucceeds(code, createCompilerOptions());
+  }
+
+  private void assertPartialCompilationSucceeds(String code, CompilerOptions options)
+      throws Exception {
     compiler = new Compiler();
     compiler.setErrorManager(
         new BasicErrorManager() {
@@ -62,7 +69,6 @@ public class PartialCompilationTest {
             /* no-op */
           }
         });
-    CompilerOptions options = createCompilerOptions();
     compiler.init(
         ImmutableList.of(),
         Collections.singletonList(SourceFile.fromCode("input.js", code)),
@@ -84,6 +90,8 @@ public class PartialCompilationTest {
     options.setWarningLevel(DiagnosticGroups.MISSING_SOURCES_WARNINGS, CheckLevel.OFF);
     options.setWarningLevel(
         DiagnosticGroup.forType(FunctionTypeBuilder.RESOLVED_TAG_EMPTY), CheckLevel.OFF);
+    options.setWarningLevel(
+        DiagnosticGroup.forType(TypeCheck.CONFLICTING_EXTENDED_TYPE), CheckLevel.OFF);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     return options;
   }
@@ -258,5 +266,76 @@ public class PartialCompilationTest {
             }
         }
         """);
+  }
+
+  @Test
+  public void testMissingModuleImportExtends_keepOriginalModuleExportNames() throws Exception {
+    CompilerOptions options = createCompilerOptions();
+    options.setEnableModuleRewriting(false);
+    options.setChecksOnly(true);
+    options.setPreserveDetailedSourceInfo(true);
+
+    assertPartialCompilationSucceeds(
+        """
+        goog.module('test.module');
+        const MissingDefaultBase = goog.require('another.missing.module');
+        const {MissingDestructuredBase} = goog.require('some.missing.module');
+        const {MissingRenamedBase: NewName} = goog.require('some.missing.module');
+
+        class DerivedDefault extends MissingDefaultBase {}
+        class DerivedDestructured extends MissingDestructuredBase {}
+        class DerivedRenamed extends NewName {}
+        """,
+        options);
+
+    TypedScopeCreator tsc = (TypedScopeCreator) compiler.getTypedScopeCreator();
+    var file = compiler.getJsRoot().getLastChild();
+    checkState(file.isScript() && file.getFirstChild().isModuleBody(), file);
+    TypedScope moduleScope = tsc.getNodeToScopeMapper().apply(file.getFirstChild());
+
+    TypedVar missingDefault = moduleScope.getSlot("MissingDefaultBase");
+    assertThat(missingDefault).isNotNull();
+    assertThat(missingDefault.getType().isNoResolvedType()).isTrue();
+
+    TypedVar missingDestructured = moduleScope.getSlot("MissingDestructuredBase");
+    assertThat(missingDestructured).isNotNull();
+    assertThat(missingDestructured.getType().isNoResolvedType()).isTrue();
+
+    TypedVar missingRenamed = moduleScope.getSlot("NewName");
+    assertThat(missingRenamed).isNotNull();
+    assertThat(missingRenamed.getType().isNoResolvedType()).isTrue();
+
+    TypedVar derivedDefault = moduleScope.getSlot("DerivedDefault");
+    assertThat(derivedDefault).isNotNull();
+    JSType defaultSuper =
+        derivedDefault.getType().toMaybeFunctionType().getPrototype().getImplicitPrototype();
+    assertWithMessage("defaultSuper %s", defaultSuper).that(defaultSuper).isNotNull();
+    assertWithMessage("defaultSuper %s", defaultSuper)
+        .that(defaultSuper.isNoResolvedType())
+        .isTrue();
+    assertThat(((NoResolvedType) defaultSuper).getReferenceName()).isEqualTo("MissingDefaultBase");
+
+    TypedVar derivedDestructured = moduleScope.getSlot("DerivedDestructured");
+    assertThat(derivedDestructured).isNotNull();
+    JSType destructuredSuper =
+        derivedDestructured.getType().toMaybeFunctionType().getPrototype().getImplicitPrototype();
+    assertWithMessage("destructuredSuper %s", destructuredSuper)
+        .that(destructuredSuper)
+        .isNotNull();
+    assertWithMessage("destructuredSuper %s", destructuredSuper)
+        .that(destructuredSuper.isNoResolvedType())
+        .isTrue();
+    assertThat(((NoResolvedType) destructuredSuper).getReferenceName())
+        .isEqualTo("MissingDestructuredBase");
+
+    TypedVar derivedRenamed = moduleScope.getSlot("DerivedRenamed");
+    assertThat(derivedRenamed).isNotNull();
+    JSType renamedSuper =
+        derivedRenamed.getType().toMaybeFunctionType().getPrototype().getImplicitPrototype();
+    assertWithMessage("renamedSuper %s", renamedSuper).that(renamedSuper).isNotNull();
+    assertWithMessage("renamedSuper %s", renamedSuper)
+        .that(renamedSuper.isNoResolvedType())
+        .isTrue();
+    assertThat(((NoResolvedType) renamedSuper).getReferenceName()).isEqualTo("NewName");
   }
 }
