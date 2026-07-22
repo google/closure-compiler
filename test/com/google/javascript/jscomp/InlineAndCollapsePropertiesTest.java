@@ -2994,6 +2994,29 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassStaticInheritance_propertyWithSuperNocollapseSubclassCollapse() {
+    test(
+        srcs(
+            """
+            class A {}
+            /** @nocollapse */
+            A.foo = 5;
+            class B extends A {}
+            B.foo = 6;
+            use(B.foo);
+            """),
+        expected(
+            """
+            class A {}
+            /** @nocollapse */
+            A.foo = 5;
+            class B extends A {}
+            var B$foo = 6;
+            use(B$foo);
+            """));
+  }
+
+  @Test
   public void testClassStaticInheritance_cantDetermineSuperclass() {
     // Here A.foo and B.foo are unsafely collapsed because getSuperclass() creates an alias for them
     test(
