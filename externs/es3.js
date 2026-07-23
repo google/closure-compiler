@@ -693,8 +693,8 @@ ReadonlyArray.prototype.join = function(opt_separator) {};
 /**
  * Extracts a section of an array and returns a new array.
  *
- * @param {?number=} begin Zero-based index at which to begin extraction.
- * @param {?number=} end Zero-based index at which to end extraction.  slice
+ * @param {number=} begin Zero-based index at which to begin extraction.
+ * @param {number=} end Zero-based index at which to end extraction.  slice
  *     extracts up to but not including end.
  * @return {!Array<T>}
  * @this {IArrayLike<T>|string}
@@ -923,8 +923,8 @@ Array.prototype.shift = function() {};
 /**
  * Extracts a section of an array and returns a new array.
  *
- * @param {?number=} begin Zero-based index at which to begin extraction.
- * @param {?number=} end Zero-based index at which to end extraction.  slice
+ * @param {number=} begin Zero-based index at which to begin extraction.
+ * @param {number=} end Zero-based index at which to end extraction.  slice
  *     extracts up to but not including end.
  * @return {!Array<T>}
  * @this {IArrayLike<T>|string}
@@ -1205,13 +1205,13 @@ Number.prototype.toPrecision = function(opt_precision) {};
 /**
  * Returns a string representing the number.
  * @this {Number|number}
- * @param {(number|Number)=} opt_radix An optional radix.
+ * @param {number=} radix An optional radix.
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString
  * @override
  */
-Number.prototype.toString = function(opt_radix) {};
+Number.prototype.toString = function(radix) {};
 
 // Properties.
 /**
@@ -2195,13 +2195,13 @@ String.prototype.search = function(pattern) {};
 
 /**
  * @this {String|string}
- * @param {number} begin
- * @param {number=} opt_end
+ * @param {number=} begin
+ * @param {number=} end
  * @return {string}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice
  */
-String.prototype.slice = function(begin, opt_end) {};
+String.prototype.slice = function(begin, end) {};
 
 /**
  * @this {String|string}

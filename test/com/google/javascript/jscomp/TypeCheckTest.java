@@ -35,11 +35,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
+import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -76,6 +78,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
       """
       Cannot add a property to a struct instance after it is constructed. (If you already declared the property, make sure to give it a type.)
       """;
+
+  private static final String UNION_METHOD_CALL_EXTERNS =
+      new TestExternsBuilder()
+          .addArray()
+          .addArrayBuffer()
+          .addUint8Array()
+          .addObject()
+          .addUndefined()
+          .addFunction()
+          .addString()
+          .addBigInt()
+          .addNumber()
+          .build();
 
   @Test
   public void testInitialTypingScope() {
@@ -23791,8 +23806,72 @@ override: number
   }
 
   @Test
+  public void testInferredType_unionReceiverSliceCall() {
+    assertUnionMethodCallType("!Array<number>|string", ".slice(0, 3)", "!Array<number>|string");
+    assertUnionMethodCallType(
+        "!Array<number>|!ArrayBuffer", ".slice(0, 3)", "!Array<number>|!ArrayBuffer");
+    assertUnionMethodCallType(
+        "!Array<number>|!ArrayBuffer|!Uint8Array",
+        ".slice(0, 3)",
+        "!Array<number>|!ArrayBuffer|!Uint8Array");
+  }
+
+  @Test
+  public void testInferredType_unionReceiverIncludesCall() {
+    assertUnionMethodCallType(
+        "!Array<string>|string|!ReadonlyArray<string>", ".includes('a')", "boolean");
+    assertUnionMethodCallType("!Array<number>|!Uint8Array", ".includes(3)", "boolean");
+  }
+
+  @Test
+  public void testInferredType_unionReceiverIndexOfCall() {
+    assertUnionMethodCallType("!Array<string>|string", ".indexOf('a')", "number");
+    assertUnionMethodCallType("!Array<number>|!Uint8Array", ".indexOf(3)", "number");
+  }
+
+  @Test
+  public void testInferredType_unionReceiverToStringCall() {
+    assertUnionMethodCallType("number|bigint", ".toString()", "string");
+    assertUnionMethodCallType("bigint|number", ".toString(36)", "string");
+  }
+
+  @Test
   public void testUnknownTypeReport_allowsUnknownIfStatement() {
     newTest().addSource("function id(x) { x; }").enableReportUnknownTypes().run();
+  }
+
+  private void assertUnionMethodCallType(
+      String receiverType, String methodCall, String expectedType) {
+    Node root =
+        parseAndTypeCheck(
+            UNION_METHOD_CALL_EXTERNS,
+            """
+            /** @param {%s} x */
+            function callMethodOf(x) {
+                return x%s;
+            }
+            """
+                .formatted(receiverType, methodCall));
+
+    Node functionNode = root.getFirstChild();
+    assertNode(functionNode).hasToken(Token.FUNCTION);
+
+    Node returnNode = functionNode.getLastChild().getFirstChild();
+    assertNode(returnNode).hasToken(Token.RETURN);
+
+    Node sliceCallNode = returnNode.getFirstChild();
+    assertNode(sliceCallNode).hasToken(Token.CALL);
+
+    JSType actualSliceType = sliceCallNode.getJSType();
+    assertThat(actualSliceType.isUnknownType()).isFalse();
+    assertTypeEquals(parseType(expectedType), actualSliceType);
+  }
+
+  private JSType parseType(String typeExpression) {
+    return compiler
+        .getTypeRegistry()
+        .evaluateTypeExpressionInGlobalScope(
+            new JSTypeExpression(JsDocInfoParser.parseTypeString(typeExpression), "<test>"));
   }
 
   @Test

@@ -764,13 +764,13 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame(
         """
         /** @constructor */ function A() {};
-        A.prototype.substring = function(begin$jscomp$1, end$jscomp$1) {};
+        A.prototype.substring = function(begin$jscomp$2, end$jscomp$2) {};
         function f(/** !A */ a) { a.substring(0, 1); }
         """);
     foldSame(
         """
         /** @constructor */ function A() {};
-        A.prototype.slice = function(begin$jscomp$1, end$jscomp$1) {};
+        A.prototype.slice = function(begin$jscomp$2, end$jscomp$2) {};
         function f(/** !A */ a) { a.slice(0, 1); }
         """);
 
