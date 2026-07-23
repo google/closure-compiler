@@ -1171,7 +1171,7 @@ google.maps.Data.DataOptions.prototype.style;
  *
  * Access by calling `const {Data} = await google.maps.importLibrary("maps");`.
  * See https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {?google.maps.Data.FeatureOptions=} options
+ * @param {!google.maps.Data.FeatureOptions|null=} options
  * @constructor
  */
 google.maps.Data.Feature = function(options) {};
@@ -1186,7 +1186,7 @@ google.maps.Data.Feature.prototype.forEachProperty = function(callback) {};
 
 /**
  * Returns the feature&#39;s geometry.
- * @return {?google.maps.Data.Geometry}
+ * @return {!google.maps.Data.Geometry|null}
  */
 google.maps.Data.Feature.prototype.getGeometry = function() {};
 
@@ -1213,7 +1213,7 @@ google.maps.Data.Feature.prototype.removeProperty = function(name) {};
 
 /**
  * Sets the feature&#39;s geometry.
- * @param {google.maps.Data.Geometry|google.maps.LatLng|google.maps.LatLngLiteral|null}
+ * @param {!google.maps.Data.Geometry|!google.maps.LatLng|!google.maps.LatLngLiteral|null}
  *     newGeometry
  * @return {undefined}
  */
@@ -5118,9 +5118,9 @@ google.maps.LatLngAltitudeLiteral.prototype.lng;
  * Access by calling `const {LatLngBounds} = await
  * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {google.maps.LatLng|google.maps.LatLngLiteral|google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral|null=}
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null=}
  *     swOrLatLngBounds
- * @param {google.maps.LatLng|google.maps.LatLngLiteral|null=} ne
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral|null=} ne
  * @constructor
  */
 google.maps.LatLngBounds = function(swOrLatLngBounds, ne) {};
@@ -5135,7 +5135,8 @@ google.maps.LatLngBounds.prototype.contains = function(latLng) {};
 /**
  * Returns <code>true</code> if this bounds approximately equals the given
  * bounds.
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral|null} other
+ * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral|null}
+ *     other
  * @return {boolean}
  */
 google.maps.LatLngBounds.prototype.equals = function(other) {};
