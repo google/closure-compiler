@@ -2053,6 +2053,145 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 .addChunk("a;")
                 .build()),
         expected("", "let a = 1; let b = { [a + 1]: 2 };", "a;"));
+
+    //  Well defined variables are moveable
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("var a = function() {}; a.prototype.blah = function() {};")
+                // m2
+                .addChunk("a;")
+                .build()),
+        expected(
+            // m1
+            "",
+            // m2
+            """
+            var a = function() {};
+            a.prototype.blah = function() {};
+            a;
+            """));
+  }
+
+  @Test
+  public void testComputedPropertiesUsingSymbol() {
+    // Computed properties are movable if the key is a `Symbol.<any_property_on_symbol>`
+    // `Symbol` is a built-in JavaScript object that is guaranteed to be unique. Therefore, it
+    // is movable. Any properties on `Symbol` are also movable (e.g `Symbol.iterator`).
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("let a = { [Symbol.iterator]: 1};")
+                .addChunk("a;")
+                .build()),
+        expected(
+            "", // everything has been moved out of this chunk
+            "let a = { [Symbol.iterator]: 1}; a;"));
+
+    // `Symbol` is declared in m1, and used in m2. It should be moved to m2 in expected output.
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("let a = class { [Symbol.anyPropertyOnSymbolIsMovable]() {} };")
+                // m2
+                .addChunk("a;")
+                .build()),
+        expected(
+            // m1
+            "",
+            // m2
+            "let a = class { [Symbol.anyPropertyOnSymbolIsMovable]() {} }; a;"));
+
+    testSame(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("let prop; let a = class { [prop]() {} };")
+                // m2
+                .addChunk("a;")
+                .build()));
+
+    // Now turn on transpilation and rerun the same above 3 unit tests.
+    enableTranspile();
+
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("let a = { [Symbol.iterator]: 1};")
+                // m2
+                .addChunk("a;")
+                .build()),
+        expected(
+            // m1
+            // Ideally, we should be moving this code out of m1, but this would require us to move
+            // an `ASSIGN` node which we don't want to do.
+            """
+            var $jscomp$compprop98447280$0 = {};
+            var a = ($jscomp$compprop98447280$0[Symbol.iterator] = 1, $jscomp$compprop98447280$0);
+            """,
+            // m2
+            "a;"));
+
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("let a = class { [Symbol.anyPropertyOnSymbolIsMovable]() {} };")
+                // m2
+                .addChunk("a;")
+                .build()),
+        expected(
+            // m1
+            "",
+            // m2
+            """
+            /** @constructor */ var a = function() {};
+            a.prototype[Symbol.anyPropertyOnSymbolIsMovable] = function() {};
+            a;
+            """));
+
+    // Non-Symbol computed properties are currently not movable.
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("let prop; let a = class { [prop]() {} };")
+                // m2
+                .addChunk("a;")
+                .build()),
+        expected(
+            // m1
+            """
+            var prop;
+            var $jscomp$compField$98447280$0 = prop;
+            /** @constructor */ var a = function() {};
+            a.prototype[$jscomp$compField$98447280$0] = function() {};
+            """,
+            // m2
+            "a;"));
+  }
+
+  @Test
+  public void testComputedPropertiesUsingSymbolUnmovable() {
+    // Computed properties are not movable if the key is not explicitly called `Symbol.`
+    testSame(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("let a = { [Symbol123.iterator]: 1};")
+                .addChunk("a;")
+                .build()));
+
+    testSame(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk("let a = class { [Symbol123.anyPropertyOnSymbolIsMovable]() {} };")
+                // m2
+                .addChunk("a;")
+                .build()));
   }
 
   @Test

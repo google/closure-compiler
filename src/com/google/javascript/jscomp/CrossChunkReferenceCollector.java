@@ -193,13 +193,15 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
           // `varName = value;`
           draft.declaredNameNode = lhs;
           draft.declaredValueNode = rhs;
-        } else if (lhs.isGetProp()) {
+        } else if (lhs.isGetProp() || isPotentiallyMoveableGetElem(lhs)) {
           Node nameNode = checkNotNull(lhs.getFirstChild());
           while (nameNode.isGetProp()) {
             nameNode = checkNotNull(nameNode.getFirstChild());
           }
           if (nameNode.isName()) {
             // `varName.some.property = value;`
+            // OR
+            // `varName[someProperty] = value;`
             draft.declaredNameNode = nameNode;
             draft.declaredValueNode = rhs;
           }
@@ -241,6 +243,28 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
       }
     }
     return draft;
+  }
+
+  private static boolean isPotentiallyMoveableGetElem(Node maybeGetElem) {
+    if (!maybeGetElem.isGetElem()) {
+      return false;
+    }
+
+    // We'll only consider a GETELEM as potentially moveable if the property being indexed is on
+    // `Symbol` (e.g. `Symbol.iterator`). We don't generally want to consider GETELEM nodes as
+    // moveable as registries (ex. `GlobalRegistry['Foo'] = Foo`) will create a reference from `Foo`
+    // to `GlobalRegistry`. As other pieces of code reference `GlobalRegistry` this will ultimately
+    // cause a large cluster of symbols that would have to be considered as moving together, but
+    // likely will no to be able to.
+    // Therefore, we we'll only consider a subset of cases, like `Symbol.iterator`, as moveable as
+    // these large reference clusters are unlikely in this case. This should allow classes that
+    // define these properties to potentialy be moved to later chunks.
+    Node property = maybeGetElem.getLastChild();
+    if (!property.isGetProp()) {
+      return false;
+    }
+    Node name = property.getFirstChild();
+    return name.isName() && name.getString().equals("Symbol");
   }
 
   private static <T> T pop(List<T> list) {
@@ -423,6 +447,18 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
           }
         }
         return true;
+      }
+      case GETPROP -> {
+        // `Symbol` is a built-in JavaScript object that is guaranteed to be unique. Therefore it
+        // is movable. Any properties on `Symbol` are also movable (e.g `Symbol.iterator`).
+        Node child = valueNode.getFirstChild();
+        if (child != null && child.isName()) {
+          String symbol = child.getString();
+          if (symbol != null && symbol.equals("Symbol")) {
+            return true;
+          }
+        }
+        return false;
       }
       default -> {}
     }
