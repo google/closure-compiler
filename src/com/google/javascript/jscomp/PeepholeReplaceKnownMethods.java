@@ -27,6 +27,10 @@ import static java.lang.Math.min;
 
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.base.Tri;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -36,8 +40,27 @@ import java.util.List;
 import java.util.Locale;
 import org.jspecify.annotations.Nullable;
 
-/** Just to fold known methods when they are called with constants. */
+/**
+ * Folds known methods when the return value can be determined at compile time. This can happen when
+ * the parameters are constants or the method result depends on the parameters only through their
+ * color and we know the parameter color.
+ *
+ * <p>Example:
+ *
+ * <pre>{@code
+ * Number.parseFloat("0.1") -> 0.1
+ * "(".charCodeAt(0)        -> 40
+ * ['a', 'b', 'c'].join('') -> 'abc'
+ * Array.isArray([1, 2])    -> true
+ * Array.isArray(x.sort())  -> x.sort(), true
+ * }</pre>
+ */
 class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
+  private static final ImmutableSet<ColorId> DEFINITELY_ARRAY_COLOR_IDS =
+      ImmutableSet.of(
+          StandardColors.ARRAY_ID,
+          StandardColors.READONLY_ARRAY_ID,
+          StandardColors.I_TEMPLATE_ARRAY_ID);
 
   private final boolean late;
   private final boolean useTypes;
@@ -110,17 +133,72 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     // Method node might not be a string if callTarget is a GETELEM.
     // e.g. Array[something]()
-    if (!callTarget.getString().equals("of")) {
-      return subtree;
+    switch (callTarget.getString()) {
+      case "isArray" -> {
+        Tri isArray = tryEvalArrayIsArray(subtree);
+        if (isArray == Tri.UNKNOWN) {
+          return subtree;
+        }
+        subtree.setSideEffectFlags(Node.SideEffectFlags.NO_SIDE_EFFECTS);
+        return replaceExpressionWithEvalResult(
+            subtree, NodeUtil.booleanNode(isArray.toBoolean(false)));
+      }
+      case "of" -> {
+        subtree.removeFirstChild();
+
+        Node arraylit = new Node(Token.ARRAYLIT);
+        arraylit.addChildrenToBack(subtree.removeChildren());
+        subtree.replaceWith(arraylit);
+        reportChangeToEnclosingScope(arraylit);
+        return arraylit;
+      }
+      default -> {
+        return subtree;
+      }
     }
+  }
 
-    subtree.removeFirstChild();
-
-    Node arraylit = new Node(Token.ARRAYLIT);
-    arraylit.addChildrenToBack(subtree.removeChildren());
-    subtree.replaceWith(arraylit);
-    reportChangeToEnclosingScope(arraylit);
-    return arraylit;
+  /**
+   * Given an Array.isArray(arg, ...) expression, tries to evaluate its return value by inspecting
+   * the color of arg.
+   *
+   * <p>If the return value can be determined with certainty, returns Tri.TRUE or Tri.FALSE;
+   * otherwise returns Tri.UNKNOWN.
+   *
+   * <p>While JSType's can lead to more refined evaluation, since they are not available at
+   * peepholes in most common pass configs, we rely on colors only.
+   */
+  private Tri tryEvalArrayIsArray(Node expr) {
+    Node arg = expr.getSecondChild();
+    if (arg == null) {
+      return Tri.FALSE;
+    }
+    if (arg.isSpread()) {
+      return Tri.UNKNOWN;
+    }
+    if (arg.isArrayLit()) {
+      return Tri.TRUE;
+    }
+    Color color = useTypes ? arg.getColor() : null;
+    if (color == null) {
+      return Tri.UNKNOWN;
+    }
+    if (DEFINITELY_ARRAY_COLOR_IDS.contains(color.getId())) {
+      return Tri.TRUE;
+    }
+    if (color.isUnion()) {
+      boolean allArrays = true;
+      boolean allPrimitives = true;
+      for (Color element : color.getUnionElements()) {
+        allArrays &= DEFINITELY_ARRAY_COLOR_IDS.contains(element.getId());
+        allPrimitives &= element.isPrimitive();
+        if (!allArrays && !allPrimitives) {
+          return Tri.UNKNOWN;
+        }
+      }
+      return Tri.forBoolean(allArrays);
+    }
+    return color.isPrimitive() ? Tri.FALSE : Tri.UNKNOWN;
   }
 
   private Node tryFoldKnownNumberMethods(Node subtree, Node callTarget) {
