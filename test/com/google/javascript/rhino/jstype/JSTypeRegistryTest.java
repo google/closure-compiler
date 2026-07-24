@@ -48,6 +48,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYP
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ITERATOR_LIKE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
@@ -112,6 +113,21 @@ public class JSTypeRegistryTest {
   @Test
   public void testGetBuiltInType_iterator() {
     assertType(registry.getGlobalType("Iterator")).isEqualTo(registry.getNativeType(ITERATOR_TYPE));
+  }
+
+  @Test
+  public void testGetBuiltInType_iteratorLike() {
+    assertType(registry.getGlobalType("IteratorLike"))
+        .isEqualTo(registry.getNativeType(ITERATOR_LIKE_TYPE));
+  }
+
+  @Test
+  public void testIteratorExtendsIteratorLike() {
+    assertThat(
+            registry
+                .getNativeType(ITERATOR_TYPE)
+                .isSubtypeOf(registry.getNativeType(ITERATOR_LIKE_TYPE)))
+        .isTrue();
   }
 
   @Test

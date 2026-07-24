@@ -10638,6 +10638,31 @@ override: function(): string
   }
 
   @Test
+  public void testIteratorLikeAccess1() {
+    newTest()
+        .addSource(
+            """
+            /**
+             * @param {!IteratorLike<T>} x
+             * @return {T}
+             * @template T
+             */
+            function f(x) { return x[0]; }
+            function g(/** !Iterator<string> */ x) {
+              var /** null */ y = f(x);
+            }
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : string
+            required: null
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
   public void testArrayAccess1() {
     newTest()
         .addSource("var a = []; var b = a['hi'];")

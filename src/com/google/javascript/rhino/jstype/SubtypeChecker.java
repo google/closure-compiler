@@ -679,6 +679,7 @@ final class SubtypeChecker {
     }
     return switch (unwrappedTypeName) {
       case "ReadonlyArray" -> unwrapped.registry.getReadonlyArrayElementKey();
+      case "IteratorLike" -> unwrapped.registry.getIteratorLikeValueTemplate();
       case "Iterator" -> unwrapped.registry.getIteratorValueTemplate();
       case "Generator" -> unwrapped.registry.getGeneratorValueTemplate();
       case "AsyncIterator" -> unwrapped.registry.getAsyncIteratorValueTemplate();

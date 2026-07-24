@@ -207,7 +207,19 @@ public class TestExternsBuilder {
       IIterableResult.prototype.value;
 
       /**
+       * @record
+       * @template T, TReturn, TNext
+       */
+      function IteratorLike() {}
+      /**
+       * @param {T=} value
+       * @return {!IIterableResult<T>}
+       */
+      IteratorLike.prototype.next;
+
+      /**
        * @interface
+       * @extends {IteratorLike<T, TReturn, TNext>}
        * @template T, TReturn, TNext
        */
       function Iterator() {}

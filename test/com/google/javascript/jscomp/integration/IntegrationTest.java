@@ -1555,10 +1555,10 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         """
         function Foo() {}
-        Foo.prototype.JSC$48_bar = 3;
+        Foo.prototype.JSC$50_bar = 3;
 
         function Baz() {}
-        Baz.prototype.JSC$50_bar = 3;
+        Baz.prototype.JSC$52_bar = 3;
         """);
   }
 
@@ -1951,13 +1951,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     String expected =
         """
         function A() {}
-        A.prototype.JSC$48_foo = function() {
+        A.prototype.JSC$50_foo = function() {
           window.console.log('A');
         };
         function B() {}
         window['main'] = function() {
           var a = window['a'] = new A;
-          a.JSC$48_foo();
+          a.JSC$50_foo();
           window['b'] = new B;
         }
         """;
@@ -2020,21 +2020,21 @@ public final class IntegrationTest extends IntegrationTestCase {
     String expected =
         """
         function A() {}
-        A.prototype.JSC$48_always = function() {
+        A.prototype.JSC$50_always = function() {
           window.console.log('AA');
         };
-        A.prototype.JSC$48_sometimes = function(){
+        A.prototype.JSC$50_sometimes = function(){
           window.console.log('SA');
         };
         function B() {}
-        B.prototype.JSC$50_always=function(){
+        B.prototype.JSC$52_always=function(){
           window.console.log('AB');
         };
         window['main'] = function() {
           var a = window['a'] = new A;
-          a.JSC$48_always();
-          a.JSC$48_sometimes();
-          (window['b'] = new B).JSC$50_always();
+          a.JSC$50_always();
+          a.JSC$50_sometimes();
+          (window['b'] = new B).JSC$52_always();
         }
         """;
 
@@ -2132,10 +2132,10 @@ public final class IntegrationTest extends IntegrationTestCase {
         var Arrays = function() {};
         Arrays.$create = function() { return {}; }
         /** @constructor */
-        function Foo() { this.JSC$48_myprop = 1; }
+        function Foo() { this.JSC$50_myprop = 1; }
         /** @constructor */
-        function Bar() { this.JSC$50_myprop = 2; }
-        var x = {}.JSC$48_myprop;
+        function Bar() { this.JSC$52_myprop = 2; }
+        var x = {}.JSC$50_myprop;
         """);
   }
 
@@ -2173,16 +2173,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         """
         /** @constructor */
-        function Foo() { this.JSC$47_myprop = 1; }
+        function Foo() { this.JSC$49_myprop = 1; }
         /** @constructor */
-        function Bar() { this.JSC$49_myprop = 2; }
+        function Bar() { this.JSC$51_myprop = 2; }
         /** @return {Object} */
         function getSomething() {
           var x = new Bar();
           return new Foo();
         }
         (function someMethod() {
-          return 1 != getSomething().JSC$47_myprop;
+          return 1 != getSomething().JSC$49_myprop;
         })()
         """);
   }
@@ -2227,16 +2227,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         """
         /** @constructor */
-        function Foo() { this.JSC$47_myprop = 1; }
+        function Foo() { this.JSC$49_myprop = 1; }
         /** @constructor */
-        function Bar() { this.JSC$49_myprop = 2; }
+        function Bar() { this.JSC$51_myprop = 2; }
         /** @return {Object} */
         function getSomething() {
           var x = new Bar();
           return new Foo();
         }
         (function someMethod() {
-          return 1 != getSomething().JSC$47_myprop;
+          return 1 != getSomething().JSC$49_myprop;
         })()
         """);
   }

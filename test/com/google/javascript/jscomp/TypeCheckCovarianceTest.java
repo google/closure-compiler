@@ -125,6 +125,20 @@ public final class TypeCheckCovarianceTest {
   }
 
   @Test
+  public void testIteratorLikeCovariant() {
+    newTest()
+        .addSource(
+            """
+            function f(/** !IteratorLike<(string|number)>*/ x){};
+            function g(/** !IteratorLike<number> */ arr) {
+                f(arr);
+            }
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
   public void testIteratorIterableCovariant() {
     newTest()
         .addSource(

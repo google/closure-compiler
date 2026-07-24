@@ -396,6 +396,18 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGeneratorFunctionWithIteratorLikeSpecifiedReturnType() {
+    testWarning(
+        """
+        /** @return {!IteratorLike<number, number>} */
+        function *gen() {
+         yield 1;
+        }
+        """,
+        CheckMissingReturn.MISSING_RETURN_STATEMENT);
+  }
+
+  @Test
   public void testAsyncFunction_noJSDoc() {
     // Note: we add the alert because CheckMissingReturn never warns on functions with empty bodies.
     testNoWarning("async function foo() { alert(1); }");

@@ -54,6 +54,9 @@ final class JsIterables {
     } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorValueTemplate())) {
       // `Iterator<SomeElementType>`
       return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorValueTemplate());
+    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorLikeValueTemplate())) {
+      // `IteratorLike<SomeElementType>`
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorLikeValueTemplate());
     } else if (templateTypeMap.hasTemplateKey(typeRegistry.getAsyncIterableValueTemplate())) {
       // `AsyncIterable<SomeElementType>` or `AsyncGenerator<SomeElementType>`
       return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIterableValueTemplate());
@@ -85,6 +88,9 @@ final class JsIterables {
     } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorReturnTemplate())) {
       // `Iterator<?, SomeElementType>`
       return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorReturnTemplate());
+    } else if (templateTypeMap.hasTemplateKey(typeRegistry.getIteratorLikeReturnTemplate())) {
+      // `IteratorLike<?, SomeElementType>`
+      return templateTypeMap.getResolvedTemplateType(typeRegistry.getIteratorLikeReturnTemplate());
     } else if (templateTypeMap.hasTemplateKey(typeRegistry.getAsyncIterableReturnTemplate())) {
       // `AsyncIterable<?, SomeElementType>` or `AsyncGenerator<?, SomeElementType>`
       return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIterableReturnTemplate());

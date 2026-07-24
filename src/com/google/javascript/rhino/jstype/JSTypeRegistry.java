@@ -124,6 +124,17 @@ public final class JSTypeRegistry {
    */
   private TemplateType iteratorIterableReturnTemplate;
 
+  /**
+   * The template variable corresponding to the T type in {@code IteratorLike<T, TReturn, TNext>}.
+   */
+  private TemplateType iteratorLikeValueTemplate;
+
+  /**
+   * The template variable corresponding to the TReturn type in {@code IteratorLike<T, TReturn,
+   * TNext>}.
+   */
+  private TemplateType iteratorLikeReturnTemplate;
+
   /** The template variable corresponding to the T type in {@code Iterator<T, TReturn, TNext>}. */
   private TemplateType iteratorValueTemplate;
 
@@ -352,6 +363,16 @@ public final class JSTypeRegistry {
   /** Returns the value template variable for the IIterableResult interface. */
   public TemplateType getIIterableResultValueTemplate() {
     return checkNotNull(iiterableResultValueTemplate);
+  }
+
+  /** Returns the value template variable for the IteratorLike interface. */
+  public TemplateType getIteratorLikeValueTemplate() {
+    return checkNotNull(iteratorLikeValueTemplate);
+  }
+
+  /** Returns the return template variable for the IteratorLike interface. */
+  public TemplateType getIteratorLikeReturnTemplate() {
+    return checkNotNull(iteratorLikeReturnTemplate);
   }
 
   /** Returns the value template variable for the Iterator interface. */
@@ -586,6 +607,19 @@ public final class JSTypeRegistry {
     ObjectType iterableType = iterableFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.ITERABLE_TYPE, iterableType);
 
+    iteratorLikeValueTemplate = new TemplateType(this, "T");
+    iteratorLikeReturnTemplate = new TemplateType(this, "TReturn");
+    TemplateType iteratorLikeNextTemplate = new TemplateType(this, "TNext");
+    FunctionType iteratorLikeFunctionType =
+        nativeInterface(
+            "IteratorLike",
+            iteratorLikeValueTemplate,
+            iteratorLikeReturnTemplate,
+            iteratorLikeNextTemplate);
+    registerNativeType(JSTypeNative.ITERATOR_LIKE_FUNCTION_TYPE, iteratorLikeFunctionType);
+    ObjectType iteratorLikeType = iteratorLikeFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.ITERATOR_LIKE_TYPE, iteratorLikeType);
+
     iteratorValueTemplate = new TemplateType(this, "T");
     iteratorReturnTemplate = new TemplateType(this, "TReturn");
     TemplateType iteratorNextTemplate = new TemplateType(this, "TNext");
@@ -593,6 +627,13 @@ public final class JSTypeRegistry {
         nativeInterface(
             "Iterator", iteratorValueTemplate, iteratorReturnTemplate, iteratorNextTemplate);
     registerNativeType(JSTypeNative.ITERATOR_FUNCTION_TYPE, iteratorFunctionType);
+    iteratorFunctionType.setExtendedInterfaces(
+        ImmutableList.of(
+            createTemplatizedType(
+                iteratorLikeType,
+                iteratorValueTemplate,
+                iteratorReturnTemplate,
+                iteratorNextTemplate)));
     ObjectType iteratorType = iteratorFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.ITERATOR_TYPE, iteratorType);
 
@@ -1043,6 +1084,7 @@ public final class JSTypeRegistry {
     registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.I_ARRAY_LIKE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ITERABLE_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.ITERATOR_LIKE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ITERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ITERATOR_ITERABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.GENERATOR_TYPE));
