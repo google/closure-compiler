@@ -2633,9 +2633,11 @@ Atomics.exchange = function(typedArray, index, value) {};
 Atomics.isLockFree = function(size) {};
 
 /**
- * @param {!TypedArray} typedArray
+ * @param {!Int8Array|!Uint8Array|!Int16Array|!Uint16Array|!Int32Array|!Uint32Array|!BigInt64Array|!BigUint64Array}
+ *     typedArray
  * @param {number} index
  * @return {number}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/load
  */
 Atomics.load = function(typedArray, index) {};
 
