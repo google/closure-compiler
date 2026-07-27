@@ -131,6 +131,7 @@ public class DiagnosticGroups {
           + "constantProperty, "
           + "deprecated, "
           + "deprecatedAnnotations, "
+          + "defineWithoutGoogDefine, "
           + "duplicateMessage, "
           + "es5Strict, "
           + "externsValidation, "
@@ -247,6 +248,10 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup UNKNOWN_DEFINES =
       DiagnosticGroups.registerGroup("unknownDefines", ProcessDefines.UNKNOWN_DEFINE_WARNING);
+
+  public static final DiagnosticGroup DEFINE_WITHOUT_GOOG_DEFINE =
+      DiagnosticGroups.registerGroup(
+          "defineWithoutGoogDefine", ProcessDefines.DEFINE_WITHOUT_GOOG_DEFINE);
 
   public static final DiagnosticGroup TWEAKS =
       DiagnosticGroups.registerGroup(

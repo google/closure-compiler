@@ -44,6 +44,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   private boolean recognizeClosureDefines = true;
 
   private boolean enableJ2clPasses = false;
+  private boolean enableDefineWithoutGoogDefineCheck = false;
 
   @Override
   @Before
@@ -51,6 +52,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     super.setUp();
     overrides.clear();
     mode = ProcessDefines.Mode.CHECK_AND_OPTIMIZE;
+    enableDefineWithoutGoogDefineCheck = false;
 
     // ProcessDefines emits warnings if the user tries to re-define a constant,
     // but the constant is not defined anywhere in the binary.
@@ -76,7 +78,9 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     options.setOutputFeatureSet(outputFeatureSet);
     options.setEnableZonesDefineName("javascript.angular2.ENABLE_ZONES");
     options.setZoneInputPattern(ZONE_INPUT_PATTERN);
-
+    if (enableDefineWithoutGoogDefineCheck) {
+      options.setWarningLevel(DiagnosticGroups.DEFINE_WITHOUT_GOOG_DEFINE, CheckLevel.ERROR);
+    }
     return options;
   }
 
@@ -650,6 +654,36 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     testError(
         jsdoc + "const templateName = goog.define(`${template}Name`, 1);",
         ClosurePrimitiveErrors.INVALID_ARGUMENT_ERROR);
+  }
+
+  @Test
+  public void testDefineWithoutGoogDefine_disabledByDefault() {
+    mode = ProcessDefines.Mode.CHECK;
+    testSame("/** @define {boolean} */ const MY_FLAG = true;");
+  }
+
+  @Test
+  public void testDefineWithoutGoogDefine() {
+    mode = ProcessDefines.Mode.CHECK;
+    enableDefineWithoutGoogDefineCheck = true;
+    testError(
+        "/** @define {boolean} */ const MY_FLAG = true;",
+        ProcessDefines.DEFINE_WITHOUT_GOOG_DEFINE);
+  }
+
+  @Test
+  public void testDefineWithoutGoogDefine_compiledInBaseJs() {
+    mode = ProcessDefines.Mode.CHECK;
+    enableDefineWithoutGoogDefineCheck = true;
+    testSame(
+        srcs(SourceFile.fromCode("base.js", "/** @define {boolean} */ var COMPILED = false;")));
+  }
+
+  @Test
+  public void testDefineWithoutGoogDefine_jscompOptOut() {
+    mode = ProcessDefines.Mode.CHECK;
+    enableDefineWithoutGoogDefineCheck = true;
+    testSame("var $jscomp = {}; /** @define {boolean} */ $jscomp.FOO = true;");
   }
 
   @Test

@@ -143,6 +143,12 @@ class ProcessDefines implements CompilerPass {
           "ZoneJS is incompatible with language level ES2017 or higher (See go/ngissue/31730)\n"
               + "Please set `--language_out=ECMASCRIPT_2016` (or older) in your flags.");
 
+  static final DiagnosticType DEFINE_WITHOUT_GOOG_DEFINE =
+      DiagnosticType.disabled(
+          "JSC_DEFINE_WITHOUT_GOOG_DEFINE",
+          "The const declaration for @define ''{0}'' must be initialized with a call to"
+              + " goog.define().");
+
   /** Create a pass that overrides define constants. */
   private ProcessDefines(Builder builder) {
     this.mode = builder.mode;
@@ -541,6 +547,17 @@ class ProcessDefines implements CompilerPass {
 
     for (Define define : this.defineByDefineName.values()) {
       Node declarationNode = define.declaration.getNode();
+
+      if (!isGoogDefineCall(define.value)
+          && !KNOWN_DEFINES.contains(define.defineName)
+          && !define.defineName.startsWith("$jscomp.")) {
+        compiler.report(
+            JSError.make(
+                firstNonNull(define.value, firstNonNull(define.valueParent, declarationNode)),
+                DEFINE_WITHOUT_GOOG_DEFINE,
+                define.defineName,
+                "go/js-practices/locals#defines")); // Example help link
+      }
 
       if (!this.hasValidValue(define)) {
         compiler.report(
