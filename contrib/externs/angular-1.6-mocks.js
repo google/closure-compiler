@@ -20,7 +20,6 @@
  *
  * TODO: Remaining Mocks:
  *     $browser
- *     $log
  *     angular.mock.TzDate
  *     angular.mock.dump
  *     $RAFDecorator
@@ -280,3 +279,67 @@ angular.mock.$exceptionHandlerProvider = function() {};
 
 /** @param {string} mode */
 angular.mock.$exceptionHandlerProvider.prototype.mode = function(mode) {};
+
+
+/**
+ * @interface
+ * @extends {angular.$log}
+ */
+angular.mock.$log = function() {};
+
+
+/** @return {void} */
+angular.mock.$log.prototype.assertEmpty = function() {};
+
+
+/** @return {void} */
+angular.mock.$log.prototype.reset = function() {};
+
+/**
+ * @param {...*} var_args
+ * @return {void}
+ */
+angular.mock.$log.prototype.debug = function(var_args) {};
+
+/** @type {!Array<*>} */
+angular.mock.$log.prototype.debug.logs;
+
+
+/**
+ * @param {...*} var_args
+ * @return {void}
+ */
+angular.mock.$log.prototype.error = function(var_args) {};
+
+/** @type {!Array<*>} */
+angular.mock.$log.prototype.error.logs;
+
+
+/**
+ * @param {...*} var_args
+ * @return {void}
+ */
+angular.mock.$log.prototype.info = function(var_args) {};
+
+/** @type {!Array<*>} */
+angular.mock.$log.prototype.info.logs;
+
+
+/**
+ * @param {...*} var_args
+ * @return {void}
+ */
+angular.mock.$log.prototype.log = function(var_args) {};
+
+/** @type {!Array<*>} */
+angular.mock.$log.prototype.log.logs;
+
+
+/**
+ * @param {...*} var_args
+ * @return {void}
+ */
+angular.mock.$log.prototype.warn = function(var_args) {};
+
+/** @type {!Array<*>} */
+angular.mock.$log.prototype.warn.logs;
