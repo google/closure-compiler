@@ -43,6 +43,81 @@ var SchedulerPostTaskCallback;
 var SchedulerPostTaskOptions;
 
 /**
+ * @record
+ * @see https://wicg.github.io/scheduling-apis/#dictdef-taskcontrollerinit
+ */
+function TaskControllerInit() {}
+
+/** @type {!TaskPriority|undefined} */
+TaskControllerInit.prototype.priority;
+
+/**
+ * @record
+ * @extends {EventInit}
+ * @see https://wicg.github.io/scheduling-apis/#dictdef-taskprioritychangeeventinit
+ */
+function TaskPriorityChangeEventInit() {}
+
+/** @type {!TaskPriority} */
+TaskPriorityChangeEventInit.prototype.previousPriority;
+
+/**
+ * @record
+ * @see https://wicg.github.io/scheduling-apis/#dictdef-tasksignalanyinit
+ */
+function TaskSignalAnyInit() {}
+
+/** @type {(!TaskPriority|!TaskSignal|undefined)} */
+TaskSignalAnyInit.prototype.priority;
+
+/**
+ * @constructor
+ * @extends {AbortController}
+ * @param {!TaskControllerInit=} opt_init
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/TaskController
+ */
+function TaskController(opt_init) {}
+
+/**
+ * @param {!TaskPriority} priority
+ * @return {undefined}
+ */
+TaskController.prototype.setPriority = function(priority) {};
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {!TaskPriorityChangeEventInit} eventInitDict
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/TaskPriorityChangeEvent
+ */
+function TaskPriorityChangeEvent(type, eventInitDict) {}
+
+/** @type {!TaskPriority} */
+TaskPriorityChangeEvent.prototype.previousPriority;
+
+/**
+ * @constructor
+ * @extends {AbortSignal}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/TaskSignal
+ */
+function TaskSignal() {}
+
+/** @type {?function(!TaskPriorityChangeEvent)} */
+TaskSignal.prototype.onprioritychange;
+
+/** @type {!TaskPriority} */
+TaskSignal.prototype.priority;
+
+/**
+ * @param {!Array<!AbortSignal>} signals
+ * @param {!TaskSignalAnyInit=} opt_init
+ * @return {!TaskSignal}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/TaskSignal/any_static
+ */
+TaskSignal.any = function(signals, opt_init) {};
+
+/**
  * @see https://wicg.github.io/scheduling-apis/#sec-scheduler
  * @interface
  */
@@ -55,8 +130,17 @@ function Scheduler() {}
  */
 Scheduler.prototype.postTask = function(callback, options) {};
 
-/** @type {!Scheduler} */
+/**
+ * @return {!Promise<undefined>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Scheduler/yield
+ */
+Scheduler.prototype.yield = function() {};
+
+/** @const {!Scheduler} */
 Window.prototype.scheduler;
 
-/** @type {!Scheduler} */
+/** @const {!Scheduler} */
 WorkerGlobalScope.prototype.scheduler;
+
+/** @const {!Scheduler} */
+var scheduler;

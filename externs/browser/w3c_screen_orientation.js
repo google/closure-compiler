@@ -22,6 +22,14 @@
  */
 
 /**
+ * @typedef {string}
+ * Valid values: 'any', 'landscape', 'landscape-primary', 'landscape-secondary',
+ * 'natural', 'portrait', 'portrait-primary', 'portrait-secondary'.
+ * @see https://w3c.github.io/screen-orientation/#orientationlocktype-enum
+ */
+var OrientationLockType;
+
+/**
  * @interface
  * @extends {EventTarget}
  * @see https://w3c.github.io/screen-orientation/#screenorientation-interface
@@ -29,7 +37,7 @@
 var ScreenOrientation = function() {};
 
 /**
- * @param {string} orientation
+ * @param {!OrientationLockType} orientation
  * @return {!Promise<void>}
  */
 ScreenOrientation.prototype.lock = function(orientation) {};

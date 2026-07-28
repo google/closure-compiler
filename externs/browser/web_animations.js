@@ -343,6 +343,19 @@ var KeyframeAnimationOptions = function() {};
 /** @type {string|undefined} */
 KeyframeAnimationOptions.prototype.id;
 
+/**
+ * @type {!TimelineRangeOffset|!CSSNumericValue|!CSSKeywordValue|string|undefined}
+ */
+KeyframeAnimationOptions.prototype.rangeEnd;
+
+/**
+ * @type {!TimelineRangeOffset|!CSSNumericValue|!CSSKeywordValue|string|undefined}
+ */
+KeyframeAnimationOptions.prototype.rangeStart;
+
+/** @type {!AnimationTimeline|null|undefined} */
+KeyframeAnimationOptions.prototype.timeline;
+
 
 /**
  * @record
@@ -411,6 +424,100 @@ var AnimationTimeline = function() {};
 /** @type {?number} */
 AnimationTimeline.prototype.currentTime;
 
+/** @type {?number} */
+AnimationTimeline.prototype.duration;
+
+/**
+ * @record
+ * @see https://drafts.csswg.org/scroll-animations-1/#dictdef-scrolltimelineoptions
+ */
+function ScrollTimelineOptions() {}
+/** @type {!ScrollAxis|undefined} */
+ScrollTimelineOptions.prototype.axis;
+/** @type {!Element|null|undefined} */
+ScrollTimelineOptions.prototype.source;
+
+/**
+ * @constructor
+ * @implements {AnimationTimeline}
+ * @param {!ScrollTimelineOptions=} opt_options
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ScrollTimeline
+ */
+function ScrollTimeline(opt_options) {}
+
+/** @type {!ScrollAxis} */
+ScrollTimeline.prototype.axis;
+
+/** @type {!Element|null} */
+ScrollTimeline.prototype.source;
+
+// from AnimationTimeline
+
+/** @override */
+ScrollTimeline.prototype.currentTime;
+
+/** @override */
+ScrollTimeline.prototype.duration;
+
+/**
+ * @record
+ * @see https://drafts.csswg.org/web-animations-2/#dictdef-timelinerangeoffset
+ */
+function TimelineRangeOffset() {}
+
+/** @type {!CSSNumericValue|undefined} */
+TimelineRangeOffset.prototype.offset;
+
+/** @type {string|null|undefined} */
+TimelineRangeOffset.prototype.rangeName;
+
+/**
+ * @record
+ * @see https://drafts.csswg.org/scroll-animations-1/#dictdef-viewtimelineoptions
+ */
+function ViewTimelineOptions() {}
+
+/** @type {!ScrollAxis|undefined} */
+ViewTimelineOptions.prototype.axis;
+
+/** @type {(string|!Array<(!CSSNumericValue|!CSSKeywordValue)>)|undefined} */
+ViewTimelineOptions.prototype.inset;
+
+/** @type {!Element|undefined} */
+ViewTimelineOptions.prototype.subject;
+
+/**
+ * @constructor
+ * @extends {ScrollTimeline}
+ * @param {!ViewTimelineOptions=} opt_options
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ViewTimeline
+ */
+function ViewTimeline(opt_options) {}
+
+/** @type {!CSSNumericValue} */
+ViewTimeline.prototype.endOffset;
+
+/** @type {!CSSNumericValue} */
+ViewTimeline.prototype.startOffset;
+
+/** @type {!Element} */
+ViewTimeline.prototype.subject;
+
+// from AnimationTimeline
+
+/** @override */
+ViewTimeline.prototype.currentTime;
+
+/** @override */
+ViewTimeline.prototype.duration;
+
+/**
+ * @typedef {string}
+ * Valid values: 'block', 'inline', 'x', 'y'.
+ * @see https://drafts.csswg.org/scroll-animations-1/#enumdef-scrollaxis
+ */
+var ScrollAxis;
+
 /**
  * @typedef {{
  *   originTime: (number|undefined)
@@ -425,8 +532,13 @@ var DocumentTimelineOptions;
  */
 var DocumentTimeline = function(options) {};
 
+// from AnimationTimeline
+
 /** @override */
 DocumentTimeline.prototype.currentTime;
+
+/** @override */
+DocumentTimeline.prototype.duration;
 
 
 /** @type {!DocumentTimeline} */
