@@ -2205,6 +2205,50 @@ public final class TypeCheckNoTranspileTest {
   }
 
   @Test
+  public void testGenerator_returnsStructuralIteratorLike() {
+    newTest()
+        .addSource(
+            """
+            /** @record */
+            function StructuralIterator() {}
+            /** @return {!IIterableResult<string>} */
+            StructuralIterator.prototype.next = function() {};
+
+            /** @return {!StructuralIterator} */
+            function* gen() { yield 1; }
+            """)
+        .addDiagnostic(
+            """
+            Yielded type does not match declared return type.
+            found   : number
+            required: string
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testGenerator_returnsObjectLiteralIteratorLike() {
+    newTest()
+        .addSource(
+            """
+            /** @typedef {{next: function(): !IIterableResult<string>}} */
+            var StructuralIterator;
+
+            /** @return {!StructuralIterator} */
+            function* gen() { yield 1; }
+            """)
+        .addDiagnostic(
+            """
+            Yielded type does not match declared return type.
+            found   : number
+            required: string
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
   public void testGenerator_returnsIteratorIterable() {
     newTest()
         .addSource("/** @return {!IteratorIterable<?>} */ function *gen() {}")

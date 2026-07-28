@@ -19,6 +19,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_ITERABLE_TYP
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.TemplateType;
@@ -63,6 +64,16 @@ final class JsIterables {
     } else if (templateTypeMap.hasTemplateKey(typeRegistry.getAsyncIteratorValueTemplate())) {
       // `AsyncIterator<SomeElementType>`
       return templateTypeMap.getResolvedTemplateType(typeRegistry.getAsyncIteratorValueTemplate());
+    }
+    JSType nextProperty = iterableOrIterator.findPropertyType("next");
+    if (nextProperty != null) {
+      FunctionType nextFn = nextProperty.toMaybeFunctionType();
+      if (nextFn != null && nextFn.getReturnType() != null) {
+        JSType valueProperty = nextFn.getReturnType().findPropertyType("value");
+        if (valueProperty != null) {
+          return valueProperty;
+        }
+      }
     }
     return typeRegistry.getNativeType(UNKNOWN_TYPE);
   }
