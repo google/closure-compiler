@@ -1631,6 +1631,72 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         """);
   }
 
+  @Test
+  public void testInstanceFieldInitializerCaptureIsClobbered() {
+    test(
+        // input JS
+        """
+        function render(input) {
+          let s = sanitize(input);
+          class Box { html = s; }
+          let t = input;
+          log(t, input);
+          return new Box();
+        }
+        """,
+        // TODO(b/538168027): buggy output: `t` coalesced onto `s`; the class-field initializer now
+        // observes raw `input` at [[Construct]] time instead of the sanitized value.
+        """
+        function render(input) {
+          var s = sanitize(input);
+          class Box { html = s; }
+          s = input;
+          log(s, input);
+          return new Box();
+        }
+        """);
+  }
+
+  @Test
+  public void testControl_innerFunctionCaptureIsNotClobbered() {
+    // `s` is escaped (FUNCTION is a CFG root), so it is excluded from the interference graph
+    // and `t` cannot be coalesced onto it. Nothing coalesces; `t` stays `t`.
+    testSame(
+        """
+        function render(input) {
+          let s = sanitize(input);
+          let make = function() { return {html: s}; };
+          let t = input;
+          log(t, input);
+          return make();
+        }
+        """);
+  }
+
+  @Test
+  public void testComputedFieldInitializerCaptureIsClobbered() {
+    test(
+        """
+        function render(input) {
+          let s = sanitize(input);
+          class Box { ["html"] = s; }
+          let t = input;
+          log(t, input);
+          return new Box();
+        }
+        """,
+        // TODO(b/538168027): buggy output, ["html"] = s; is reading `input` instead.
+        """
+        function render(input) {
+          var s = sanitize(input);
+          class Box { ["html"] = s; }
+          s = input;
+          log(s, input);
+          return new Box();
+        }
+        """);
+  }
+
   private void inFunction(String src) {
     testSame("function FUNC(){" + src + "}");
   }

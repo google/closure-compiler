@@ -62,7 +62,7 @@ public final class FunctionArgumentInjectorTest {
   }
 
   @Test
-  public void testInject1() {
+  public void testInject1_thisRef() {
     Node result =
         functionArgumentInjector.inject(
             compiler,
@@ -70,6 +70,37 @@ public final class FunctionArgumentInjectorTest {
             null,
             ImmutableMap.of("this", parse("null").getFirstFirstChild()));
     assertNode(result).isEqualTo(getFunctionBody(parseFunction("function f() { alert(null); }")));
+  }
+
+  @Test
+  public void testInject_thisRef_classField_instance() {
+    Node result =
+        functionArgumentInjector.inject(
+            compiler,
+            getFunctionBody(parseFunction("function f() { return class { field = this; }; }")),
+            null,
+            ImmutableMap.of("this", parse("null").getFirstFirstChild()));
+
+    // TODO(b/538149733): fix this output - we should not replace 'this' with null.
+    assertNode(result)
+        .isEqualTo(
+            getFunctionBody(parseFunction("function f() { return class { field = null; }; }")));
+  }
+
+  @Test
+  public void testInject_thisRef_classField_static() {
+    Node result =
+        functionArgumentInjector.inject(
+            compiler,
+            getFunctionBody(
+                parseFunction("function f() { return class { static field = this; }; }")),
+            null,
+            ImmutableMap.of("this", parse("null").getFirstFirstChild()));
+
+    assertNode(result)
+        .isEqualTo(
+            getFunctionBody(
+                parseFunction("function f() { return class { static field = null; }; }")));
   }
 
   // TODO(johnlenz): Add more unit tests for "inject"

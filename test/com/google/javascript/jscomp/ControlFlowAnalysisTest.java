@@ -530,6 +530,24 @@ public final class ControlFlowAnalysisTest {
     assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
   }
 
+  @Test
+  public void testCallThrowingException() throws IOException {
+    String src = "function f() {try { obj.a(); } catch (e) {e()}}";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertCrossEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+    assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
+  }
+
+  @Test
+  public void testOptChainCallThrowingException() throws IOException {
+    String src = "function f() {try { obj?.a(); } catch (e) {e()}}";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    // TODO(b/538135521): fix this - currently ControlFlowAnalysis fails to understand that the
+    // OPTCHAIN_CALL might throw an exception.
+    assertNoEdge(cfg, Token.EXPR_RESULT, Token.BLOCK);
+    assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
+  }
+
   // Test a simple FOR loop.
   @Test
   public void testSimpleFor() throws IOException {

@@ -1297,6 +1297,141 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         """);
   }
 
+  @Test
+  public void testClassField_static_clobbersAssignment() {
+    inFunction(
+        """
+        let x = 0;
+        class C {
+          static field = (x = 1); // clobbers "x = 0" above.
+        }
+        use(x);
+        """,
+        """
+        let x;
+        0;
+        class C {
+          static field = (x = 1);
+        }
+        use(x);
+        """);
+  }
+
+  @Test
+  public void testClassField_instance_doesNotClobberAssignment() {
+    inFunction(
+        """
+        let x = 0;
+        class C {
+          field = (x = 1);
+        }
+        use(x);
+        """,
+        // TODO(b/538135521): fix this output - we should not remove the `x = 0` initializer.
+        """
+        let x;
+        0;
+        class C {
+          field = (x = 1);
+        }
+        use(x);
+        """);
+  }
+
+  @Test
+  public void testClassField_instance_doesNotClobberAssignment_computed() {
+    inFunction(
+        """
+        let x = 0;
+        class C {
+          ["field"] = (x = 1);
+        }
+        use(x);
+        """,
+        // TODO(b/538135521): fix this output - we should not remove the `x = 0` initializer.
+        """
+        let x;
+        0;
+        class C {
+          ["field"] = (x = 1);
+        }
+        use(x);
+        """);
+  }
+
+  @Test
+  public void testClassField_instanceRead_preserved() {
+    inFunction(
+        """
+        let x = 0;
+        class C {
+          field = x;
+        }
+        use(new C().field); // reads x
+        x = 1;
+        use(new C().field); // reads x
+        """,
+
+        // TODO(b/538135521): fix this output - we should not remove the `x = 1;` assignment.
+        """
+        let x = 0;
+        class C {
+          field = x;
+        }
+        use(new C().field); // reads x
+        1;
+        use(new C().field); // reads x
+        """);
+  }
+
+  @Test
+  public void testDefaultValueNestedAssign_arrayPattern() {
+    test(
+        """
+        function render(input, opts) {
+          var x;
+          var result = input;
+          result = sanitize(result);
+          [x = (result = VAL)] = opts;
+          use(result);
+        }
+        """,
+        // TODO(b/538153547): fix this output - we should not remove the `result = sanitize(` assign
+        """
+        function render(input, opts) {
+          var x;
+          var result = input;
+          sanitize(result);
+          [x = (result = VAL)] = opts;
+          use(result);
+        }
+        """);
+  }
+
+  @Test
+  public void testDefaultValueNestedAssign_objectPattern() {
+    test(
+        """
+        function render(input, opts) {
+          var x;
+          var result = input;
+          result = sanitize(result);
+          ({x = (result = VAL)} = opts);
+          use(result);
+        }
+        """,
+        // TODO(b/538153547): fix this output - we should not remove the `result = sanitize(` assign
+        """
+        function render(input, opts) {
+          var x;
+          var result = input;
+          sanitize(result);
+          ({x = (result = VAL)} = opts);
+          use(result);
+        }
+        """);
+  }
+
   private void inFunction(String src) {
     inFunction(src, src);
   }
