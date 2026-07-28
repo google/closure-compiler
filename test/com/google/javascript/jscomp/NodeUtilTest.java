@@ -1860,6 +1860,8 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("true"))).isNull();
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("false"))).isNull();
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("null"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("undefined"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("void 0"))).isNull();
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("[1]"))).isNull();
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("{}"))).isNull();
 

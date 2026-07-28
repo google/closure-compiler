@@ -319,11 +319,15 @@ public final class NodeUtil {
         return null;
       }
       case VOID -> {
+        if (!numberConversions) {
+          return null;
+        }
         return Double.NaN;
       }
       case NAME -> {
         return switch (n.getString()) {
-          case "undefined", "NaN" -> Double.NaN;
+          case "undefined" -> numberConversions ? Double.NaN : null;
+          case "NaN" -> Double.NaN;
           case "Infinity" -> Double.POSITIVE_INFINITY;
           default -> null;
         };

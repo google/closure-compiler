@@ -638,6 +638,8 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Number.isNaN(1.5)", "false");
     fold("Number.isNaN(NaN)", "true");
     foldSame("Number.isNaN('a')");
+    foldSame("Number.isNaN(undefined)");
+    foldSame("Number.isNaN(void 0)");
     // unknown function may have side effects
     foldSame("Number.isNaN(+(void unknown()))");
   }
