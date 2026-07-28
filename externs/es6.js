@@ -184,6 +184,23 @@ Math.clz32 = function(value) {};
  */
 Math.fround = function(value) {};
 
+/**
+ * @param {number} x
+ * @return {number}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/f16round
+ */
+Math.f16round = function(x) {};
+
+
+/**
+ * @param {string} string
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/escape
+ */
+RegExp.escape = function(string) {};
+
 
 /**
  * @param {*} a
@@ -1701,6 +1718,16 @@ function Promise(resolver) {}
  * =:
  */
 Promise.resolve = function(opt_value) {};
+
+
+/**
+ * @param {function(this: null, ...*): (TYPE|!PromiseLike<TYPE>)} callbackFn
+ * @param {...*} var_args
+ * @return {!Promise<TYPE>}
+ * @template TYPE
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/try
+ */
+Promise.try = function(callbackFn, var_args) {};
 
 
 /**

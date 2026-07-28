@@ -134,6 +134,26 @@ Map.prototype.forEach = function(callback, opt_thisArg) {};
  */
 Map.prototype.get = function(key) {};
 
+
+/**
+ * @param {K} key
+ * @param {V} defaultValue
+ * @return {V}
+ * @modifies {this}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/getOrInsert
+ */
+Map.prototype.getOrInsert = function(key, defaultValue) {};
+
+
+/**
+ * @param {K} key
+ * @param {function(K): V} callback
+ * @return {V}
+ * @modifies {this}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/getOrInsertComputed
+ */
+Map.prototype.getOrInsertComputed = function(key, callback) {};
+
 /**
  * @override
  * @param {K} key
@@ -204,6 +224,26 @@ WeakMap.prototype.delete = function(key) {};
  */
 WeakMap.prototype.get = function(key) {};
 
+
+/**
+ * @param {K} key
+ * @param {V} defaultValue
+ * @return {V}
+ * @modifies {this}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/getOrInsert
+ */
+WeakMap.prototype.getOrInsert = function(key, defaultValue) {};
+
+
+/**
+ * @param {K} key
+ * @param {function(K): V} callback
+ * @return {V}
+ * @modifies {this}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/getOrInsertComputed
+ */
+WeakMap.prototype.getOrInsertComputed = function(key, callback) {};
+
 /**
  * @param {K} key
  * @return {boolean}
@@ -242,10 +282,142 @@ SetLike.prototype.keys = function() {};
  */
 SetLike.prototype.size;
 
+
+/**
+ * @record
+ * @template VALUE
+ */
+function ReadonlySetLike() {}
+
+/**
+ * @param {VALUE} element
+ * @return {boolean}
+ * @nosideeffects
+ */
+ReadonlySetLike.prototype.has = function(element) {};
+
+/**
+ * @return {!IteratorIterable<VALUE>}
+ * @nosideeffects
+ */
+ReadonlySetLike.prototype.keys = function() {};
+
+/**
+ * @const {number}
+ * @nosideeffects
+ */
+ReadonlySetLike.prototype.size;
+
+/**
+ * @interface
+ * @extends {Iterable<VALUE>}
+ * @template VALUE
+ */
+function ReadonlySet() {}
+
+/**
+ * @param {function(this: THIS, VALUE, VALUE, SET): ?} callback
+ * @param {THIS=} opt_thisArg
+ * @this {SET}
+ * @template SET, THIS
+ * @return {undefined}
+ */
+ReadonlySet.prototype.forEach = function(callback, opt_thisArg) {};
+
+/**
+ * @param {VALUE} value
+ * @return {boolean}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.has = function(value) {};
+
+/**
+ * @const {number}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.size;
+
+/**
+ * @return {!IteratorIterable<VALUE>}
+ * @override
+ */
+ReadonlySet.prototype[Symbol.iterator] = function() {};
+
+/**
+ * @return {!IteratorIterable<!Array<VALUE>>}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.entries = function() {};
+
+/**
+ * @return {!IteratorIterable<VALUE>}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<VALUE>}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.values = function() {};
+
+/**
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<OTHER_VALUE|VALUE>}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.union = function(other) {};
+
+/**
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<VALUE>}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.intersection = function(other) {};
+
+/**
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<VALUE>}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.difference = function(other) {};
+
+/**
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<OTHER_VALUE|VALUE>}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.symmetricDifference = function(other) {};
+
+/**
+ * @param {!ReadonlySetLike<*>} other
+ * @return {boolean}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.isSubsetOf = function(other) {};
+
+/**
+ * @param {!ReadonlySetLike<*>} other
+ * @return {boolean}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.isSupersetOf = function(other) {};
+
+/**
+ * @param {!ReadonlySetLike<*>} other
+ * @return {boolean}
+ * @nosideeffects
+ */
+ReadonlySet.prototype.isDisjointFrom = function(other) {};
+
 /**
  * @constructor @struct
  * @param {Iterable<VALUE>|Array<VALUE>=} opt_iterable
- * @implements {Iterable<VALUE>}
+ * @implements {ReadonlySet<VALUE>}
  * @template VALUE
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
@@ -278,6 +450,7 @@ Set.prototype.clear = function() {};
 Set.prototype.delete = function(value) {};
 
 /**
+ * @override
  * @return {!IteratorIterable<!Array<VALUE>>} Where each array has two entries:
  *     [value, value]
  * @nosideeffects
@@ -286,6 +459,7 @@ Set.prototype.delete = function(value) {};
 Set.prototype.entries = function() {};
 
 /**
+ * @override
  * @param {function(this: THIS, VALUE, VALUE, SET)} callback
  * @param {THIS=} opt_thisArg
  * @this {SET}
@@ -295,6 +469,7 @@ Set.prototype.entries = function() {};
 Set.prototype.forEach = function(callback, opt_thisArg) {};
 
 /**
+ * @override
  * @param {VALUE} value
  * @return {boolean}
  * @nosideeffects
@@ -303,6 +478,7 @@ Set.prototype.forEach = function(callback, opt_thisArg) {};
 Set.prototype.has = function(value) {};
 
 /**
+ * @override
  * @return {!IteratorIterable<VALUE>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/keys
@@ -310,6 +486,7 @@ Set.prototype.has = function(value) {};
 Set.prototype.keys = function() {};
 
 /**
+ * @override
  * @return {!IteratorIterable<VALUE>}
  * @nosideeffects
  * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype.values
@@ -317,8 +494,9 @@ Set.prototype.keys = function() {};
 Set.prototype.values = function() {};
 
 /**
+ * @override
  * @template OTHER_VALUE
- * @param {!SetLike<OTHER_VALUE>} other
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
  * @return {!Set<OTHER_VALUE|VALUE>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/union
@@ -326,8 +504,9 @@ Set.prototype.values = function() {};
 Set.prototype.union = function(other) {};
 
 /**
+ * @override
  * @template OTHER_VALUE
- * @param {!SetLike<OTHER_VALUE>} other
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
  * @return {!Set<VALUE>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/intersection
@@ -335,8 +514,9 @@ Set.prototype.union = function(other) {};
 Set.prototype.intersection = function(other) {};
 
 /**
+ * @override
  * @template OTHER_VALUE
- * @param {!SetLike<OTHER_VALUE>} other
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
  * @return {!Set<VALUE>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/difference
@@ -344,8 +524,9 @@ Set.prototype.intersection = function(other) {};
 Set.prototype.difference = function(other) {};
 
 /**
+ * @override
  * @template OTHER_VALUE
- * @param {!SetLike<OTHER_VALUE>} other
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
  * @return {!Set<OTHER_VALUE|VALUE>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/symmetricDifference
@@ -353,8 +534,8 @@ Set.prototype.difference = function(other) {};
 Set.prototype.symmetricDifference = function(other) {};
 
 /**
- * @template OTHER_VALUE
- * @param {!SetLike<OTHER_VALUE>} other
+ * @override
+ * @param {!ReadonlySetLike<*>} other
  * @return {boolean}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/isSupersetOf
@@ -362,8 +543,8 @@ Set.prototype.symmetricDifference = function(other) {};
 Set.prototype.isSupersetOf = function(other) {};
 
 /**
- * @template OTHER_VALUE
- * @param {!SetLike<OTHER_VALUE>} other
+ * @override
+ * @param {!ReadonlySetLike<*>} other
  * @return {boolean}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/isSubsetOf
@@ -371,8 +552,8 @@ Set.prototype.isSupersetOf = function(other) {};
 Set.prototype.isSubsetOf = function(other) {};
 
 /**
- * @template OTHER_VALUE
- * @param {!SetLike<OTHER_VALUE>} other
+ * @override
+ * @param {!ReadonlySetLike<*>} other
  * @return {boolean}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/isDisjointFrom
