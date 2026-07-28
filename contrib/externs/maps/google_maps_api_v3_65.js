@@ -10748,8 +10748,10 @@ google.maps.StrokePosition = {
  * Access by calling `const {StyledMapType} = await
  * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
- * @param {?Array<?google.maps.MapTypeStyle>} styles
- * @param {?google.maps.StyledMapTypeOptions=} options
+ * @param {!Array<!google.maps.MapTypeStyle|null>|null} styles The styles to
+ *     apply.
+ * @param {!google.maps.StyledMapTypeOptions|null=} options The styled map type
+ *     options.
  * @implements {google.maps.MapType}
  * @extends {google.maps.MVCObject}
  * @constructor
@@ -10777,7 +10779,7 @@ google.maps.StyledMapType.prototype.minZoom;
 google.maps.StyledMapType.prototype.name;
 
 /**
- * @type {?google.maps.Projection}
+ * @type {!google.maps.Projection|null}
  */
 google.maps.StyledMapType.prototype.projection;
 
@@ -10787,24 +10789,22 @@ google.maps.StyledMapType.prototype.projection;
 google.maps.StyledMapType.prototype.radius;
 
 /**
- * @type {?google.maps.Size}
+ * @type {!google.maps.Size|null}
  */
 google.maps.StyledMapType.prototype.tileSize;
 
 /**
- * @param {?google.maps.Point} tileCoord Tile coordinates.
+ * @param {!google.maps.Point|null} tileCoord Tile coordinates.
  * @param {number} zoom Tile zoom.
- * @param {?Document} ownerDocument The document which owns this tile.
- * @return {?Element} Resulting tile.
- * @override
+ * @param {!Document|null} ownerDocument The document which owns this tile.
+ * @return {!Element|null} Resulting tile.
  */
 google.maps.StyledMapType.prototype.getTile = function(
     tileCoord, zoom, ownerDocument) {};
 
 /**
- * @param {?Element} tile Tile to release.
- * @return {undefined}
- * @override
+ * @param {!Element|null} tile Tile to release.
+ * @return {void}
  */
 google.maps.StyledMapType.prototype.releaseTile = function(tile) {};
 
@@ -26583,6 +26583,33 @@ google.maps.routes.ComputeRoutesRequest.prototype.travelMode;
 google.maps.routes.ComputeRoutesRequest.prototype.units;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Options for creating waypoint markers.
+ * @template T
+ * @record
+ */
+google.maps.routes.CreateWaypointMarkersOptions = function() {};
+
+/**
+ * A custom function to mutate the created elements. The default forEach
+ * function appends pins with A-Z glyphs to each marker. For different behavior,
+ * override this function.
+ * @type {(function(T): void)|null|undefined}
+ */
+google.maps.routes.CreateWaypointMarkersOptions.prototype.forEach;
+
+/**
+ * The constructor of the element to create. Supported types include: <ul>
+ * <li>{@link google.maps.maps3d.Marker3DElement}</li> <li>{@link
+ * google.maps.maps3d.Marker3DInteractiveElement}</li> <li>{@link
+ * google.maps.maps3d.MarkerElement}</li> <li>{@link
+ * google.maps.maps3d.MarkerInteractiveElement}</li> </ul>
+ * @type {(function(new:T))|null|undefined}
+ */
+google.maps.routes.CreateWaypointMarkersOptions.prototype.markerClass;
+
+/**
  * Encapsulates a geographic point and an optional heading.
  *
  * Access by calling `const {DirectionalLocation} = await
@@ -27212,6 +27239,19 @@ google.maps.routes.Route.prototype.createPopover = function() {};
  */
 google.maps.routes.Route.prototype.createWaypointAdvancedMarkers = function(
     options) {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Creates markers for the route&#39;s origin and destination. Markers have
+ * default styling applied unless a customOverride function is specified.
+ * Intermediate waypoints are not currently supported. <br><br> Created markers
+ * have their {@link google.maps.CollisionBehavior} set to {@link
+ * google.maps.CollisionBehavior.REQUIRED_AND_HIDES_OPTIONAL} by default.
+ * @template T
+ * @param {!google.maps.routes.CreateWaypointMarkersOptions<T>=} options
+ * @return {!Promise<!Array<T>>}
+ */
+google.maps.routes.Route.prototype.createWaypointMarkers = function(options) {};
 
 /**
  * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
