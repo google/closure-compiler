@@ -1579,6 +1579,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("NaN instanceof Object", "false");
     test("Infinity instanceof Object", "false");
 
+    // Untagged template literals always evaluate to strings.
+    test("`` instanceof Object", "false");
+    test("`${[]}` instanceof Object", "false");
+    test("`${function(){}}` instanceof Object", "false");
+    // Back off when substitutions have side-effects.
+    testSame("`${(console.log(0), [])}` instanceof Object");
+
+    // Tagged template literals may evaluate to a non-string, though. Would require type information
+    // to fold.
+    testSame("tag`${function(){}}` instanceof Object");
+
     // Array and object literals are known to be objects.
     test("[] instanceof Object", "true");
     test("({}) instanceof Object", "true");

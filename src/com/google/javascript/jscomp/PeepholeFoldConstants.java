@@ -362,6 +362,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (NodeUtil.isImmutableValue(left)) {
         // Non-object types are never instances.
         replacementNode = IR.falseNode();
+      } else if (left.isTemplateLit()) {
+        // Template literals always evaluate to strings. If they do not meet the "immutable value"
+        // condition above, verify their substitutions have no side effects before folding.
+        if (!mayHaveSideEffects(left)) {
+          replacementNode = IR.falseNode();
+        }
       } else if (right.isName() && Objects.equals(right.getString(), "Object")) {
         replacementNode = IR.trueNode();
       }
