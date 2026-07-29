@@ -146,23 +146,134 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testPrivateField() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #field;
           #field_initialized = 1;
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = {};
+            PRIVATE$1.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.field = void 0;
+            PRIVATE$1.field_initialized = 1;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateField_interleavedWithPublicFields() {
+    test(
+        """
+        class Foo {
+          f1 = 1;
+          #pf2 = this.f1 + 2;
+          f3 = this.#pf2 + 3;
+          #pf4 = this.f3 + this.#pf2;
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = {};
+            PRIVATE$1.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            this.f1 = 1;
+            PRIVATE$1.pf2 = this.f1 + 2;
+            this.f3 = PRIVATE_MAP$0.get(this).pf2 + 3;
+            PRIVATE$1.pf4 = this.f3 + PRIVATE_MAP$0.get(this).pf2;
+          }
         }
         """);
   }
 
   @Test
   public void testPrivateStaticField() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           static #static_field;
           static #static_field_initialized = 2;
         }
+        """,
+        """
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = {};
+            PRIVATE$1.$self = Foo;
+            STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
+            PRIVATE$1.static_field = void 0;
+            PRIVATE$1.static_field_initialized = 2;
+          }
+        }
+        Foo.STATIC_INIT$2();
+        """);
+  }
+
+  @Test
+  public void testPrivateAndStaticFieldMultipleClasses() {
+    test(
+        """
+        class Foo {
+          #field;
+          #field_initialized = 1;
+          static #static_field;
+          static #static_field_initialized = 2;
+        }
+        class Bar {
+          #field;
+          #field_initialized = 1;
+          static #static_field;
+          static #static_field_initialized = 2;
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const STATIC_PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = {};
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            PRIVATE$2.field = void 0;
+            PRIVATE$2.field_initialized = 1;
+          }
+          static STATIC_INIT$4() {
+            const PRIVATE$3 = {};
+            PRIVATE$3.$self = Foo;
+            STATIC_PRIVATE_MAP$1.set(Foo, PRIVATE$3);
+            PRIVATE$3.static_field = void 0;
+            PRIVATE$3.static_field_initialized = 2;
+          }
+        }
+        Foo.STATIC_INIT$4();
+        const PRIVATE_MAP$5 = new $jscomp.PrivateMap();
+        const STATIC_PRIVATE_MAP$6 = new $jscomp.PrivateMap();
+        class Bar {
+          constructor() {
+            const PRIVATE$7 = {};
+            PRIVATE$7.$self = this;
+            PRIVATE_MAP$5.set(this, PRIVATE$7);
+            PRIVATE$7.field = void 0;
+            PRIVATE$7.field_initialized = 1;
+          }
+          static STATIC_INIT$9() {
+            const PRIVATE$8 = {};
+            PRIVATE$8.$self = Bar;
+            STATIC_PRIVATE_MAP$6.set(Bar, PRIVATE$8);
+            PRIVATE$8.static_field = void 0;
+            PRIVATE$8.static_field_initialized = 2;
+          }
+        }
+        Bar.STATIC_INIT$9();
         """);
   }
 
@@ -228,23 +339,52 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testPrivateIdInOperator() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #field;
           brandCheck(x) { return #field in x; }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = {};
+            PRIVATE$1.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.field = void 0;
+          }
+          brandCheck(x) {
+            return PRIVATE_MAP$0.has(x);
+          }
         }
         """);
   }
 
   @Test
   public void testPrivateIdInOperator_static() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           static #staticField;
           brandCheck(x) { return #staticField in x; }
         }
+        """,
+        """
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          brandCheck(x) {
+            return STATIC_PRIVATE_MAP$0.has(x);
+          }
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = {};
+            PRIVATE$1.$self = Foo;
+            STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
+            PRIVATE$1.staticField = void 0;
+          }
+        }
+        Foo.STATIC_INIT$2();
         """);
   }
 
@@ -262,12 +402,27 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testPrivateDestructuringAssignment() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+    test(
         """
         class Foo {
           #x;
           assignFromObj(obj) {
             ({ val: this.#x } = obj);
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = {};
+            PRIVATE$1.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.x = void 0;
+          }
+          assignFromObj(obj) {
+            ({ val: PRIVATE_MAP$0.get(this).x } = obj);
           }
         }
         """);
@@ -286,7 +441,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testPrivateUpdateAndCompoundAssignment() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #x = 1;
@@ -295,12 +450,27 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             this.#x += 10;
           }
         }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = {};
+            PRIVATE$1.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.x = 1;
+          }
+          increment() {
+            PRIVATE_MAP$0.get(this).x++;
+            PRIVATE_MAP$0.get(this).x += 10;
+          }
+        }
         """);
   }
 
   @Test
   public void testPrivateFieldAccess() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #x = 1;
@@ -311,12 +481,29 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             otherObj2.#x = v;
           }
         }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = {};
+            PRIVATE$1.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.x = 1;
+          }
+          getX(otherObj1) {
+            return PRIVATE_MAP$0.get(otherObj1).x;
+          }
+          setX(otherObj2, v) {
+            PRIVATE_MAP$0.get(otherObj2).x = v;
+          }
+        }
         """);
   }
 
   @Test
   public void testPrivateFieldAccess_direct() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #x = 1;
@@ -325,6 +512,23 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
           setX(v) {
             this.#x = v;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = {};
+            PRIVATE$1.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.x = 1;
+          }
+          getX() {
+            return PRIVATE_MAP$0.get(this).x;
+          }
+          setX(v) {
+            PRIVATE_MAP$0.get(this).x = v;
           }
         }
         """);
@@ -427,10 +631,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
         """
         class Foo {
-          #method() { return 1; }
           #field = 2;
           access(otherObj) {
-            return otherObj?.#field + otherObj?.#method();
+            return otherObj?.#field;
           }
         }
         """);
@@ -441,10 +644,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
         """
         class Foo {
-          #method() { return 1; }
           #field = 2;
           access() {
-            return this?.#field + this?.#method();
+            return this?.#field;
           }
         }
         """);
@@ -472,13 +674,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testPrivateNestedClassScoping() {
-    // We do NOT expect this to fail after full implementation. In JavaScript, private elements are
-    // lexically scoped, meaning a nested class (Inner) can access private fields of its lexically
-    // enclosing class (Outer). See:
-    // https://tc39.es/ecma262/multipage/ecmascript-language-functions-and-classes.html#sec-runtime-semantics-classdefinitionevaluation
-    // After implementation, `Es6NormalizeClasses` will resolve `o.#x` by searching up the lexical
-    // `classStack` to find `Outer` and transpiling it to use Outer's WeakMap.
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Outer {
           #x = 1;
@@ -486,6 +682,23 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return class Inner {
               readOuter(o) { return o.#x; }
             };
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+        class Outer {
+          constructor() {
+            const PRIVATE$2 = {};
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$1.set(this, PRIVATE$2);
+            PRIVATE$2.x = 1;
+          }
+          createInner() {
+            const CLASS_DECL$0 = class {
+              readOuter(o) { return PRIVATE_MAP$1.get(o).x; }
+            };
+            return CLASS_DECL$0;
           }
         }
         """);

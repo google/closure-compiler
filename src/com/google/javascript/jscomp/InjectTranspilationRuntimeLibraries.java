@@ -147,6 +147,11 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
       runtimeLibs.injectLibForField("$jscomp.getRestArguments");
     }
 
+    if (used.contains(Feature.PRIVATE_ELEMENTS)
+        && mustBeCompiledAway.contains(Feature.PRIVATE_ELEMENTS)) {
+      runtimeLibs.injectLibForField("$jscomp.PrivateMap");
+    }
+
     if (shouldInstrumentAsyncContext
         // NOTE: async functions only matter for output features, since we don't bother
         // instrumenting them if they're being transpiled away.  Generators are relevant

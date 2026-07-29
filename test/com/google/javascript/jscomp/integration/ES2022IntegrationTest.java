@@ -26,7 +26,9 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
+import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.RuntimeLibraryMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -460,6 +462,101 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
 
     options.setLanguageIn(LanguageMode.UNSTABLE);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+    test(options, src, expected);
+  }
+
+  @Test
+  public void privateClassFields_supportedInChecksOnlyMode() {
+    CompilerOptions options = checksOnlyCompilerOptions();
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
+    testNoWarnings(
+        options,
+        """
+        class MyClass {
+          #x = 2;
+          #y;
+          getX() {
+            return this.#x;
+          }
+        }
+        console.log(new MyClass().getX());
+        """);
+  }
+
+  @Test
+  public void privateClassFields_supportedInOptimizationsMode() {
+    CompilerOptions options = createCompilerOptions();
+    // Avoid prepending polyfill implementation code (e.g. WeakMap) into the expected test output.
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    // Declare $jscomp in externs to satisfy VarCheck when runtime libraries are not injected.
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra("/** @const */ var $jscomp = {};")
+                .buildExternsFile("externs"));
+
+    String src =
+        """
+        class MyClass {
+          #x = 1;
+          inc() {
+            ++this.#x;
+          }
+          getX() {
+            return this.#x;
+          }
+        }
+
+        const o1 = new MyClass();
+        console.log(o1.getX());
+        o1.inc();
+        console.log(o1.getX());
+
+        const o2 = new MyClass();
+        o1.inc();
+        o1.inc();
+        console.log(o2.getX());
+        """;
+
+    // TODO(b/236744850): When languageOut is ECMASCRIPT_2022, private fields should be emitted
+    // natively instead of being transpiled to $jscomp.PrivateMap (or modified to public fields).
+    String expected =
+        """
+        const $jscomp$privateMap$98447280$0 = new $jscomp.PrivateMap();
+        class MyClass {
+          constructor() {
+            var $jscomp$priv$98447280$1 = {};
+            $jscomp$priv$98447280$1.$self = this;
+            $jscomp$privateMap$98447280$0.set(this, $jscomp$priv$98447280$1);
+            $jscomp$priv$98447280$1.x = 1;
+          }
+          inc() {
+            ++$jscomp$privateMap$98447280$0.get(this).x;
+          }
+          getX() {
+            return $jscomp$privateMap$98447280$0.get(this).x;
+          }
+        }
+        const o1 = new MyClass();
+        console.log(o1.getX());
+        o1.inc();
+        console.log(o1.getX());
+        const o2 = new MyClass();
+        o1.inc();
+        o1.inc();
+        console.log(o2.getX());
+        """;
+
+    // TODO(b/236744850): Update expected output for ES2022 once private fields are emitted
+    // natively.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2022);
+    test(options, src, expected);
+
+    // Transpile ES2022 private class fields to ES2021-compatible JavaScript ($jscomp.PrivateMap).
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
     test(options, src, expected);
   }
 }

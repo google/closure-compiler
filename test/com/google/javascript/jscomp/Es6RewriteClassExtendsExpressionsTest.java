@@ -112,7 +112,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
   public void testClassExtendsClassTranspilation() {
     String code =
         """
-        class __PRIVATE_WebChannelConnection extends class __PRIVATE_RestConnection {
+        class __TEST_WebChannelConnection extends class __TEST_RestConnection {
           constructor(e) {
             this.databaseInfo = e, this.databaseId = e.databaseId;
           }
@@ -136,7 +136,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
           };
           return CLASS_DECL$1;
         })();
-        class __PRIVATE_WebChannelConnection extends CLASS_EXTENDS$0 {
+        class __TEST_WebChannelConnection extends CLASS_EXTENDS$0 {
           constructor(e) {
             super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling = e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams, this.longPollingOptions = e.longPollingOptions;
             console.log('test');

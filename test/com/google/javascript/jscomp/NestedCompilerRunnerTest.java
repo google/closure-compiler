@@ -249,12 +249,14 @@ public class NestedCompilerRunnerTest {
   private Node createScript(String code) {
     SourceFile file = SourceFile.fromCode("test.js", code, SourceKind.STRONG);
 
+    Node parsed = original.parseTestCode(code);
     Node script = IR.script();
     script.setStaticSourceFile(file);
     script.setIsInClosureUnawareSubtree(true);
-    script.putProp(Node.FEATURE_SET, FeatureSet.ALL);
+    FeatureSet features = NodeUtil.getFeatureSetOfScript(parsed);
+    script.putProp(Node.FEATURE_SET, features != null ? features : FeatureSet.BARE_MINIMUM);
 
-    script.addChildrenToFront(original.parseTestCode(code).removeChildren());
+    script.addChildrenToFront(parsed.removeChildren());
     return script;
   }
 

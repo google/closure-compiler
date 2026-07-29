@@ -16,33 +16,23 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.TranspilationUtil.cannotConvertYet;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 
 /** Transpiles away usages of private properties in ES6 classes. */
 final class RewritePrivateClassProperties extends AbstractPeepholeTranspilation {
 
-  private final AbstractCompiler compiler;
-
-  RewritePrivateClassProperties(AbstractCompiler compiler) {
-    this.compiler = compiler;
-  }
+  RewritePrivateClassProperties(AbstractCompiler compiler) {}
 
   @Override
   FeatureSet getTranspiledAwayFeatures() {
-    return FeatureSet.BARE_MINIMUM.with(Feature.PRIVATE_ELEMENTS);
+    return FeatureSet.BARE_MINIMUM;
   }
 
   @Override
   @CanIgnoreReturnValue
   Node transpileSubtree(Node n) {
-    if (n.isPrivateIdentifier()) {
-      cannotConvertYet(compiler, n, "private class properties");
-    }
     return n;
   }
 }
