@@ -29,37 +29,94 @@
 var WebAssembly = {};
 
 /**
+ * @record
+ * @see https://webassembly.github.io/spec/js-api/#dictdef-webassemblycompileoptions
+ */
+WebAssembly.WebAssemblyCompileOptions = function() {};
+
+/**
+ * @type {!Array<string>|undefined}
+ */
+WebAssembly.WebAssemblyCompileOptions.prototype.builtins;
+
+/**
+ * @type {string|null|undefined}
+ */
+WebAssembly.WebAssemblyCompileOptions.prototype.importedStringConstants;
+
+/**
+ * @record
+ * @see https://webassembly.github.io/spec/js-api/#dictdef-webassemblyinstantiatedsource
+ */
+WebAssembly.WebAssemblyInstantiatedSource = function() {};
+
+/** @type {!WebAssembly.Instance} */
+WebAssembly.WebAssemblyInstantiatedSource.prototype.instance;
+
+/** @type {!WebAssembly.Module} */
+WebAssembly.WebAssemblyInstantiatedSource.prototype.module;
+
+/**
  * @constructor
  * @param {!BufferSource} bytes
+ * @param {!WebAssembly.WebAssemblyCompileOptions=} opt_options
  */
-WebAssembly.Module = function(bytes) {};
+WebAssembly.Module = function(bytes, opt_options) {};
 
 /**
  * @constructor
  * @param {!WebAssembly.Module} moduleObject
- * @param {Object=} importObject
+ * @param {!WebAssembly.Imports=} importObject
  */
 WebAssembly.Instance = function(moduleObject, importObject) {};
 
 /**
- * @typedef {{initial:number, maximum:(number|undefined), shared:(boolean|undefined)}}
+ * @record
+ * @see https://webassembly.github.io/spec/js-api/#dictdef-memorydescriptor
  */
-var MemoryDescriptor;
+WebAssembly.MemoryDescriptor = function() {};
+
+/** @type {(!WebAssembly.AddressType|undefined)} */
+WebAssembly.MemoryDescriptor.prototype.address;
+
+/** @type {!WebAssembly.AddressValue} */
+WebAssembly.MemoryDescriptor.prototype.initial;
+
+/** @type {(!WebAssembly.AddressValue|undefined)} */
+WebAssembly.MemoryDescriptor.prototype.maximum;
+
+/** @type {(boolean|undefined)} */
+WebAssembly.MemoryDescriptor.prototype.shared;
 
 /**
  * @constructor
- * @param {MemoryDescriptor} memoryDescriptor
+ * @param {!WebAssembly.MemoryDescriptor} memoryDescriptor
+ * @see https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/JavaScript_interface/Memory
  */
 WebAssembly.Memory = function(memoryDescriptor) {};
 
 /**
- * @typedef {{element:string, initial:number, maximum:(number|undefined)}}
+ * @record
+ * @see https://webassembly.github.io/spec/js-api/#dictdef-tabledescriptor
  */
-var TableDescriptor;
+WebAssembly.TableDescriptor = function() {};
+
+/** @type {(!WebAssembly.AddressType|undefined)} */
+WebAssembly.TableDescriptor.prototype.address;
+
+/** @type {!WebAssembly.TableKind} */
+WebAssembly.TableDescriptor.prototype.element;
+
+/** @type {!WebAssembly.AddressValue} */
+WebAssembly.TableDescriptor.prototype.initial;
+
+/** @type {(!WebAssembly.AddressValue|undefined)} */
+WebAssembly.TableDescriptor.prototype.maximum;
 
 /**
  * @constructor
- * @param {TableDescriptor} tableDescriptor
+ * @param {!WebAssembly.TableDescriptor} tableDescriptor
+ * @see https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/JavaScript_interface/Table
  */
 WebAssembly.Table = function(tableDescriptor) {};
 
@@ -86,17 +143,19 @@ WebAssembly.RuntimeError = function(message, fileName, lineNumber) {};
 
 /**
  * @record
+ * @see https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/JavaScript_interface/Tag
  */
-function WebAssemblyTagOptions() {};
+WebAssembly.TagType = function() {};
 
 /**
- * @type {Array<string>}
+ * @type {!Array<!WebAssembly.ValueType>}
  */
-WebAssemblyTagOptions.prototype.parameters;
+WebAssembly.TagType.prototype.parameters;
 
 /**
  * @constructor
- * @param {!WebAssemblyTagOptions} type
+ * @param {!WebAssembly.TagType} type
+ * @see https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/JavaScript_interface/Tag
  */
 WebAssembly.Tag = function(type) {};
 
@@ -120,6 +179,7 @@ WebAssemblyExceptionOptions.prototype.traceStack;
  * @param {!WebAssembly.Tag} tag
  * @param {!Array} payload
  * @param {WebAssemblyExceptionOptions=} options
+ * @see https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/JavaScript_interface/Exception
  */
 WebAssembly.Exception = function(tag, payload, options) {};
 
@@ -128,40 +188,63 @@ WebAssembly.Exception = function(tag, payload, options) {};
  */
 WebAssembly.Exception.prototype.stack;
 
-// Note: Closure compiler does not support function overloading, omit this overload for now.
-// {function(!WebAssembly.Module, Object=):!Promise<!WebAssembly.Instance>}
 /**
- * @param {!BufferSource} moduleObject
- * @param {Object=} importObject
- * @return {!Promise<{module:!WebAssembly.Module, instance:!WebAssembly.Instance}>}
+ * @param {!WebAssembly.Tag} exceptionTag
+ * @param {number} index
+ * @return {*}
  */
-WebAssembly.instantiate = function(moduleObject, importObject) {};
+WebAssembly.Exception.prototype.getArg = function(exceptionTag, index) {};
+
+/**
+ * @param {!WebAssembly.Tag} exceptionTag
+ * @return {boolean}
+ */
+WebAssembly.Exception.prototype.is = function(exceptionTag) {};
+
+/**
+ * @param {!BufferSource|!WebAssembly.Module} bytesOrModuleObject
+ * @param {!WebAssembly.Imports=} opt_importObject
+ * @param {!WebAssembly.WebAssemblyCompileOptions=} opt_options
+ * @return {!Promise<!WebAssembly.WebAssemblyInstantiatedSource|!WebAssembly.Instance>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/instantiate
+ */
+WebAssembly.instantiate = function(
+    bytesOrModuleObject, opt_importObject, opt_options) {};
 
 /**
  * @param {!Promise<!Response>|!Response} source
- * @param {Object=} importObject
- * @return {!Promise<{module:!WebAssembly.Module, instance:!WebAssembly.Instance}>}
+ * @param {!WebAssembly.Imports=} opt_importObject
+ * @param {!WebAssembly.WebAssemblyCompileOptions=} opt_options
+ * @return {!Promise<!WebAssembly.WebAssemblyInstantiatedSource>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/instantiateStreaming
  */
-WebAssembly.instantiateStreaming = function(source, importObject) {};
+WebAssembly.instantiateStreaming = function(
+    source, opt_importObject, opt_options) {};
 
 /**
  * @param {!BufferSource} bytes
+ * @param {!WebAssembly.WebAssemblyCompileOptions=} opt_options
  * @return {!Promise<!WebAssembly.Module>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/compile
  */
-WebAssembly.compile = function(bytes) {};
+WebAssembly.compile = function(bytes, opt_options) {};
 
 /**
- * @param {!Promise<!Response>} moduleStream
+ * @param {!Promise<!Response>|!Response} source
+ * @param {!WebAssembly.WebAssemblyCompileOptions=} opt_options
  * @return {!Promise<!WebAssembly.Module>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/compileStreaming
  */
-WebAssembly.compileStreaming = function(moduleStream) {};
+WebAssembly.compileStreaming = function(source, opt_options) {};
 
 /**
  * @param {!BufferSource} bytes
+ * @param {!WebAssembly.WebAssemblyCompileOptions=} opt_options
  * @return {boolean}
  * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/validate
  */
-WebAssembly.validate = function(bytes) {};
+WebAssembly.validate = function(bytes, opt_options) {};
 
 /**
  * @param {!WebAssembly.Module} moduleObject
@@ -191,15 +274,26 @@ WebAssembly.Instance.prototype.exports;
 WebAssembly.Memory.prototype.grow = function(delta) {};
 
 /**
+ * @return {!ArrayBuffer}
+ */
+WebAssembly.Memory.prototype.toFixedLengthBuffer = function() {};
+
+/**
+ * @return {!ArrayBuffer}
+ */
+WebAssembly.Memory.prototype.toResizableBuffer = function() {};
+
+/**
  * @type {!ArrayBuffer}
  */
 WebAssembly.Memory.prototype.buffer;
 
 /**
- * @param {number} delta
- * @return {number}
+ * @param {!WebAssembly.AddressValue} delta
+ * @param {*=} opt_value
+ * @return {!WebAssembly.AddressValue}
  */
-WebAssembly.Table.prototype.grow = function(delta) {};
+WebAssembly.Table.prototype.grow = function(delta, opt_value) {};
 
 /**
  * @type {number}
@@ -221,6 +315,17 @@ WebAssembly.Table.prototype.get = function(index) {};
  * @return {undefined}
  */
 WebAssembly.Table.prototype.set = function(index, value) {};
+
+/**
+ * @typedef {string}
+ * Valid values: 'i32', 'i64'.
+ */
+WebAssembly.AddressType;
+
+/**
+ * @typedef {number}
+ */
+WebAssembly.AddressValue;
 
 /**
  * @typedef {{
@@ -245,6 +350,13 @@ WebAssembly.ValueTypeMap;
 WebAssembly.ValueType;
 
 /**
+ * @typedef {string}
+ * Valid values: 'anyfunc', 'externref'.
+ * @see https://webassembly.github.io/spec/js-api/#enumdef-tablekind
+ */
+WebAssembly.TableKind;
+
+/**
  * @typedef {{
  *   mutable: (boolean|undefined),
  *   value: WebAssembly.ValueType
@@ -263,3 +375,23 @@ WebAssembly.Global = function(descriptor, v) {};
  * @type {?}
  */
 WebAssembly.Global.prototype.value;
+
+/**
+ * @typedef {!Function|!WebAssembly.Global|!WebAssembly.Memory|!WebAssembly.Table}
+ */
+WebAssembly.ExportValue;
+
+/**
+ * @typedef {!WebAssembly.ExportValue|number}
+ */
+WebAssembly.ImportValue;
+
+/**
+ * @typedef {!Object<string, !WebAssembly.ModuleImports>}
+ */
+WebAssembly.Imports;
+
+/**
+ * @typedef {!Object<string, !WebAssembly.ImportValue>}
+ */
+WebAssembly.ModuleImports;

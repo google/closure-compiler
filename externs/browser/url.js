@@ -208,3 +208,125 @@ URL.canParse = function(url, base) {};
  * @return {undefined}
  */
 URL.revokeObjectURL = function(url) {};
+
+/**
+ * @record
+ * @see https://urlpattern.spec.whatwg.org/#dictdef-urlpatterncomponentresult
+ */
+function URLPatternComponentResult() {}
+/** @type {!Object<string, (string|undefined)>} */
+URLPatternComponentResult.prototype.groups;
+/** @type {string} */
+URLPatternComponentResult.prototype.input;
+
+/**
+ * @record
+ * @see https://urlpattern.spec.whatwg.org/#dictdef-urlpatterninit
+ */
+function URLPatternInit() {}
+/** @type {string|undefined} */
+URLPatternInit.prototype.baseURL;
+/** @type {string|undefined} */
+URLPatternInit.prototype.hash;
+/** @type {string|undefined} */
+URLPatternInit.prototype.hostname;
+/** @type {string|undefined} */
+URLPatternInit.prototype.password;
+/** @type {string|undefined} */
+URLPatternInit.prototype.pathname;
+/** @type {string|undefined} */
+URLPatternInit.prototype.port;
+/** @type {string|undefined} */
+URLPatternInit.prototype.protocol;
+/** @type {string|undefined} */
+URLPatternInit.prototype.search;
+/** @type {string|undefined} */
+URLPatternInit.prototype.username;
+
+/**
+ * @record
+ * @see https://urlpattern.spec.whatwg.org/#dictdef-urlpatternoptions
+ */
+function URLPatternOptions() {}
+/** @type {boolean|undefined} */
+URLPatternOptions.prototype.ignoreCase;
+
+/**
+ * @record
+ * @see https://urlpattern.spec.whatwg.org/#dictdef-urlpatternresult
+ */
+function URLPatternResult() {}
+/** @type {!URLPatternComponentResult} */
+URLPatternResult.prototype.hash;
+/** @type {!URLPatternComponentResult} */
+URLPatternResult.prototype.hostname;
+/** @type {!Array<!URLPatternInput>} */
+URLPatternResult.prototype.inputs;
+/** @type {!URLPatternComponentResult} */
+URLPatternResult.prototype.password;
+/** @type {!URLPatternComponentResult} */
+URLPatternResult.prototype.pathname;
+/** @type {!URLPatternComponentResult} */
+URLPatternResult.prototype.port;
+/** @type {!URLPatternComponentResult} */
+URLPatternResult.prototype.protocol;
+/** @type {!URLPatternComponentResult} */
+URLPatternResult.prototype.search;
+/** @type {!URLPatternComponentResult} */
+URLPatternResult.prototype.username;
+
+/**
+ * @constructor
+ * @param {(!URLPatternInput)=} opt_input
+ * @param {(string|!URL|!URLPatternOptions)=} opt_baseURLOrOptions
+ * @param {!URLPatternOptions=} opt_options
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/URLPattern
+   */
+function URLPattern(opt_input, opt_baseURLOrOptions, opt_options) {}
+
+/** @type {boolean} */
+URLPattern.prototype.hasRegExpGroups;
+
+/** @type {string} */
+URLPattern.prototype.hash;
+
+/** @type {string} */
+URLPattern.prototype.hostname;
+
+/** @type {string} */
+URLPattern.prototype.password;
+
+/** @type {string} */
+URLPattern.prototype.pathname;
+
+/** @type {string} */
+URLPattern.prototype.port;
+
+/** @type {string} */
+URLPattern.prototype.protocol;
+
+/** @type {string} */
+URLPattern.prototype.search;
+
+/** @type {string} */
+URLPattern.prototype.username;
+
+/**
+ * @param {!URLPatternInput=} opt_input
+ * @param {(string|!URL)=} opt_baseURL
+ * @return {?URLPatternResult}
+ */
+URLPattern.prototype.exec = function(opt_input, opt_baseURL) {};
+
+/**
+ * @param {!URLPatternInput=} opt_input
+ * @param {(string|!URL)=} opt_baseURL
+ * @return {boolean}
+ */
+URLPattern.prototype.test = function(opt_input, opt_baseURL) {};
+
+/**
+ * @typedef {(string|!URLPatternInit)}
+ * @see https://urlpattern.spec.whatwg.org/#typedefdef-urlpatterninput
+ */
+var URLPatternInput;
