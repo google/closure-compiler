@@ -42,6 +42,8 @@ import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -50,6 +52,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
@@ -983,6 +986,9 @@ public class CompilerOptions {
   private String debugLogFilter;
 
   private boolean serializeExtraDebugInfo;
+
+  private @Nullable Function<OutputStream, OutputStream> stateCompressionWrapper = null;
+  private @Nullable Function<InputStream, InputStream> stateDecompressionWrapper = null;
 
   /** Whether to write keyword properties as foo['class'] instead of foo.class; needed for IE8. */
   private boolean quoteKeywordProperties;
@@ -2978,6 +2984,22 @@ public class CompilerOptions {
 
   void setSerializeExtraDebugInfo(boolean serializeExtraDebugInfo) {
     this.serializeExtraDebugInfo = serializeExtraDebugInfo;
+  }
+
+  public void setStateCompressionWrapper(@Nullable Function<OutputStream, OutputStream> wrapper) {
+    this.stateCompressionWrapper = wrapper;
+  }
+
+  public @Nullable Function<OutputStream, OutputStream> getStateCompressionWrapper() {
+    return this.stateCompressionWrapper;
+  }
+
+  public void setStateDecompressionWrapper(@Nullable Function<InputStream, InputStream> wrapper) {
+    this.stateDecompressionWrapper = wrapper;
+  }
+
+  public @Nullable Function<InputStream, InputStream> getStateDecompressionWrapper() {
+    return this.stateDecompressionWrapper;
   }
 
   public void setQuoteKeywordProperties(boolean quoteKeywordProperties) {

@@ -67,6 +67,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1749,6 +1750,54 @@ public final class CompilerTest {
     compiler.saveState(outputStream);
     outputStream.close();
     return outputStream.toByteArray();
+  }
+
+  @Test
+  public void testCustomStateCompressionWrapper() throws Exception {
+    Compiler compiler = new Compiler(new TestErrorManager());
+    CompilerOptions options = new CompilerOptions();
+
+    AtomicBoolean compressionUsed = new AtomicBoolean(false);
+    AtomicBoolean decompressionUsed = new AtomicBoolean(false);
+
+    options.setStateCompressionWrapper(
+        out -> {
+          compressionUsed.set(true);
+          return out;
+        });
+    options.setStateDecompressionWrapper(
+        in -> {
+          decompressionUsed.set(true);
+          return in;
+        });
+
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("test.js", "var x = 1;"));
+    compiler.init(ImmutableList.of(), inputs, options);
+
+    compiler.parse();
+
+    // Save state
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    compiler.saveState(baos);
+    baos.close();
+
+    assertThat(compressionUsed.get()).isTrue();
+
+    // Restore state
+    Compiler compiler2 = new Compiler(new TestErrorManager());
+    CompilerOptions options2 = new CompilerOptions();
+    options2.setStateDecompressionWrapper(
+        in -> {
+          decompressionUsed.set(true);
+          return in;
+        });
+    compiler2.init(ImmutableList.of(), inputs, options2);
+
+    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+    compiler2.restoreState(bais);
+    bais.close();
+
+    assertThat(decompressionUsed.get()).isTrue();
   }
 
   @Test

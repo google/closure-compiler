@@ -99,6 +99,8 @@ import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -131,7 +133,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -4273,22 +4274,31 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     runInCompilerThread(
         () -> {
           Tracer tracer = newTracer("serializeCompilerState");
-          GZIPOutputStream gzipStream = new FastGzipOutputStream(outputStream);
-          new ObjectOutputStream(gzipStream).writeObject(getCompilerState());
+          OutputStream nonClosingOut = new NonClosingOutputStream(outputStream);
+          OutputStream compressionStream;
+          Function<OutputStream, OutputStream> wrapper = options.getStateCompressionWrapper();
+          if (wrapper != null) {
+            compressionStream = wrapper.apply(nonClosingOut);
+          } else {
+            compressionStream = new FastGzipOutputStream(nonClosingOut);
+          }
+
+          OutputStream bufferedCompressionStream =
+              new BufferedOutputStream(compressionStream, 64 * 1024);
+          new ObjectOutputStream(bufferedCompressionStream).writeObject(getCompilerState());
           stopTracer(tracer, "serializeCompilerState");
           tracer = newTracer("serializeTypedAst");
           SerializeTypedAstPass.createFromOutputStream(
                   this,
-                  gzipStream,
+                  bufferedCompressionStream,
                   SerializationOptions.builder()
                       .setRuntimeLibraries(ImmutableList.of())
                       .setIncludeDebugInfo(this.getOptions().shouldSerializeExtraDebugInfo())
                       .build())
               .process(externsRoot, jsRoot);
           stopTracer(tracer, "serializeTypedAst");
-          // Finish will flush all zip buffers and write out zip trailing bytes but it will not
-          // close the stream since that is our callers responsibility.
-          gzipStream.finish();
+          // Close the buffered stream to flush uncompressed bytes and close the compressor
+          bufferedCompressionStream.close();
           return null;
         });
   }
@@ -4305,10 +4315,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         () -> {
           Tracer tracer = newTracer(PassNames.DESERIALIZE_COMPILER_STATE);
           logger.fine("Deserializing the CompilerState");
+          InputStream nonClosingIn = new NonClosingInputStream(inputStream);
+          InputStream decompressStream;
+          Function<InputStream, InputStream> wrapper = options.getStateDecompressionWrapper();
+          if (wrapper != null) {
+            decompressStream = wrapper.apply(nonClosingIn);
+          } else {
+            decompressStream = new GZIPInputStream(nonClosingIn, 64 * 1024);
+          }
+          InputStream bufferedDecompressStream =
+              new BufferedInputStream(decompressStream, 64 * 1024);
           try {
-            deserializeCompilerState(new GZIPInputStream(inputStream, 64 * 1024));
+            deserializeCompilerState(bufferedDecompressStream);
             return null;
           } finally {
+            bufferedDecompressStream.close();
             logger.fine("Finished deserializing CompilerState");
             stopTracer(tracer, PassNames.DESERIALIZE_COMPILER_STATE);
           }
@@ -4549,5 +4570,27 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             + pruningResult.entryPointDependencyCount()
             + "\n\nTop bottleneck dependencies:\n"
             + pruningResult.bottleneckBlame());
+  }
+
+  private static final class NonClosingOutputStream extends java.io.FilterOutputStream {
+    NonClosingOutputStream(OutputStream out) {
+      super(out);
+    }
+
+    @Override
+    public void close() throws IOException {
+      flush();
+    }
+  }
+
+  private static final class NonClosingInputStream extends java.io.FilterInputStream {
+    NonClosingInputStream(InputStream in) {
+      super(in);
+    }
+
+    @Override
+    public void close() throws IOException {
+      // Do not close the underlying stream
+    }
   }
 }
