@@ -31,7 +31,7 @@ public final class DefaultExterns {
 
   // Core language externs. When the environment is CUSTOM, only these externs will be included.
   private static final ImmutableList<String> BUILTIN_LANG_EXTERNS =
-      ImmutableList.of("es3.js", "es5.js", "es6.js", "es6_collections.js");
+      ImmutableList.of("es3.js", "es5.js", "es6.js", "es6_typed_array.js", "es6_collections.js");
 
   // Ordered browser externs. Externs not included in this list are added last.
   private static final ImmutableList<String> BROWSER_EXTERN_DEP_ORDER =
