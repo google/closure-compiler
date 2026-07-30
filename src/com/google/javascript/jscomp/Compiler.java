@@ -82,6 +82,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.jscomp.serialization.ColorPool;
+import com.google.javascript.jscomp.serialization.FastGzipOutputStream;
 import com.google.javascript.jscomp.serialization.SerializationOptions;
 import com.google.javascript.jscomp.serialization.SerializeTypedAstPass;
 import com.google.javascript.jscomp.serialization.TypedAstDeserializer;
@@ -4272,7 +4273,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     runInCompilerThread(
         () -> {
           Tracer tracer = newTracer("serializeCompilerState");
-          GZIPOutputStream gzipStream = new GZIPOutputStream(outputStream);
+          GZIPOutputStream gzipStream = new FastGzipOutputStream(outputStream);
           new ObjectOutputStream(gzipStream).writeObject(getCompilerState());
           stopTracer(tracer, "serializeCompilerState");
           tracer = newTracer("serializeTypedAst");
@@ -4305,7 +4306,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           Tracer tracer = newTracer(PassNames.DESERIALIZE_COMPILER_STATE);
           logger.fine("Deserializing the CompilerState");
           try {
-            deserializeCompilerState(new GZIPInputStream(inputStream));
+            deserializeCompilerState(new GZIPInputStream(inputStream, 64 * 1024));
             return null;
           } finally {
             logger.fine("Finished deserializing CompilerState");
