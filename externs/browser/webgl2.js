@@ -1704,7 +1704,7 @@ WebGL2RenderingContext.prototype.framebufferTextureLayer = function(
 
 /**
  * @param {number} target
- * @param {!Array<number>} attachments
+ * @param {!Array<number>|!Iterable<number>} attachments
  * @return {undefined}
  */
 WebGL2RenderingContext.prototype.invalidateFramebuffer = function(
@@ -1712,7 +1712,7 @@ WebGL2RenderingContext.prototype.invalidateFramebuffer = function(
 
 /**
  * @param {number} target
- * @param {!Array<number>} attachments
+ * @param {!Array<number>|!Iterable<number>} attachments
  * @param {number} x
  * @param {number} y
  * @param {number} width
@@ -1988,7 +1988,7 @@ WebGL2RenderingContext.prototype.uniform4ui = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {?Float32Array|?Array<number>} data
+ * @param {?Float32Array|?Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -1999,7 +1999,7 @@ WebGL2RenderingContext.prototype.uniform1fv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {?Float32Array|?Array<number>} data
+ * @param {?Float32Array|?Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2010,7 +2010,7 @@ WebGL2RenderingContext.prototype.uniform2fv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {?Float32Array|?Array<number>} data
+ * @param {?Float32Array|?Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2021,7 +2021,7 @@ WebGL2RenderingContext.prototype.uniform3fv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {?Float32Array|?Array<number>} data
+ * @param {?Float32Array|?Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2032,7 +2032,7 @@ WebGL2RenderingContext.prototype.uniform4fv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {?Int32Array|?Array<number>|?Array<boolean>} data
+ * @param {?Int32Array|?Array<number>|?Array<boolean>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2043,7 +2043,7 @@ WebGL2RenderingContext.prototype.uniform1iv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {?Int32Array|?Array<number>|?Array<boolean>} data
+ * @param {?Int32Array|?Array<number>|?Array<boolean>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2054,7 +2054,7 @@ WebGL2RenderingContext.prototype.uniform2iv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {?Int32Array|?Array<number>|?Array<boolean>} data
+ * @param {?Int32Array|?Array<number>|?Array<boolean>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2065,7 +2065,7 @@ WebGL2RenderingContext.prototype.uniform3iv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {?Int32Array|?Array<number>|?Array<boolean>} data
+ * @param {?Int32Array|?Array<number>|?Array<boolean>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2077,7 +2077,7 @@ WebGL2RenderingContext.prototype.uniform4iv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {!Uint32Array|!Array<number>|!Array<boolean>} data
+ * @param {!Uint32Array|!Array<number>|!Array<boolean>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2087,7 +2087,7 @@ WebGL2RenderingContext.prototype.uniform1uiv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {!Uint32Array|!Array<number>|!Array<boolean>} data
+ * @param {!Uint32Array|!Array<number>|!Array<boolean>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2097,7 +2097,7 @@ WebGL2RenderingContext.prototype.uniform2uiv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {!Uint32Array|!Array<number>|!Array<boolean>} data
+ * @param {!Uint32Array|!Array<number>|!Array<boolean>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2107,7 +2107,7 @@ WebGL2RenderingContext.prototype.uniform3uiv = function(
 
 /**
  * @param {?WebGLUniformLocation} location
- * @param {!Uint32Array|!Array<number>|!Array<boolean>} data
+ * @param {!Uint32Array|!Array<number>|!Array<boolean>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2118,7 +2118,7 @@ WebGL2RenderingContext.prototype.uniform4uiv = function(
 /**
  * @param {?WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {?Float32Array|?Array<number>} data
+ * @param {?Float32Array|?Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2130,7 +2130,7 @@ WebGL2RenderingContext.prototype.uniformMatrix2fv = function(
 /**
  * @param {?WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {!Float32Array|!Array<number>} data
+ * @param {!Float32Array|!Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2141,7 +2141,7 @@ WebGL2RenderingContext.prototype.uniformMatrix3x2fv = function(
 /**
  * @param {?WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {!Float32Array|!Array<number>} data
+ * @param {!Float32Array|!Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2152,7 +2152,7 @@ WebGL2RenderingContext.prototype.uniformMatrix4x2fv = function(
 /**
  * @param {?WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {!Float32Array|!Array<number>} data
+ * @param {!Float32Array|!Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2163,7 +2163,7 @@ WebGL2RenderingContext.prototype.uniformMatrix2x3fv = function(
 /**
  * @param {?WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {?Float32Array|?Array<number>} data
+ * @param {?Float32Array|?Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2175,7 +2175,7 @@ WebGL2RenderingContext.prototype.uniformMatrix3fv = function(
 /**
  * @param {?WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {!Float32Array|!Array<number>} data
+ * @param {!Float32Array|!Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2186,7 +2186,7 @@ WebGL2RenderingContext.prototype.uniformMatrix4x3fv = function(
 /**
  * @param {?WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {!Float32Array|!Array<number>} data
+ * @param {!Float32Array|!Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2197,7 +2197,7 @@ WebGL2RenderingContext.prototype.uniformMatrix2x4fv = function(
 /**
  * @param {?WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {!Float32Array|!Array<number>} data
+ * @param {!Float32Array|!Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2208,7 +2208,7 @@ WebGL2RenderingContext.prototype.uniformMatrix3x4fv = function(
 /**
  * @param {?WebGLUniformLocation} location
  * @param {boolean} transpose
- * @param {?Float32Array|?Array<number>} data
+ * @param {?Float32Array|?Array<number>|!Iterable<number>} data
  * @param {number=} opt_srcOffset
  * @param {number=} opt_srcLength
  * @return {undefined}
@@ -2232,7 +2232,7 @@ WebGL2RenderingContext.prototype.vertexAttribI4i = function(
 
 /**
  * @param {number} index
- * @param {!Int32Array|!Array<number>|!Array<boolean>} values
+ * @param {!Int32Array|!Array<number>|!Array<boolean>|!Iterable<number>} values
  * @return {undefined}
  */
 WebGL2RenderingContext.prototype.vertexAttribI4iv = function(index, values) {};
@@ -2250,7 +2250,7 @@ WebGL2RenderingContext.prototype.vertexAttribI4ui = function(
 
 /**
  * @param {number} index
- * @param {!Uint32Array|!Array<number>|!Array<boolean>} values
+ * @param {!Uint32Array|!Array<number>|!Array<boolean>|!Iterable<number>} values
  * @return {undefined}
  */
 WebGL2RenderingContext.prototype.vertexAttribI4uiv = function(index, values) {};
@@ -2329,7 +2329,7 @@ WebGL2RenderingContext.prototype.readPixels = function(
 /* Multiple Render Targets */
 
 /**
- * @param {!Array<number>} buffers
+ * @param {!Array<number>|!Iterable<number>} buffers
  * @return {undefined}
  */
 WebGL2RenderingContext.prototype.drawBuffers = function(buffers) {};
@@ -2338,7 +2338,7 @@ WebGL2RenderingContext.prototype.drawBuffers = function(buffers) {};
 /**
  * @param {number} buffer
  * @param {number} drawbuffer
- * @param {!Float32Array|!Array<number>} values
+ * @param {!Float32Array|!Array<number>|!Iterable<number>} values
  * @param {number=} opt_srcOffset
  * @return {undefined}
  */
@@ -2348,7 +2348,7 @@ WebGL2RenderingContext.prototype.clearBufferfv = function(
 /**
  * @param {number} buffer
  * @param {number} drawbuffer
- * @param {!Int32Array|!Array<number>|!Array<boolean>} values
+ * @param {!Int32Array|!Array<number>|!Array<boolean>|!Iterable<number>} values
  * @param {number=} opt_srcOffset
  * @return {undefined}
  */
@@ -2358,7 +2358,7 @@ WebGL2RenderingContext.prototype.clearBufferiv = function(
 /**
  * @param {number} buffer
  * @param {number} drawbuffer
- * @param {!Uint32Array|!Array<number>|!Array<boolean>} values
+ * @param {!Uint32Array|!Array<number>|!Array<boolean>|!Iterable<number>} values
  * @param {number=} opt_srcOffset
  * @return {undefined}
  */
@@ -2561,7 +2561,7 @@ WebGL2RenderingContext.prototype.endTransformFeedback = function() {};
 
 /**
  * @param {!WebGLProgram} program
- * @param {!Array<string>} varyings
+ * @param {!Array<string>|!Iterable<string>} varyings
  * @param {number} bufferMode
  * @return {undefined}
  */
@@ -2619,7 +2619,7 @@ WebGL2RenderingContext.prototype.getIndexedParameter = function(
 
 /**
  * @param {!WebGLProgram} program
- * @param {!Array<string>} uniformNames
+ * @param {!Array<string>|!Iterable<string>} uniformNames
  * @return {!Array<number>}
  */
 WebGL2RenderingContext.prototype.getUniformIndices = function(
@@ -2627,7 +2627,7 @@ WebGL2RenderingContext.prototype.getUniformIndices = function(
 
 /**
  * @param {!WebGLProgram} program
- * @param {!Array<number>} uniformIndices
+ * @param {!Array<number>|!Iterable<number>} uniformIndices
  * @param {number} pname
  * @return {*}
  */

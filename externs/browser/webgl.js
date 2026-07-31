@@ -2830,7 +2830,7 @@ WebGLRenderingContext.prototype.vertexAttrib1f = function(indx, x) {};
 
 /**
  * @param {number} indx
- * @param {Float32Array|Array<number>} values
+ * @param {Float32Array|Array<number>|!Iterable<number>} values
  * @return {undefined}
  */
 WebGLRenderingContext.prototype.vertexAttrib1fv = function(indx, values) {};
@@ -2846,7 +2846,7 @@ WebGLRenderingContext.prototype.vertexAttrib2f = function(
 
 /**
  * @param {number} indx
- * @param {Float32Array|Array<number>} values
+ * @param {Float32Array|Array<number>|!Iterable<number>} values
  * @return {undefined}
  */
 WebGLRenderingContext.prototype.vertexAttrib2fv = function(
@@ -2864,7 +2864,7 @@ WebGLRenderingContext.prototype.vertexAttrib3f = function(
 
 /**
  * @param {number} indx
- * @param {Float32Array|Array<number>} values
+ * @param {Float32Array|Array<number>|!Iterable<number>} values
  * @return {undefined}
  */
 WebGLRenderingContext.prototype.vertexAttrib3fv = function(indx, values) {};
@@ -2882,7 +2882,7 @@ WebGLRenderingContext.prototype.vertexAttrib4f = function(
 
 /**
  * @param {number} indx
- * @param {Float32Array|Array<number>} values
+ * @param {Float32Array|Array<number>|!Iterable<number>} values
  * @return {undefined}
  */
 WebGLRenderingContext.prototype.vertexAttrib4fv = function(indx, values) {};
@@ -2959,6 +2959,11 @@ WebGLContextAttributes.prototype.failIfMajorPerformanceCaveat;
  * @type {string}
  */
 WebGLContextAttributes.prototype.powerPreference;
+
+/**
+ * @type {boolean|undefined}
+ */
+WebGLContextAttributes.prototype.xrCompatible;
 
 /**
  * @param {string} eventType
@@ -3333,11 +3338,83 @@ WEBGL_draw_buffers.prototype.MAX_COLOR_ATTACHMENTS_WEBGL;
 WEBGL_draw_buffers.prototype.MAX_DRAW_BUFFERS_WEBGL;
 
 /**
- * @param {Array<number>} buffers Draw buffers.
+ * @param {!Array<number>|!Iterable<number>} buffers Draw buffers.
  * @return {undefined}
  */
 WEBGL_draw_buffers.prototype.drawBuffersWEBGL = function(buffers) {};
 
+
+/**
+ * @see https://www.khronos.org/registry/webgl/extensions/WEBGL_multi_draw/
+ * @constructor
+ */
+function WEBGL_multi_draw() {}
+
+/**
+ * @param {!GLenum} mode
+ * @param {!Int32Array|!Iterable<!GLint>} firstsList
+ * @param {number} firstsOffset
+ * @param {!Int32Array|!Iterable<!GLsizei>} countsList
+ * @param {number} countsOffset
+ * @param {!Int32Array|!Iterable<!GLsizei>} instanceCountsList
+ * @param {number} instanceCountsOffset
+ * @param {!GLsizei} drawcount
+ * @return {undefined}
+ */
+WEBGL_multi_draw.prototype.multiDrawArraysInstancedWEBGL = function(
+    mode, firstsList, firstsOffset, countsList, countsOffset,
+    instanceCountsList, instanceCountsOffset, drawcount) {};
+
+/**
+ * @param {!GLenum} mode
+ * @param {!Int32Array|!Iterable<!GLint>} firstsList
+ * @param {number} firstsOffset
+ * @param {!Int32Array|!Iterable<!GLsizei>} countsList
+ * @param {number} countsOffset
+ * @param {!GLsizei} drawcount
+ * @return {undefined}
+ */
+WEBGL_multi_draw.prototype.multiDrawArraysWEBGL = function(
+    mode, firstsList, firstsOffset, countsList, countsOffset, drawcount) {};
+
+/**
+ * @param {!GLenum} mode
+ * @param {!Int32Array|!Iterable<!GLsizei>} countsList
+ * @param {number} countsOffset
+ * @param {!GLenum} type
+ * @param {!Int32Array|!Iterable<!GLsizei>} offsetsList
+ * @param {number} offsetsOffset
+ * @param {!Int32Array|!Iterable<!GLsizei>} instanceCountsList
+ * @param {number} instanceCountsOffset
+ * @param {!GLsizei} drawcount
+ * @return {undefined}
+ */
+WEBGL_multi_draw.prototype.multiDrawElementsInstancedWEBGL = function(
+    mode, countsList, countsOffset, type, offsetsList, offsetsOffset,
+    instanceCountsList, instanceCountsOffset, drawcount) {};
+
+/**
+ * @param {!GLenum} mode
+ * @param {!Int32Array|!Iterable<!GLsizei>} countsList
+ * @param {number} countsOffset
+ * @param {!GLenum} type
+ * @param {!Int32Array|!Iterable<!GLsizei>} offsetsList
+ * @param {number} offsetsOffset
+ * @param {!GLsizei} drawcount
+ * @return {undefined}
+ */
+WEBGL_multi_draw.prototype.multiDrawElementsWEBGL = function(
+    mode, countsList, countsOffset, type, offsetsList, offsetsOffset,
+    drawcount) {};
+
+/** @typedef {number} */
+var GLenum;
+
+/** @typedef {number} */
+var GLint;
+
+/** @typedef {number} */
+var GLsizei;
 
 /**
  * @see http://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays/
