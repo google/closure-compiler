@@ -122,6 +122,15 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLocalAccessOptimization_notUsedInDefiningChunk() {
+    optimizeLocalAccess = true;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(JSChunkGraphBuilder.forUnordered().addChunk("var a = 1;").addChunk("a;").build()),
+        expected("_.a = 1;", "_.a;"));
+  }
+
+  @Test
   public void testImplicitGlobal() {
     optimizeLocalAccess = true;
     assumeCrossChunkNames = true;

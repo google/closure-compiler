@@ -70,6 +70,12 @@ final class RescopeGlobalSymbols implements CompilerPass {
    */
   private final Set<String> crossChunkNamesWithNonlocalWrite = new LinkedHashSet<>();
 
+  /**
+   * Names that are read in the chunk where they are defined. Only populated if optimizeLocalAccess
+   * is true.
+   */
+  private final Set<String> namesWithLocalRead = new LinkedHashSet<>();
+
   /** Global identifiers that may be a non-arrow function referencing "this" */
   private final Set<String> maybeReferencesThis = new LinkedHashSet<>();
 
@@ -269,6 +275,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
               && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
             crossChunkNamesWithNonlocalWrite.add(name);
           }
+        } else if (optimizeLocalAccess && n != v.getNameNode()) {
+          namesWithLocalRead.add(name);
         }
       }
     }
@@ -420,7 +428,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (containsRescopedOrInitializedVars(declaration, isGlobalDeclaration)) {
           for (Node lhs : allLhsNodes) {
             String name = lhs.getString();
-            if (!crossChunkNamesWithNonlocalWrite.contains(name) && !isExternVar(name, t)) {
+            if (!crossChunkNamesWithNonlocalWrite.contains(name)
+                && !isExternVar(name, t)
+                && (!isCrossChunkName(name) || namesWithLocalRead.contains(name))) {
               preDeclarations.add(
                   new ChunkGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
             }
@@ -534,7 +544,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         // If the cross-chunk variable is defined in this chunk, and not re-assigned in any other
         // chunk, then we skip the replacement and keep the local name. Any assignment needs to be
         // also set on the global namespace symbol.
-        if (!crossChunkNamesWithNonlocalWrite.contains(name)) {
+        if (!crossChunkNamesWithNonlocalWrite.contains(name) && namesWithLocalRead.contains(name)) {
           if (var.getInput().getChunk() == t.getChunk()) {
             if (NodeUtil.isLValue(n) && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
               addGlobalNamespaceAlias(n, name);
