@@ -617,6 +617,17 @@ public class CompilerOptions {
     return renamePrefixNamespaceAssumeCrossChunkNames;
   }
 
+  private boolean optimizeLocalAccessForGlobalSymbolNamespace = false;
+
+  /** Optimize access to global symbols within the chunk where they are defined. */
+  public void setOptimizeLocalAccessForGlobalSymbolNamespace(boolean optimize) {
+    optimizeLocalAccessForGlobalSymbolNamespace = optimize;
+  }
+
+  boolean optimizeLocalAccessForGlobalSymbolNamespace() {
+    return optimizeLocalAccessForGlobalSymbolNamespace;
+  }
+
   private PropertyCollapseLevel collapsePropertiesLevel;
 
   /**
@@ -3487,6 +3498,9 @@ public class CompilerOptions {
         .add("numParallelThreads", numParallelThreads)
         .add("optimizeCalls", optimizeCalls)
         .add("optimizeESClassConstructors", optimizeESClassConstructors)
+        .add(
+            "optimizeLocalAccessForGlobalSymbolNamespace",
+            optimizeLocalAccessForGlobalSymbolNamespace)
         .add("outputCharset", outputCharset)
         .add("outputFeatureSet", outputFeatureSet)
         .add("outputJs", outputJs)

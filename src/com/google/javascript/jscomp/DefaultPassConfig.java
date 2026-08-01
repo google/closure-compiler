@@ -2207,7 +2207,8 @@ public final class DefaultPassConfig extends PassConfig {
                   new RescopeGlobalSymbols(
                       compiler,
                       options.getRenamePrefixNamespace(),
-                      options.assumeCrossChunkNamesForRenamePrefixNamespace()))
+                      options.assumeCrossChunkNamesForRenamePrefixNamespace(),
+                      options.optimizeLocalAccessForGlobalSymbolNamespace()))
           .build();
 
   /** Converts cross chunk references into ES Module import and export statements. */

@@ -61,7 +61,14 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final String globalSymbolNamespace;
   private final boolean addExtern;
   private final boolean assumeCrossChunkNames;
+  private final boolean optimizeLocalAccess;
   private final Set<String> crossChunkNames = new LinkedHashSet<>();
+
+  /**
+   * Global identifiers that are used in more than one chunk and have a non-local write. Only
+   * populated if optimizeLocalAccess is true.
+   */
+  private final Set<String> crossChunkNamesWithNonlocalWrite = new LinkedHashSet<>();
 
   /** Global identifiers that may be a non-arrow function referencing "this" */
   private final Set<String> maybeReferencesThis = new LinkedHashSet<>();
@@ -75,10 +82,15 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * @param globalSymbolNamespace Name of namespace into which all global symbols are transferred.
    * @param assumeCrossChunkNames If true, all global symbols will be assumed cross chunk boundaries
    *     and thus require renaming.
+   * @param optimizeLocalAccess If true, write aliases for global symbols in the chunk where they
+   *     are defined, for more efficient access.
    */
   RescopeGlobalSymbols(
-      AbstractCompiler compiler, String globalSymbolNamespace, boolean assumeCrossChunkNames) {
-    this(compiler, globalSymbolNamespace, true, assumeCrossChunkNames);
+      AbstractCompiler compiler,
+      String globalSymbolNamespace,
+      boolean assumeCrossChunkNames,
+      boolean optimizeLocalAccess) {
+    this(compiler, globalSymbolNamespace, true, assumeCrossChunkNames, optimizeLocalAccess);
   }
 
   /**
@@ -89,16 +101,20 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * @param addExtern If true, the compiler will consider the globalSymbolNamespace an extern name.
    * @param assumeCrossChunkNames If true, all global symbols will be assumed cross chunk boundaries
    *     and thus require renaming. VisibleForTesting
+   * @param optimizeLocalAccess If true, write aliases for global symbols in the chunk where they
+   *     are defined, for more efficient access.
    */
   RescopeGlobalSymbols(
       AbstractCompiler compiler,
       String globalSymbolNamespace,
       boolean addExtern,
-      boolean assumeCrossChunkNames) {
+      boolean assumeCrossChunkNames,
+      boolean optimizeLocalAccess) {
     this.compiler = compiler;
     this.globalSymbolNamespace = globalSymbolNamespace;
     this.addExtern = addExtern;
     this.assumeCrossChunkNames = assumeCrossChunkNames;
+    this.optimizeLocalAccess = optimizeLocalAccess;
   }
 
   private boolean isCrossChunkName(String name) {
@@ -226,7 +242,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
         String name = n.getString();
-        if ("".equals(name) || crossChunkNames.contains(name)) {
+        if ("".equals(name) || (!optimizeLocalAccess && crossChunkNames.contains(name))) {
           return;
         }
         Scope s = t.getScope();
@@ -245,6 +261,14 @@ final class RescopeGlobalSymbols implements CompilerPass {
         JSChunk chunk = input.getChunk();
         if (chunk != t.getChunk()) {
           crossChunkNames.add(name);
+
+          // If optimizing local access, track names with non-local writes separately. This includes
+          // all L-value names except for declarations without children.
+          if (optimizeLocalAccess
+              && NodeUtil.isLValue(n)
+              && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
+            crossChunkNamesWithNonlocalWrite.add(name);
+          }
         }
       }
     }
@@ -384,14 +408,31 @@ final class RescopeGlobalSymbols implements CompilerPass {
      */
     private void rewriteNameDeclaration(
         NodeTraversal t, Node declaration, List<Node> allLhsNodes, boolean isGlobalDeclaration) {
-
-      // Add predeclarations for variables that are neither global/cross-chunk names nor externs.
       CompilerInput input = t.getInput();
-      for (Node lhs : allLhsNodes) {
-        String name = lhs.getString();
-        if (!(isGlobalDeclaration && isCrossChunkName(name)) && !isExternVar(name, t)) {
-          preDeclarations.add(
-              new ChunkGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
+
+      // Add pre-declarations for all LHS variables that are neither global/cross-chunk names nor
+      // externs.
+      if (optimizeLocalAccess) {
+        // If we are optimizing local accesses, we only want to pre-declare variables if the
+        // declaration will be converted to assignments/property accesses and removed by
+        // RemoveGlobalVarCallback. We don't want to add a new var declaration otherwise to avoid
+        // redeclaration errors (e.g. "var a; let a;").
+        if (containsRescopedOrInitializedVars(declaration, isGlobalDeclaration)) {
+          for (Node lhs : allLhsNodes) {
+            String name = lhs.getString();
+            if (!crossChunkNamesWithNonlocalWrite.contains(name) && !isExternVar(name, t)) {
+              preDeclarations.add(
+                  new ChunkGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
+            }
+          }
+        }
+      } else {
+        for (Node lhs : allLhsNodes) {
+          String name = lhs.getString();
+          if (!(isGlobalDeclaration && isCrossChunkName(name)) && !isExternVar(name, t)) {
+            preDeclarations.add(
+                new ChunkGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
+          }
         }
       }
 
@@ -429,15 +470,49 @@ final class RescopeGlobalSymbols implements CompilerPass {
       compiler.reportChangeToEnclosingScope(declaration);
     }
 
+    /**
+     * Determines whether a variable declaration statement contains any variables that will be
+     * rescoped (replaced with property accesses) or initialized (replaced with assignments).
+     * Assumes that optimizeLocalAccess is true.
+     *
+     * <p>Examples:
+     *
+     * <ul>
+     *   <li>Rescoped: `var a;` where `a` is a cross-chunk name with a nonlocal write (becomes
+     *       `_.a`).
+     *   <li>Initialized: `var a = 1;` (has children) or `var [a] = [1];` (destructuring LHS).
+     * </ul>
+     *
+     * <p>If a declaration contains any such variables, the statement will be removed by
+     * RemoveGlobalVarCallback, and we must pre-declare any other variables in it.
+     */
+    private boolean containsRescopedOrInitializedVars(
+        Node declaration, boolean isGlobalDeclaration) {
+      for (Node child = declaration.getFirstChild(); child != null; child = child.getNext()) {
+        if (isGlobalDeclaration
+            && child.isName()
+            && crossChunkNamesWithNonlocalWrite.contains(child.getString())) {
+          return true;
+        }
+        if (child.hasChildren() || child.isDestructuringLhs()) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     private void visitName(NodeTraversal t, Node n, Node parent) {
       String name = n.getString();
+
       // Ignore anonymous functions
       if (parent.isFunction() && name.isEmpty()) {
         return;
       }
+
       if (isExternVar(name, t)) {
         return;
       }
+
       // When the globalSymbolNamespace is used as a local variable name
       // add suffix to avoid shadowing the namespace. Also add a suffix
       // if a name starts with the name of the globalSymbolNamespace and
@@ -449,9 +524,25 @@ final class RescopeGlobalSymbols implements CompilerPass {
         n.setString(name + DISAMBIGUATION_SUFFIX);
         compiler.reportChangeToEnclosingScope(n);
       }
+
       // We only care about global vars.
       if (!(var.isGlobal() && isCrossChunkName(name))) {
         return;
+      }
+
+      if (optimizeLocalAccess) {
+        // If the cross-chunk variable is defined in this chunk, and not re-assigned in any other
+        // chunk, then we skip the replacement and keep the local name. Any assignment needs to be
+        // also set on the global namespace symbol.
+        if (!crossChunkNamesWithNonlocalWrite.contains(name)) {
+          if (var.getInput().getChunk() == t.getChunk()) {
+            if (NodeUtil.isLValue(n) && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
+              addGlobalNamespaceAlias(n, name);
+            }
+            // Early return to skip replacing the symbol.
+            return;
+          }
+        }
       }
       replaceSymbol(n, name);
     }
@@ -471,6 +562,45 @@ final class RescopeGlobalSymbols implements CompilerPass {
         parent.putBooleanProp(Node.FREE_CALL, false);
       }
       compiler.reportChangeToEnclosingScope(parent);
+    }
+
+    /**
+     * Aliases the local variable's value to the global namespace, so that it can be accessed from
+     * other chunks.
+     *
+     * <p>For simple assignments, this chains the assignment to avoid an extra statement (e.g.
+     * converts `a = x` to `a = _.a = x`). For other writes (e.g. compound assignments,
+     * destructuring, increments), it inserts a separate assignment statement after the current one
+     * (e.g. appends `_.a = a;`).
+     */
+    private void addGlobalNamespaceAlias(Node n, String name) {
+      Node stmt = NodeUtil.getEnclosingStatement(n);
+      if (stmt == null) {
+        return;
+      }
+      Node parent = n.getParent();
+      if (parent.isAssign() && parent.getFirstChild() == n) {
+        // Optimized path for simple assignments (e.g. `a = x`).
+        // We chain the assignment to the global namespace to reduce output size:
+        // `a = _.a = x` instead of `a = x; _.a = a;`.
+        Node rhs = parent.getSecondChild();
+        Node globalNamespaceAssign =
+            IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), rhs.detach());
+        globalNamespaceAssign.srcrefTree(n);
+        parent.addChildToBack(globalNamespaceAssign);
+        compiler.reportChangeToEnclosingScope(parent);
+      } else {
+        // Fallback path for other writes (e.g. `a++`, `a += x`, destructuring).
+        // In these cases, we cannot easily chain the assignment without changing semantics
+        // or making the code overly complex. Instead, we append a separate assignment
+        // statement (`_.a = a;`).
+        Node globalNamespaceAssign =
+            IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), IR.name(name));
+        Node aliasStatement = IR.exprResult(globalNamespaceAssign);
+        aliasStatement.srcrefTree(n);
+        aliasStatement.insertAfter(stmt);
+        compiler.reportChangeToEnclosingScope(stmt.getParent());
+      }
     }
 
     /**
