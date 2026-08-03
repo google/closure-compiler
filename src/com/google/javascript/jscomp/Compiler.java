@@ -102,6 +102,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -4351,7 +4352,55 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void deserializeCompilerState(InputStream inputStream)
       throws IOException, ClassNotFoundException {
     // Do not close the input stream, caller is responsible for closing it.
-    CompilerState compilerState = (CompilerState) new ObjectInputStream(inputStream).readObject();
+    // Use a restricted ObjectInputStream to prevent deserialization of unexpected classes.
+    ObjectInputStream ois =
+        new ObjectInputStream(inputStream) {
+          private static final ObjectInputFilter FILTER =
+              ObjectInputFilter.Config.createFilter(
+                  "com.google.javascript.jscomp.*;java.lang.*;java.util.*;!*");
+
+          @Override
+          protected java.io.ObjectStreamClass resolveClass(java.io.ObjectStreamClass desc)
+              throws IOException, ClassNotFoundException {
+            if (FILTER.checkInput(
+                    new ObjectInputFilter.FilterInfo() {
+                      @Override
+                      public Class<?> serialClass() {
+                        try {
+                          return Class.forName(desc.getName());
+                        } catch (ClassNotFoundException e) {
+                          return null;
+                        }
+                      }
+
+                      @Override
+                      public long arrayLength() {
+                        return -1;
+                      }
+
+                      @Override
+                      public long depth() {
+                        return -1;
+                      }
+
+                      @Override
+                      public long references() {
+                        return -1;
+                      }
+
+                      @Override
+                      public long streamBytes() {
+                        return -1;
+                      }
+                    })
+                != ObjectInputFilter.Status.ALLOWED) {
+              throw new java.io.InvalidClassException(
+                  "Deserialization of class not allowed: " + desc.getName());
+            }
+            return super.resolveClass(desc);
+          }
+        };
+    CompilerState compilerState = (CompilerState) ois.readObject();
 
     checkNotNull(
         this.chunkGraph, "Did you forget to call .init or .initChunks before restoreState?");
