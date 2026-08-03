@@ -28,7 +28,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -4168,7 +4167,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
     private final boolean mergedPrecompiledLibraries;
-    private final JSChunkGraph chunkGraph;
+    private final String[] chunkNames;
+    private final int[][] chunkDependencies;
+    private final String[][] chunkInputIds;
     private final int uniqueNameId;
     private final UniqueIdSupplier uniqueIdSupplier;
     private final LinkedHashSet<String> exportedNames;
@@ -4178,7 +4179,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final IdGenerator crossChunkIdGenerator;
     private final boolean runJ2clPasses;
     private final ImmutableList<InputId> externs;
-    private final ImmutableListMultimap<JSChunk, InputId> chunkToInputList;
     private final ImmutableList<String> injectedLibraries;
     private final int lastInjectedLibraryIndexInFirstScript;
     private final AccessorSummary accessorSummary;
@@ -4191,7 +4191,28 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
       this.lifeCycleStage = compiler.getLifeCycleStage();
       this.mergedPrecompiledLibraries = compiler.options.getMergedPrecompiledLibraries();
-      this.chunkGraph = compiler.chunkGraph;
+      JSChunk[] chunkList = compiler.chunkGraph.getIntegralChunkArrayForSerialization();
+      this.chunkNames = new String[chunkList.length];
+      this.chunkInputIds = new String[chunkList.length][];
+      LinkedHashMap<String, Integer> chunkNameMap = new LinkedHashMap<>();
+      for (int i = 0; i < chunkList.length; i++) {
+        JSChunk chunk = chunkList[i];
+        this.chunkNames[i] = chunk.getName();
+        chunkNameMap.put(chunk.getName(), i);
+        this.chunkInputIds[i] = new String[chunk.getInputCount()];
+        ImmutableList<CompilerInput> inputs = chunk.getInputs();
+        for (int j = 0; j < chunk.getInputCount(); j++) {
+          this.chunkInputIds[i][j] = inputs.get(j).getInputId().getIdName();
+        }
+      }
+      this.chunkDependencies = new int[chunkList.length][];
+      for (int i = 0; i < chunkList.length; i++) {
+        ImmutableList<JSChunk> deps = chunkList[i].getDependencies();
+        this.chunkDependencies[i] = new int[deps.size()];
+        for (int j = 0; j < deps.size(); j++) {
+          this.chunkDependencies[i][j] = chunkNameMap.get(deps.get(j).getName());
+        }
+      }
       this.uniqueNameId = compiler.uniqueNameId;
       this.uniqueIdSupplier = compiler.uniqueIdSupplier;
       this.exportedNames = compiler.exportedNames;
@@ -4202,7 +4223,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.runJ2clPasses = compiler.runJ2clPasses;
       this.externs =
           compiler.externs.stream().map(CompilerInput::getInputId).collect(toImmutableList());
-      this.chunkToInputList = mapJsChunksToInputIds(compiler.chunkGraph.getAllChunks());
       this.injectedLibraries = compiler.getRuntimeJsLibManager().getInjectedLibraries();
       Node lastInjectedLibrary = compiler.getRuntimeJsLibManager().getLastInjectedLibrary();
       this.lastInjectedLibraryIndexInFirstScript =
@@ -4232,7 +4252,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             : compilerState.lifeCycleStage;
     setLifeCycleStage(stage);
     getOptions().setMergedPrecompiledLibraries(compilerState.mergedPrecompiledLibraries);
-    chunkGraph = compilerState.chunkGraph;
     uniqueNameId = compilerState.uniqueNameId;
     uniqueIdSupplier = compilerState.uniqueIdSupplier;
     exportedNames.clear();
@@ -4255,18 +4274,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     accessorSummary = compilerState.accessorSummary;
     instrumentationMapping = compilerState.instrumentationMappping;
-  }
-
-  private static final ImmutableListMultimap<JSChunk, InputId> mapJsChunksToInputIds(
-      Iterable<JSChunk> jsChunks) {
-    ImmutableListMultimap.Builder<JSChunk, InputId> jsChunkToInputId =
-        ImmutableListMultimap.builder();
-    for (JSChunk jsChunk : jsChunks) {
-      jsChunkToInputId.putAll(
-          jsChunk,
-          jsChunk.getInputs().stream().map(CompilerInput::getInputId).collect(toImmutableList()));
-    }
-    return jsChunkToInputId.build();
   }
 
   public void saveState(OutputStream outputStream) throws IOException {
@@ -4372,6 +4379,28 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     restoreFromState(compilerState);
 
+    // We don't plan to be compatible with an older version of the compiler, so this should never
+    // happen.
+    checkNotNull(compilerState.chunkNames, "Missing chunk names");
+    checkNotNull(compilerState.chunkDependencies, "Missing chunk dependencies");
+
+    // Restore the chunk graph
+    List<JSChunk> chunks = new ArrayList<>();
+    for (String chunkName : compilerState.chunkNames) {
+      JSChunk chunk = new JSChunk(chunkName);
+      chunks.add(chunk);
+    }
+    if (compilerState.chunkDependencies != null) {
+      for (int i = 0; i < chunks.size(); i++) {
+        JSChunk chunk = chunks.get(i);
+        int[] deps = compilerState.chunkDependencies[i];
+        for (int dep : deps) {
+          chunk.addDependency(chunks.get(dep));
+        }
+      }
+    }
+    chunkGraph = new JSChunkGraph(chunks);
+
     // Restore TypedAST and related fields
     externProperties = deserializedAst.getExternProperties();
     externAndJsRoot = IR.root(IR.root(), IR.root());
@@ -4409,14 +4438,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.externs.add(input);
     }
 
-    for (JSChunk deserializedChunk : getChunks()) {
-      for (InputId inputId : compilerState.chunkToInputList.get(deserializedChunk)) {
-        SourceFile src = codeFiles.get(inputId.getIdName());
+    // We don't plan to be compatible with an older version of the compiler, so this should never
+    // happen.
+    checkNotNull(compilerState.chunkInputIds, "Missing chunk input ids");
+    // Restore the inputs for each chunk.
+    for (int i = 0; i < chunks.size(); i++) {
+      String[] inputIds = compilerState.chunkInputIds[i];
+      for (String inputId : inputIds) {
+        SourceFile src = codeFiles.get(inputId);
         if (src == null) {
           // The auto-generated empty fill files used to facilitate CCCM for
           // empty chunks may not have gotten serialized, but all the others
           // should have.
-          checkState(isFillFileName(inputId.getIdName()), "Missing %s", inputId);
+          checkState(isFillFileName(inputId), "Missing %s", inputId);
           continue;
         }
         CompilerInput input = new CompilerInput(src);
@@ -4426,7 +4460,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         scriptNodeByFilename.put(src.getName(), script);
 
         putCompilerInput(input); // overwrite the old input
-        deserializedChunk.add(input);
+        chunks.get(i).add(input);
       }
     }
 

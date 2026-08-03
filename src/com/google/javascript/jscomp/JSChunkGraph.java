@@ -280,6 +280,11 @@ public final class JSChunkGraph implements Serializable {
     return Arrays.asList(chunks);
   }
 
+  /** Gets all chunks in dependency order. Note: Do not modify the returned array. */
+  JSChunk[] getIntegralChunkArrayForSerialization() {
+    return chunks;
+  }
+
   /**
    * Gets a single chunk by name.
    *
