@@ -744,7 +744,7 @@ public class Scanner {
         skipDecimalDigits();
         if (peek('.')) {
           nextChar();
-          skipDecimalDigits();
+          skipDecimalDigits(/* hasLeadingDigit= */ false);
         }
         if (peek('n')) {
           reportError("SyntaxError: nonzero BigInt can't have leading zero");
@@ -1166,7 +1166,7 @@ public class Scanner {
   private LiteralToken scanFractionalNumericLiteral(int beginToken) {
     if (peek('.')) {
       nextChar();
-      skipDecimalDigits();
+      skipDecimalDigits(/* hasLeadingDigit= */ false);
     }
     return scanExponentOfNumericLiteral(beginToken);
   }
@@ -1194,15 +1194,22 @@ public class Scanner {
   }
 
   private void skipDecimalDigits() {
+    skipDecimalDigits(/* hasLeadingDigit= */ true);
+  }
+
+  private void skipDecimalDigits(boolean hasLeadingDigit) {
+    boolean hasDigit = hasLeadingDigit;
     char ch = peekChar();
     while (isDecimalDigit(ch) || ch == '_') {
       nextChar();
       if (ch == '_') {
-        if (isDecimalDigit(peekChar())) {
+        if (hasDigit && isDecimalDigit(peekChar())) {
           nextChar();
         } else {
           reportError("Trailing numeric separator");
         }
+      } else {
+        hasDigit = true;
       }
       ch = peekChar();
     }

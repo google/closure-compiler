@@ -544,6 +544,29 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testNumericSeparatorWithDecimalPoint() {
+    parseError("3_.141", "Trailing numeric separator");
+    parseError("3._141", "Trailing numeric separator");
+    parseError("3._", "Trailing numeric separator");
+    parseError("0._141", "Trailing numeric separator");
+    parseError("0._", "Trailing numeric separator");
+    parseError("3._e1", "Trailing numeric separator");
+    parseError("3.1_e1", "Trailing numeric separator");
+    parseError("3.141_", "Trailing numeric separator");
+    parseError(".141_", "Trailing numeric separator");
+    parseError("_.1", SEMICOLON_EXPECTED);
+    parseError("._141", "primary expression expected");
+
+    Node result = parse("3.1_41;");
+    expectFeatures(Feature.NUMERIC_SEPARATOR);
+    assertNode(result).hasType(Token.SCRIPT);
+    Node exprResult = result.getOnlyChild();
+    assertNode(exprResult).hasType(Token.EXPR_RESULT);
+    Node numberNode = exprResult.getOnlyChild();
+    assertNode(numberNode).isNumber(3.141);
+  }
+
+  @Test
   public void testNumericSeparatorWarning() {
     mode = LanguageMode.ECMASCRIPT_2020;
     parseWarning("1_000", requiresLanguageModeMessage(Feature.NUMERIC_SEPARATOR));
