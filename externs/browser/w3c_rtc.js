@@ -717,7 +717,7 @@ RTCEncodedVideoFrame.prototype.timestamp;
 
 
 /**
- * @const {string}
+ * @const {!EncodedVideoChunkType}
  */
 RTCEncodedVideoFrame.prototype.type;
 
@@ -802,7 +802,7 @@ RTCDTMFSender.prototype.toneBuffer;
  *
  * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpcodeccapability
  */
-var RTCRtpCodecCapability;
+var RTCRtpCodec;
 
 
 /**
@@ -817,7 +817,7 @@ var RTCRtpHeaderExtensionCapability;
 
 /**
  * @typedef {{
- *   codecs: !Array<!RTCRtpCodecCapability>,
+ *   codecs: !Array<!RTCRtpCodec>,
  *   headerExtensions: !Array<!RTCRtpHeaderExtensionCapability>,
  * }}
  *
@@ -939,6 +939,11 @@ function RTCRtpReceiveParameters() {}
  */
 function RTCRtpScriptTransform(worker, options, transfer) {}
 
+/** @typedef {!RTCRtpScriptTransform} */
+var RTCRtpReceiverTransform;
+
+/** @typedef {!RTCRtpScriptTransform} */
+var RTCRtpSenderTransform;
 /**
  * @constructor
  * @see https://www.w3.org/TR/webrtc/#rtcrtpsender-interface
@@ -961,7 +966,7 @@ RTCRtpSender.prototype.track;
 RTCRtpSender.prototype.transport;
 
 /**
- * @const {?RTCRtpScriptTransform}
+ * @const {?RTCRtpSenderTransform}
  */
 RTCRtpSender.prototype.transform;
 
@@ -1065,7 +1070,7 @@ RTCRtpReceiver.prototype.track;
  */
 RTCRtpReceiver.prototype.transport;
 
-/** @type {?RTCRtpScriptTransform} */
+/** @type {?RTCRtpReceiverTransform} */
 RTCRtpReceiver.prototype.transform;
 
 /**
@@ -1240,7 +1245,8 @@ RTCRtpTransceiver.prototype.sender;
 RTCRtpTransceiver.prototype.receiver;
 
 /**
- * @param {!Array<!RTCRtpCodecCapability>} codecs
+ * @param {!Array<!RTCRtpCodec>|!Iterable<!RTCRtpCodec>}
+ *     codecs
  */
 RTCRtpTransceiver.prototype.setCodecPreferences = function(codecs) {};
 
@@ -1310,6 +1316,17 @@ ConstrainDOMStringParameters.prototype.exact;
 ConstrainDOMStringParameters.prototype.ideal;
 
 /**
+ * @record
+ */
+function ConstrainBooleanOrDOMStringParameters() {}
+
+/** @type {boolean|string|undefined} */
+ConstrainBooleanOrDOMStringParameters.prototype.exact;
+
+/** @type {boolean|string|undefined} */
+ConstrainBooleanOrDOMStringParameters.prototype.ideal;
+
+/**
  * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-constraindoublerange
  * @record
  * @extends {DoubleRange}
@@ -1357,6 +1374,11 @@ var ConstrainBoolean;
 var ConstrainDOMString;
 
 /**
+ * @typedef {boolean|string|!ConstrainBooleanOrDOMStringParameters}
+ */
+var ConstrainBooleanOrDOMString;
+
+/**
  * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-constraindouble
  * @typedef {number|ConstrainDoubleRange}
  */
@@ -1398,7 +1420,7 @@ MediaTrackConstraintSet.prototype.channelCount;
 MediaTrackConstraintSet.prototype.deviceId;
 
 /**
- * @type {ConstrainBoolean|undefined}
+ * @type {ConstrainBooleanOrDOMString|undefined}
  */
 MediaTrackConstraintSet.prototype.echoCancellation;
 
@@ -3178,7 +3200,7 @@ RTCCertificateStats.prototype.issuerCertificateId;
 
 /**
  * @interface
- * @extends {Iterable<!Array<string|!RTCStats>>}
+ * @extends {ReadonlyMap<string, *>}
  * @see https://w3c.github.io/webrtc-pc/#rtcstatsreport-object
  */
 function RTCStatsReport() {}
@@ -3221,50 +3243,6 @@ RTCStatsReport.prototype.type;
  */
 RTCStatsReport.prototype.id;
 
-// Note: Below are Map like methods supported by WebRTC statistics
-// specification-compliant RTCStatsReport. Currently only implemented by
-// Mozilla.
-// See https://www.w3.org/TR/webrtc/#rtcstatsreport-object for definition.
-/**
- * @param {function(this:SCOPE, !RTCStats, string, MAP)} callback
- * @param {SCOPE=} opt_thisObj The value of "this" inside callback function.
- * @this {MAP}
- * @template MAP,SCOPE
- */
-RTCStatsReport.prototype.forEach = function(callback, opt_thisObj) {};
-
-/**
- * @param {string} key
- * @return {!IteratorIterable<!Array<string|!RTCStats>>}
- */
-RTCStatsReport.prototype.entries = function(key) {};
-
-/**
- * @param {string} key
- * @return {!RTCStats}
- */
-RTCStatsReport.prototype.get = function(key) {};
-
-/**
- * @return {!IteratorIterable<string>}
- */
-RTCStatsReport.prototype.keys = function() {};
-
-/**
- * @return {!IteratorIterable<!RTCStats>}
- */
-RTCStatsReport.prototype.values = function() {};
-
-/**
- * @param {string} key
- * @return {boolean}
- */
-RTCStatsReport.prototype.has = function(key) {};
-
-/**
- * @const {number}
- */
-RTCStatsReport.prototype.size;
 
 /**
  * @return {!IteratorIterable<!Array<string|!RTCStats>>}
