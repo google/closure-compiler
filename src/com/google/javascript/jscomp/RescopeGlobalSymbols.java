@@ -248,7 +248,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
         String name = n.getString();
-        if ("".equals(name) || (!optimizeLocalAccess && crossChunkNames.contains(name))) {
+        if (name.isEmpty() || (!optimizeLocalAccess && crossChunkNames.contains(name))) {
           return;
         }
         Scope s = t.getScope();

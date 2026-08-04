@@ -410,7 +410,7 @@ final class ConvertChunksToESModules implements CompilerPass {
     checkState(nameNode.isName());
     String name = nameNode.getString();
 
-    if ("".equals(name)) {
+    if (name.isEmpty()) {
       return false;
     }
 
