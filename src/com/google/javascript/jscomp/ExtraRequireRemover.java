@@ -56,10 +56,7 @@ public final class ExtraRequireRemover implements CompilerPass, NodeTraversal.Ca
 
   private static final ImmutableSet<String> DEFAULT_EXTRA_NAMESPACES =
       ImmutableSet.of(
-          "goog.testing.asserts",
-          "goog.testing.jsunit",
-          "goog.testing.JsTdTestCaseAdapter",
-          "goog.labs.testing.Environment");
+          "goog.testing.asserts", "goog.testing.jsunit", "goog.labs.testing.Environment");
 
   public ExtraRequireRemover(AbstractCompiler compiler) {
     this.compiler = compiler;

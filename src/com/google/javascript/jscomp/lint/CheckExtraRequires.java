@@ -65,8 +65,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
 
   // TODO(b/130215517): This should eventually be removed and exceptions suppressed
   private static final ImmutableSet<String> DEFAULT_EXTRA_NAMESPACES =
-      ImmutableSet.of(
-          "goog.testing.asserts", "goog.testing.jsunit", "goog.testing.JsTdTestCaseAdapter");
+      ImmutableSet.of("goog.testing.asserts", "goog.testing.jsunit");
 
   /**
    * @param requiresToRemove providing a non-null set to this parameter will result in only removing
