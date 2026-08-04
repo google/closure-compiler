@@ -317,14 +317,14 @@ final class RenameVars implements CompilerPass {
    * SyntacticScopeCreator} merges them when a parameter declares the same name, so {@code var} is
    * the parameter's rather than the function name's. Renaming both to the same name is
    * semantically correct - the parameter shadows the function name throughout the function, so the
-   * function name is unreferenceable - but it preserves a construct that Safari 16 and earlier
-   * reject: those versions treat a function expression's name as an extra parameter, so they
-   * report a duplicate parameter name whenever the parameter list is non-simple. For example,
-   * {@code function a({a}) {}} fails to parse with "SyntaxError: Duplicate parameter 'a' not
-   * allowed in function with destructuring parameters".
+   * function name is unreferenceable - but it preserves a construct that older versions of Safari
+   * reject: they treat a function expression's name as an extra parameter, so they report a
+   * duplicate parameter name whenever the parameter list is non-simple. For example, {@code
+   * function a({a}) {}} fails to parse with "SyntaxError: Duplicate parameter 'a' not allowed in
+   * function with destructuring parameters".
    *
-   * <p>See https://github.com/swc-project/swc/issues/11083 (destructuring) and
-   * https://github.com/swc-project/swc/issues/9015 (default values).
+   * <p>See https://bugs.webkit.org/show_bug.cgi?id=220517, fixed by
+   * https://bugs.webkit.org/show_bug.cgi?id=247433.
    */
   private static boolean isFunctionNameShadowedByParameter(Node n, Node parent, @Nullable Var var) {
     if (!NodeUtil.isBleedingFunctionName(n)) {

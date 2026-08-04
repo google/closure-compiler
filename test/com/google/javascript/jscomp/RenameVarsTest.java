@@ -417,11 +417,11 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   @Test
   public void testBleedingFunctionNameShadowedByObjectPatternParam() {
-    // Safari 16 and earlier incorrectly treat a function expression's own name as one of its
+    // Older versions of Safari incorrectly treat a function expression's own name as one of its
     // parameters, so they reject a function whose non-simple parameter list binds that same name:
     // "SyntaxError: Duplicate parameter 'a' not allowed in function with destructuring
     // parameters". The function name and the parameter are separate bindings, so they must not be
-    // renamed to the same name. See https://github.com/swc-project/swc/issues/11083.
+    // renamed to the same name. See https://bugs.webkit.org/show_bug.cgi?id=220517.
     test(
         """
         var foo = function bar({bar}) { return bar; };
@@ -446,7 +446,6 @@ public final class RenameVarsTest extends CompilerTestCase {
   public void testBleedingFunctionNameShadowedByDefaultValueParam() {
     // The same Safari bug applies to default values:
     // "Duplicate parameter 'a' not allowed in function with default parameter values".
-    // See https://github.com/swc-project/swc/issues/9015.
     test(
         """
         var foo = function bar(bar = 1) { return bar; };
