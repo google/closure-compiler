@@ -1429,20 +1429,21 @@ public final class JsDocInfoParser {
         }
       }
 
-      if (!match(JsDocToken.RIGHT_CURLY)) {
+      token = next();
+      if (token != JsDocToken.RIGHT_CURLY) {
         addParserWarning(Msg.JSDOC_SUPPRESS);
+        return token;
+      }
+
+      // Find the suppressions' description (if applicable).
+      if (jsdocBuilder.shouldParseDocumentation() && !lookAheadForAnnotation()) {
+        ExtractionInfo suppressDescriptionInfo = extractMultilineTextualBlock(token);
+        String suppressDescription = suppressDescriptionInfo.string;
+        jsdocBuilder.recordSuppressions(ImmutableSet.copyOf(suppressions), suppressDescription);
+        token = suppressDescriptionInfo.token;
       } else {
-        token = next();
-        // Find the suppressions' description (if applicable).
-        if (jsdocBuilder.shouldParseDocumentation() && token != JsDocToken.ANNOTATION) {
-          ExtractionInfo suppressDescriptionInfo = extractMultilineTextualBlock(token);
-          String suppressDescription = suppressDescriptionInfo.string;
-          jsdocBuilder.recordSuppressions(ImmutableSet.copyOf(suppressions), suppressDescription);
-          token = suppressDescriptionInfo.token;
-        } else if (token != JsDocToken.EOC && token != JsDocToken.EOF) {
-          token = eatUntilEOLIfNotAnnotation();
-          jsdocBuilder.recordSuppressions(suppressions);
-        }
+        token = eatUntilEOLIfNotAnnotation(next());
+        jsdocBuilder.recordSuppressions(suppressions);
       }
       return token;
     }

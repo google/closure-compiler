@@ -3116,6 +3116,48 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testSuppressFollowedByAnnotationOnSameLine_parseTypesOnly() {
+    JSDocInfo sameLine =
+        parse("@suppress {visibility} @return {boolean} */", JsDocParsing.TYPES_ONLY);
+    assertThat(sameLine.getReturnType()).isNotNull();
+    assertThat(sameLine.getSuppressions()).contains("visibility");
+  }
+
+  @Test
+  public void testSuppressFollowedByAnnotationOnSameLine_parseWithDescription() {
+    // Regression test - the compiler used to include the @return {boolean} annotation in the
+    // suppress description only if JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE was used.
+    JSDocInfo sameLine =
+        parse(
+            "@suppress {visibility} @return {boolean} */",
+            JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
+    assertThat(sameLine.getReturnType()).isNotNull();
+    assertThat(sameLine.getSuppressions()).contains("visibility");
+  }
+
+  @Test
+  public void testSuppressWithDescriptionFollowedByAnnotation_parseTypeOnly() {
+    JSDocInfo sameLine =
+        parse(
+            "@suppress {visibility} this is a description @return {boolean} */",
+            JsDocParsing.TYPES_ONLY);
+    // The @return {boolean} is considered part of the @suppress description.
+    assertThat(sameLine.getReturnType()).isNull();
+    assertThat(sameLine.getSuppressions()).contains("visibility");
+  }
+
+  @Test
+  public void testSuppressWithDescriptionFollowedByAnnotation_includeDescriptions() {
+    JSDocInfo sameLine =
+        parse(
+            "@suppress {visibility} this is a description @return {boolean} */",
+            JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
+    // The @return {boolean} is considered part of the @suppress description.
+    assertThat(sameLine.getReturnType()).isNull();
+    assertThat(sameLine.getSuppressions()).contains("visibility");
+  }
+
+  @Test
   public void testSuppressWithDescription() {
     String jsDocComment =
         // No description for `@suppress {z}`.
