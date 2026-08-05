@@ -41,6 +41,7 @@
 package com.google.javascript.rhino;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Iterator;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -89,7 +90,7 @@ public abstract class QualifiedName {
   // further into TypedScopeCreator.
 
   /** Appends the joined qualified name to the given StringBuilder. */
-  abstract void appendTo(StringBuilder sb);
+  abstract void appendTo(StringBuilder sb, Character separator);
 
   /** Checks whether the given node matches this name. */
   public abstract boolean matches(Node n);
@@ -123,8 +124,13 @@ public abstract class QualifiedName {
 
   /** Returns the qualified name as a string. */
   public String join() {
+    return join('.');
+  }
+
+  /** Returns the qualified name as a string, with the given separator between components. */
+  public String join(Character separator) {
     StringBuilder sb = new StringBuilder();
-    appendTo(sb);
+    appendTo(sb, separator);
     return sb.toString();
   }
 
@@ -164,10 +170,10 @@ public abstract class QualifiedName {
     }
 
     @Override
-    void appendTo(StringBuilder sb) {
+    void appendTo(StringBuilder sb, Character separator) {
       for (int i = 0; i < size; i++) {
         if (i > 0) {
-          sb.append('.');
+          sb.append(separator);
         }
         sb.append(terms.get(i));
       }
@@ -233,9 +239,9 @@ public abstract class QualifiedName {
     }
 
     @Override
-    void appendTo(StringBuilder sb) {
-      owner.appendTo(sb);
-      sb.append('.').append(prop);
+    void appendTo(StringBuilder sb, Character separator) {
+      owner.appendTo(sb, separator);
+      sb.append(separator).append(prop);
     }
 
     @Override
@@ -283,8 +289,12 @@ public abstract class QualifiedName {
     }
 
     @Override
-    void appendTo(StringBuilder sb) {
-      sb.append(join());
+    void appendTo(StringBuilder sb, Character separator) {
+      Iterator<String> components = this.components().iterator();
+      sb.append(components.next());
+      while (components.hasNext()) {
+        sb.append(separator).append(components.next());
+      }
     }
 
     @Override
