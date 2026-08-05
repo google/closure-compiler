@@ -17,14 +17,17 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -61,20 +64,26 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final String globalSymbolNamespace;
   private final boolean addExtern;
   private final boolean assumeCrossChunkNames;
-  private final boolean optimizeLocalAccess;
+  private final CompilerOptions.OptimizeLocalAccess optimizeLocalAccess;
   private final Set<String> crossChunkNames = new LinkedHashSet<>();
 
   /**
-   * Global identifiers that are used in more than one chunk and have a non-local write. Only
-   * populated if optimizeLocalAccess is true.
+   * Global identifiers that are used in more than one chunk and are written to from a chunk other
+   * than the defining one. Only populated if optimizeLocalAccess is not DISABLED.
    */
-  private final Set<String> crossChunkNamesWithNonlocalWrite = new LinkedHashSet<>();
+  private final Set<String> globalNamesWithWriteFromOtherChunk = new LinkedHashSet<>();
 
   /**
    * Names that are read in the chunk where they are defined. Only populated if optimizeLocalAccess
-   * is true.
+   * is not DISABLED.
    */
-  private final Set<String> namesWithLocalRead = new LinkedHashSet<>();
+  private final Set<String> globalNamesWithLocalRead = new LinkedHashSet<>();
+
+  /**
+   * Track which global symbols are written to outside from a nested scope (i.e. not the global
+   * scope). Only populated if optimizeLocalAccess is ALL_CHUNKS.
+   */
+  private final Set<String> globalNamesWithInnerScopeWriteInDefiningChunk = new LinkedHashSet<>();
 
   /** Global identifiers that may be a non-arrow function referencing "this" */
   private final Set<String> maybeReferencesThis = new LinkedHashSet<>();
@@ -95,7 +104,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       AbstractCompiler compiler,
       String globalSymbolNamespace,
       boolean assumeCrossChunkNames,
-      boolean optimizeLocalAccess) {
+      CompilerOptions.OptimizeLocalAccess optimizeLocalAccess) {
     this(compiler, globalSymbolNamespace, true, assumeCrossChunkNames, optimizeLocalAccess);
   }
 
@@ -107,15 +116,14 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * @param addExtern If true, the compiler will consider the globalSymbolNamespace an extern name.
    * @param assumeCrossChunkNames If true, all global symbols will be assumed cross chunk boundaries
    *     and thus require renaming. VisibleForTesting
-   * @param optimizeLocalAccess If true, write aliases for global symbols in the chunk where they
-   *     are defined, for more efficient access.
+   * @param optimizeLocalAccess Mode for optimizing local access to global symbols.
    */
   RescopeGlobalSymbols(
       AbstractCompiler compiler,
       String globalSymbolNamespace,
       boolean addExtern,
       boolean assumeCrossChunkNames,
-      boolean optimizeLocalAccess) {
+      CompilerOptions.OptimizeLocalAccess optimizeLocalAccess) {
     this.compiler = compiler;
     this.globalSymbolNamespace = globalSymbolNamespace;
     this.addExtern = addExtern;
@@ -179,6 +187,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
     // in the previous pass.
     NodeTraversal.traverse(compiler, root, new RemoveGlobalVarCallback());
     rewriteScope.declareChunkGlobals();
+    if (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS) {
+      rewriteScope.declareLocalAliases();
+    }
   }
 
   /**
@@ -248,7 +259,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
         String name = n.getString();
-        if (name.isEmpty() || (!optimizeLocalAccess && crossChunkNames.contains(name))) {
+        if (name.isEmpty()
+            || (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.DISABLED
+                && crossChunkNames.contains(name))) {
           return;
         }
         Scope s = t.getScope();
@@ -256,7 +269,17 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (v == null || !v.isGlobal()) {
           return;
         }
+
         CompilerInput input = v.getInput();
+
+        if (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS
+            && !t.inGlobalScope()
+            && (input == null || input.getChunk() == t.getChunk())
+            && NodeUtil.isLValue(n)
+            && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
+          globalNamesWithInnerScopeWriteInDefiningChunk.add(name);
+        }
+
         if (input == null) {
           // We know nothing. Assume name is used across chunks.
           crossChunkNames.add(name);
@@ -270,13 +293,14 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
           // If optimizing local access, track names with non-local writes separately. This includes
           // all L-value names except for declarations without children.
-          if (optimizeLocalAccess
+          if (optimizeLocalAccess != CompilerOptions.OptimizeLocalAccess.DISABLED
               && NodeUtil.isLValue(n)
               && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
-            crossChunkNamesWithNonlocalWrite.add(name);
+            globalNamesWithWriteFromOtherChunk.add(name);
           }
-        } else if (optimizeLocalAccess && n != v.getNameNode()) {
-          namesWithLocalRead.add(name);
+        } else if (optimizeLocalAccess != CompilerOptions.OptimizeLocalAccess.DISABLED
+            && n != v.getNameNode()) {
+          globalNamesWithLocalRead.add(name);
         }
       }
     }
@@ -367,6 +391,12 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private class RewriteScopeCallback implements NodeTraversal.Callback {
     final List<ChunkGlobal> preDeclarations = new ArrayList<>();
 
+    /**
+     * Map of chunks to the set of global symbols that need to be aliased in that chunk. Only
+     * populated if optimizeLocalAccess is ALL_CHUNKS.
+     */
+    final Map<JSChunk, Set<String>> localAliasesToDeclare = new LinkedHashMap<>();
+
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isNameDeclaration(n)) {
@@ -420,7 +450,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
       // Add pre-declarations for all LHS variables that are neither global/cross-chunk names nor
       // externs.
-      if (optimizeLocalAccess) {
+      if (optimizeLocalAccess != CompilerOptions.OptimizeLocalAccess.DISABLED) {
         // If we are optimizing local accesses, we only want to pre-declare variables if the
         // declaration will be converted to assignments/property accesses and removed by
         // RemoveGlobalVarCallback. We don't want to add a new var declaration otherwise to avoid
@@ -428,9 +458,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (containsRescopedOrInitializedVars(declaration, isGlobalDeclaration)) {
           for (Node lhs : allLhsNodes) {
             String name = lhs.getString();
-            if (!crossChunkNamesWithNonlocalWrite.contains(name)
+            if (!globalNamesWithWriteFromOtherChunk.contains(name)
                 && !isExternVar(name, t)
-                && (!isCrossChunkName(name) || namesWithLocalRead.contains(name))) {
+                && (!isCrossChunkName(name) || globalNamesWithLocalRead.contains(name))) {
               preDeclarations.add(
                   new ChunkGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
             }
@@ -501,7 +531,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       for (Node child = declaration.getFirstChild(); child != null; child = child.getNext()) {
         if (isGlobalDeclaration
             && child.isName()
-            && crossChunkNamesWithNonlocalWrite.contains(child.getString())) {
+            && globalNamesWithWriteFromOtherChunk.contains(child.getString())) {
           return true;
         }
         if (child.hasChildren() || child.isDestructuringLhs()) {
@@ -540,15 +570,36 @@ final class RescopeGlobalSymbols implements CompilerPass {
         return;
       }
 
-      if (optimizeLocalAccess) {
-        // If the cross-chunk variable is defined in this chunk, and not re-assigned in any other
-        // chunk, then we skip the replacement and keep the local name. Any assignment needs to be
-        // also set on the global namespace symbol.
-        if (!crossChunkNamesWithNonlocalWrite.contains(name) && namesWithLocalRead.contains(name)) {
-          if (var.getInput().getChunk() == t.getChunk()) {
+      if (optimizeLocalAccess != CompilerOptions.OptimizeLocalAccess.DISABLED) {
+        JSChunk currentChunk = t.getChunk();
+        JSChunk definingChunk = var.getInput().getChunk();
+        if (currentChunk == definingChunk) {
+          if (!globalNamesWithWriteFromOtherChunk.contains(name)
+              && globalNamesWithLocalRead.contains(name)) {
+            // If the cross-chunk variable is defined in this chunk, and not re-assigned in any
+            // other
+            // chunk, then we skip the replacement and keep the local name.
             if (NodeUtil.isLValue(n) && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
+              // Any assignment needs to be also set on the global namespace symbol.
               addGlobalNamespaceAlias(n, name);
             }
+            // Early return to skip replacing the symbol.
+            return;
+          }
+        } else if (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS) {
+          // Variables defined in a different chunk are still safe for local aliasing if all of the
+          // following conditions are met.
+          // 1. The variable is not written to in any other chunk than in the defining chunk.
+          // 2. The variable is not written to in an inner scope in the defining chunk, so all
+          //     assignments are guaranteed to happen during the initial execution of the chunk.
+          // 3. The current chunk depends on the defining chunk, so all writes are guaranteed to
+          //     have occurred already when the current chunk is loaded.
+          if (!globalNamesWithWriteFromOtherChunk.contains(name)
+              && !globalNamesWithInnerScopeWriteInDefiningChunk.contains(name)
+              && compiler.getChunkGraph().dependsOn(currentChunk, definingChunk)) {
+            localAliasesToDeclare
+                .computeIfAbsent(currentChunk, k -> new LinkedHashSet<>())
+                .add(name);
             // Early return to skip replacing the symbol.
             return;
           }
@@ -617,7 +668,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
      * Adds back declarations for variables that do not cross chunk boundaries. Must be called after
      * RemoveGlobalVarCallback.
      */
-    void declareChunkGlobals() {
+    private void declareChunkGlobals() {
       for (ChunkGlobal global : preDeclarations) {
         if (global.root.hasChildren() && global.root.getFirstChild().isVar()) {
           global.root.getFirstChild().addChildToBack(global.name);
@@ -625,6 +676,31 @@ final class RescopeGlobalSymbols implements CompilerPass {
           global.root.addChildToFront(IR.var(global.name).srcref(global.name));
         }
         compiler.reportChangeToEnclosingScope(global.root);
+      }
+    }
+
+    /**
+     * Adds local alias declarations (e.g. `var a = _.a;`) at the beginning of chunks for
+     * cross-chunk variables that can be safely accessed locally. Must be called after
+     * RemoveGlobalVarCallback. Only applies if optimizeLocalAccess is ALL_CHUNKS.
+     */
+    private void declareLocalAliases() {
+      for (Map.Entry<JSChunk, Set<String>> entry : localAliasesToDeclare.entrySet()) {
+        JSChunk chunk = entry.getKey();
+        Set<String> names = entry.getValue();
+        if (names.isEmpty()) {
+          continue;
+        }
+        ImmutableList<CompilerInput> inputs = chunk.getInputs();
+        CompilerInput firstInput = inputs.get(0);
+        Node script = firstInput.getAstRoot(compiler);
+        for (String name : names) {
+          // AST for local alias: var name = globals.name
+          Node alias = IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name));
+          alias.srcrefTree(script);
+          script.addChildToFront(alias);
+          compiler.reportChangeToEnclosingScope(script);
+        }
       }
     }
 

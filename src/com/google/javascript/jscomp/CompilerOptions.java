@@ -617,14 +617,15 @@ public class CompilerOptions {
     return renamePrefixNamespaceAssumeCrossChunkNames;
   }
 
-  private boolean optimizeLocalAccessForGlobalSymbolNamespace = false;
+  private OptimizeLocalAccess optimizeLocalAccessForGlobalSymbolNamespace =
+      OptimizeLocalAccess.DISABLED;
 
-  /** Optimize access to global symbols within the chunk where they are defined. */
-  public void setOptimizeLocalAccessForGlobalSymbolNamespace(boolean optimize) {
+  /** Optimize access to global symbols. */
+  public void setOptimizeLocalAccessForGlobalSymbolNamespace(OptimizeLocalAccess optimize) {
     optimizeLocalAccessForGlobalSymbolNamespace = optimize;
   }
 
-  boolean optimizeLocalAccessForGlobalSymbolNamespace() {
+  public OptimizeLocalAccess getOptimizeLocalAccessForGlobalSymbolNamespace() {
     return optimizeLocalAccessForGlobalSymbolNamespace;
   }
 
@@ -3609,6 +3610,28 @@ public class CompilerOptions {
     // Each chunk is an ES module with dependencies and symbol access set up using import and export
     // statements.
     ES_MODULES;
+  }
+
+  /**
+   * Option for optimizing local access to the global symbol namespace when using
+   * renamePrefixNamespace.
+   */
+  public enum OptimizeLocalAccess {
+    /** No local access optimization. All global symbols are rescoped to the global namespace. */
+    DISABLED,
+
+    /**
+     * Use a local closure scope alias for global symbols within the chunk where they are defined,
+     * if they are not reassigned in other chunks.
+     */
+    DEFINING_CHUNK_ONLY,
+
+    /**
+     * In addition to {@link #DEFINING_CHUNK_ONLY}, create local aliases (e.g. `var a = _.a;`) in
+     * other chunks that use the global symbol, and use the local alias instead of the global
+     * namespace. This is only done for symbols that are not reassigned anywhere.
+     */
+    ALL_CHUNKS
   }
 
   /**

@@ -2208,7 +2208,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       options.getRenamePrefixNamespace(),
                       options.assumeCrossChunkNamesForRenamePrefixNamespace(),
-                      options.optimizeLocalAccessForGlobalSymbolNamespace()))
+                      options.getOptimizeLocalAccessForGlobalSymbolNamespace()))
           .build();
 
   /** Converts cross chunk references into ES Module import and export statements. */
