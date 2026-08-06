@@ -4623,7 +4623,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
       // Do not close the underlying stream
     }
   }
