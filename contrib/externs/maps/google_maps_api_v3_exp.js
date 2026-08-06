@@ -16910,6 +16910,58 @@ google.maps.maps3d.GestureHandling = {
 };
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Represents a text label associated with a 3D marker on a map, allowing
+ * independent configuration of properties such as collision behavior.
+ *
+ * Access by calling `const {Label3DElement} = await
+ * google.maps.importLibrary("maps3d");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.maps3d.Label3DElementOptions=} options
+ * @implements {google.maps.maps3d.Label3DElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.maps3d.Label3DElement = function(options) {};
+
+/**
+ * An enumeration specifying how the label of a Marker3DElement should behave
+ * when it collides with another element.
+ * @default {@link google.maps.CollisionBehavior.REQUIRED}
+ * @type {!google.maps.CollisionBehavior|null|undefined}
+ */
+google.maps.maps3d.Label3DElement.prototype.collisionBehavior;
+
+/**
+ * The Marker3DElement that this label is for.
+ * @type {string|!HTMLElement|null|undefined}
+ */
+google.maps.maps3d.Label3DElement.prototype.for;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Label3DElementOptions object used to define the properties that can be set on
+ * a Label3DElement.
+ * @record
+ */
+google.maps.maps3d.Label3DElementOptions = function() {};
+
+/**
+ * An enumeration specifying how the label of a Marker3DElement should behave
+ * when it collides with another element.
+ * @type {!google.maps.CollisionBehavior|null|undefined}
+ */
+google.maps.maps3d.Label3DElementOptions.prototype.collisionBehavior;
+
+/**
+ * The Marker3DElement that this label is for.
+ * @type {string|!HTMLElement|null|undefined}
+ */
+google.maps.maps3d.Label3DElementOptions.prototype.for;
+
+/**
  * This event is created from clicking a Map3DElement.
  *
  * Access by calling `const {LocationClickEvent} = await
@@ -27332,6 +27384,15 @@ google.maps.routes.Route3DElement.prototype.routes;
 google.maps.routes.Route3DElement.prototype.routingPreference;
 
 /**
+ * Whether to disable traffic-aware polylines. Traffic aware polylines are only
+ * available when routingPreference is set to TRAFFIC_AWARE or
+ * TRAFFIC_AWARE_OPTIMAL.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.Route3DElement.prototype.trafficPolylinesDisabled;
+
+/**
  * If provided, the polyline is based on the specified travel mode.
  * @type {!google.maps.TravelMode|null|undefined}
  */
@@ -27379,6 +27440,14 @@ google.maps.routes.Route3DElementOptions.prototype.origin;
  * @type {!google.maps.routes.RoutingPreference|null|undefined}
  */
 google.maps.routes.Route3DElementOptions.prototype.routingPreference;
+
+/**
+ * Whether to disable traffic-aware polylines. Traffic aware polylines are only
+ * available when routingPreference is set to TRAFFIC_AWARE or
+ * TRAFFIC_AWARE_OPTIMAL.
+ * @type {boolean|null|undefined}
+ */
+google.maps.routes.Route3DElementOptions.prototype.trafficPolylinesDisabled;
 
 /**
  * See {@link google.maps.routes.Route3DElement.travelMode}.
