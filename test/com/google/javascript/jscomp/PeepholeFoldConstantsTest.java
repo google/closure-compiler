@@ -1545,21 +1545,58 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testFoldTypeof() {
-    test("x = typeof 1", "x = \"number\"");
-    test("x = typeof 'foo'", "x = \"string\"");
-    test("x = typeof true", "x = \"boolean\"");
-    test("x = typeof false", "x = \"boolean\"");
-    test("x = typeof null", "x = \"object\"");
-    test("x = typeof undefined", "x = \"undefined\"");
-    test("x = typeof void 0", "x = \"undefined\"");
-    test("x = typeof []", "x = \"object\"");
-    test("x = typeof [1]", "x = \"object\"");
-    test("x = typeof [1,[]]", "x = \"object\"");
-    test("x = typeof {}", "x = \"object\"");
+    test("x = typeof 1", "x = 'number'");
+    test("x = typeof 'foo'", "x = 'string'");
+    test("x = typeof true", "x = 'boolean'");
+    test("x = typeof false", "x = 'boolean'");
+    test("x = typeof null", "x = 'object'");
+    test("x = typeof undefined", "x = 'undefined'");
+    test("x = typeof void 0", "x = 'undefined'");
+    test("x = typeof []", "x = 'object'");
+    test("x = typeof [1]", "x = 'object'");
+    test("x = typeof [1,[]]", "x = 'object'");
+    test("x = typeof {}", "x = 'object'");
     test("x = typeof function() {}", "x = 'function'");
 
-    testSame("x = typeof[1,[foo()]]");
-    testSame("x = typeof{bathwater:baby()}");
+    test("x = typeof[1,[foo()]]", "x = (foo(), 'object')");
+    test("x = typeof{bathwater:baby()}", "x = (baby(), 'object')");
+
+    test("x = typeof(a = 1)", "x = (a = 1, 'number')");
+    test("x = typeof(foo(), null)", "x = (foo(), 'object')");
+    test("x = typeof(foo() ? 'a' : 'b')", "x = (foo(), 'string')");
+    test("x = typeof void bar()", "x = (bar(), 'undefined')");
+  }
+
+  @Test
+  public void testFoldTypeofFromColor() {
+    enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
+
+    test(
+        "/** @constructor */ function Foo() {} function f(/** !Foo */ x) { return typeof x; }",
+        "/** @constructor */ function Foo() {} function f(/** !Foo */ x) { return 'object'; }");
+    test(
+        "/** @constructor */ function Foo() {} function f() { return typeof Foo; }",
+        "/** @constructor */ function Foo() {} function f() { return 'function'; }");
+    test(
+        "/** @constructor */ function Foo() {} function f() { return typeof new Foo(); }",
+        "/** @constructor */ function Foo() {} function f() { return new Foo(), 'object'; }");
+    test(
+        "/** @constructor */ function Foo() {} function f(/** typeof Foo */ x) { return typeof x;"
+            + " }",
+        "/** @constructor */ function Foo() {} function f(/** typeof Foo */ x) { return 'function';"
+            + " }");
+    test(
+        "function f(/** string */ x) { return typeof (x || 'fallback'); }",
+        "function f(/** string */ x) { return 'string'; }");
+    test(
+        "/** @constructor */ function Foo() {}"
+            + " function f(/** (!Foo|undefined) */ x, /** !Foo */ y) { return typeof (x ?? y); }",
+        "/** @constructor */ function Foo() {}"
+            + " function f(/** (!Foo|undefined) */ x, /** !Foo */ y) { return 'object'; }");
+    testSame("function f(x) { return x; }; typeof f;");
+    testSame("function f(/** function(): number */ x) { return typeof x; }");
   }
 
   @Test
