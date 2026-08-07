@@ -838,7 +838,9 @@ public class Scanner {
     }
 
     Keywords k = Keywords.get(value);
-    if (k != null) {
+    // Keywords containing unicode escape sequences are treated as IdentifierTokens rather than
+    // keyword Tokens (ECMA-262 11.6.2).
+    if (k != null && !containsUnicodeEscape) {
       return new Token(k.type, getTokenRange(beginToken));
     }
 

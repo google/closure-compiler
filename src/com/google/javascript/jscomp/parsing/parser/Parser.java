@@ -3414,10 +3414,22 @@ public class Parser {
    * @return whether the next token is an identifier.
    */
   private boolean peekId(int index) {
-    TokenType type = peekType(index);
+    Token token = peekToken(index);
+    TokenType typeToCheck = token.type;
+
+    if (typeToCheck == TokenType.IDENTIFIER) {
+      String value = token.asIdentifier().getMaybePrivateValue();
+      Keywords k = Keywords.get(value);
+      if (k == null) {
+        return true;
+      }
+      // Swap the type to the matched keyword's type
+      typeToCheck = k.type;
+    }
+
     // There is one special case to handle here: outside of strict-mode code, strict-mode keywords
     // can be used as identifiers
-    return TokenType.IDENTIFIER == type || (!inStrictContext() && Keywords.isStrictKeyword(type));
+    return !inStrictContext() && Keywords.isStrictKeyword(typeToCheck);
   }
 
   private boolean peekIdOrKeyword() {

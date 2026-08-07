@@ -5349,6 +5349,24 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testKeywordAsIdentifier() {
     parseError("var while;", "'identifier' expected");
     parseError("var wh\\u0069le;", "'identifier' expected");
+    parseError("var v\\u0061r;", "'identifier' expected");
+  }
+
+  @Test
+  public void testUnicodeEscapeInKeywords() {
+    parseError("v\\u0061r b = 1;", "'identifier' expected");
+    parseError("i\\u0066 (b) { }", "'identifier' expected");
+    parseError("f\\u0075nction foo() {}", "'identifier' expected");
+    parseError("l\\u0065t x = 1;", "'identifier' expected");
+    parseError("l\\u0065t = 1;", "'identifier' expected");
+    strictMode = SLOPPY;
+    parse("l\\u0065t = 1;");
+  }
+
+  @Test
+  public void testUnicodeEscapeInPropertyNames() {
+    parse("obj.v\\u0061r");
+    parse("var x = { v\\u0061r: 1 };");
   }
 
   @Test
