@@ -922,7 +922,10 @@ public final class JsDocInfoParser {
               // system.
               if (JsDocToken.EQUALS == token) {
                 token = next();
-                if (JsDocToken.STRING == token) {
+                if (token != JsDocToken.RIGHT_SQUARE
+                    && token != JsDocToken.EOL
+                    && token != JsDocToken.EOC
+                    && token != JsDocToken.EOF) {
                   token = next();
                 }
               }
