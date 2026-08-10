@@ -157,7 +157,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
         class Foo {
           constructor() {
-            const PRIVATE$1 = {};
+            const PRIVATE$1 = Object.create(null);
             PRIVATE$1.$self = this;
             PRIVATE_MAP$0.set(this, PRIVATE$1);
             PRIVATE$1.field = void 0;
@@ -182,7 +182,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
         class Foo {
           constructor() {
-            const PRIVATE$1 = {};
+            const PRIVATE$1 = Object.create(null);
             PRIVATE$1.$self = this;
             PRIVATE_MAP$0.set(this, PRIVATE$1);
             this.f1 = 1;
@@ -207,7 +207,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
         class Foo {
           static STATIC_INIT$2() {
-            const PRIVATE$1 = {};
+            const PRIVATE$1 = Object.create(null);
             PRIVATE$1.$self = Foo;
             STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
             PRIVATE$1.static_field = void 0;
@@ -240,14 +240,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const STATIC_PRIVATE_MAP$1 = new $jscomp.PrivateMap();
         class Foo {
           constructor() {
-            const PRIVATE$2 = {};
+            const PRIVATE$2 = Object.create(null);
             PRIVATE$2.$self = this;
             PRIVATE_MAP$0.set(this, PRIVATE$2);
             PRIVATE$2.field = void 0;
             PRIVATE$2.field_initialized = 1;
           }
           static STATIC_INIT$4() {
-            const PRIVATE$3 = {};
+            const PRIVATE$3 = Object.create(null);
             PRIVATE$3.$self = Foo;
             STATIC_PRIVATE_MAP$1.set(Foo, PRIVATE$3);
             PRIVATE$3.static_field = void 0;
@@ -259,14 +259,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const STATIC_PRIVATE_MAP$6 = new $jscomp.PrivateMap();
         class Bar {
           constructor() {
-            const PRIVATE$7 = {};
+            const PRIVATE$7 = Object.create(null);
             PRIVATE$7.$self = this;
             PRIVATE_MAP$5.set(this, PRIVATE$7);
             PRIVATE$7.field = void 0;
             PRIVATE$7.field_initialized = 1;
           }
           static STATIC_INIT$9() {
-            const PRIVATE$8 = {};
+            const PRIVATE$8 = Object.create(null);
             PRIVATE$8.$self = Bar;
             STATIC_PRIVATE_MAP$6.set(Bar, PRIVATE$8);
             PRIVATE$8.static_field = void 0;
@@ -279,10 +279,25 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testPrivateMethod() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #method() {}
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function() {}
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
         }
         """);
   }
@@ -350,7 +365,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
         class Foo {
           constructor() {
-            const PRIVATE$1 = {};
+            const PRIVATE$1 = Object.create(null);
             PRIVATE$1.$self = this;
             PRIVATE_MAP$0.set(this, PRIVATE$1);
             PRIVATE$1.field = void 0;
@@ -378,7 +393,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return STATIC_PRIVATE_MAP$0.has(x);
           }
           static STATIC_INIT$2() {
-            const PRIVATE$1 = {};
+            const PRIVATE$1 = Object.create(null);
             PRIVATE$1.$self = Foo;
             STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
             PRIVATE$1.staticField = void 0;
@@ -416,7 +431,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
         class Foo {
           constructor() {
-            const PRIVATE$1 = {};
+            const PRIVATE$1 = Object.create(null);
             PRIVATE$1.$self = this;
             PRIVATE_MAP$0.set(this, PRIVATE$1);
             PRIVATE$1.x = void 0;
@@ -430,11 +445,31 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testPrivateMethodWithComplexParameters() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #method(a = 1, ...rest) { return a + rest.length; }
           callMethod() { return this.#method(10, 20, 30); }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function(a = 1, ...rest) {
+              return a + rest.length;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          callMethod() {
+            return PRIVATE_MAP$0.get(this).method.call(this, 10, 20, 30);
+          }
         }
         """);
   }
@@ -455,7 +490,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
         class Foo {
           constructor() {
-            const PRIVATE$1 = {};
+            const PRIVATE$1 = Object.create(null);
             PRIVATE$1.$self = this;
             PRIVATE_MAP$0.set(this, PRIVATE$1);
             PRIVATE$1.x = 1;
@@ -486,7 +521,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
         class Foo {
           constructor() {
-            const PRIVATE$1 = {};
+            const PRIVATE$1 = Object.create(null);
             PRIVATE$1.$self = this;
             PRIVATE_MAP$0.set(this, PRIVATE$1);
             PRIVATE$1.x = 1;
@@ -519,7 +554,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
         class Foo {
           constructor() {
-            const PRIVATE$1 = {};
+            const PRIVATE$1 = Object.create(null);
             PRIVATE$1.$self = this;
             PRIVATE_MAP$0.set(this, PRIVATE$1);
             PRIVATE$1.x = 1;
@@ -536,7 +571,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testPrivateMethodAccess() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #method(paramX) { return paramX + 1; }
@@ -544,17 +579,57 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return otherObj.#method(argX);
           }
         }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function(paramX) {
+              return paramX + 1;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          callMethod(otherObj, argX) {
+            return PRIVATE_MAP$0.get(otherObj).method.call(otherObj, argX);
+          }
+        }
         """);
   }
 
   @Test
   public void testPrivateMethodAccess_direct() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #method(paramX) { return paramX + 1; }
           callMethod(argX) {
             return this.#method(argX);
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function(paramX) {
+              return paramX + 1;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          callMethod(argX) {
+            return PRIVATE_MAP$0.get(this).method.call(this, argX);
           }
         }
         """);
@@ -653,8 +728,34 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPrivateInheritanceAndSuper() {
+  public void testPrivateMethodAccessWithOptionalChain() {
     assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #method() {}
+          access(otherObj) {
+            return otherObj?.#method;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodCallWithOptionalChain() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #method() {}
+          access(otherObj) {
+            return otherObj?.#method();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateInheritanceAndSuper() {
+    test(
         """
         class Base {
           constructor() {
@@ -667,6 +768,469 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           constructor() {
             super();
             this.#field = this.baseProp + this.#method();
+          }
+        }
+        """,
+        """
+        class Base {
+          constructor() {
+            this.baseProp = 1;
+          }
+        }
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function() {
+              return 3;
+            }
+          }
+        });
+        class Sub extends Base {
+          constructor() {
+            super();
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            PRIVATE$2.field = 2;
+            PRIVATE_MAP$0.get(this).field = this.baseProp + PRIVATE_MAP$0.get(this).method.call(this);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateInheritanceWithSuperclassHavingPrivates() {
+    test(
+        """
+        class Base {
+          #baseField = 1;
+          #baseMethod() { return this.#baseField; }
+          getBase() { return this.#baseMethod(); }
+        }
+        class Sub extends Base {
+          #subField = 2;
+          #subMethod() { return this.#subField; }
+          getSub() { return this.#subMethod(); }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          baseMethod: {
+            value: function() {
+              return PRIVATE_MAP$0.get(this).baseField;
+            }
+          }
+        });
+        class Base {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            PRIVATE$2.baseField = 1;
+          }
+          getBase() {
+            return PRIVATE_MAP$0.get(this).baseMethod.call(this);
+          }
+        }
+        const PRIVATE_MAP$3 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$4 = Object.create(null, {
+          subMethod: {
+            value: function() {
+              return PRIVATE_MAP$3.get(this).subField;
+            }
+          }
+        });
+        class Sub extends Base {
+          constructor() {
+            super(...arguments);
+            const PRIVATE$5 = Object.create(PRIVATE_PROTO$4);
+            PRIVATE$5.$self = this;
+            PRIVATE_MAP$3.set(this, PRIVATE$5);
+            PRIVATE$5.subField = 2;
+          }
+          getSub() {
+            return PRIVATE_MAP$3.get(this).subMethod.call(this);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodValueRead() {
+    test(
+        """
+        class Foo {
+          #method() {}
+          getMethod() {
+            return this.#method;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function() {}
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          getMethod() {
+            return PRIVATE_MAP$0.get(this).method;
+          }
+        }
+        """);
+  }
+
+  // TODO(b/236744850): Consider optimizing intra-instance private method calls from inside a
+  // private
+  // method to direct descriptor invocations (e.g. `this.a.call(this.$self)`) in the future.
+  @Test
+  public void testPrivateMethodCallingPrivateMethod() {
+    test(
+        """
+        class Foo {
+          #a() { return 1; }
+          #b() { return this.#a() + 2; }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          a: {
+            value: function() {
+              return 1;
+            }
+          },
+          b: {
+            value: function() {
+              return PRIVATE_MAP$0.get(this).a.call(this) + 2;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodCallingPublicMethod() {
+    test(
+        """
+        class Foo {
+          a() { return 1; }
+          #b() { return this.a() + 2; }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          b: {
+            value: function() {
+              return this.a() + 2;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          a() { return 1; }
+        }
+        """);
+  }
+
+  // Verifies that a nested class inside a private method containing 'super' references (e.g.
+  // super.m()) references the nested class's own superclass without confusing the outer class's
+  // private method traversal.
+  @Test
+  public void testPrivateMethodWithNestedClassUsingSuper() {
+    test(
+        """
+        class A {
+          m() {}
+        }
+        class B {
+          #priv() {
+            return class C extends A {
+              m() {
+                super.m();
+              }
+            }
+          }
+        }
+        """,
+        """
+        class A {
+          m() {}
+        }
+        const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$2 = Object.create(null, {
+          priv: {
+            value: function() {
+              const CLASS_DECL$0 = class extends A {
+                m() {
+                  super.m();
+                }
+              };
+              return CLASS_DECL$0;
+            }
+          }
+        });
+        class B {
+          constructor() {
+            const PRIVATE$3 = Object.create(PRIVATE_PROTO$2);
+            PRIVATE$3.$self = this;
+            PRIVATE_MAP$1.set(this, PRIVATE$3);
+          }
+        }
+        """);
+  }
+
+  // Verifies that a complex or side-effecting receiver expression (e.g. getObj().#method()) is
+  // evaluated exactly once into a temporary variable to prevent duplicate side effects.
+  @Test
+  public void testPrivateMethodSideEffectingReceiver() {
+    test(
+        """
+        class Foo {
+          #method() {}
+          callMethod(getObj) {
+            return getObj().#method();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$2 = Object.create(null, {
+          method: {
+            value: function() {}
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$3 = Object.create(PRIVATE_PROTO$2);
+            PRIVATE$3.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$3);
+          }
+          callMethod(getObj) {
+            let $jscomp$tmp$m1146332801$1;
+            return ($jscomp$tmp$m1146332801$1 = getObj(), PRIVATE_MAP$0.get($jscomp$tmp$m1146332801$1).method.call($jscomp$tmp$m1146332801$1));
+          }
+        }
+        """);
+  }
+
+  // Verifies that a property access receiver (e.g. holder['prop'].#method()) is evaluated exactly
+  // once into a temporary variable to prevent duplicate evaluation in case the property access
+  // triggers getter side effects.
+  @Test
+  public void testPrivateMethodPropertyAccessReceiver() {
+    test(
+        """
+        class Foo {
+          #method() {}
+          static callOnProp(holder) {
+            return holder['prop'].#method();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$2 = Object.create(null, {
+          method: {
+            value: function() {}
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$3 = Object.create(PRIVATE_PROTO$2);
+            PRIVATE$3.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$3);
+          }
+          static callOnProp(holder) {
+            let $jscomp$tmp$m1146332801$1;
+            return ($jscomp$tmp$m1146332801$1 = holder['prop'],
+                PRIVATE_MAP$0.get($jscomp$tmp$m1146332801$1).method.call($jscomp$tmp$m1146332801$1));
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodAsyncAndGenerator() {
+    test(
+        """
+        class Foo {
+          async #asyncMethod() {}
+          *#genMethod() {}
+          async *#asyncGenMethod() {}
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          asyncMethod: {
+            value: async function() {}
+          },
+          genMethod: {
+            value: function*() {}
+          },
+          asyncGenMethod: {
+            value: async function*() {}
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+        }
+        """);
+  }
+
+  // Verifies that calling a private method on another instance of the same class (e.g.
+  // `other.#method()`) is valid per ES2022 class-scoped private member semantics and transpiles to
+  // `PRIVATE_MAP.get(other).method.call(other)`.
+  @Test
+  public void testPrivateMethodCalledOnOtherInstance() {
+    test(
+        """
+        class Foo {
+          #method() { return 42; }
+          callOther(other) {
+            return other.#method();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function() {
+              return 42;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          callOther(other) {
+            return PRIVATE_MAP$0.get(other).method.call(other);
+          }
+        }
+        """);
+  }
+
+  // Verifies the combination of method descriptors and instance field initializations in a single
+  // class.
+  @Test
+  public void testPrivateMethodMultiplePrivateMethodsAndFields() {
+    test(
+        """
+        class Foo {
+          #field = 10;
+          #getValue() { return this.#field; }
+          publicMethod() {
+            return this.#getValue();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          getValue: {
+            value: function() {
+              return PRIVATE_MAP$0.get(this).field;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            PRIVATE$2.field = 10;
+          }
+          publicMethod() {
+            return PRIVATE_MAP$0.get(this).getValue.call(this);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodWriteUnsupported() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #method() {}
+          write() {
+            this.#method = 1;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodWithSuperUnsupported() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Base {
+          foo() {}
+        }
+        class Sub extends Base {
+          #method() {
+            super.foo();
+          }
+          call() {
+            this.#method();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateFieldWithSuperArrowFunction() {
+    test(
+        """
+        class Sup {
+          m() {}
+        }
+        class Sub extends Sup {
+          #x = () => super.m();
+        }
+        """,
+        """
+        class Sup {
+          m() {}
+        }
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Sub extends Sup {
+          constructor() {
+            super(...arguments);
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE$1.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.x = () => {
+              return super.m();
+            };
           }
         }
         """);
@@ -689,17 +1253,264 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
         class Outer {
           constructor() {
-            const PRIVATE$2 = {};
+            const PRIVATE$2 = Object.create(null);
             PRIVATE$2.$self = this;
             PRIVATE_MAP$1.set(this, PRIVATE$2);
             PRIVATE$2.x = 1;
           }
           createInner() {
             const CLASS_DECL$0 = class {
-              readOuter(o) { return PRIVATE_MAP$1.get(o).x; }
+              readOuter(o) {
+                return PRIVATE_MAP$1.get(o).x;
+              }
             };
             return CLASS_DECL$0;
           }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMemberInConstructorArrowFunction() {
+    test(
+        """
+        class Foo {
+          #field = 10;
+          #method() { return 20; }
+          constructor() {
+            const getVal = () => this.#field + this.#method();
+            this.val = getVal();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function() {
+              return 20;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            PRIVATE$2.field = 10;
+            const getVal = () => {
+              return PRIVATE_MAP$0.get(this).field + PRIVATE_MAP$0.get(this).method.call(this);
+            };
+            this.val = getVal();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodCalledInsideArrowFunction() {
+    test(
+        """
+        class Foo {
+          #method() { return 42; }
+          getArrow() {
+            return () => this.#method();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function() {
+              return 42;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          getArrow() {
+            return () => {
+              return PRIVATE_MAP$0.get(this).method.call(this);
+            };
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testNestedClassAccessingOuterPrivateMethod() {
+    test(
+        """
+        class Outer {
+          #foo() { return 1; }
+          method() {
+            class Inner {
+              #bar() { return 2; }
+              use(outer) {
+                return outer.#foo() + this.#bar();
+              }
+            }
+            return new Inner();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$4 = Object.create(null, {
+          foo: {
+            value: function() {
+              return 1;
+            }
+          }
+        });
+        class Outer {
+          constructor() {
+            const PRIVATE$5 = Object.create(PRIVATE_PROTO$4);
+            PRIVATE$5.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$5);
+          }
+          method() {
+            const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+            const PRIVATE_PROTO$2 = Object.create(null, {
+              bar: {
+                value: function() {
+                  return 2;
+                }
+              }
+            });
+            class Inner {
+              constructor() {
+                const PRIVATE$3 = Object.create(PRIVATE_PROTO$2);
+                PRIVATE$3.$self = this;
+                PRIVATE_MAP$1.set(this, PRIVATE$3);
+              }
+              use(outer) {
+                return PRIVATE_MAP$0.get(outer).foo.call(outer) + PRIVATE_MAP$1.get(this).bar.call(this);
+              }
+            }
+            return new Inner();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testNestedClassShadowingPrivateMemberName() {
+    test(
+        """
+        class Outer {
+          #foo() { return 1; }
+          method() {
+            class Inner {
+              #foo() { return 2; }
+              use(outer) {
+                return outer.#foo() + this.#foo();
+              }
+            }
+            return new Inner();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$3 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$4 = Object.create(null, {
+          foo: {
+            value: function() {
+              return 1;
+            }
+          }
+        });
+        class Outer {
+          constructor() {
+            const PRIVATE$5 = Object.create(PRIVATE_PROTO$4);
+            PRIVATE$5.$self = this;
+            PRIVATE_MAP$3.set(this, PRIVATE$5);
+          }
+          method() {
+            const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+            const PRIVATE_PROTO$1 = Object.create(null, {
+              foo: {
+                value: function() {
+                  return 2;
+                }
+              }
+            });
+            class Inner {
+              constructor() {
+                const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+                PRIVATE$2.$self = this;
+                PRIVATE_MAP$0.set(this, PRIVATE$2);
+              }
+              use(outer) {
+                return PRIVATE_MAP$0.get(outer).foo.call(outer) + PRIVATE_MAP$0.get(this).foo.call(this);
+              }
+            }
+            return new Inner();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testNestedClassInsideStaticBlock() {
+    test(
+        """
+        class Outer {
+          #foo() { return 1; }
+          static innerInstance;
+          static {
+            class Inner {
+              #bar() { return 2; }
+              use(outer) {
+                return outer.#foo() + this.#bar();
+              }
+            }
+            Outer.innerInstance = new Inner();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$4 = Object.create(null, {
+          foo: {
+            value: function() {
+              return 1;
+            }
+          }
+        });
+        class Outer {
+          constructor() {
+            const PRIVATE$5 = Object.create(PRIVATE_PROTO$4);
+            PRIVATE$5.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$5);
+          }
+        }
+        Outer.innerInstance = void 0;
+        {
+          const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+          const PRIVATE_PROTO$2 = Object.create(null, {
+            bar: {
+              value: function() {
+                return 2;
+              }
+            }
+          });
+          class Inner {
+            constructor() {
+              const PRIVATE$3 = Object.create(PRIVATE_PROTO$2);
+              PRIVATE$3.$self = this;
+              PRIVATE_MAP$1.set(this, PRIVATE$3);
+            }
+            use(outer) {
+              return PRIVATE_MAP$0.get(outer).foo.call(outer) + PRIVATE_MAP$1.get(this).bar.call(this);
+            }
+          }
+          Outer.innerInstance = new Inner();
         }
         """);
   }
