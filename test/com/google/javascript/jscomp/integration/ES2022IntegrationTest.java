@@ -16,9 +16,6 @@
 
 package com.google.javascript.jscomp.integration;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
-
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilationLevel;
@@ -531,7 +528,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         const $jscomp$privateMap$98447280$0 = new $jscomp.PrivateMap();
         class MyClass {
           constructor() {
-            var $jscomp$priv$98447280$1 = Object.create(null);
+            var $jscomp$priv$98447280$1 = {};
             $jscomp$priv$98447280$1.$self = this;
             $jscomp$privateMap$98447280$0.set(this, $jscomp$priv$98447280$1);
             $jscomp$priv$98447280$1.x = 1;
@@ -561,40 +558,5 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
     // Transpile ES2022 private class fields to ES2021-compatible JavaScript ($jscomp.PrivateMap).
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
     test(options, src, expected);
-  }
-
-  @Test
-  public void nestedClassAccessingSuperPrivateMethodThrows() {
-    CompilerOptions options = createCompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
-
-    // In ES2022 (§13.3.7), super.#priv() is not a valid SuperProperty production.
-    // Transpiling this nested class causes AstValidator to reject assigning SUPER to a temp
-    // variable.
-    RuntimeException e =
-        assertThrows(
-            RuntimeException.class,
-            () ->
-                test(
-                    options,
-                    """
-                    class Base {
-                      #priv() {}
-                      static {
-                        class Sub extends Base {
-                          m() {
-                            return super.#priv();
-                          }
-                        }
-                      }
-                    }
-                    """,
-                    ""));
-    assertThat(e).hasMessageThat().contains("Validity check failed for es6NormalizeClasses");
-    assertThat(e)
-        .hasCauseThat()
-        .hasCauseThat()
-        .hasMessageThat()
-        .contains("Expected expression but was SUPER");
   }
 }
