@@ -1165,8 +1165,18 @@ public class CompilerOptions {
   /**
    * Whether to resolve source mapping annotations. Cannot do this in an appengine or js environment
    * since we don't have access to the filesystem.
+   *
+   * <p>Defaults to {@code false}. When enabled, a {@code //# sourceMappingURL=} comment in
+   * compiled JS is followed to a file on the local filesystem (see {@link
+   * SourceMapResolver#extractSourceMap}), including via relative paths such as {@code
+   * ../../../../etc/passwd} that resolve outside the directory of the file being compiled. If
+   * this defaulted to {@code true}, compiling untrusted or third-party JavaScript source (e.g. in
+   * a hosted minification service or CI environment) would let the input JS trigger an arbitrary
+   * local file read with no explicit opt-in required. Callers who need to resolve source mapping
+   * annotations over source they fully trust can opt back in with {@link
+   * #setResolveSourceMapAnnotations}.
    */
-  private boolean resolveSourceMapAnnotations = true;
+  private boolean resolveSourceMapAnnotations = false;
 
   private ImmutableList<? extends SourceMap.LocationMapping> sourceMapLocationMappings =
       ImmutableList.of();
