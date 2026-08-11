@@ -2285,4 +2285,18 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "function f() { switch(x) { default: return; case 1: return 5;bar()}}",
         "function f() { switch(x) { default: return; case 1: return 5;}}");
   }
+
+  @Test
+  public void testArrayConstructor() {
+    // Array constructor with length argument only should be eliminated when unused
+    fold("Array(10)", "");
+    fold("Array(5)", "");
+
+    // Array constructor with elements should also be eliminated
+    fold("Array(1,2,3)", "");
+
+    // Array constructor used in expression with side effects
+    fold("Array(10).push(5)", "Array(10).push(5)"); // push has side effects
+    fold("Array(10)[0] = 2", "Array(10)[0] = 2"); // assignment has side effects
+  }
 }

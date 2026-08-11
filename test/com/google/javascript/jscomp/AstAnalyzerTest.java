@@ -314,6 +314,10 @@ public final class AstAnalyzerTest {
           kase().js("new Array").token(NEW).expect(true),
           kase().js("new Array(4)").token(NEW).expect(true),
           kase().js("new Array('a', 'b', 'c')").token(NEW).expect(true),
+          kase().js("Array(10)").token(CALL).expect(false),
+          kase().js("Array(1,2,3)").token(CALL).expect(false),
+          kase().js("Array(10)").token(CALL).assumeBuiltinsPure(false).expect(true),
+          kase().js("Array(1,2,3)").token(CALL).assumeBuiltinsPure(false).expect(true),
           kase().js("new SomeClassINeverHeardOf()").token(NEW).expect(true),
 
           // Getters and setters - object rest and spread
