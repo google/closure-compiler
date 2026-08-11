@@ -859,6 +859,65 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("Array[123]()");
   }
 
+  @Test
+  public void testBatchD_objectStaticMethods() {
+    // OPP-016: Object.keys, Object.values, Object.entries guards and current behavior
+    foldSame("x = Object.keys({a: 1, b: 2})");
+    foldSame("x = Object.keys({})");
+    foldSame("x = Object.values({a: 1, b: 2})");
+    foldSame("x = Object.entries({a: 1, b: 2})");
+    foldSame("x = Object.keys(obj)");
+    foldSame("x = Object.keys({a: foo(), b: 2})");
+    foldSame("x = Object.values({get a() { return 1; }})");
+
+    // OPP-017: Object.assign guards and current behavior
+    foldSame("x = Object.assign({}, {a: 1}, {b: 2})");
+    foldSame("x = Object.assign({a: 1}, {b: 2})");
+    foldSame("x = Object.assign(target, {})");
+    foldSame("x = Object.assign({}, obj)");
+    foldSame("x = Object.assign({}, {a: foo()})");
+    foldSame("x = Object.assign({}, {get a() { return 1; }})");
+
+    // OPP-018: Object.is guards and current behavior
+    foldSame("x = Object.is('a', 'a')");
+    foldSame("x = Object.is(1, 1)");
+    foldSame("x = Object.is(NaN, NaN)");
+    foldSame("x = Object.is(0, -0)");
+    foldSame("x = Object.is(a, 'hello')");
+    foldSame("x = Object.is(a, b)");
+  }
+
+  @Test
+  public void testBatchD_mathAndNumberStaticMethods() {
+    // OPP-019: Number.isInteger, Number.isFinite, Number.isNaN, Math methods
+    foldSame("x = Number.isInteger(1)");
+    foldSame("x = Number.isInteger(1.5)");
+    foldSame("x = Number.isInteger('1')");
+    foldSame("x = Number.isInteger(NaN)");
+    foldSame("x = Number.isInteger(Infinity)");
+    foldSame("x = Number.isInteger(x)");
+
+    // Existing Math/Number fold checks and edge guards
+    fold("Math.abs(-5)", "5");
+    fold("Math.abs(5)", "5");
+    fold("Math.sign(5)", "1");
+    fold("Math.sign(-5)", "-1");
+    fold("Math.trunc(5.7)", "5");
+    fold("Math.trunc(-5.7)", "-5");
+    fold("Math.clz32(1)", "31");
+
+    fold("Number.isFinite(100)", "true");
+    fold("Number.isFinite(Infinity)", "false");
+    fold("Number.isNaN(NaN)", "true");
+    fold("Number.isNaN(100)", "false");
+    foldSame("Number.isNaN('hello')");
+    foldSame("Number.isFinite('100')");
+    foldSame("Number.isFinite(x)");
+    foldSame("Math.abs(x)");
+    foldSame("Math.sign(x)");
+    foldSame("Math.trunc(x)");
+  }
+
   private void foldSame(String js) {
     testSame(js);
   }

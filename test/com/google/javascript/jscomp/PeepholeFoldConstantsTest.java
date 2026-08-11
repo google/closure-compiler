@@ -742,6 +742,156 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldOptChain_nonNullReceiver() {
+    // Constant folding on literals with optional chaining
+    test("x = 'hello'?.length", "x = 5");
+    test("x = ''?.length", "x = 0");
+    test("x = [1, 2, 3]?.length", "x = 3");
+    test("x = []?.length", "x = 0");
+    test("x = ([10, 20])?.[0]", "x = 10");
+    test("x = ([10, 20])?.[1]", "x = 20");
+    test("x = 'abcdef'?.[1]", "x = 'b'");
+    test("x = ({a: 1})?.a", "x = 1");
+    test("x = ({a: 1})?.['a']", "x = 1");
+
+    // Guard cases / unknown receivers must remain untouched
+    testSame("x = str?.length");
+    testSame("x = arr?.length");
+    testSame("x = obj?.a");
+    testSame("x = obj?.[key]");
+    testSame("x = fn?.(arg)");
+    testSame("x = [foo()]?.length"); // side-effecting array
+  }
+
+  @Test
+  public void testFoldOptChain_nullishReceiver() {
+    // Current compiler behavior in PeepholeFoldConstants (unfolded / preserved)
+    testSame("x = null?.y");
+    testSame("x = undefined?.y");
+    testSame("x = (void 0)?.y");
+    testSame("x = null?.[0]");
+    testSame("x = undefined?.[foo()]");
+    testSame("x = null?.(foo())");
+    testSame("x = (foo(), null)?.y");
+  }
+
+  @Test
+  public void testFoldNullishCoalesce_advanced() {
+    // Basic nullish LHS folding
+    test("null ?? 1", "1");
+    test("undefined ?? false", "false");
+    test("(void 0) ?? 'default'", "'default'");
+    test("(a(), null) ?? 1", "(a(), null, 1)");
+
+    // Non-nullish LHS folding
+    test("x = false ?? x", "x = false");
+    test("x = true ?? x", "x = true");
+    test("x = 0 ?? x", "x = 0");
+    test("x = '' ?? x", "x = ''");
+    test("x = 'hello' ?? x", "x = 'hello'");
+    test("x = 3 ?? x", "x = 3");
+    test("x = [1, 2] ?? x", "x = [1, 2]");
+    test("x = ({a: 1}) ?? x", "x = ({a: 1})");
+    test("x = [foo()] ?? x", "x = [foo()]");
+
+    // Guard cases: RHS cannot be folded if LHS is unknown
+    testSame("a = x ?? true");
+    testSame("a = x ?? false");
+    testSame("a = x ?? 3");
+    testSame("a = x ?? null");
+    testSame("a = (foo() ? null : 1) ?? 2");
+  }
+
+  @Test
+  public void testFoldLogicalAssignments() {
+    // Under normalization, logical assignments normalize to short-circuiting conditional assigns
+    testSame("x || (x = y)");
+    testSame("x && (x = y)");
+    testSame("x ?? (x = y)");
+    testSame("x || (x = false)");
+    testSame("x && (x = true)");
+    testSame("x ?? (x = null)");
+    testSame("obj[foo()] || (obj[foo()] = y)");
+  }
+
+  @Test
+  public void testBatchC_templateLiteralsAndSpread() {
+    // OPP-012: Template literal substitutions and guards
+    test("`a${'b'}c`", "`abc`");
+    test("`a${123}c`", "`a123c`");
+    test("`a${true}c`", "`atruec`");
+    test("`a${false}c`", "`afalsec`");
+    test("`${''}a${''}`", "`a`");
+    testSame("tag`a${'b'}c`");
+    testSame("`a${foo()}c`");
+    testSame("`a${x}c`");
+    testSame("`$${''}{`");
+
+    // OPP-013: Object spread constant flattening and guards
+    test("x = {...{}}", "x = {}");
+    test("x = {a, ...{}, b}", "x = {a, b}");
+    test("x = {...{a, b}, c, ...{d, e}}", "x = {a, b, c, d, e}");
+    test("x = {...{...{a}, b}, c}", "x = {a, b, c}");
+    testSame("x = {...obj}");
+    testSame("x = {...foo()}");
+    testSame("x = {...{get a() { return 1; }}}");
+    testSame("x = {...{set a(v) { }}}");
+
+    // OPP-014: Array spread constant flattening and guards
+    test("x = [...[]]", "x = []");
+    test("x = [0, ...[], 1]", "x = [0, 1]");
+    test("x = [...[0, 1], 2, ...[3, 4]]", "x = [0, 1, 2, 3, 4]");
+    test("x = [...[...[0], 1], 2]", "x = [0, 1, 2]");
+    test("foo(...[0], 1)", "foo(0, 1)");
+    test("foo([...[...[0], 1], 2])", "foo([0, 1, 2])");
+    testSame("x = [...iter]");
+    testSame("foo(...iter)");
+    testSame("x = [...{}]");
+    testSame("x = {...[]}");
+  }
+
+  @Test
+  public void testBatchE_arithmeticNeutralElements() {
+    // OPP-020: Arithmetic Neutral Elements & Strength Reductions
+    // Literal double negation
+    test("x = -(-4)", "x = 4");
+    test("x = -(-4n)", "x = 4n");
+
+    // Guard cases: expressions that must not fold or are preserved
+    testSame("x = foo() ** 0"); // side-effectful base
+    testSame("x = bigIntVal ** 1"); // cannot mix BigInt with number 1
+    testSame("x = (a + b) ** 1"); // non-constant exponentiation
+    testSame("x = (a + b) ** 0");
+    testSame("x = -(-(a + b))");
+    testSame("x = a % 1");
+  }
+
+  @Test
+  public void testBatchE_bitwiseNeutralAndAbsorptionIdentities() {
+    // OPP-021: Bitwise Neutral, Idempotent & Absorption Identities
+    // Fold constant bitwise operations
+    test("x = 1.5 | 0", "x = 1");
+    test("x = 4294967295 | 0", "x = -1");
+    test("x = -1 & 0", "x = 0");
+    test("x = 0 & -1", "x = 0");
+    test("x = ~0", "x = -1");
+    test("x = ~-7", "x = 6");
+
+    // Guard cases: non-constant / side-effectful expressions
+    testSame("x = foo() ^ foo()"); // side effects cannot be dropped
+    testSame("x = foo() & 0"); // side effects cannot be dropped
+    testSame("x = (a | b) | 0");
+    testSame("x = (a & b) & -1");
+    testSame("x = (a ^ b) ^ 0");
+    testSame("x = (a >> b) >> 0");
+    testSame("x = (a >>> b) >>> 0");
+    testSame("x = ~~ (a | b)");
+    testSame("x = (a + b) ^ (a + b)");
+    testSame("x = (a + b) & 0");
+    testSame("x = y | 0");
+  }
+
+  @Test
   public void testFoldBitwiseOp() {
     test("x = 1 & 1", "x = 1");
     test("x = 1 & 2", "x = 0");

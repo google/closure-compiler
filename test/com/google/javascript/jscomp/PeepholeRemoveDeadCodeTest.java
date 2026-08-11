@@ -1932,6 +1932,31 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBatchC_destructuringOptimization() {
+    // OPP-015: Pure undefined / void default values
+    fold("const {a = void 0, b = undefined} = obj;", "const {a, b} = obj;");
+    fold("const [a = void 0, b = undefined] = arr;", "const [a, b] = arr;");
+
+    // Empty nested patterns in object patterns
+    fold("const {a: {}, b: {}} = obj;", "");
+    fold("const {a: {}, b} = obj;", "const {b} = obj;");
+    fold("const {a: [], b} = obj;", "const {b} = obj;");
+
+    // Trailing empty slots and empty nested patterns in array patterns
+    fold("const [a, , ,] = arr;", "const [a] = arr;");
+    fold("const [a, [], {}] = arr;", "const [a] = arr;");
+    fold("let [a, [] = 0] = arr;", "let [a] = arr;");
+
+    // Guard cases: Object rest property exclusion, effectful defaults, computed keys
+    foldSame("const {a: {}, ...rest} = obj;");
+    foldSame("const {a: [] = foo()} = obj;");
+    foldSame("const {[foo()]: {}} = obj;");
+    foldSame("function f({}, x) {}");
+    foldSame("for (const {} of iter) {}");
+    foldSame("const [, a] = arr;");
+  }
+
+  @Test
   public void testDoNotRemoveGetterOnlyAccess() {
     foldSame(
         """
@@ -2284,5 +2309,59 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     test(
         "function f() { switch(x) { default: return; case 1: return 5;bar()}}",
         "function f() { switch(x) { default: return; case 1: return 5;}}");
+  }
+
+  @Test
+  public void testBatchE_switchConstantDiscriminantFolding() {
+    // OPP-023: Switch Constant Discriminant Folding & Dead Case Pruning
+    fold(
+        """
+        switch ('foo') {
+          case 'foo':
+            foo();
+            break;
+          case 'bar':
+            bar();
+            break;
+        }
+        """,
+        "foo();");
+
+    fold(
+        """
+        switch ('noMatch') {
+          case 'foo':
+            foo();
+            break;
+          case 'bar':
+            bar();
+            break;
+        }
+        """,
+        "");
+
+    fold("switch(1){case 2: var x=0;}", "var x;");
+
+    // Guard cases
+    foldSame("switch (x) { case 1: foo(); break; }");
+    foldSame("function f() { switch(a) { case 1: foo(); } }");
+    foldSame("function f() { switch(a) { default: return; case 1: break; } }");
+  }
+
+  @Test
+  public void testBatchE_pureExpressionStatementAndBlockElimination() {
+    // OPP-024: Pure Expression Statement & Block Elimination
+    fold("{ 'hi' }", "");
+    fold("{ x == 3 }", "");
+    fold("{ `hello ${foo}` }", "");
+    fold("{ (function(){ x++; }) }", "");
+    fold("{{ foo() }}", "foo()");
+    fold("{ foo(); {} }", "foo()");
+    fold("{{ foo() } { bar() }}", "foo(); bar()");
+
+    // Guard cases: side-effectful statements and declarations
+    foldSame("foo();");
+    foldSame("function f() { return 3; }");
+    foldSame("for (let x = 1; x < 10; x++) {}");
   }
 }

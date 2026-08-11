@@ -1060,4 +1060,23 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         }
         """);
   }
+
+  @Test
+  public void testBatchE_booleanAbsorptionAndContextSimplifications() {
+    // OPP-022: Boolean Absorption & Context Simplifications
+    // Hook inversion on negated condition
+    test("var res = !x ? a : b;", "var res = x ? b : a;");
+
+    // if-statement minimization preserves Boolean(x) wrapper in current pass
+    test("if (Boolean(x)) { foo(); }", "Boolean(x) && foo();");
+
+    // Guard cases: non-constant / side-effectful / shadowed expressions
+    testSame("while (Boolean(x)) foo();");
+    testSame("var res = Boolean(x) ? a : b;");
+    testSame("var res = !Boolean(x);");
+    testSame("x = a || (a && b);");
+    testSame("x = a && (a || b);");
+    testSame("x = foo() || (foo() && b);");
+    testSame("function f(Boolean) { Boolean(x) ? a : b; }");
+  }
 }
