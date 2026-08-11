@@ -146,7 +146,7 @@ $jscomp.generator.Context = function() {
    * continue.
    *
    * @private
-   * @type {?Iterator<VALUE>}
+   * @type {?IteratorLike<VALUE>}
    */
   this.yieldAllIterator_ = null;
 
@@ -373,7 +373,7 @@ $jscomp.generator.Context.prototype['yield'] =
  * Causes the state machine program to yield all values from an iterator.
  *
  * @final
- * @param {string|!Iterator<VALUE>|!Iterable<VALUE>|!Arguments} iterable
+ * @param {string|!IteratorLike<VALUE>|!Iterable<VALUE>|!Arguments} iterable
  *     Iterator to yeild all values from.
  * @param {number} resumeAddress The address where the program should resume.
  * @return {void | {value: VALUE}}
@@ -381,7 +381,7 @@ $jscomp.generator.Context.prototype['yield'] =
  */
 $jscomp.generator.Context.prototype.yieldAll = function(
     iterable, resumeAddress) {
-  /** @const @type {!Iterator<VALUE>} */ var iterator =
+  /** @const @type {!IteratorLike<VALUE>} */ var iterator =
       $jscomp.makeIterator(iterable);
   /** @const */ var result = iterator.next();
   $jscomp.generator.ensureIteratorResultIsObject_(result);
@@ -815,7 +815,7 @@ $jscomp.generator.Engine_.prototype.throw_ = function(exception) {
  * @private
  * @final
  * @template T
- * @param {function(this:Iterator<VALUE>, T): !IIterableResult<VALUE>} action
+ * @param {function(this:IteratorLike<VALUE>, T): !IIterableResult<VALUE>} action
  * @param {T} value
  * @param {function(this:$jscomp.generator.Context, VALUE): void} nextAction
  * @return {!IIterableResult<VALUE>}
@@ -825,7 +825,7 @@ $jscomp.generator.Engine_.prototype.yieldAllStep_ = function(
     action, value, nextAction) {
   try {
     /** @const */ var result = action.call(
-        /** @type {!Iterator<VALUE>} */ (this.context_.yieldAllIterator_),
+        /** @type {!IteratorLike<VALUE>} */ (this.context_.yieldAllIterator_),
         value);
     $jscomp.generator.ensureIteratorResultIsObject_(result);
     if (!result.done) {
@@ -921,7 +921,7 @@ $jscomp.generator.Generator_ = function(engine) {
  *
  * @final
  * @template VALUE
- * @param {function(this:?, ...): (!Iterator<VALUE>|!Iterable<VALUE>)} generator
+ * @param {function(this:?, ...): (!IteratorLike<VALUE>|!Iterable<VALUE>)} generator
  * @param {function(!$jscomp.generator.Context<VALUE>): (void|{value: VALUE})} program
  * @return {!Generator<VALUE>}
  * @suppress {reportUnknownTypes}

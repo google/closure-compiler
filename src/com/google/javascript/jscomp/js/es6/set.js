@@ -43,7 +43,7 @@ $jscomp.polyfill('Set',
     }
     // Some implementations don't support constructor arguments.
     try {
-      NativeSet = /** @type {function(new: Set, !Iterator=)} */ (NativeSet);
+      NativeSet = /** @type {function(new: Set, !IteratorLike=)} */ (NativeSet);
       var value = Object.seal({x: 4});
       var set = new NativeSet($jscomp.makeIterator([value]));
       if (!set.has(value) || set.size != 1 || set.add(value) != set ||

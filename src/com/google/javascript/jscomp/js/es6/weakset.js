@@ -55,7 +55,7 @@ $jscomp.polyfill('WeakSet',
    * @constructor
    * @extends {WeakSet<TYPE>}
    * @template TYPE
-   * @param {!Iterator<TYPE>|!Array<TYPE>|null=} opt_iterable
+   * @param {!IteratorLike<TYPE>|!Array<TYPE>|null=} opt_iterable
    */
   var PolyfillWeakSet = function(opt_iterable) {
     /** @private @const {!WeakMap<TYPE, boolean>} */

@@ -71,14 +71,14 @@ $jscomp.polyfill('Map',
     }
     // Some implementations don't support constructor arguments.
     try {
-      NativeMap = /** @type {function(new: Map, !Iterator=)} */ (NativeMap);
+      NativeMap = /** @type {function(new: Map, !IteratorLike=)} */ (NativeMap);
       var key = Object.seal({x: 4});
       var map = new NativeMap($jscomp.makeIterator([[key, 's']]));
       if (map.get(key) != 's' || map.size != 1 || map.get({x: 4}) ||
           map.set({x: 4}, 't') != map || map.size != 2) {
         return false;
       }
-      var /** !Iterator<!Array> */ iter = map.entries();
+      var /** !IteratorLike<!Array> */ iter = map.entries();
       var item = iter.next();
       if (item.done || item.value[0] != key || item.value[1] != 's') {
         return false;

@@ -130,7 +130,7 @@ $jscomp.polyfill('Symbol.toStringTag', function(orig) {
  * the definition of `%IteratorPrototype%` if methods are ever
  * added to it in the future.
  *
- * @param {function(this: Iterator<T>): T} next
+ * @param {function(this: IteratorLike<T>): T} next
  * @return {!IteratorIterable<T>}
  * @template T
  */

@@ -133,7 +133,7 @@ $jscomp.polyfill('WeakMap',
    * @constructor
    * @extends {WeakMap<KEY, VALUE>}
    * @template KEY, VALUE
-   * @param {!Iterator<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>|null=}
+   * @param {!IteratorLike<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>|null=}
    *     opt_iterable Optional initial data.
    */
   var PolyfillWeakMap = function(opt_iterable) {

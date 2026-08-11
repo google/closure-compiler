@@ -25,7 +25,7 @@
  * between this and $jscomp.arrayFromIterable is that if the iterator's
  * next() method has already been called one or more times, this method returns
  * only the values that haven't been yielded yet.
- * @param {!Iterator<T>} iterator
+ * @param {!IteratorLike<T>} iterator
  * @return {!Array<T>}
  * @template T
  * @suppress {reportUnknownTypes}
