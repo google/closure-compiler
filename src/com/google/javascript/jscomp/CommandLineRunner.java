@@ -647,6 +647,14 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private String outputManifest = "";
 
     @Option(
+        name = "--output_input_reduction_report",
+        usage =
+            "Writes a tab-separated report of input AST sizes before and after compilation. "
+                + "This is intended to identify source files whose code the optimizer completely "
+                + "or mostly removes.")
+    private String outputInputReductionReport = "";
+
+    @Option(
         name = "--output_chunk_dependencies",
         usage = "Prints out a JSON file of dependencies between chunks.")
     private String outputChunkDependencies = "";
@@ -1053,6 +1061,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 "Reports",
                 ImmutableList.of(
                     "create_source_map",
+                    "output_input_reduction_report",
                     "output_manifest",
                     "output_chunk_dependencies",
                     "property_renaming_report",
@@ -1765,6 +1774,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setBrowserFeaturesetYear(flags.browserFeaturesetYear)
           .setCharset(flags.charset)
           .setDependencyOptions(dependencyOptions)
+          .setOutputInputReductionReport(flags.outputInputReductionReport)
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
           .setOutputBundle(bundleFiles)
           .setSkipNormalOutputs(skipNormalOutputs)
@@ -2244,6 +2254,24 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
   }
 
   private static final Logger phaseLogger = Logger.getLogger(PhaseOptimizer.class.getName());
+
+  /**
+   * Runs one command-line compilation without terminating the JVM.
+   *
+   * <p>This entry point is intended for persistent build workers that reuse a JVM while creating a
+   * fresh compiler and command-line configuration for every request.
+   */
+  public static int runCompiler(String[] args, PrintStream out, PrintStream err) throws IOException {
+    if (phaseLogger != null) {
+      phaseLogger.setLevel(Level.OFF);
+    }
+    CommandLineRunner runner = new CommandLineRunner(args, out, err);
+    if (!runner.shouldRunCompiler()) {
+      return runner.hasErrors() ? -1 : 0;
+    }
+    int exitCode = runner.doRun();
+    return runner.hasErrors() ? -1 : exitCode;
+  }
 
   /** Runs the Compiler. Exits cleanly in the event of an error. */
   public static void main(String[] args) {

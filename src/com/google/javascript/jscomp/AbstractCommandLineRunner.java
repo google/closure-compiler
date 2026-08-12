@@ -201,6 +201,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
   private @Nullable ImmutableMap<String, String> parsedChunkConformanceFiles = null;
 
+  private ImmutableMap<String, Integer> initialInputAstSizes = ImmutableMap.of();
+
   private final Gson gson;
 
   static final String OUTPUT_MARKER = "%output%";
@@ -1341,6 +1343,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     // Parse, restore from a save file, or initialize from a TypedAST list.
     initializeStateBeforeCompilation();
 
+    if (!config.outputInputReductionReport.isEmpty()) {
+      initialInputAstSizes = countAstNodesBySourceFile();
+    }
+
     // Do the interesting work - checks, optimizations, etc.
     runCompilerPasses(metricsRecorder);
 
@@ -1353,6 +1359,24 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     // Perform post-compilation tasks even if compiler.hasErrors(). The command-line runner emits
     // normal outputs afterward, so delay its tracer report until those outputs are recorded too.
     compiler.performPostCompilationTasksWithoutTracerReport();
+  }
+
+  private ImmutableMap<String, Integer> countAstNodesBySourceFile() {
+    Map<String, Integer> nodeCounts = new LinkedHashMap<>();
+    Node jsRoot = compiler.getJsRoot();
+    if (jsRoot == null) {
+      return ImmutableMap.of();
+    }
+    for (Node node : NodeUtil.preOrderIterable(jsRoot)) {
+      if (node.isRoot() || node.isScript()) {
+        continue;
+      }
+      String sourceName = node.getSourceFileName();
+      if (sourceName != null) {
+        nodeCounts.merge(sourceName, 1, Integer::sum);
+      }
+    }
+    return ImmutableMap.copyOf(nodeCounts);
   }
 
   private void runCompilerPasses(CompileMetricsRecorderInterface metricsRecorder) {
@@ -1599,12 +1623,66 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       // Output the production instrumentation param mapping if requested.
       outputInstrumentationMapping();
 
+      outputInputReductionReport();
+
       if (isOutputInJson()) {
         outputJsonStream();
       }
     }
 
     return getExitStatusForResult(result);
+  }
+
+  private void outputInputReductionReport() throws IOException {
+    if (config.outputInputReductionReport.isEmpty()) {
+      return;
+    }
+
+    ImmutableMap<String, Integer> finalInputAstSizes = countAstNodesBySourceFile();
+    List<CompilerInput> inputs = new ArrayList<>();
+    compiler.getInputsInOrder().forEach(inputs::add);
+    inputs.sort(
+        (left, right) -> {
+          String leftName = left.getName();
+          String rightName = right.getName();
+          int leftInitial = initialInputAstSizes.getOrDefault(leftName, 0);
+          int rightInitial = initialInputAstSizes.getOrDefault(rightName, 0);
+          int leftRemoved = leftInitial - finalInputAstSizes.getOrDefault(leftName, 0);
+          int rightRemoved = rightInitial - finalInputAstSizes.getOrDefault(rightName, 0);
+          int byRemovedNodes = Integer.compare(rightRemoved, leftRemoved);
+          if (byRemovedNodes != 0) {
+            return byRemovedNodes;
+          }
+          int byInitialNodes = Integer.compare(rightInitial, leftInitial);
+          return byInitialNodes != 0 ? byInitialNodes : leftName.compareTo(rightName);
+        });
+
+    maybeCreateDirsForPath(config.outputInputReductionReport);
+    try (Writer writer =
+        checkNotNull(fileNameToOutputWriter2(config.outputInputReductionReport))) {
+      writer.append(
+          "input_bytes\tinput_lines\tinitial_ast_nodes\tfinal_ast_nodes\t"
+              + "removed_ast_nodes\tinput\n");
+      for (CompilerInput input : inputs) {
+        String inputName = input.getName();
+        int initialNodes = initialInputAstSizes.getOrDefault(inputName, 0);
+        int finalNodes = finalInputAstSizes.getOrDefault(inputName, 0);
+        SourceFile sourceFile = input.getSourceFile();
+        writer
+            .append(Integer.toString(sourceFile.getNumBytes()))
+            .append('\t')
+            .append(Integer.toString(sourceFile.getNumLines()))
+            .append('\t')
+            .append(Integer.toString(initialNodes))
+            .append('\t')
+            .append(Integer.toString(finalNodes))
+            .append('\t')
+            .append(Integer.toString(initialNodes - finalNodes))
+            .append('\t')
+            .append(inputName.replace('\t', ' ').replace('\n', ' '))
+            .append('\n');
+      }
+    }
   }
 
   private static int getExitStatusForResult(Result result) {
@@ -2956,6 +3034,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     private List<String> outputManifests = ImmutableList.of();
+
+    private String outputInputReductionReport = "";
+
+    /** Sets the path for a report comparing each input's initial and final AST size. */
+    @CanIgnoreReturnValue
+    public CommandLineConfig setOutputInputReductionReport(String outputInputReductionReport) {
+      this.outputInputReductionReport = outputInputReductionReport;
+      return this;
+    }
 
     /** Sets whether to print output manifest files. Filter out empty file names. */
     @CanIgnoreReturnValue

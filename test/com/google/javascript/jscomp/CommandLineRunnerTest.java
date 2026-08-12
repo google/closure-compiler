@@ -2179,6 +2179,77 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testOutputInputReductionReport() throws IOException {
+    File removedInput = temporaryFolder.newFile("removed.js");
+    File retainedInput = temporaryFolder.newFile("retained.js");
+    File compiledOutput = temporaryFolder.newFile("compiled.js");
+    File reductionReport = temporaryFolder.newFile("input-reduction.tsv");
+    writeFile(removedInput, "function unused() { return 1; }");
+    writeFile(retainedInput, "throw 2;");
+
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            new String[] {
+              "--compilation_level=ADVANCED",
+              "--env=CUSTOM",
+              "--js=" + removedInput,
+              "--js=" + retainedInput,
+              "--js_output_file=" + compiledOutput,
+              "--output_input_reduction_report=" + reductionReport,
+            },
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+
+    int exitCode = runner.doRun();
+    assertWithMessage(errReader.toString(UTF_8)).that(exitCode).isEqualTo(0);
+    List<String> reportLines = java.nio.file.Files.readAllLines(reductionReport.toPath());
+    assertThat(reportLines.get(0))
+        .isEqualTo(
+            "input_bytes\tinput_lines\tinitial_ast_nodes\tfinal_ast_nodes\t"
+                + "removed_ast_nodes\tinput");
+    String removedLine =
+        reportLines.stream().filter(line -> line.endsWith("\t" + removedInput)).findFirst().get();
+    String retainedLine =
+        reportLines.stream().filter(line -> line.endsWith("\t" + retainedInput)).findFirst().get();
+    assertThat(removedLine.split("\t")[3]).isEqualTo("0");
+    assertThat(Integer.parseInt(retainedLine.split("\t")[3])).isGreaterThan(0);
+  }
+
+  @Test
+  public void testRunCompilerCanRunTwiceInSameJvm() throws IOException {
+    File input = temporaryFolder.newFile("input.js");
+    File firstOutput = temporaryFolder.newFile("first-output.js");
+    File secondOutput = temporaryFolder.newFile("second-output.js");
+    writeFile(input, "throw 1 + 2;");
+
+    int firstExitCode =
+        CommandLineRunner.runCompiler(
+            new String[] {
+              "--compilation_level=ADVANCED",
+              "--env=CUSTOM",
+              "--js=" + input,
+              "--js_output_file=" + firstOutput,
+            },
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+    int secondExitCode =
+        CommandLineRunner.runCompiler(
+            new String[] {
+              "--compilation_level=ADVANCED",
+              "--env=CUSTOM",
+              "--js=" + input,
+              "--js_output_file=" + secondOutput,
+            },
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+
+    assertWithMessage(errReader.toString(UTF_8)).that(firstExitCode).isEqualTo(0);
+    assertWithMessage(errReader.toString(UTF_8)).that(secondExitCode).isEqualTo(0);
+    assertThat(java.nio.file.Files.readString(firstOutput.toPath()))
+        .isEqualTo(java.nio.file.Files.readString(secondOutput.toPath()));
+  }
+
+  @Test
   public void testProcessCJS() {
     useStringComparison = true;
     args.add("--process_common_js_modules");
