@@ -147,13 +147,21 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
 
   final void declareInternal(String name, V var) {
     checkState(hasOwnSlot(name) || canDeclare(name), "Illegal shadow: %s", var.getNode());
+    initializeVarsIfNeeded();
+    vars.put(name, var);
+  }
 
-    // For memory savings, only initialize the map once it needs to add its first element
+  private void initializeVarsIfNeeded() {
     ImmutableMap<String, V> emptySentinel = ImmutableMap.of();
     if (vars == emptySentinel) {
       vars = Maps.newLinkedHashMapWithExpectedSize(1);
     }
-    vars.put(name, var);
+  }
+
+  /** Adds a variable after the caller has verified that the declaration is valid and absent. */
+  final void declareInternalWithoutChecks(String name, V var) {
+    initializeVarsIfNeeded();
+    checkState(vars.put(name, var) == null, "Duplicate declaration: %s", name);
   }
 
   final void clearVarsInternal() {

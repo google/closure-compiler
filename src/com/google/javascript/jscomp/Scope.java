@@ -94,6 +94,21 @@ public final class Scope extends AbstractScope<Scope, Var> {
     return var;
   }
 
+  /** Declares a variable after the caller has checked for duplicates and illegal shadowing. */
+  Var declareWithoutSlotCheck(String name, Node nameNode, CompilerInput input) {
+    checkArgument(!name.isEmpty());
+    Var var =
+        new Var(
+            name,
+            nameNode,
+            this,
+            getVarCount(),
+            input,
+            /* implicitGoogNamespaceDefinition= */ null);
+    declareInternalWithoutChecks(name, var);
+    return var;
+  }
+
   /**
    * Declares an implicit goog.provide or goog.module namespace in this scope
    *

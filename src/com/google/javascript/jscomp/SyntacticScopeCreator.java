@@ -336,7 +336,9 @@ public final class SyntacticScopeCreator implements ScopeCreator {
               || s.isFunctionBlockScope()) && name.equals(ARGUMENTS))) {
         redeclarationHandler.onRedeclaration(s, name, n, input);
       } else {
-        s.declare(name, n, input);
+        // The checks above establish the same absence and shadowing invariants that Scope.declare()
+        // normally verifies. Avoid repeating those map lookups in this scope-building hot path.
+        s.declareWithoutSlotCheck(name, n, input);
       }
     }
 
