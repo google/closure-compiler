@@ -241,6 +241,23 @@ final class PolyfillUsageFinder {
         compiler, root, new Traverser(this.compiler, polyfillConsumer, Guard.ONLY_GUARDED));
   }
 
+  /**
+   * Passes guarded usages in the given change scopes to {@code polyfillConsumer}, without visiting
+   * scopes nested within them.
+   *
+   * <p>A guard cannot flow across a function boundary, so changed function and script scopes can
+   * be rescanned independently. Avoiding nested scopes is important when only an outer function or
+   * a script changed, since their nested functions may still have valid cached results.
+   */
+  void traverseOnlyGuardedScopeRoots(
+      List<Node> scopeRoots, Consumer<PolyfillUsage> polyfillConsumer) {
+    NodeTraversal.traverseScopeRoots(
+        compiler,
+        scopeRoots,
+        new Traverser(this.compiler, polyfillConsumer, Guard.ONLY_GUARDED),
+        /* traverseNested= */ false);
+  }
+
   private enum Guard {
     ONLY_GUARDED,
     ONLY_UNGUARDED,

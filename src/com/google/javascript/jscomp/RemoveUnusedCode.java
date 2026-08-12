@@ -41,8 +41,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
@@ -82,6 +84,61 @@ import org.jspecify.annotations.Nullable;
  * right before the moment an attempt to remove them would otherwise be made.
  */
 class RemoveUnusedCode implements CompilerPass {
+
+  /** Caches guarded polyfill usages across fixed-point iterations. */
+  static final class GuardedPolyfillUsageCache {
+    private static final AtomicInteger NEXT_ID = new AtomicInteger();
+
+    // ChangeTracker identifies clients by name, so every independently-created cache needs a
+    // distinct name. DefaultPassConfig shares one cache across all RemoveUnusedCode instances.
+    private final String changeTrackerName =
+        RemoveUnusedCode.class.getName() + ".guardedPolyfills." + NEXT_ID.getAndIncrement();
+    private final Map<Node, Set<Node>> usagesByChangeScope = new LinkedHashMap<>();
+    private final Set<Node> allUsages = new LinkedHashSet<>();
+    private @Nullable AbstractCompiler compiler;
+    private @Nullable Node root;
+    private boolean initialized = false;
+
+    Set<Node> getGuardedUsages(AbstractCompiler compiler, Polyfills polyfills, Node root) {
+      if (this.compiler != compiler || this.root != root) {
+        this.compiler = compiler;
+        this.root = root;
+        this.initialized = false;
+        this.usagesByChangeScope.clear();
+        this.allUsages.clear();
+      }
+
+      List<Node> changedScopeRoots =
+          compiler.getChangeTracker().getChangedScopeNodesForPass(changeTrackerName);
+      if (!initialized) {
+        usagesByChangeScope.clear();
+        allUsages.clear();
+        new PolyfillUsageFinder(compiler, polyfills).traverseOnlyGuarded(root, this::storeUsage);
+        initialized = true;
+      } else if (!checkNotNull(changedScopeRoots).isEmpty()) {
+        for (Node changedScopeRoot : changedScopeRoots) {
+          Set<Node> invalidatedUsages = usagesByChangeScope.remove(changedScopeRoot);
+          if (invalidatedUsages != null) {
+            allUsages.removeAll(invalidatedUsages);
+          }
+        }
+        new PolyfillUsageFinder(compiler, polyfills)
+            .traverseOnlyGuardedScopeRoots(changedScopeRoots, this::storeUsage);
+      }
+
+      return allUsages;
+    }
+
+    private void storeUsage(PolyfillUsage usage) {
+      Node changeScopeRoot = ChangeTracker.getEnclosingChangeScopeRoot(usage.node());
+      checkNotNull(changeScopeRoot);
+      Node usageNode = usage.node();
+      usagesByChangeScope
+          .computeIfAbsent(changeScopeRoot, unused -> new LinkedHashSet<>())
+          .add(usageNode);
+      allUsages.add(usageNode);
+    }
+  }
 
   // Properties that are implicitly used as part of the JS language.
   private static final ImmutableSet<String> IMPLICITLY_USED_PROPERTIES =
@@ -128,7 +185,9 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private final Multimap<String, PolyfillInfo> polyfills = HashMultimap.create();
 
-  private final Set<Node> guardedUsages = new LinkedHashSet<>();
+  private Set<Node> guardedUsages = Set.of();
+
+  private final GuardedPolyfillUsageCache guardedPolyfillUsageCache;
 
   private final Polyfills polyfillsFromTable;
 
@@ -158,6 +217,7 @@ class RemoveUnusedCode implements CompilerPass {
     this.removeUnusedObjectDefinePropertiesDefinitions =
         builder.removeUnusedObjectDefinePropertiesDefinitions;
     this.removeUnusedPolyfills = builder.removeUnusedPolyfills;
+    this.guardedPolyfillUsageCache = builder.guardedPolyfillUsageCache;
     this.polyfillsFromTable =
         Polyfills.fromTable(
             ResourceLoader.loadTextResource(RemoveUnusedCode.class, "js/polyfills.txt"));
@@ -178,6 +238,8 @@ class RemoveUnusedCode implements CompilerPass {
     private boolean removeUnusedObjectDefinePropertiesDefinitions = false;
     private boolean removeUnusedPolyfills = false;
     private boolean assumeGettersArePure = false;
+    private GuardedPolyfillUsageCache guardedPolyfillUsageCache =
+        new GuardedPolyfillUsageCache();
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -228,6 +290,12 @@ class RemoveUnusedCode implements CompilerPass {
     @CanIgnoreReturnValue
     Builder assumeGettersArePure(boolean value) {
       this.assumeGettersArePure = value;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    Builder guardedPolyfillUsageCache(GuardedPolyfillUsageCache value) {
+      this.guardedPolyfillUsageCache = value;
       return this;
     }
 
@@ -367,9 +435,12 @@ class RemoveUnusedCode implements CompilerPass {
           NodeUtil.JSC_PROPERTY_NAME_FN, /* no declaration node */ null, /* no input */ null);
     }
 
-    // Accumulate guarded usages of polyfills before removal starts.
-    new PolyfillUsageFinder(compiler, polyfillsFromTable)
-        .traverseOnlyGuarded(root, this::storePolyfill);
+    // Accumulate guarded usages of polyfills before removal starts. Most optimization iterations
+    // change only a small fraction of all scopes, so reuse results for every unchanged scope.
+    guardedUsages =
+        removeUnusedPolyfills
+            ? guardedPolyfillUsageCache.getGuardedUsages(compiler, polyfillsFromTable, root)
+            : Set.of();
 
     worklist.add(new Continuation(root, scope));
     while (!worklist.isEmpty()) {
@@ -382,10 +453,6 @@ class RemoveUnusedCode implements CompilerPass {
     for (Scope fparamScope : allFunctionParamScopes) {
       removeUnreferencedFunctionArgs(fparamScope);
     }
-  }
-
-  private void storePolyfill(PolyfillUsage polyfillUsage) {
-    this.guardedUsages.add(polyfillUsage.node());
   }
 
   private void removeIndependentlyRemovableProperties() {

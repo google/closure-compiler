@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
 import org.junit.Test;
@@ -40,6 +41,89 @@ import org.junit.runners.JUnit4;
 /** Unit tests for {@link PolyfillUsageFinder} */
 @RunWith(JUnit4.class)
 public final class PolyfillUsageFinderTest {
+
+  @Test
+  public void guardedUsageCache_rescansOnlyChangedScopes() {
+    SourceFile src =
+        SourceFile.builder()
+            .withPath("src.js")
+            .withContent(
+                """
+                if (Map) use(Map);
+                function f() { if (Promise) use(Promise); }
+                function g() { if (Symbol) use(Symbol); }
+                """)
+            .build();
+    Compiler compiler = new Compiler();
+    compiler.init(
+        ImmutableList.of(new TestExternsBuilder().buildExternsFile("externs.js")),
+        ImmutableList.of(src),
+        new CompilerOptions());
+    compiler.parse();
+
+    Node root = compiler.getJsRoot();
+    Node script = root.getFirstChild();
+    Node topLevelIf = script.getFirstChild();
+    Node functionF = topLevelIf.getNext();
+    Node functionG = functionF.getNext();
+    Node functionFIf = functionF.getLastChild().getFirstChild();
+    Node functionGIf = functionG.getLastChild().getFirstChild();
+
+    Node topLevelCondition = topLevelIf.getFirstChild();
+    Node topLevelGuardedUse = topLevelIf.getSecondChild().getFirstFirstChild().getSecondChild();
+    Node functionFCondition = functionFIf.getFirstChild();
+    Node functionFGuardedUse = functionFIf.getSecondChild().getFirstFirstChild().getSecondChild();
+    Node functionGCondition = functionGIf.getFirstChild();
+    Node functionGGuardedUse = functionGIf.getSecondChild().getFirstFirstChild().getSecondChild();
+
+    Polyfills polyfills =
+        Polyfills.fromTable(
+            """
+            Map es6 es3 es6/map
+            Promise es6 es3 es6/promise/promise
+            Symbol es6 es3 es6/symbol
+            """);
+    RemoveUnusedCode.GuardedPolyfillUsageCache cache =
+        new RemoveUnusedCode.GuardedPolyfillUsageCache();
+
+    assertThat(cache.getGuardedUsages(compiler, polyfills, root))
+        .containsExactly(
+            topLevelCondition,
+            topLevelGuardedUse,
+            functionFCondition,
+            functionFGuardedUse,
+            functionGCondition,
+            functionGGuardedUse);
+
+    // Invalidating f drops its now-unguarded Promise nodes, without rescanning or losing g.
+    functionFCondition.setString("notAPolyfill");
+    compiler.reportChangeToChangeScope(functionF);
+    assertThat(cache.getGuardedUsages(compiler, polyfills, root))
+        .containsExactly(
+            topLevelCondition, topLevelGuardedUse, functionGCondition, functionGGuardedUse);
+
+    // Rescanning the same scope can also add newly guarded usages.
+    functionFCondition.setString("Promise");
+    compiler.reportChangeToChangeScope(functionF);
+    assertThat(cache.getGuardedUsages(compiler, polyfills, root))
+        .containsExactly(
+            topLevelCondition,
+            topLevelGuardedUse,
+            functionFCondition,
+            functionFGuardedUse,
+            functionGCondition,
+            functionGGuardedUse);
+
+    // A script-level change similarly leaves cached results for its nested functions intact. Also
+    // invalidate f again to cover updating multiple independent scopes in one request.
+    functionFCondition.setString("notAPolyfill");
+    compiler.reportChangeToChangeScope(functionF);
+    topLevelCondition.setString("notAPolyfill");
+    compiler.reportChangeToChangeScope(script);
+    Set<Node> finalUsages = cache.getGuardedUsages(compiler, polyfills, root);
+    assertThat(finalUsages).containsExactly(functionGCondition, functionGGuardedUse);
+    assertThat(finalUsages).containsNoneOf(functionFCondition, functionFGuardedUse);
+  }
 
   /**
    * Covers testing of most common cases.

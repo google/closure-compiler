@@ -112,6 +112,10 @@ public final class DefaultPassConfig extends PassConfig {
   private final transient PreprocessorSymbolTable.CachedInstanceFactory
       preprocessorSymbolTableFactory = new PreprocessorSymbolTable.CachedInstanceFactory();
 
+  /** Shared across the fixed-point instances of RemoveUnusedCode. */
+  private final RemoveUnusedCode.GuardedPolyfillUsageCache guardedPolyfillUsageCache =
+      new RemoveUnusedCode.GuardedPolyfillUsageCache();
+
   public DefaultPassConfig(CompilerOptions options) {
     super(options);
   }
@@ -2425,6 +2429,7 @@ public final class DefaultPassConfig extends PassConfig {
                           options.getForceLibraryInjectionList().isEmpty()
                               && options.getInjectPolyfillsNewerThan() == null)
                       .assumeGettersArePure(options.getAssumeGettersArePure())
+                      .guardedPolyfillUsageCache(guardedPolyfillUsageCache)
                       .build())
           .build();
 

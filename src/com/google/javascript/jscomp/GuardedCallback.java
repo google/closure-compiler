@@ -167,8 +167,9 @@ abstract class GuardedCallback<T> implements NodeTraversal.Callback {
     //    a. the installed {`if`: "x"} guard is removed.
     //    c. pop the final empty context from the stack.
 
-    if (parent == null) {
-      // The first node gets an empty context.
+    if (contextStack.isEmpty()) {
+      // The first node gets an empty context. Its parent may be non-null when NodeTraversal is
+      // traversing the contents of an existing scope root.
       contextStack.push(Context.EMPTY);
     } else {
       // Before traversing any children, we update the stack
