@@ -553,7 +553,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.maybeAdd(peepholeOptimizationsOnceNormalized);
     }
 
-    if (options.shouldInlineVariables() || options.shouldInlineLocalVariables()) {
+    if (options.getFinalFlowSensitiveInlineVariables()
+        && (options.shouldInlineVariables() || options.shouldInlineLocalVariables())) {
       passes.maybeAdd(flowSensitiveInlineVariables);
 
       // After inlining variable uses, some variables may be unused.

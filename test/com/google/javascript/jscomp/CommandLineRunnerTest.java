@@ -3458,6 +3458,16 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
   }
 
   @Test
+  public void testRunFinalFlowSensitiveInlineVariables() {
+    testSame("");
+    assertThat(lastCompiler.getOptions().getFinalFlowSensitiveInlineVariables()).isTrue();
+
+    args.add("--run_final_flow_sensitive_inline_variables=false");
+    testSame("");
+    assertThat(lastCompiler.getOptions().getFinalFlowSensitiveInlineVariables()).isFalse();
+  }
+
+  @Test
   public void testParamModification1() {
     args.add("--compilation_level=ADVANCED");
     test(

@@ -531,6 +531,15 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private int optimizationMotionLoopMaxIterations = 0;
 
     @Option(
+        name = "--run_final_flow_sensitive_inline_variables",
+        hidden = true,
+        handler = BooleanOptionHandler.class,
+        usage =
+            "Repeat flow-sensitive variable inlining and its unused-code cleanup during final "
+                + "optimizations.")
+    private boolean runFinalFlowSensitiveInlineVariables = true;
+
+    @Option(
         name = "--checks_only",
         aliases = {"--checks-only"},
         handler = BooleanOptionHandler.class,
@@ -1911,6 +1920,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     options.setOptimizationLoopSizeThreshold(flags.optimizationLoopSizeThreshold);
     options.setMaxOptimizationLoopIterations(flags.optimizationLoopMaxIterations);
     options.setMaxOptimizationMotionLoopIterations(flags.optimizationMotionLoopMaxIterations);
+    options.setFinalFlowSensitiveInlineVariables(flags.runFinalFlowSensitiveInlineVariables);
 
     options.setEnvironment(flags.environment);
 

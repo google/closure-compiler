@@ -504,6 +504,9 @@ public class CompilerOptions {
   // Remove this.
   private boolean flowSensitiveInlineVariables;
 
+  /** Whether to repeat flow-sensitive variable inlining during finalizations. */
+  private boolean finalFlowSensitiveInlineVariables = true;
+
   /** Removes code associated with unused global names */
   private boolean smartNameRemoval;
 
@@ -2446,6 +2449,14 @@ public class CompilerOptions {
     return flowSensitiveInlineVariables;
   }
 
+  public void setFinalFlowSensitiveInlineVariables(boolean enabled) {
+    this.finalFlowSensitiveInlineVariables = enabled;
+  }
+
+  boolean getFinalFlowSensitiveInlineVariables() {
+    return finalFlowSensitiveInlineVariables;
+  }
+
   public void setSmartNameRemoval(boolean smartNameRemoval) {
     // TODO(bradfordcsmith): Remove the smart name removal option.
     this.smartNameRemoval = smartNameRemoval;
@@ -3481,6 +3492,7 @@ public class CompilerOptions {
         .add("extractPrototypeMemberDeclarations", extractPrototypeMemberDeclarations)
         .add("filesToPrintAfterEachPassRegexList", filesToPrintAfterEachPassRegexList)
         .add("flowSensitiveInlineVariables", flowSensitiveInlineVariables)
+        .add("finalFlowSensitiveInlineVariables", finalFlowSensitiveInlineVariables)
         .add("foldConstants", foldConstants)
         .add("forceLibraryInjection", forceLibraryInjection)
         .add("gatherCssNames", gatherCssNames)
