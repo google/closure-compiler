@@ -655,7 +655,7 @@ function CSSStartingStyleRule() {}
 
 /**
  * @constructor
- * @extends {CSSProperties}
+ * @extends {CSSStyleProperties}
  * @implements {IObject<(string|number), string>}
  * @implements {IArrayLike<string>}
  * @implements {Iterable<string>}
@@ -1414,6 +1414,14 @@ ElementCSSInlineStyle.prototype.style;
  * @constructor
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties
  */
+function CSSStyleProperties() {}
+
+/**
+ * Legacy compatibility class for style property dictionaries.
+ * @constructor
+ * @extends {CSSStyleProperties}
+ * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties
+ */
 function CSSProperties() {}
 
 // CSS 2 properties
@@ -1422,320 +1430,320 @@ function CSSProperties() {}
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-azimuth
  */
-CSSProperties.prototype.azimuth;
+CSSStyleProperties.prototype.azimuth;
 
 /**
  * @type {string}
  * @see https://drafts.fxtf.org/filter-effects-2/#BackdropFilterProperty
  */
-CSSProperties.prototype.backdropFilter;
+CSSStyleProperties.prototype.backdropFilter;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-background
  */
-CSSProperties.prototype.background;
+CSSStyleProperties.prototype.background;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-backgroundAttachment
  */
-CSSProperties.prototype.backgroundAttachment;
+CSSStyleProperties.prototype.backgroundAttachment;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-backgroundColor
  */
-CSSProperties.prototype.backgroundColor;
+CSSStyleProperties.prototype.backgroundColor;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-backgroundImage
  */
-CSSProperties.prototype.backgroundImage;
+CSSStyleProperties.prototype.backgroundImage;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-backgroundPosition
  */
-CSSProperties.prototype.backgroundPosition;
+CSSStyleProperties.prototype.backgroundPosition;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-backgroundRepeat
  */
-CSSProperties.prototype.backgroundRepeat;
+CSSStyleProperties.prototype.backgroundRepeat;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-background-size
  */
-CSSProperties.prototype.backgroundSize;
+CSSStyleProperties.prototype.backgroundSize;
 
 /**
  * @implicitCast
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-border
  */
-CSSProperties.prototype.border;
+CSSStyleProperties.prototype.border;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderCollapse
  */
-CSSProperties.prototype.borderCollapse;
+CSSStyleProperties.prototype.borderCollapse;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderColor
  */
-CSSProperties.prototype.borderColor;
+CSSStyleProperties.prototype.borderColor;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderSpacing
  */
-CSSProperties.prototype.borderSpacing;
+CSSStyleProperties.prototype.borderSpacing;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue-borderStyle
  */
-CSSProperties.prototype.borderStyle;
+CSSStyleProperties.prototype.borderStyle;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderTop
  */
-CSSProperties.prototype.borderTop;
+CSSStyleProperties.prototype.borderTop;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderRight
  */
-CSSProperties.prototype.borderRight;
+CSSStyleProperties.prototype.borderRight;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderBottom
  */
-CSSProperties.prototype.borderBottom;
+CSSStyleProperties.prototype.borderBottom;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderLeft
  */
-CSSProperties.prototype.borderLeft;
+CSSStyleProperties.prototype.borderLeft;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderTopColor
  */
-CSSProperties.prototype.borderTopColor;
+CSSStyleProperties.prototype.borderTopColor;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderRightColor
  */
-CSSProperties.prototype.borderRightColor;
+CSSStyleProperties.prototype.borderRightColor;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderBottomColor
  */
-CSSProperties.prototype.borderBottomColor;
+CSSStyleProperties.prototype.borderBottomColor;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderLeftColor
  */
-CSSProperties.prototype.borderLeftColor;
+CSSStyleProperties.prototype.borderLeftColor;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderTopStyle
  */
-CSSProperties.prototype.borderTopStyle;
+CSSStyleProperties.prototype.borderTopStyle;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderRightStyle
  */
-CSSProperties.prototype.borderRightStyle;
+CSSStyleProperties.prototype.borderRightStyle;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderBottomStyle
  */
-CSSProperties.prototype.borderBottomStyle;
+CSSStyleProperties.prototype.borderBottomStyle;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderLeftStyle
  */
-CSSProperties.prototype.borderLeftStyle;
+CSSStyleProperties.prototype.borderLeftStyle;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderTopWidth
  */
-CSSProperties.prototype.borderTopWidth;
+CSSStyleProperties.prototype.borderTopWidth;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderRightWidth
  */
-CSSProperties.prototype.borderRightWidth;
+CSSStyleProperties.prototype.borderRightWidth;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderBottomWidth
  */
-CSSProperties.prototype.borderBottomWidth;
+CSSStyleProperties.prototype.borderBottomWidth;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderLeftWidth
  */
-CSSProperties.prototype.borderLeftWidth;
+CSSStyleProperties.prototype.borderLeftWidth;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderWidth
  */
-CSSProperties.prototype.borderWidth;
+CSSStyleProperties.prototype.borderWidth;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-background/#the-border-radius
  */
-CSSProperties.prototype.borderRadius;
+CSSStyleProperties.prototype.borderRadius;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-background/#the-border-radius
  */
-CSSProperties.prototype.borderBottomLeftRadius;
+CSSStyleProperties.prototype.borderBottomLeftRadius;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-background/#the-border-radius
  */
-CSSProperties.prototype.borderBottomRightRadius;
+CSSStyleProperties.prototype.borderBottomRightRadius;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-background/#the-border-radius
  */
-CSSProperties.prototype.borderTopLeftRadius;
+CSSStyleProperties.prototype.borderTopLeftRadius;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-background/#the-border-radius
  */
-CSSProperties.prototype.borderTopRightRadius;
+CSSStyleProperties.prototype.borderTopRightRadius;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-image-source
  */
-CSSProperties.prototype.borderImageSource;
+CSSStyleProperties.prototype.borderImageSource;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-background/#the-border-image-slice
  */
-CSSProperties.prototype.borderImageSlice;
+CSSStyleProperties.prototype.borderImageSlice;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-background/#the-border-image-width
  */
-CSSProperties.prototype.borderImageWidth;
+CSSStyleProperties.prototype.borderImageWidth;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-background/#the-border-image-outset
  */
-CSSProperties.prototype.borderImageOutset;
+CSSStyleProperties.prototype.borderImageOutset;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-image-repeat
  */
-CSSProperties.prototype.borderImageRepeat;
+CSSStyleProperties.prototype.borderImageRepeat;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-image
  */
-CSSProperties.prototype.borderImage;
+CSSStyleProperties.prototype.borderImage;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-bottom
  */
-CSSProperties.prototype.bottom;
+CSSStyleProperties.prototype.bottom;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-captionSide
  */
-CSSProperties.prototype.captionSide;
+CSSStyleProperties.prototype.captionSide;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-clear
  */
-CSSProperties.prototype.clear;
+CSSStyleProperties.prototype.clear;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-clip
  */
-CSSProperties.prototype.clip;
+CSSStyleProperties.prototype.clip;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-color
  */
-CSSProperties.prototype.color;
+CSSStyleProperties.prototype.color;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-color-adjust/#color-scheme-prop
  */
-CSSProperties.prototype.colorScheme;
+CSSStyleProperties.prototype.colorScheme;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css-contain-2/#contain-property
  */
-CSSProperties.prototype.contain;
+CSSStyleProperties.prototype.contain;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-content
  */
-CSSProperties.prototype.content;
+CSSStyleProperties.prototype.content;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css-contain-2/#content-visibility
  */
-CSSProperties.prototype.contentVisibility;
+CSSStyleProperties.prototype.contentVisibility;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-counterIncrement
  */
-CSSProperties.prototype.counterIncrement;
+CSSStyleProperties.prototype.counterIncrement;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-counterReset
  */
-CSSProperties.prototype.counterReset;
+CSSStyleProperties.prototype.counterReset;
 
 /**
  * This is not an official part of the W3C spec. In practice, this is a settable
@@ -1743,792 +1751,792 @@ CSSProperties.prototype.counterReset;
  * needs to be extern'd so the --disambiguate_properties JS compiler pass works.
  * @type {string}
  */
-CSSProperties.prototype.cssText;
+CSSStyleProperties.prototype.cssText;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-cue
  */
-CSSProperties.prototype.cue;
+CSSStyleProperties.prototype.cue;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-cueAfter
  */
-CSSProperties.prototype.cueAfter;
+CSSStyleProperties.prototype.cueAfter;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-cueBefore
  */
-CSSProperties.prototype.cueBefore;
+CSSStyleProperties.prototype.cueBefore;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-cursor
  */
-CSSProperties.prototype.cursor;
+CSSStyleProperties.prototype.cursor;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-direction
  */
-CSSProperties.prototype.direction;
+CSSStyleProperties.prototype.direction;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-display
  */
-CSSProperties.prototype.display;
+CSSStyleProperties.prototype.display;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-elevation
  */
-CSSProperties.prototype.elevation;
+CSSStyleProperties.prototype.elevation;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-emptyCells
  */
-CSSProperties.prototype.emptyCells;
+CSSStyleProperties.prototype.emptyCells;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-cssFloat
  */
-CSSProperties.prototype.cssFloat;
+CSSStyleProperties.prototype.cssFloat;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-font
  */
-CSSProperties.prototype.font;
+CSSStyleProperties.prototype.font;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-fontFamily
  */
-CSSProperties.prototype.fontFamily;
+CSSStyleProperties.prototype.fontFamily;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-fontSize
  */
-CSSProperties.prototype.fontSize;
+CSSStyleProperties.prototype.fontSize;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-fontSizeAdjust
  */
-CSSProperties.prototype.fontSizeAdjust;
+CSSStyleProperties.prototype.fontSizeAdjust;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-fontStretch
  */
-CSSProperties.prototype.fontStretch;
+CSSStyleProperties.prototype.fontStretch;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-fontStyle
  */
-CSSProperties.prototype.fontStyle;
+CSSStyleProperties.prototype.fontStyle;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-fontVariant
  */
-CSSProperties.prototype.fontVariant;
+CSSStyleProperties.prototype.fontVariant;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-fontWeight
  */
-CSSProperties.prototype.fontWeight;
+CSSStyleProperties.prototype.fontWeight;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-align-3/#propdef-gap
  */
-CSSProperties.prototype.gap;
+CSSStyleProperties.prototype.gap;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid
  */
-CSSProperties.prototype.grid;
+CSSStyleProperties.prototype.grid;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-area
  */
-CSSProperties.prototype.gridArea;
+CSSStyleProperties.prototype.gridArea;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-columns
  */
-CSSProperties.prototype.gridAutoColumns;
+CSSStyleProperties.prototype.gridAutoColumns;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-flow
  */
-CSSProperties.prototype.gridAutoFlow;
+CSSStyleProperties.prototype.gridAutoFlow;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-auto-rows
  */
-CSSProperties.prototype.gridAutoRows;
+CSSStyleProperties.prototype.gridAutoRows;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-column
  */
-CSSProperties.prototype.gridColumn;
+CSSStyleProperties.prototype.gridColumn;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-column-end
  */
-CSSProperties.prototype.gridColumnEnd;
+CSSStyleProperties.prototype.gridColumnEnd;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-column-start
  */
-CSSProperties.prototype.gridColumnStart;
+CSSStyleProperties.prototype.gridColumnStart;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-row
  */
-CSSProperties.prototype.gridRow;
+CSSStyleProperties.prototype.gridRow;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-row-end
  */
-CSSProperties.prototype.gridRowEnd;
+CSSStyleProperties.prototype.gridRowEnd;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-row-start
  */
-CSSProperties.prototype.gridRowStart;
+CSSStyleProperties.prototype.gridRowStart;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-template
  */
-CSSProperties.prototype.gridTemplate;
+CSSStyleProperties.prototype.gridTemplate;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-template-areas
  */
-CSSProperties.prototype.gridTemplateAreas;
+CSSStyleProperties.prototype.gridTemplateAreas;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-template-columns
  */
-CSSProperties.prototype.gridTemplateColumns;
+CSSStyleProperties.prototype.gridTemplateColumns;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-grid-1/#propdef-grid-template-rows
  */
-CSSProperties.prototype.gridTemplateRows;
+CSSStyleProperties.prototype.gridTemplateRows;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-height
  */
-CSSProperties.prototype.height;
+CSSStyleProperties.prototype.height;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-logical/#propdef-inset
  */
-CSSProperties.prototype.inset;
+CSSStyleProperties.prototype.inset;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-logical/#position-properties
  */
-CSSProperties.prototype.insetBlock;
+CSSStyleProperties.prototype.insetBlock;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-logical/#position-properties
  */
-CSSProperties.prototype.insetBlockEnd;
+CSSStyleProperties.prototype.insetBlockEnd;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-logical/#position-properties
  */
-CSSProperties.prototype.insetBlockStart;
+CSSStyleProperties.prototype.insetBlockStart;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-logical/#position-properties
  */
-CSSProperties.prototype.insetInline;
+CSSStyleProperties.prototype.insetInline;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-logical/#position-properties
  */
-CSSProperties.prototype.insetInlineEnd;
+CSSStyleProperties.prototype.insetInlineEnd;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-logical/#position-properties
  */
-CSSProperties.prototype.insetInlineStart;
+CSSStyleProperties.prototype.insetInlineStart;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-left
  */
-CSSProperties.prototype.left;
+CSSStyleProperties.prototype.left;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-letterSpacing
  */
-CSSProperties.prototype.letterSpacing;
+CSSStyleProperties.prototype.letterSpacing;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-lineHeight
  */
-CSSProperties.prototype.lineHeight;
+CSSStyleProperties.prototype.lineHeight;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-listStyle
  */
-CSSProperties.prototype.listStyle;
+CSSStyleProperties.prototype.listStyle;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-listStyleImage
  */
-CSSProperties.prototype.listStyleImage;
+CSSStyleProperties.prototype.listStyleImage;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-listStylePosition
  */
-CSSProperties.prototype.listStylePosition;
+CSSStyleProperties.prototype.listStylePosition;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-listStyleType
  */
-CSSProperties.prototype.listStyleType;
+CSSStyleProperties.prototype.listStyleType;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-margin
  */
-CSSProperties.prototype.margin;
+CSSStyleProperties.prototype.margin;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-marginTop
  */
-CSSProperties.prototype.marginTop;
+CSSStyleProperties.prototype.marginTop;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-marginRight
  */
-CSSProperties.prototype.marginRight;
+CSSStyleProperties.prototype.marginRight;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-marginBottom
  */
-CSSProperties.prototype.marginBottom;
+CSSStyleProperties.prototype.marginBottom;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-marginLeft
  */
-CSSProperties.prototype.marginLeft;
+CSSStyleProperties.prototype.marginLeft;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-markerOffset
  */
-CSSProperties.prototype.markerOffset;
+CSSStyleProperties.prototype.markerOffset;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-marks
  */
-CSSProperties.prototype.marks;
+CSSStyleProperties.prototype.marks;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-maxHeight
  */
-CSSProperties.prototype.maxHeight;
+CSSStyleProperties.prototype.maxHeight;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-maxWidth
  */
-CSSProperties.prototype.maxWidth;
+CSSStyleProperties.prototype.maxWidth;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-minHeight
  */
-CSSProperties.prototype.minHeight;
+CSSStyleProperties.prototype.minHeight;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-minWidth
  */
-CSSProperties.prototype.minWidth;
+CSSStyleProperties.prototype.minWidth;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-orphans
  */
-CSSProperties.prototype.orphans;
+CSSStyleProperties.prototype.orphans;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-outline
  */
-CSSProperties.prototype.outline;
+CSSStyleProperties.prototype.outline;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-outlineColor
  */
-CSSProperties.prototype.outlineColor;
+CSSStyleProperties.prototype.outlineColor;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-outlineStyle
  */
-CSSProperties.prototype.outlineStyle;
+CSSStyleProperties.prototype.outlineStyle;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-outlineWidth
  */
-CSSProperties.prototype.outlineWidth;
+CSSStyleProperties.prototype.outlineWidth;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-overflow
  */
-CSSProperties.prototype.overflow;
+CSSStyleProperties.prototype.overflow;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-scroll-anchoring/#exclusion-api
  */
-CSSProperties.prototype.overflowAnchor;
+CSSStyleProperties.prototype.overflowAnchor;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-overflow/#overflow-clip-margin
  */
-CSSProperties.prototype.overflowClipMargin;
+CSSStyleProperties.prototype.overflowClipMargin;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-text/#overflow-wrap-property
  */
-CSSProperties.prototype.overflowWrap;
+CSSStyleProperties.prototype.overflowWrap;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-overflow/#overflow-properties
  */
-CSSProperties.prototype.overflowX;
+CSSStyleProperties.prototype.overflowX;
 
 /**
  * @type {string}
  * @see https://drafts.csswg.org/css-overflow/#overflow-properties
  */
-CSSProperties.prototype.overflowY;
+CSSStyleProperties.prototype.overflowY;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-overscroll-1/#propdef-overscroll-behavior
  */
-CSSProperties.prototype.overscrollBehavior;
+CSSStyleProperties.prototype.overscrollBehavior;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-padding
  */
-CSSProperties.prototype.padding;
+CSSStyleProperties.prototype.padding;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-paddingTop
  */
-CSSProperties.prototype.paddingTop;
+CSSStyleProperties.prototype.paddingTop;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-paddingRight
  */
-CSSProperties.prototype.paddingRight;
+CSSStyleProperties.prototype.paddingRight;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-paddingBottom
  */
-CSSProperties.prototype.paddingBottom;
+CSSStyleProperties.prototype.paddingBottom;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-paddingLeft
  */
-CSSProperties.prototype.paddingLeft;
+CSSStyleProperties.prototype.paddingLeft;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-page
  */
-CSSProperties.prototype.page;
+CSSStyleProperties.prototype.page;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-pageBreakAfter
  */
-CSSProperties.prototype.pageBreakAfter;
+CSSStyleProperties.prototype.pageBreakAfter;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-pageBreakBefore
  */
-CSSProperties.prototype.pageBreakBefore;
+CSSStyleProperties.prototype.pageBreakBefore;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-pageBreakInside
  */
-CSSProperties.prototype.pageBreakInside;
+CSSStyleProperties.prototype.pageBreakInside;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-pause
  */
-CSSProperties.prototype.pause;
+CSSStyleProperties.prototype.pause;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-pauseAfter
  */
-CSSProperties.prototype.pauseAfter;
+CSSStyleProperties.prototype.pauseAfter;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-pauseBefore
  */
-CSSProperties.prototype.pauseBefore;
+CSSStyleProperties.prototype.pauseBefore;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-pitch
  */
-CSSProperties.prototype.pitch;
+CSSStyleProperties.prototype.pitch;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-pitchRange
  */
-CSSProperties.prototype.pitchRange;
+CSSStyleProperties.prototype.pitchRange;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-playDuring
  */
-CSSProperties.prototype.playDuring;
+CSSStyleProperties.prototype.playDuring;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-position
  */
-CSSProperties.prototype.position;
+CSSStyleProperties.prototype.position;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-quotes
  */
-CSSProperties.prototype.quotes;
+CSSStyleProperties.prototype.quotes;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-ui/#resize
  */
-CSSProperties.prototype.resize;
+CSSStyleProperties.prototype.resize;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-richness
  */
-CSSProperties.prototype.richness;
+CSSStyleProperties.prototype.richness;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-right
  */
-CSSProperties.prototype.right;
+CSSStyleProperties.prototype.right;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-size
  */
-CSSProperties.prototype.size;
+CSSStyleProperties.prototype.size;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-speak
  */
-CSSProperties.prototype.speak;
+CSSStyleProperties.prototype.speak;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-speakHeader
  */
-CSSProperties.prototype.speakHeader;
+CSSStyleProperties.prototype.speakHeader;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-speakNumeral
  */
-CSSProperties.prototype.speakNumeral;
+CSSStyleProperties.prototype.speakNumeral;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-speakPunctuation
  */
-CSSProperties.prototype.speakPunctuation;
+CSSStyleProperties.prototype.speakPunctuation;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-speechRate
  */
-CSSProperties.prototype.speechRate;
+CSSStyleProperties.prototype.speechRate;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-stress
  */
-CSSProperties.prototype.stress;
+CSSStyleProperties.prototype.stress;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-tableLayout
  */
-CSSProperties.prototype.tableLayout;
+CSSStyleProperties.prototype.tableLayout;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-textAlign
  */
-CSSProperties.prototype.textAlign;
+CSSStyleProperties.prototype.textAlign;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-textDecoration
  */
-CSSProperties.prototype.textDecoration;
+CSSStyleProperties.prototype.textDecoration;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-text-decor-3/#text-decoration-line-property
  */
-CSSProperties.prototype.textDecorationLine;
+CSSStyleProperties.prototype.textDecorationLine;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-text-decor-3/#text-decoration-style-property
  */
-CSSProperties.prototype.textDecorationStyle;
+CSSStyleProperties.prototype.textDecorationStyle;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-text-decor-3/#text-decoration-color-property
  */
-CSSProperties.prototype.textDecorationColor;
+CSSStyleProperties.prototype.textDecorationColor;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-text-decor-3/#text-underline-position-property
  */
-CSSProperties.prototype.textDecorationPosition;
+CSSStyleProperties.prototype.textDecorationPosition;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-textIndent
  */
-CSSProperties.prototype.textIndent;
+CSSStyleProperties.prototype.textIndent;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-textShadow
  */
-CSSProperties.prototype.textShadow;
+CSSStyleProperties.prototype.textShadow;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-textTransform
  */
-CSSProperties.prototype.textTransform;
+CSSStyleProperties.prototype.textTransform;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/1998/REC-CSS2-19980512/visuren.html#propdef-top
  */
-CSSProperties.prototype.top;
+CSSStyleProperties.prototype.top;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-unicodeBidi
  */
-CSSProperties.prototype.unicodeBidi;
+CSSStyleProperties.prototype.unicodeBidi;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-verticalAlign
  */
-CSSProperties.prototype.verticalAlign;
+CSSStyleProperties.prototype.verticalAlign;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/scroll-animations-1/#view-timeline-shorthand
  */
-CSSProperties.prototype.viewTimeline;
+CSSStyleProperties.prototype.viewTimeline;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/scroll-animations-1/#view-timeline-axis
  */
-CSSProperties.prototype.viewTimelineAxis;
+CSSStyleProperties.prototype.viewTimelineAxis;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/scroll-animations-1/#view-timeline-inset
  */
-CSSProperties.prototype.viewTimelineInset;
+CSSStyleProperties.prototype.viewTimelineInset;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/scroll-animations-1/#view-timeline-name
  */
-CSSProperties.prototype.viewTimelineName;
+CSSStyleProperties.prototype.viewTimelineName;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-view-transitions-2/#view-transition-class-prop
  */
-CSSProperties.prototype.viewTransitionClass;
+CSSStyleProperties.prototype.viewTransitionClass;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-visibility
  */
-CSSProperties.prototype.visibility;
+CSSStyleProperties.prototype.visibility;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-voiceFamily
  */
-CSSProperties.prototype.voiceFamily;
+CSSStyleProperties.prototype.voiceFamily;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-volume
  */
-CSSProperties.prototype.volume;
+CSSStyleProperties.prototype.volume;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-whiteSpace
  */
-CSSProperties.prototype.whiteSpace;
+CSSStyleProperties.prototype.whiteSpace;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-widows
  */
-CSSProperties.prototype.widows;
+CSSStyleProperties.prototype.widows;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-width
  */
-CSSProperties.prototype.width;
+CSSStyleProperties.prototype.width;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-wordSpacing
  */
-CSSProperties.prototype.wordSpacing;
+CSSStyleProperties.prototype.wordSpacing;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-wordWrap
  */
-CSSProperties.prototype.wordWrap;
+CSSStyleProperties.prototype.wordWrap;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-zIndex
  */
-CSSProperties.prototype.zIndex;
+CSSStyleProperties.prototype.zIndex;
 
 // CSS 3 properties
 
 /** @type {string} */
-CSSProperties.prototype.boxDecorationBreak;
+CSSStyleProperties.prototype.boxDecorationBreak;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-background/#box-shadow
  */
-CSSProperties.prototype.boxShadow;
+CSSStyleProperties.prototype.boxShadow;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-ui/#box-sizing
  */
-CSSProperties.prototype.boxSizing;
+CSSStyleProperties.prototype.boxSizing;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-color/#transparency
  */
-CSSProperties.prototype.opacity;
+CSSStyleProperties.prototype.opacity;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-ui-3/#outline-offset
  */
-CSSProperties.prototype.outlineOffset;
+CSSStyleProperties.prototype.outlineOffset;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-ui/#text-overflow
  */
-CSSProperties.prototype.textOverflow;
+CSSStyleProperties.prototype.textOverflow;
 
 // CSS 3 animations
 
@@ -2536,55 +2544,55 @@ CSSProperties.prototype.textOverflow;
  * @type {string|number}
  * @see https://www.w3.org/TR/css-animations-1/#animation
  */
-CSSProperties.prototype.animation;
+CSSStyleProperties.prototype.animation;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-animations-1/#animation-delay
  */
-CSSProperties.prototype.animationDelay;
+CSSStyleProperties.prototype.animationDelay;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-animations-1/#animation-direction
  */
-CSSProperties.prototype.animationDirection;
+CSSStyleProperties.prototype.animationDirection;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-animations-1/#animation-duration
  */
-CSSProperties.prototype.animationDuration;
+CSSStyleProperties.prototype.animationDuration;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-animations-1/#animation-fill-mode
  */
-CSSProperties.prototype.animationFillMode;
+CSSStyleProperties.prototype.animationFillMode;
 
 /**
  * @type {string|number}
  * @see https://www.w3.org/TR/css-animations-1/#animation-iteration-count
  */
-CSSProperties.prototype.animationIterationCount;
+CSSStyleProperties.prototype.animationIterationCount;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-animations-1/#animation-name
  */
-CSSProperties.prototype.animationName;
+CSSStyleProperties.prototype.animationName;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-animations-1/#animation-play-state
  */
-CSSProperties.prototype.animationPlayState;
+CSSStyleProperties.prototype.animationPlayState;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-animations-1/#animation-timing-function
  */
-CSSProperties.prototype.animationTimingFunction;
+CSSStyleProperties.prototype.animationTimingFunction;
 
 // CSS 3 transforms
 
@@ -2592,37 +2600,37 @@ CSSProperties.prototype.animationTimingFunction;
  * @type {string}
  * @see http://www.w3.org/TR/css3-2d-transforms/#backface-visibility-property
  */
-CSSProperties.prototype.backfaceVisibility;
+CSSStyleProperties.prototype.backfaceVisibility;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-2d-transforms/#perspective
  */
-CSSProperties.prototype.perspective;
+CSSStyleProperties.prototype.perspective;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-2d-transforms/#perspective-origin
  */
-CSSProperties.prototype.perspectiveOrigin;
+CSSStyleProperties.prototype.perspectiveOrigin;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-2d-transforms/#effects
  */
-CSSProperties.prototype.transform;
+CSSStyleProperties.prototype.transform;
 
 /**
  * @type {string|number}
  * @see http://www.w3.org/TR/css3-2d-transforms/#transform-origin
  */
-CSSProperties.prototype.transformOrigin;
+CSSStyleProperties.prototype.transformOrigin;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-2d-transforms/#transform-style
  */
-CSSProperties.prototype.transformStyle;
+CSSStyleProperties.prototype.transformStyle;
 
 // CSS 3 transitions
 
@@ -2630,37 +2638,37 @@ CSSProperties.prototype.transformStyle;
  * @type {string}
  * @see http://www.w3.org/TR/css3-transitions/#transition
  */
-CSSProperties.prototype.transition;
+CSSStyleProperties.prototype.transition;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-transitions/#transition-delay
  */
-CSSProperties.prototype.transitionDelay;
+CSSStyleProperties.prototype.transitionDelay;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-transitions/#transition-duration
  */
-CSSProperties.prototype.transitionDuration;
+CSSStyleProperties.prototype.transitionDuration;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-transitions/#transition-property-property
  */
-CSSProperties.prototype.transitionProperty;
+CSSStyleProperties.prototype.transitionProperty;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/css3-transitions/#transition-timing-function
  */
-CSSProperties.prototype.transitionTimingFunction;
+CSSStyleProperties.prototype.transitionTimingFunction;
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/SVG11/interact.html#PointerEventsProperty
  */
-CSSProperties.prototype.pointerEvents;
+CSSStyleProperties.prototype.pointerEvents;
 
 // CSS Compositing 1
 
@@ -2668,19 +2676,19 @@ CSSProperties.prototype.pointerEvents;
  * @type {string}
  * @see https://www.w3.org/TR/compositing-1/#mix-blend-mode
  */
-CSSProperties.prototype.mixBlendMode;
+CSSStyleProperties.prototype.mixBlendMode;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/compositing-1/#isolation
  */
-CSSProperties.prototype.isolation;
+CSSStyleProperties.prototype.isolation;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/compositing-1/#background-blend-mode
  */
-CSSProperties.prototype.backgroundBlendMode;
+CSSStyleProperties.prototype.backgroundBlendMode;
 
 
 // CSS Flexbox 1
@@ -2690,73 +2698,73 @@ CSSProperties.prototype.backgroundBlendMode;
  * @type {string}
  * @see https://www.w3.org/TR/css-flexbox-1/#align-content-property
  */
-CSSProperties.prototype.alignContent;
+CSSStyleProperties.prototype.alignContent;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-flexbox-1/#align-items-property
  */
-CSSProperties.prototype.alignItems;
+CSSStyleProperties.prototype.alignItems;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-flexbox-1/#align-items-property
  */
-CSSProperties.prototype.alignSelf;
+CSSStyleProperties.prototype.alignSelf;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-flexbox-1/#flex-property
  */
-CSSProperties.prototype.flex;
+CSSStyleProperties.prototype.flex;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-flexbox-1/#flex-basis-property
  */
-CSSProperties.prototype.flexBasis;
+CSSStyleProperties.prototype.flexBasis;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-flexbox-1/#flex-direction-property
  */
-CSSProperties.prototype.flexDirection;
+CSSStyleProperties.prototype.flexDirection;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-flexbox-1/#flex-flow-property
  */
-CSSProperties.prototype.flexFlow;
+CSSStyleProperties.prototype.flexFlow;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/css-flexbox-1/#flex-grow-property
  */
-CSSProperties.prototype.flexGrow;
+CSSStyleProperties.prototype.flexGrow;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/css-flexbox-1/#flex-shrink-property
  */
-CSSProperties.prototype.flexShrink;
+CSSStyleProperties.prototype.flexShrink;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-flexbox-1/#flex-wrap-property
  */
-CSSProperties.prototype.flexWrap;
+CSSStyleProperties.prototype.flexWrap;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-flexbox-1/#justify-content-property
  */
-CSSProperties.prototype.justifyContent;
+CSSStyleProperties.prototype.justifyContent;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/css-flexbox-1/#order-property
  */
-CSSProperties.prototype.order;
+CSSStyleProperties.prototype.order;
 
 // Externs for CSS Will Change Module Level 1
 // http://www.w3.org/TR/css-will-change/
@@ -2765,13 +2773,13 @@ CSSProperties.prototype.order;
  * @type {string}
  * @see http://www.w3.org/TR/css-will-change-1/#will-change
  */
-CSSProperties.prototype.willChange;
+CSSStyleProperties.prototype.willChange;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-ui-4/#propdef-user-select
  */
-CSSProperties.prototype.userSelect;
+CSSStyleProperties.prototype.userSelect;
 
 // CSS 3 Images
 
@@ -2779,13 +2787,13 @@ CSSProperties.prototype.userSelect;
  * @type {string}
  * @see https://www.w3.org/TR/css3-images/#the-object-fit
  */
-CSSProperties.prototype.objectFit;
+CSSStyleProperties.prototype.objectFit;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css3-images/#object-position
  */
-CSSProperties.prototype.objectPosition;
+CSSStyleProperties.prototype.objectPosition;
 
 // CSS Masking
 
@@ -2793,13 +2801,13 @@ CSSProperties.prototype.objectPosition;
  * @type {string}
  * @see https://www.w3.org/TR/css-masking-1/
  */
-CSSProperties.prototype.clipPath;
+CSSStyleProperties.prototype.clipPath;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/css-masking-1/
  */
-CSSProperties.prototype.maskImage;
+CSSStyleProperties.prototype.maskImage;
 
 // CSS Containment
 
@@ -2807,7 +2815,7 @@ CSSProperties.prototype.maskImage;
  * @type {string}
  * @see https://www.w3.org/TR/css-contain-1/
  */
-CSSProperties.prototype.contain;
+CSSStyleProperties.prototype.contain;
 
 // SVG Fill Properties
 
@@ -2815,19 +2823,19 @@ CSSProperties.prototype.contain;
  * @type {string}
  * @see https://www.w3.org/TR/fill-stroke-3/#fill-shorthand
  */
-CSSProperties.prototype.fill;
+CSSStyleProperties.prototype.fill;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/fill-stroke-3/#fill-opacity
  */
-CSSProperties.prototype.fillOpacity;
+CSSStyleProperties.prototype.fillOpacity;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/fill-stroke-3/#fill-rule
  */
-CSSProperties.prototype.fillRule;
+CSSStyleProperties.prototype.fillRule;
 
 // SVG Stroke Properties
 
@@ -2835,67 +2843,67 @@ CSSProperties.prototype.fillRule;
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.stroke;
+CSSStyleProperties.prototype.stroke;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.strokeAlignment;
+CSSStyleProperties.prototype.strokeAlignment;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.strokeOpacity;
+CSSStyleProperties.prototype.strokeOpacity;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.strokeWidth;
+CSSStyleProperties.prototype.strokeWidth;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.strokeLinecap;
+CSSStyleProperties.prototype.strokeLinecap;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.strokeLinejoin;
+CSSStyleProperties.prototype.strokeLinejoin;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.strokeMiterlimit;
+CSSStyleProperties.prototype.strokeMiterlimit;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.strokeDasharray;
+CSSStyleProperties.prototype.strokeDasharray;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.strokeDashoffset;
+CSSStyleProperties.prototype.strokeDashoffset;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.strokeDashcorner;
+CSSStyleProperties.prototype.strokeDashcorner;
 
 /**
  * @type {string}
  * @see https://www.w3.org/TR/svg-strokes/
  */
-CSSProperties.prototype.strokeDashadjust;
+CSSStyleProperties.prototype.strokeDashadjust;
 
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
