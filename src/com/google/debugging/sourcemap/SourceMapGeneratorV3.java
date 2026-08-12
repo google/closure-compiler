@@ -79,8 +79,8 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   /**
    * A map of source names to source file contents
    */
-  private final LinkedHashMap<String, String> sourceFileContentMap =
-       new LinkedHashMap<>();
+  private LinkedHashMap<String, String> sourceFileContentMap = new LinkedHashMap<>();
+  private boolean sourceFileContentMapShared = false;
 
   /**
    * A map of source names to source name index
@@ -124,6 +124,21 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    * on the source entry.
    */
   private String sourceRootPath;
+
+  @Override
+  public SourceMapGeneratorV3 snapshot() {
+    SourceMapGeneratorV3 snapshot = new SourceMapGeneratorV3();
+    this.sourceFileContentMapShared = true;
+    snapshot.sourceFileContentMap = this.sourceFileContentMap;
+    snapshot.sourceFileContentMapShared = true;
+    snapshot.mappings.addAll(this.mappings);
+    snapshot.lastMapping = this.lastMapping;
+    snapshot.offsetPosition = this.offsetPosition;
+    snapshot.prefixPosition = this.prefixPosition;
+    snapshot.sourceRootPath = this.sourceRootPath;
+    snapshot.extensions.putAll(this.extensions);
+    return snapshot;
+  }
 
   /**
    * {@inheritDoc}
@@ -264,6 +279,10 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   @Override public void addSourcesContent(String source, String content) {
+    if (sourceFileContentMapShared) {
+      sourceFileContentMap = new LinkedHashMap<>(sourceFileContentMap);
+      sourceFileContentMapShared = false;
+    }
     sourceFileContentMap.put(source, content);
   }
 

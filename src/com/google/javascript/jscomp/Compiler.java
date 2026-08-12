@@ -4696,6 +4696,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  SourceMap snapshotSourceMap() {
+    return checkNotNull(sourceMap).snapshot();
+  }
+
   @CanIgnoreReturnValue
   @FormatMethod
   private static Node checkNotModule(Node script, String msg, Object... args) {

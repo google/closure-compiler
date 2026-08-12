@@ -28,6 +28,15 @@ import org.jspecify.annotations.Nullable;
 public interface SourceMapGenerator {
 
   /**
+   * Returns an independent snapshot that may share immutable data with this generator.
+   *
+   * @throws UnsupportedOperationException if this generator does not support snapshots
+   */
+  default SourceMapGenerator snapshot() {
+    throw new UnsupportedOperationException("This source map generator cannot be snapshotted");
+  }
+
+  /**
    * Appends the source map to the given buffer.
    *
    * @param out The stream to which the map will be appended.

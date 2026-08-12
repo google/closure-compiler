@@ -83,6 +83,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
@@ -1550,7 +1554,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         }
       } else {
         long outputStartNanos = System.nanoTime();
-        long[] outputPhaseNanos = new long[2];
+        long[] outputPhaseNanos = new long[3];
         DiagnosticType error;
         try {
           error =
@@ -1558,11 +1562,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
                   compiler.getChunkGraph(), options, outputPhaseNanos);
         } finally {
           long outputNanos = System.nanoTime() - outputStartNanos;
-          compiler.recordPassRuntime("outputChunkCode", outputPhaseNanos[0] / 1_000_000);
-          compiler.recordPassRuntime("outputChunkSourceMaps", outputPhaseNanos[1] / 1_000_000);
-          compiler.recordPassRuntime(
-              "outputChunkIoAndSetup",
-              (outputNanos - outputPhaseNanos[0] - outputPhaseNanos[1]) / 1_000_000);
+          if (outputPhaseNanos[2] != 0) {
+            // The code and source map phases overlap, so report their non-overlapping wall time.
+            compiler.recordPassRuntime("outputChunksParallel", outputNanos / 1_000_000);
+          } else {
+            compiler.recordPassRuntime("outputChunkCode", outputPhaseNanos[0] / 1_000_000);
+            compiler.recordPassRuntime("outputChunkSourceMaps", outputPhaseNanos[1] / 1_000_000);
+            compiler.recordPassRuntime(
+                "outputChunkIoAndSetup",
+                (outputNanos - outputPhaseNanos[0] - outputPhaseNanos[1]) / 1_000_000);
+          }
         }
         if (error != null) {
           compiler.report(JSError.make(error));
@@ -1686,11 +1695,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       maybeCreateDirsForPath(config.chunkOutputPathPrefix + "dummy");
     }
 
-    // If the source map path is in fact a pattern for each
-    // chunk, create a stream per-chunk. Otherwise, create
-    // a single source map.
-    Writer mapFileOut = null;
-
     // When the json_streams flag is specified, sourcemaps are always generated
     // per chunk
     if (!(shouldGenerateMapPerChunk(options)
@@ -1702,44 +1706,92 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     ChunkGraphAwareLicenseTracker mlicenseTracker = new ChunkGraphAwareLicenseTracker(compiler);
-    for (JSChunk m : chunks) {
-      if (m.getName().equals(JSChunk.WEAK_CHUNK_NAME)) {
-        // Skip the weak chunk, which is always empty.
-        continue;
-      }
-      if (isOutputInJson()) {
-        this.filesToStreamOut.add(createJsonFileFromChunk(m));
-      } else {
-        if (shouldGenerateMapPerChunk(options)) {
-          mapFileOut = fileNameToOutputWriter2(expandSourceMapPath(options, m));
+    // Code generation mutates shared compiler state, but completed source maps can be serialized
+    // independently while the main thread generates the next chunk.
+    boolean parallelSourceMaps =
+        options.shouldGatherSourceMapInfo()
+            && !isOutputInJson()
+            && options.getNumParallelThreads() > 1;
+    ExecutorService sourceMapExecutor =
+        parallelSourceMaps
+            ? Executors.newFixedThreadPool(
+                options.getNumParallelThreads(),
+                runnable -> {
+                  Thread thread = new Thread(runnable, "jscompiler-SourceMapOutput");
+                  thread.setDaemon(true);
+                  return thread;
+                })
+            : null;
+    List<Future<Long>> sourceMapOutputs = new ArrayList<>();
+    boolean outputCompleted = false;
+    try {
+      for (JSChunk m : chunks) {
+        if (m.getName().equals(JSChunk.WEAK_CHUNK_NAME)) {
+          // Skip the weak chunk, which is always empty.
+          continue;
         }
-
-        String chunkFilename = getChunkOutputFileName(m);
-        maybeCreateDirsForPath(chunkFilename);
-        try (Writer writer = fileNameToLegacyOutputWriter(chunkFilename)) {
-          if (options.shouldGatherSourceMapInfo()) {
-            compiler.resetAndIntitializeSourceMap();
+        if (isOutputInJson()) {
+          this.filesToStreamOut.add(createJsonFileFromChunk(m));
+        } else {
+          String chunkFilename = getChunkOutputFileName(m);
+          maybeCreateDirsForPath(chunkFilename);
+          try (Writer writer = fileNameToLegacyOutputWriter(chunkFilename)) {
+            if (options.shouldGatherSourceMapInfo()) {
+              compiler.resetAndIntitializeSourceMap();
+            }
+            mlicenseTracker.setCurrentChunkContext(m);
+            long codeStartNanos = System.nanoTime();
+            writeChunkOutput(chunkFilename, writer, mlicenseTracker, m);
+            outputPhaseNanos[0] += System.nanoTime() - codeStartNanos;
+            if (options.shouldGatherSourceMapInfo()) {
+              String sourceMapFilename = expandSourceMapPath(options, m);
+              if (parallelSourceMaps) {
+                SourceMap sourceMap = compiler.snapshotSourceMap();
+                sourceMapOutputs.add(
+                    checkNotNull(sourceMapExecutor)
+                        .submit(
+                            () -> {
+                              long sourceMapStartNanos = System.nanoTime();
+                              try (Writer mapFileOut =
+                                  fileNameToOutputWriter2(sourceMapFilename)) {
+                                sourceMap.appendTo(mapFileOut, chunkFilename);
+                              }
+                              return System.nanoTime() - sourceMapStartNanos;
+                            }));
+              } else {
+                long sourceMapStartNanos = System.nanoTime();
+                try (Writer mapFileOut = fileNameToOutputWriter2(sourceMapFilename)) {
+                  compiler.getSourceMap().appendTo(mapFileOut, chunkFilename);
+                }
+                outputPhaseNanos[1] += System.nanoTime() - sourceMapStartNanos;
+              }
+            }
           }
-          mlicenseTracker.setCurrentChunkContext(m);
-          long codeStartNanos = System.nanoTime();
-          writeChunkOutput(chunkFilename, writer, mlicenseTracker, m);
-          outputPhaseNanos[0] += System.nanoTime() - codeStartNanos;
-          if (options.shouldGatherSourceMapInfo()) {
-            long sourceMapStartNanos = System.nanoTime();
-            compiler.getSourceMap().appendTo(mapFileOut, chunkFilename);
-            outputPhaseNanos[1] += System.nanoTime() - sourceMapStartNanos;
-          }
-        }
-
-        if (shouldGenerateMapPerChunk(options) && mapFileOut != null) {
-          mapFileOut.close();
-          mapFileOut = null;
         }
       }
-    }
-
-    if (mapFileOut != null) {
-      mapFileOut.close();
+      if (sourceMapExecutor != null) {
+        sourceMapExecutor.shutdown();
+        for (Future<Long> sourceMapOutput : sourceMapOutputs) {
+          try {
+            outputPhaseNanos[1] += sourceMapOutput.get();
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while writing source maps", e);
+          } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException ioException) {
+              throw ioException;
+            }
+            throw new RuntimeException(cause);
+          }
+        }
+        outputPhaseNanos[2] = 1;
+      }
+      outputCompleted = true;
+    } finally {
+      if (sourceMapExecutor != null && !outputCompleted) {
+        sourceMapExecutor.shutdownNow();
+      }
     }
     return null;
   }

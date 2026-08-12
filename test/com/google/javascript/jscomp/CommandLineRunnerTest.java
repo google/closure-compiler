@@ -1503,6 +1503,15 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testParallelChunkSourceMaps() {
+    useChunks = ChunkPattern.CHAIN;
+    args.add("--create_source_map=%outname%.map");
+    args.add("--chunk_output_path_prefix=foo_");
+    args.add("--num_parallel_threads=2");
+    testSame(new String[] {"var x = 3;", "var y = 5;"});
+  }
+
+  @Test
   public void testInvalidSourceMapPattern() {
     useChunks = ChunkPattern.CHAIN;
     args.add("--create_source_map=out.map");

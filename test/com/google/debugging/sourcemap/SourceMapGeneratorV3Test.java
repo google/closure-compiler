@@ -481,6 +481,32 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
   }
 
   @Test
+  public void testSnapshotIsIndependentAndSharesSourceContentCopyOnWrite() throws IOException {
+    SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
+    generator.addSourcesContent("first.js", "const first = 1;");
+    generator.addMapping(
+        "first.js", null, new FilePosition(0, 0), new FilePosition(0, 0), new FilePosition(0, 5));
+
+    SourceMapGeneratorV3 snapshot = generator.snapshot();
+    generator.reset();
+    generator.addSourcesContent("second.js", "const second = 2;");
+    generator.addMapping(
+        "second.js", null, new FilePosition(0, 0), new FilePosition(0, 0), new FilePosition(0, 6));
+
+    StringWriter snapshotOutput = new StringWriter();
+    snapshot.appendTo(snapshotOutput, "first-output.js");
+    assertThat(snapshotOutput.toString()).contains("\"sources\":[\"first.js\"]");
+    assertThat(snapshotOutput.toString()).contains("const first = 1;");
+    assertThat(snapshotOutput.toString()).doesNotContain("second.js");
+
+    StringWriter currentOutput = new StringWriter();
+    generator.appendTo(currentOutput, "second-output.js");
+    assertThat(currentOutput.toString()).contains("\"sources\":[\"second.js\"]");
+    assertThat(currentOutput.toString()).contains("const second = 2;");
+    assertThat(currentOutput.toString()).doesNotContain("first.js");
+  }
+
+  @Test
   public void testWriteMetaMap2() throws IOException {
     StringWriter out = new StringWriter();
     String name = "./app.js";

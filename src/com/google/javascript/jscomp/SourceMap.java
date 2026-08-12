@@ -291,6 +291,13 @@ public final class SourceMap {
     sourceLocationFixupCache.clear();
   }
 
+  SourceMap snapshot() {
+    SourceMap snapshot = new SourceMap(generator.snapshot());
+    snapshot.prefixMappings = this.prefixMappings;
+    snapshot.mapping = this.mapping;
+    return snapshot;
+  }
+
   public void setStartingPosition(int offsetLine, int offsetIndex) {
     generator.setStartingPosition(offsetLine, offsetIndex);
   }
