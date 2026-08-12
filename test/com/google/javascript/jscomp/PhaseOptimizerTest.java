@@ -95,6 +95,15 @@ public final class PhaseOptimizerTest {
   }
 
   @Test
+  public void testCapCodeMotionLoopIterations() {
+    compiler.getOptions().setMaxOptimizationMotionLoopIterations(1);
+    optimizer = new PhaseOptimizer(compiler, tracker);
+    Loop loop = optimizer.addFixedPointLoop();
+    addLoopedPass(loop, PassNames.CROSS_CHUNK_CODE_MOTION, 2);
+    assertPasses(PassNames.CROSS_CHUNK_CODE_MOTION);
+  }
+
+  @Test
   public void testOptimizationLoopSizeThresholdStopsSmallChangesEarly() {
     for (int i = 0; i < 1_000; i++) {
       dummyScript.addChildToBack(IR.empty());

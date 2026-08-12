@@ -569,6 +569,9 @@ public class CompilerOptions {
    */
   private int optimizationLoopMaxIterations;
 
+  /** Maximum iterations for fixed-point loops that move code without removing it. */
+  private int optimizationMotionLoopMaxIterations;
+
   // --------------------------------
   // Renaming
   // --------------------------------
@@ -3393,6 +3396,14 @@ public class CompilerOptions {
 
   int getMaxOptimizationLoopIterations() {
     return this.optimizationLoopMaxIterations;
+  }
+
+  public void setMaxOptimizationMotionLoopIterations(int maxIterations) {
+    this.optimizationMotionLoopMaxIterations = maxIterations;
+  }
+
+  int getMaxOptimizationMotionLoopIterations() {
+    return this.optimizationMotionLoopMaxIterations;
   }
 
   public ChunkOutputType getChunkOutputType() {

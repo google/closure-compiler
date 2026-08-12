@@ -149,6 +149,7 @@ class PhaseOptimizer implements CompilerPass {
    * @see CompilerOptions#optimizationLoopMaxIterations
    */
   private final int optimizationLoopMaxIterations;
+  private final int optimizationMotionLoopMaxIterations;
 
   /**
    * @param comp the compiler that owns/creates this.
@@ -170,6 +171,13 @@ class PhaseOptimizer implements CompilerPass {
       this.optimizationLoopMaxIterations = maxIterations;
     } else {
       this.optimizationLoopMaxIterations = MAX_LOOPS;
+    }
+    int maxMotionIterations = comp.getOptions().getMaxOptimizationMotionLoopIterations();
+    if (maxMotionIterations > 0 && maxMotionIterations <= MAX_LOOPS) {
+      this.optimizationMotionLoopMaxIterations = maxMotionIterations;
+    } else {
+      // Leave the safety check below in charge of uncapped loops so it still reports an error.
+      this.optimizationMotionLoopMaxIterations = MAX_LOOPS + 1;
     }
   }
 
@@ -434,7 +442,11 @@ class PhaseOptimizer implements CompilerPass {
 
       try {
         while (true) {
-          if (count > optimizationLoopMaxIterations && this.isCodeRemovalLoop) {
+          int maxIterations =
+              this.isCodeRemovalLoop
+                  ? optimizationLoopMaxIterations
+                  : optimizationMotionLoopMaxIterations;
+          if (count > maxIterations) {
             return;
           }
           if (count > MAX_LOOPS) {
