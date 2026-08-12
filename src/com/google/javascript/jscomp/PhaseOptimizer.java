@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -23,6 +24,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -75,6 +78,71 @@ class PhaseOptimizer implements CompilerPass {
   static final int MAX_LOOPS = 100;
   static final String OPTIMIZE_LOOP_ERROR =
       "Fixed point loop exceeded the maximum number of iterations.";
+
+  /** Maintains the AST size by recounting only scripts containing reported changes. */
+  @VisibleForTesting
+  static final class IncrementalAstSize {
+    private static final String CHANGE_TIMELINE_NAME = "PhaseOptimizer.IncrementalAstSize";
+
+    private final Node root;
+    private final ChangeTracker changeTracker;
+    private final IdentityHashMap<Node, Integer> sizesByScript = new IdentityHashMap<>();
+    private int astSize = 1;
+
+    IncrementalAstSize(Node root, ChangeTracker changeTracker) {
+      checkState(root.isRoot(), root);
+      this.root = root;
+      this.changeTracker = changeTracker;
+      for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+        int scriptSize = NodeUtil.countAstSize(script);
+        sizesByScript.put(script, scriptSize);
+        astSize += scriptSize;
+      }
+      // Establish our point in the change timeline. The initial counts already include older
+      // changes, so there is no need to inspect the returned nodes.
+      changeTracker.getChangedScopeNodesForPass(CHANGE_TIMELINE_NAME);
+    }
+
+    int getAstSize() {
+      return astSize;
+    }
+
+    int update() {
+      // Script additions and removals are uncommon in optimization loops, but accounting for them
+      // here keeps this exactly equivalent to recounting the entire root.
+      sizesByScript.entrySet().removeIf(
+          (entry) -> {
+            if (entry.getKey().getParent() == root) {
+              return false;
+            }
+            astSize -= entry.getValue();
+            return true;
+          });
+      for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+        if (!sizesByScript.containsKey(script)) {
+          int scriptSize = NodeUtil.countAstSize(script);
+          sizesByScript.put(script, scriptSize);
+          astSize += scriptSize;
+        }
+      }
+
+      Set<Node> changedScripts = Collections.newSetFromMap(new IdentityHashMap<>());
+      List<Node> changedScopes =
+          checkNotNull(changeTracker.getChangedScopeNodesForPass(CHANGE_TIMELINE_NAME));
+      for (Node changedScope : changedScopes) {
+        Node script =
+            changedScope.isScript() ? changedScope : NodeUtil.getEnclosingScript(changedScope);
+        if (script != null && sizesByScript.containsKey(script)) {
+          changedScripts.add(script);
+        }
+      }
+      for (Node script : changedScripts) {
+        int newSize = NodeUtil.countAstSize(script);
+        astSize += newSize - checkNotNull(sizesByScript.put(script, newSize));
+      }
+      return astSize;
+    }
+  }
 
   /**
    * @see CompilerOptions#optimizationLoopMaxIterations
@@ -348,7 +416,9 @@ class PhaseOptimizer implements CompilerPass {
       boolean lastIterMadeChanges;
       int count = 1;
       boolean trackAstSize = useSizeHeuristicToStopOptimizationLoop && this.isCodeRemovalLoop;
-      int astSize = trackAstSize ? NodeUtil.countAstSize(root) : 0;
+      IncrementalAstSize astSizeTracker =
+          trackAstSize ? new IncrementalAstSize(root, changeTracker) : null;
+      int astSize = trackAstSize ? astSizeTracker.getAstSize() : 0;
 
       // The loop starts at state RUN_PASSES_NOT_RUN_IN_PREV_ITER and runs all passes.
       // After that, it goes to state RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER, and
@@ -398,7 +468,7 @@ class PhaseOptimizer implements CompilerPass {
 
           int previousAstSize = astSize;
           if (trackAstSize && lastIterMadeChanges) {
-            astSize = NodeUtil.countAstSize(root);
+            astSize = astSizeTracker.update();
           }
           if (state == State.RUN_PASSES_NOT_RUN_IN_PREV_ITER) {
             if (lastIterMadeChanges && isAstSufficientlyChanging(previousAstSize, astSize)) {

@@ -95,6 +95,37 @@ public final class PhaseOptimizerTest {
   }
 
   @Test
+  public void testIncrementalAstSizeMatchesFullCount() {
+    Node function =
+        IR.function(IR.name("f"), IR.paramList(), IR.block(IR.returnNode(IR.number(1))));
+    dummyScript.addChildToBack(function);
+    Node secondScript = IR.script(IR.exprResult(IR.name("x")));
+    dummyRoot.addChildToBack(secondScript);
+
+    PhaseOptimizer.IncrementalAstSize astSize =
+        new PhaseOptimizer.IncrementalAstSize(dummyRoot, compiler.getChangeTracker());
+    assertThat(astSize.getAstSize()).isEqualTo(NodeUtil.countAstSize(dummyRoot));
+
+    Node addedExpression = IR.exprResult(IR.name("y"));
+    function.getLastChild().addChildToBack(addedExpression);
+    compiler.reportChangeToEnclosingScope(addedExpression);
+    assertThat(astSize.update()).isEqualTo(NodeUtil.countAstSize(dummyRoot));
+
+    addedExpression.detach();
+    compiler.reportChangeToChangeScope(function);
+    assertThat(astSize.update()).isEqualTo(NodeUtil.countAstSize(dummyRoot));
+
+    secondScript.detach();
+    compiler.reportChangeToChangeScope(secondScript);
+    assertThat(astSize.update()).isEqualTo(NodeUtil.countAstSize(dummyRoot));
+
+    Node thirdScript = IR.script(IR.exprResult(IR.name("z")));
+    dummyRoot.addChildToBack(thirdScript);
+    compiler.reportChangeToChangeScope(thirdScript);
+    assertThat(astSize.update()).isEqualTo(NodeUtil.countAstSize(dummyRoot));
+  }
+
+  @Test
   public void testNotInfiniteLoop() {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS - 2);
