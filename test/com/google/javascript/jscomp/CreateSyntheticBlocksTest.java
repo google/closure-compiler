@@ -40,6 +40,14 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
   }
 
   @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    // This is used by NodeTraversal and not by the pass under test here
+    options.setSyntheticBlockStartMarker(START_MARKER);
+    return options;
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override

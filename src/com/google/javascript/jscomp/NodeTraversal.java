@@ -42,6 +42,7 @@ public class NodeTraversal {
   private final @Nullable ScopedCallback scopeCallback;
   private final ScopeCreator scopeCreator;
   private final boolean obeyDestructuringAndDefaultValueExecutionOrder;
+  private final boolean mayContainSyntheticBlocks;
 
   /** Contains the current node */
   private Node currentNode;
@@ -491,6 +492,10 @@ public class NodeTraversal {
             : builder.scopeCreator;
     this.obeyDestructuringAndDefaultValueExecutionOrder =
         builder.obeyDestructuringAndDefaultValueExecutionOrder;
+    // TODO(johnlenz): refactor into compiler options helper.
+    CompilerOptions options = compiler.getOptions();
+    this.mayContainSyntheticBlocks =
+        options == null || options.getSyntheticBlockStartMarker() != null;
   }
 
   private void throwUnexpectedException(Throwable unexpectedException) {
@@ -873,6 +878,23 @@ public class NodeTraversal {
     }
   }
 
+  // Like NodeUtil.createsBlockScope, but with a fast path for isSyntheticBlock.
+  private final boolean createsBlockScope(Node n) {
+    return switch (n.getToken()) {
+      case BLOCK -> {
+        if (mayContainSyntheticBlocks && n.isSyntheticBlock()) {
+          // Don't create block scope for synthetic blocks.
+          yield false;
+        }
+        Node parent = n.getParent();
+        // Don't create block scope for switch cases or catch blocks.
+        yield parent != null && !NodeUtil.isSwitchCase(parent) && !parent.isCatch();
+      }
+      case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, SWITCH_BODY, CLASS -> true;
+      default -> false;
+    };
+  }
+
   /** Traverses a branch. */
   private void traverseBranch(Node n, @Nullable Node parent) {
     switch (n.getToken()) {
@@ -911,7 +933,7 @@ public class NodeTraversal {
       return;
     }
 
-    boolean createsBlockScope = NodeUtil.createsBlockScope(n);
+    boolean createsBlockScope = createsBlockScope(n);
     Node previousHoistScopeRoot = currentHoistScopeRoot;
     if (createsBlockScope) {
       pushScope(n);

@@ -2180,11 +2180,11 @@ public final class NodeUtil {
   static boolean createsBlockScope(Node n) {
     return switch (n.getToken()) {
       case BLOCK -> {
-        if (n.isSyntheticBlock()) {
+        Node parent = n.getParent();
+        if (parent != null && (parent.isBlock() || parent.isScript()) && n.isSyntheticBlock()) {
           // Don't create block scope for synthetic blocks.
           yield false;
         }
-        Node parent = n.getParent();
         // Don't create block scope for switch cases or catch blocks.
         yield parent != null && !isSwitchCase(parent) && !parent.isCatch();
       }

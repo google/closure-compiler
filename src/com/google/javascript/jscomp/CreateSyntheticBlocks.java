@@ -168,6 +168,10 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
     // maintains the status quo and allows the normalization of function to be removed.
     rewriteFunctionDeclarationsInBlock(innerBlock);
 
+    checkState(
+        outerBlock.getParent().isBlock() || outerBlock.getParent().isScript(),
+        outerBlock.getParent());
+    checkState(innerBlock.getParent().isBlock());
     compiler.reportChangeToEnclosingScope(outerBlock);
   }
 
