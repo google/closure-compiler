@@ -1320,10 +1320,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     // We won't want to process results for cases where compilation is only partially done.
     boolean shouldProcessResults = config.getSaveCompilationStateToFilename() == null;
-    int exitStatus =
-        shouldProcessResults
-            ? processResults(result, chunks, options)
-            : getExitStatusForResult(result);
+    int exitStatus;
+    try {
+      exitStatus =
+          shouldProcessResults
+              ? processResults(result, chunks, options)
+              : getExitStatusForResult(result);
+    } finally {
+      compiler.outputTracerReport();
+    }
     metricsRecorder.recordResultMetrics(compiler, result);
     return exitStatus;
   }
@@ -1341,8 +1346,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     if (!compiler.hasErrors()) {
       saveState();
     }
-    // Perform post-compilation tasks even if compiler.hasErrors()
-    compiler.performPostCompilationTasks();
+    // Perform post-compilation tasks even if compiler.hasErrors(). The command-line runner emits
+    // normal outputs afterward, so delay its tracer report until those outputs are recorded too.
+    compiler.performPostCompilationTasksWithoutTracerReport();
   }
 
   private void runCompilerPasses(CompileMetricsRecorderInterface metricsRecorder) {
@@ -1543,7 +1549,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
           outputSourceMap(options, config.jsOutputFile);
         }
       } else {
-        DiagnosticType error = outputChunkBinaryAndSourceMaps(compiler.getChunkGraph(), options);
+        long outputStartNanos = System.nanoTime();
+        DiagnosticType error;
+        try {
+          error = outputChunkBinaryAndSourceMaps(compiler.getChunkGraph(), options);
+        } finally {
+          compiler.recordPassRuntime(
+              "outputChunkBinaryAndSourceMaps",
+              (System.nanoTime() - outputStartNanos) / 1_000_000);
+        }
         if (error != null) {
           compiler.report(JSError.make(error));
           return 1;

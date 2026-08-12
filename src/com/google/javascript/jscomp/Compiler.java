@@ -1159,15 +1159,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>DO call it even when {@code hasErrors()} returns true.
    */
   public void performPostCompilationTasks() {
+    performPostCompilationTasks(/* outputTracerReport= */ true);
+  }
+
+  void performPostCompilationTasksWithoutTracerReport() {
+    performPostCompilationTasks(/* outputTracerReport= */ false);
+  }
+
+  private void performPostCompilationTasks(boolean outputTracerReport) {
     runInCompilerThread(
         () -> {
-          performPostCompilationTasksInternal();
+          performPostCompilationTasksInternal(outputTracerReport);
           return null;
         });
   }
 
   /** Performs all the bookkeeping required at the end of a compilation. */
-  private void performPostCompilationTasksInternal() {
+  private void performPostCompilationTasksInternal(boolean outputTracerReport) {
     if (options.getDevMode() == DevMode.START_AND_END) {
       runValidityCheck();
     }
@@ -1177,15 +1185,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // more maintainable.
     ManageClosureUnawareCode.unwrap(this).process(externsRoot, jsRoot);
 
-    if (tracker != null) {
-      if (options.getTracerOutput() == null) {
-        tracker.outputTracerReport(this.outStream);
-      } else {
-        try (PrintStream out = new PrintStream(Files.newOutputStream(options.getTracerOutput()))) {
-          tracker.outputTracerReport(out);
-        } catch (Exception e) {
-          throw new RuntimeException(e);
-        }
+    if (outputTracerReport) {
+      outputTracerReport();
+    }
+  }
+
+  void outputTracerReport() {
+    if (tracker == null) {
+      return;
+    }
+    if (options.getTracerOutput() == null) {
+      tracker.outputTracerReport(this.outStream);
+    } else {
+      try (PrintStream out = new PrintStream(Files.newOutputStream(options.getTracerOutput()))) {
+        tracker.outputTracerReport(out);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
     }
   }
@@ -1723,6 +1738,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     long result = t.stop();
     if (options.getTracerMode().isOn() && tracker != null) {
       tracker.recordPassStop(passName, result);
+    }
+  }
+
+  void recordPassRuntime(String passName, long runtime) {
+    if (options.getTracerMode().isOn() && tracker != null) {
+      tracker.recordPassStart(passName, true);
+      tracker.recordPassStop(passName, runtime);
     }
   }
 
