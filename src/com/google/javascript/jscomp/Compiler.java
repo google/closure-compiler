@@ -221,6 +221,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Configured {@link SourceMapInput}s, plus any source maps discovered in source files. */
   ConcurrentHashMap<String, SourceMapInput> inputSourceMaps = new ConcurrentHashMap<>();
 
+  /** Resolved source names and contents, cached because outputting each chunk resets the map. */
+  private final ConcurrentHashMap<SourceMapInput, ImmutableList<SourceMapSourceFile>>
+      sourceMapSourceFiles = new ConcurrentHashMap<>();
+
+  private record SourceMapSourceFile(String name, String code) {}
+
   // Map from filenames to lists of all the comments in each file.
   private Map<String, List<Comment>> commentsPerFile = new ConcurrentHashMap<>();
 
@@ -3564,6 +3570,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   private synchronized void addSourceMapSourceFiles(SourceMapInput inputSourceMap) {
     // synchronized annotation guards concurrent access to sourceMap during parsing.
+    ImmutableList<SourceMapSourceFile> sourceFiles = sourceMapSourceFiles.get(inputSourceMap);
+    if (sourceFiles != null) {
+      for (SourceMapSourceFile sourceFile : sourceFiles) {
+        sourceMap.addSourceFile(sourceFile.name(), sourceFile.code());
+      }
+      return;
+    }
+
     SourceMapConsumerV3 consumer = inputSourceMap.getSourceMap(errorManager);
     if (consumer == null) {
       return;
@@ -3574,17 +3588,24 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     Iterator<String> content = sourcesContent.iterator();
     Iterator<String> sources = consumer.getOriginalSources().iterator();
+    ImmutableList.Builder<SourceMapSourceFile> sourceFilesBuilder = ImmutableList.builder();
     while (sources.hasNext() && content.hasNext()) {
       String code = content.next();
       SourceFile source =
           SourceMapResolver.getRelativePath(inputSourceMap.getOriginalPath(), sources.next());
       if (source != null) {
-        sourceMap.addSourceFile(source.getName(), code);
+        sourceFilesBuilder.add(new SourceMapSourceFile(source.getName(), code));
       }
     }
     if (sources.hasNext() || content.hasNext()) {
       throw new RuntimeException(
           "Source map's \"sources\" and \"sourcesContent\" lengths do not match.");
+    }
+
+    sourceFiles = sourceFilesBuilder.build();
+    sourceMapSourceFiles.put(inputSourceMap, sourceFiles);
+    for (SourceMapSourceFile sourceFile : sourceFiles) {
+      sourceMap.addSourceFile(sourceFile.name(), sourceFile.code());
     }
   }
 

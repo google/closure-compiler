@@ -1670,6 +1670,14 @@ public final class CompilerTest {
     sourceMap.appendTo(sourceMapStringBuilder, outputJSFile);
     final String sourceMapString = sourceMapStringBuilder.toString();
     assertThat(sourceMapString).isEqualTo(RESULT_SOURCE_MAP_WITH_CONTENT);
+
+    // Outputting multiple chunks resets the source map before each chunk. Verify that the cached
+    // input sources content is restored identically after a reset.
+    compiler.resetAndIntitializeSourceMap();
+    compiler.toSource();
+    StringBuilder sourceMapAfterReset = new StringBuilder();
+    sourceMap.appendTo(sourceMapAfterReset, outputJSFile);
+    assertThat(sourceMapAfterReset.toString()).isEqualTo(RESULT_SOURCE_MAP_WITH_CONTENT);
   }
 
   @Test
