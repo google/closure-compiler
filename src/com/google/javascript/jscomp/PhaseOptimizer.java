@@ -347,8 +347,8 @@ class PhaseOptimizer implements CompilerPass {
       State state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
       boolean lastIterMadeChanges;
       int count = 1;
-      int astSize = NodeUtil.countAstSize(root);
-      int previousAstSize = astSize;
+      boolean trackAstSize = useSizeHeuristicToStopOptimizationLoop && this.isCodeRemovalLoop;
+      int astSize = trackAstSize ? NodeUtil.countAstSize(root) : 0;
 
       // The loop starts at state RUN_PASSES_NOT_RUN_IN_PREV_ITER and runs all passes.
       // After that, it goes to state RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER, and
@@ -396,8 +396,10 @@ class PhaseOptimizer implements CompilerPass {
             }
           }
 
-          previousAstSize = astSize;
-          astSize = NodeUtil.countAstSize(root);
+          int previousAstSize = astSize;
+          if (trackAstSize) {
+            astSize = NodeUtil.countAstSize(root);
+          }
           if (state == State.RUN_PASSES_NOT_RUN_IN_PREV_ITER) {
             if (lastIterMadeChanges && isAstSufficientlyChanging(previousAstSize, astSize)) {
               state = State.RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER;
