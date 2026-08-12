@@ -35,4 +35,12 @@ public class IdGenerator implements Serializable {
   public int newId() {
     return currentId++;
   }
+
+  public int getCurrentId() {
+    return currentId;
+  }
+
+  public void setCurrentId(int id) {
+    this.currentId = id;
+  }
 }

@@ -16,14 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.Immutable;
-import java.io.Serializable;
 import java.util.Map;
 
 /** A strongly typed view of information about getters and setters collected from the AST. */
 @Immutable
-final class AccessorSummary implements Serializable {
+final class AccessorSummary {
 
   /** Indicates whether a property has a getter or a setter, or both. */
   public enum PropertyAccessKind {
@@ -98,5 +99,53 @@ final class AccessorSummary implements Serializable {
   /** Returns an accessor summary that assumes every access is a potential getter or setter. */
   public static AccessorSummary createAssumingAlwaysGetterAndSetter() {
     return new AccessorSummary(true);
+  }
+
+  public AccessorSummaryProto toProto() {
+    AccessorSummaryProto.Builder builder =
+        AccessorSummaryProto.newBuilder()
+            .setAssumeAlwaysGetterAndSetter(assumeAlwaysGetterAndSetter);
+    if (assumeAlwaysGetterAndSetter) {
+      checkState(accessors.isEmpty());
+    } else {
+      for (Map.Entry<String, PropertyAccessKind> entry : accessors.entrySet()) {
+        builder.addAccessors(
+            AccessorSummaryEntryProto.newBuilder()
+                .setName(entry.getKey())
+                .setKind(toProto(entry.getValue()))
+                .build());
+      }
+    }
+    return builder.build();
+  }
+
+  private static PropertyAccessKindProto toProto(PropertyAccessKind kind) {
+    return switch (kind) {
+      case NORMAL -> PropertyAccessKindProto.KIND_NORMAL;
+      case GETTER_ONLY -> PropertyAccessKindProto.KIND_GETTER_ONLY;
+      case SETTER_ONLY -> PropertyAccessKindProto.KIND_SETTER_ONLY;
+      case GETTER_AND_SETTER -> PropertyAccessKindProto.KIND_GETTER_AND_SETTER;
+    };
+  }
+
+  public static AccessorSummary fromProto(AccessorSummaryProto proto) {
+    if (proto.getAssumeAlwaysGetterAndSetter()) {
+      return createAssumingAlwaysGetterAndSetter();
+    }
+    ImmutableMap.Builder<String, PropertyAccessKind> builder = ImmutableMap.builder();
+    for (AccessorSummaryEntryProto entry : proto.getAccessorsList()) {
+      builder.put(entry.getName(), fromProto(entry.getKind()));
+    }
+    return create(builder.buildOrThrow());
+  }
+
+  private static PropertyAccessKind fromProto(PropertyAccessKindProto kind) {
+    return switch (kind) {
+      case KIND_NORMAL -> PropertyAccessKind.NORMAL;
+      case KIND_GETTER_ONLY -> PropertyAccessKind.GETTER_ONLY;
+      case KIND_SETTER_ONLY -> PropertyAccessKind.SETTER_ONLY;
+      case KIND_GETTER_AND_SETTER -> PropertyAccessKind.GETTER_AND_SETTER;
+      default -> throw new IllegalArgumentException("Unknown kind: " + kind);
+    };
   }
 }

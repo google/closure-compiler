@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -102,11 +101,8 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractSet;
@@ -4160,110 +4156,215 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>Only contains state that does not make sense in 'multilevel' binary builds (where
    * library-level TypedASTs are the input). Such state belongs in the jscomp.TypedAst proto.
    */
-  protected static class CompilerState implements Serializable {
-
-    private final FeatureSet allowableFeatures;
-    private final boolean typeCheckingHasRun;
-    private final boolean hasRegExpGlobalReferences;
-    private final LifeCycleStage lifeCycleStage;
-    private final boolean mergedPrecompiledLibraries;
-    private final String[] chunkNames;
-    private final int[][] chunkDependencies;
-    private final String[][] chunkInputIds;
-    private final int uniqueNameId;
-    private final UniqueIdSupplier uniqueIdSupplier;
-    private final LinkedHashSet<String> exportedNames;
-    private final Set<String> cssNames;
-    private final String idGeneratorMap;
-    private final boolean transpiledFiles;
-    private final IdGenerator crossChunkIdGenerator;
-    private final boolean runJ2clPasses;
-    private final ImmutableList<InputId> externs;
-    private final ImmutableList<String> injectedLibraries;
-    private final int lastInjectedLibraryIndexInFirstScript;
-    private final AccessorSummary accessorSummary;
-    private final VariableMap stringMap;
-    private final VariableMap instrumentationMappping;
-
-    CompilerState(Compiler compiler) {
-      this.allowableFeatures = checkNotNull(compiler.allowableFeatures);
-      this.typeCheckingHasRun = compiler.typeCheckingHasRun;
-      this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
-      this.lifeCycleStage = compiler.getLifeCycleStage();
-      this.mergedPrecompiledLibraries = compiler.options.getMergedPrecompiledLibraries();
-      JSChunk[] chunkList = compiler.chunkGraph.getIntegralChunkArrayForSerialization();
-      this.chunkNames = new String[chunkList.length];
-      this.chunkInputIds = new String[chunkList.length][];
-      LinkedHashMap<String, Integer> chunkNameMap = new LinkedHashMap<>();
-      for (int i = 0; i < chunkList.length; i++) {
-        JSChunk chunk = chunkList[i];
-        this.chunkNames[i] = chunk.getName();
-        chunkNameMap.put(chunk.getName(), i);
-        this.chunkInputIds[i] = new String[chunk.getInputCount()];
-        ImmutableList<CompilerInput> inputs = chunk.getInputs();
-        for (int j = 0; j < chunk.getInputCount(); j++) {
-          this.chunkInputIds[i][j] = inputs.get(j).getInputId().getIdName();
-        }
-      }
-      this.chunkDependencies = new int[chunkList.length][];
-      for (int i = 0; i < chunkList.length; i++) {
-        ImmutableList<JSChunk> deps = chunkList[i].getDependencies();
-        this.chunkDependencies[i] = new int[deps.size()];
-        for (int j = 0; j < deps.size(); j++) {
-          this.chunkDependencies[i][j] = chunkNameMap.get(deps.get(j).getName());
-        }
-      }
-      this.uniqueNameId = compiler.uniqueNameId;
-      this.uniqueIdSupplier = compiler.uniqueIdSupplier;
-      this.exportedNames = compiler.exportedNames;
-      this.cssNames = compiler.cssNames;
-      this.idGeneratorMap = compiler.idGeneratorMap;
-      this.transpiledFiles = compiler.transpiledFiles;
-      this.crossChunkIdGenerator = compiler.crossChunkIdGenerator;
-      this.runJ2clPasses = compiler.runJ2clPasses;
-      this.externs =
-          compiler.externs.stream().map(CompilerInput::getInputId).collect(toImmutableList());
-      this.injectedLibraries = compiler.getRuntimeJsLibManager().getInjectedLibraries();
-      Node lastInjectedLibrary = compiler.getRuntimeJsLibManager().getLastInjectedLibrary();
-      this.lastInjectedLibraryIndexInFirstScript =
-          lastInjectedLibrary != null
-              ? compiler.jsRoot.getFirstChild().getIndexOfChild(lastInjectedLibrary)
-              : -1;
-      this.accessorSummary = compiler.accessorSummary;
-      this.stringMap = compiler.getStringMap();
-      this.instrumentationMappping = compiler.getInstrumentationMapping();
+  private static FeatureProto toProto(Feature feature) {
+    try {
+      return FeatureProto.valueOf("FEATURE_" + feature.name());
+    } catch (IllegalArgumentException e) {
+      return FeatureProto.FEATURE_UNKNOWN;
     }
   }
 
+  private static LifeCycleStageProto toProto(LifeCycleStage stage) {
+    return switch (stage) {
+      case RAW -> LifeCycleStageProto.LIFE_CYCLE_STAGE_RAW;
+      case COLORS_AND_SIMPLIFIED_JSDOC ->
+          LifeCycleStageProto.LIFE_CYCLE_STAGE_COLORS_AND_SIMPLIFIED_JSDOC;
+      case NORMALIZED -> LifeCycleStageProto.LIFE_CYCLE_STAGE_NORMALIZED;
+      case NORMALIZED_OBFUSCATED -> LifeCycleStageProto.LIFE_CYCLE_STAGE_NORMALIZED_OBFUSCATED;
+    };
+  }
+
+  private static List<VariableMapEntryProto> toVariableMapEntries(VariableMap map) {
+    List<VariableMapEntryProto> entries = new ArrayList<>();
+    if (map != null) {
+      for (Map.Entry<String, String> entry : map.getOriginalNameToNewNameMap().entrySet()) {
+        entries.add(
+            VariableMapEntryProto.newBuilder()
+                .setOriginalName(entry.getKey())
+                .setNewName(entry.getValue())
+                .build());
+      }
+    }
+    return entries;
+  }
+
+  private static FeatureSet fromProto(List<FeatureProto> protos) {
+    Set<Feature> features = new LinkedHashSet<>();
+    for (FeatureProto p : protos) {
+      if (p != FeatureProto.FEATURE_UNKNOWN) {
+        try {
+          features.add(Feature.valueOf(p.name().substring("FEATURE_".length())));
+        } catch (IllegalArgumentException e) {
+          // ignore
+        }
+      }
+    }
+    return FeatureSet.BARE_MINIMUM.with(features);
+  }
+
+  private static LifeCycleStage fromProto(LifeCycleStageProto stage) {
+    return switch (stage) {
+      case LIFE_CYCLE_STAGE_RAW -> LifeCycleStage.RAW;
+      case LIFE_CYCLE_STAGE_COLORS_AND_SIMPLIFIED_JSDOC ->
+          LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC;
+      case LIFE_CYCLE_STAGE_NORMALIZED -> LifeCycleStage.NORMALIZED;
+      case LIFE_CYCLE_STAGE_NORMALIZED_OBFUSCATED -> LifeCycleStage.NORMALIZED_OBFUSCATED;
+      default -> LifeCycleStage.RAW;
+    };
+  }
+
+  private static @Nullable VariableMap fromVariableMapEntries(List<VariableMapEntryProto> entries) {
+    Map<String, String> map = new LinkedHashMap<>();
+    for (VariableMapEntryProto entry : entries) {
+      map.put(entry.getOriginalName(), entry.getNewName());
+    }
+    return new VariableMap(map);
+  }
+
+  /** Returns a builder for the serializable state of the compiler. */
+  protected JSCompilerStateProto.Builder getCompilerStateProtoBuilder() {
+    JSCompilerStateProto.Builder builder = JSCompilerStateProto.newBuilder();
+
+    for (Feature feature : allowableFeatures.getFeatures()) {
+      builder.addAllowableFeatures(toProto(feature));
+    }
+    builder
+        .setTypeCheckingHasRun(typeCheckingHasRun)
+        .setHasRegExpGlobalReferences(hasRegExpGlobalReferences)
+        .setLifeCycleStage(toProto(getLifeCycleStage()))
+        .setMergedPrecompiledLibraries(options.getMergedPrecompiledLibraries());
+
+    JSChunk[] chunkList = chunkGraph.getIntegralChunkArrayForSerialization();
+    Map<String, Integer> chunkNameMap = new LinkedHashMap<>();
+    for (int i = 0; i < chunkList.length; i++) {
+      chunkNameMap.put(chunkList[i].getName(), i);
+    }
+
+    for (JSChunk chunk : chunkList) {
+      ChunkProto.Builder chunkBuilder = ChunkProto.newBuilder();
+      chunkBuilder.setName(chunk.getName());
+      for (JSChunk dep : chunk.getDependencies()) {
+        Integer depIdx = chunkNameMap.get(dep.getName());
+        checkState(
+            depIdx != null, "Missing dependency %s for chunk %s", dep.getName(), chunk.getName());
+        chunkBuilder.addDependencies(depIdx);
+      }
+      for (CompilerInput input : chunk.getInputs()) {
+        chunkBuilder.addInputIds(input.getInputId().getIdName());
+      }
+      builder.addChunks(chunkBuilder.build());
+    }
+
+    builder
+        .setUniqueNameId(uniqueNameId)
+        .addAllUniqueIdSupplier(uniqueIdSupplier.toProto())
+        .addAllExportedNames(exportedNames);
+
+    builder.setHasCssNames(cssNames != null);
+    if (cssNames != null) {
+      builder.addAllCssNames(cssNames);
+    }
+
+    if (idGeneratorMap != null) {
+      builder.setIdGeneratorMap(idGeneratorMap);
+    }
+
+    builder
+        .setTranspiledFiles(transpiledFiles)
+        .setIdGeneratorCurrentId(crossChunkIdGenerator.getCurrentId())
+        .setRunJ2ClPasses(runJ2clPasses);
+
+    for (CompilerInput extern : externs) {
+      builder.addExterns(extern.getInputId().getIdName());
+    }
+
+    builder.addAllInjectedLibraries(runtimeJsLibManager.getInjectedLibraries());
+    Node lastInjectedLibrary = runtimeJsLibManager.getLastInjectedLibrary();
+    builder.setLastInjectedLibraryIndexInFirstScript(
+        lastInjectedLibrary != null && jsRoot != null && jsRoot.hasChildren()
+            ? jsRoot.getFirstChild().getIndexOfChild(lastInjectedLibrary)
+            : -1);
+
+    if (accessorSummary != null) {
+      builder.setAccessorSummary(accessorSummary.toProto());
+    }
+
+    builder.setHasStringMap(stringMap != null);
+    if (stringMap != null) {
+      builder.addAllStringMap(toVariableMapEntries(stringMap));
+    }
+
+    builder.setHasInstrumentationMapping(instrumentationMapping != null);
+    if (instrumentationMapping != null) {
+      builder.addAllInstrumentationMapping(toVariableMapEntries(instrumentationMapping));
+    }
+
+    return builder;
+  }
+
   /** Restore the portions of the compiler state that don't require access to the serialized AST. */
-  protected void restoreFromState(CompilerState compilerState) {
-    allowableFeatures = compilerState.allowableFeatures;
+  protected void restoreFromState(JSCompilerStateProto compilerState) {
+    allowableFeatures = fromProto(compilerState.getAllowableFeaturesList());
+    typeCheckingHasRun = compilerState.getTypeCheckingHasRun();
     scriptNodeByFilename.clear();
-    typeCheckingHasRun = compilerState.typeCheckingHasRun;
-    for (String library : compilerState.injectedLibraries) {
+    hasRegExpGlobalReferences = compilerState.getHasRegExpGlobalReferences();
+
+    for (String library : compilerState.getInjectedLibrariesList()) {
       getRuntimeJsLibManager().recordLibraryInjected(library);
     }
-    hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
-    // after restoreState, we're always guaranteed to have colors & simplified JSDoc on the AST.
-    // whether the AST is also normalized depends on when saveState was called (after stage 1 or 2)
+
     LifeCycleStage stage =
-        compilerState.lifeCycleStage == LifeCycleStage.RAW
+        compilerState.getLifeCycleStage() == LifeCycleStageProto.LIFE_CYCLE_STAGE_RAW
             ? LifeCycleStage.COLORS_AND_SIMPLIFIED_JSDOC
-            : compilerState.lifeCycleStage;
+            : fromProto(compilerState.getLifeCycleStage());
     setLifeCycleStage(stage);
-    getOptions().setMergedPrecompiledLibraries(compilerState.mergedPrecompiledLibraries);
-    uniqueNameId = compilerState.uniqueNameId;
-    uniqueIdSupplier = compilerState.uniqueIdSupplier;
+    getOptions().setMergedPrecompiledLibraries(compilerState.getMergedPrecompiledLibraries());
+
+    uniqueNameId = compilerState.getUniqueNameId();
+    uniqueIdSupplier = UniqueIdSupplier.fromProto(compilerState.getUniqueIdSupplierList());
+
     exportedNames.clear();
-    exportedNames.addAll(compilerState.exportedNames);
-    cssNames = compilerState.cssNames;
+    exportedNames.addAll(compilerState.getExportedNamesList());
+
+    if (compilerState.getHasCssNames()) {
+      cssNames = new LinkedHashSet<>(compilerState.getCssNamesList());
+    } else {
+      cssNames = null;
+    }
+
     variableMap = null;
     propertyMap = null;
-    stringMap = compilerState.stringMap;
-    idGeneratorMap = compilerState.idGeneratorMap;
-    transpiledFiles = compilerState.transpiledFiles;
-    crossChunkIdGenerator = compilerState.crossChunkIdGenerator;
-    runJ2clPasses = compilerState.runJ2clPasses;
+
+    if (compilerState.hasIdGeneratorMap()) {
+      idGeneratorMap = compilerState.getIdGeneratorMap();
+    } else {
+      idGeneratorMap = null;
+    }
+    transpiledFiles = compilerState.getTranspiledFiles();
+
+    crossChunkIdGenerator = new IdGenerator();
+    crossChunkIdGenerator.setCurrentId(compilerState.getIdGeneratorCurrentId());
+
+    runJ2clPasses = compilerState.getRunJ2ClPasses();
+
+    if (compilerState.hasAccessorSummary()) {
+      accessorSummary = AccessorSummary.fromProto(compilerState.getAccessorSummary());
+    } else {
+      accessorSummary = null;
+    }
+
+    if (compilerState.getHasStringMap()) {
+      stringMap = fromVariableMapEntries(compilerState.getStringMapList());
+    } else {
+      stringMap = null;
+    }
+
+    if (compilerState.getHasInstrumentationMapping()) {
+      instrumentationMapping =
+          fromVariableMapEntries(compilerState.getInstrumentationMappingList());
+    } else {
+      instrumentationMapping = null;
+    }
 
     // We don't save changeStamp, because its value turned out to be non-deterministic
     // (Reasons for this are unknown.), and there's no benefit to saving it anyway.
@@ -4271,9 +4372,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // so all the AST Nodes we read in effectively have a change stamp of 0,
     // and we can just start the compiler's counter over at 1.
     changeTracker.resetChangeStamp();
-
-    accessorSummary = compilerState.accessorSummary;
-    instrumentationMapping = compilerState.instrumentationMappping;
   }
 
   public void saveState(OutputStream outputStream) throws IOException {
@@ -4292,7 +4390,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
           OutputStream bufferedCompressionStream =
               new BufferedOutputStream(compressionStream, 64 * 1024);
-          new ObjectOutputStream(bufferedCompressionStream).writeObject(getCompilerState());
+
+          JSCompilerStateProto.Builder builder = getCompilerStateProtoBuilder();
+          builder.build().writeDelimitedTo(bufferedCompressionStream);
           stopTracer(tracer, "serializeCompilerState");
           tracer = newTracer("serializeTypedAst");
           SerializeTypedAstPass.createFromOutputStream(
@@ -4310,9 +4410,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         });
   }
 
-  protected CompilerState getCompilerState() {
-    return new CompilerState(this);
-  }
+
 
   public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException {
     initWarningsGuard(options.getWarningsGuard());
@@ -4348,10 +4446,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   // this method must be called from within a "compiler thread" with a larger stack
-  private void deserializeCompilerState(InputStream inputStream)
-      throws IOException, ClassNotFoundException {
+  private void deserializeCompilerState(InputStream inputStream) throws IOException {
     // Do not close the input stream, caller is responsible for closing it.
-    CompilerState compilerState = (CompilerState) new ObjectInputStream(inputStream).readObject();
+    JSCompilerStateProto stateProto = JSCompilerStateProto.parseDelimitedFrom(inputStream);
 
     checkNotNull(
         this.chunkGraph, "Did you forget to call .init or .initChunks before restoreState?");
@@ -4373,30 +4470,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             SYNTHETIC_EXTERNS_FILE,
             allInputFiles.build(),
             inputStream,
-            compilerState.typeCheckingHasRun,
+            stateProto.getTypeCheckingHasRun(),
             this.getOptions().getResolveSourceMapAnnotations(),
             this.getOptions().getParseInlineSourceMaps());
 
-    restoreFromState(compilerState);
-
-    // We don't plan to be compatible with an older version of the compiler, so this should never
-    // happen.
-    checkNotNull(compilerState.chunkNames, "Missing chunk names");
-    checkNotNull(compilerState.chunkDependencies, "Missing chunk dependencies");
+    restoreFromState(stateProto);
 
     // Restore the chunk graph
     List<JSChunk> chunks = new ArrayList<>();
-    for (String chunkName : compilerState.chunkNames) {
-      JSChunk chunk = new JSChunk(chunkName);
+    for (ChunkProto chunkProto : stateProto.getChunksList()) {
+      JSChunk chunk = new JSChunk(chunkProto.getName());
       chunks.add(chunk);
     }
-    if (compilerState.chunkDependencies != null) {
-      for (int i = 0; i < chunks.size(); i++) {
-        JSChunk chunk = chunks.get(i);
-        int[] deps = compilerState.chunkDependencies[i];
-        for (int dep : deps) {
-          chunk.addDependency(chunks.get(dep));
-        }
+    for (int i = 0; i < chunks.size(); i++) {
+      JSChunk chunk = chunks.get(i);
+      ChunkProto chunkProto = stateProto.getChunks(i);
+      for (int depIdx : chunkProto.getDependenciesList()) {
+        chunk.addDependency(chunks.get(depIdx));
       }
     }
     chunkGraph = new JSChunkGraph(chunks);
@@ -4418,16 +4508,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // TypedAstDeserializer; otherwise lookups in this.typedAstFilesystem will fail.
     ImmutableMap<String, SourceFile> externFiles = externFilesBuilder.buildOrThrow();
     ImmutableMap<String, SourceFile> codeFiles = codeFilesBuilder.buildOrThrow();
-    for (InputId extern : compilerState.externs) {
-      if (extern.getIdName().equals(SYNTHETIC_EXTERNS_FILE.getName())) {
+    for (String externName : stateProto.getExternsList()) {
+      if (externName.equals(SYNTHETIC_EXTERNS_FILE.getName())) {
         this.getSynthesizedExternsInput();
         continue;
       }
-      SourceFile externFile = externFiles.get(extern.getIdName());
+      SourceFile externFile = externFiles.get(externName);
       if (externFile == null) {
         // Extern files may passed in with regular source files, and later 'hoisted' to externs
         // because they are annotated `@externs`.
-        externFile = checkNotNull(codeFiles.get(extern.getIdName()), "Missing %s", extern);
+        externFile = checkNotNull(codeFiles.get(externName), "Missing %s", externName);
       }
       CompilerInput input = new CompilerInput(externFile, /* isExtern= */ true);
       Node script = input.getAstRoot(this); // accesses this.typedAstFilesystem
@@ -4438,13 +4528,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.externs.add(input);
     }
 
-    // We don't plan to be compatible with an older version of the compiler, so this should never
-    // happen.
-    checkNotNull(compilerState.chunkInputIds, "Missing chunk input ids");
     // Restore the inputs for each chunk.
     for (int i = 0; i < chunks.size(); i++) {
-      String[] inputIds = compilerState.chunkInputIds[i];
-      for (String inputId : inputIds) {
+      ChunkProto chunkProto = stateProto.getChunks(i);
+      for (String inputId : chunkProto.getInputIdsList()) {
         SourceFile src = codeFiles.get(inputId);
         if (src == null) {
           // The auto-generated empty fill files used to facilitate CCCM for
@@ -4470,11 +4557,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     this.typedAstFilesystem = null; // allow garbage collection
 
-    if (compilerState.lastInjectedLibraryIndexInFirstScript != -1) {
+    if (stateProto.getLastInjectedLibraryIndexInFirstScript() != -1) {
       Node lastInjectedLibrary =
           jsRoot
               .getFirstChild()
-              .getChildAtIndex(compilerState.lastInjectedLibraryIndexInFirstScript);
+              .getChildAtIndex(stateProto.getLastInjectedLibraryIndexInFirstScript());
       this.runtimeJsLibManager.setLastInjectedLibrary(lastInjectedLibrary);
     }
   }

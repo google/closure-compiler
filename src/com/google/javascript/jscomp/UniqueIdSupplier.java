@@ -18,7 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Generates unique String Ids when requested via a compiler instance.
@@ -26,7 +27,7 @@ import java.io.Serializable;
  * <p>This supplier provides Ids that are deterministic and unique across all input files given to
  * the compiler. The generated ID format is: uniqueId = "fileHashCode$counterForThisFile"
  */
-public final class UniqueIdSupplier implements Serializable {
+public final class UniqueIdSupplier {
   private final Multiset<Integer> counter;
 
   UniqueIdSupplier() {
@@ -45,5 +46,25 @@ public final class UniqueIdSupplier implements Serializable {
     int id = counter.add(fileHashCode, 1);
     String fileHashString = (fileHashCode < 0) ? ("m" + -fileHashCode) : ("" + fileHashCode);
     return fileHashString + "$" + id;
+  }
+
+  public List<UniqueIdProto> toProto() {
+    List<UniqueIdProto> result = new ArrayList<>();
+    for (Multiset.Entry<Integer> entry : counter.entrySet()) {
+      result.add(
+          UniqueIdProto.newBuilder()
+              .setHash(entry.getElement())
+              .setCounter(entry.getCount())
+              .build());
+    }
+    return result;
+  }
+
+  public static UniqueIdSupplier fromProto(List<UniqueIdProto> protos) {
+    UniqueIdSupplier supplier = new UniqueIdSupplier();
+    for (UniqueIdProto p : protos) {
+      supplier.counter.add(p.getHash(), p.getCounter());
+    }
+    return supplier;
   }
 }

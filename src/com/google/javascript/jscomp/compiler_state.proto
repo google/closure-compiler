@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package jscomp;
+
+import "third_party/java_src/jscomp/java/com/google/javascript/jscomp/conformance.proto";
+import "third_party/java_src/rhino_ast/java/com/google/javascript/rhino/typed_ast/typed_ast.proto";
+
+option java_package = "com.google.javascript.jscomp";
+option java_multiple_files = true;
+
+message JSCompilerStateProto {
+  // CompilerState fields
+  repeated FeatureProto allowable_features = 1;
+  bool type_checking_has_run = 2;
+  bool has_reg_exp_global_references = 3;
+  LifeCycleStageProto life_cycle_stage = 4;
+  bool merged_precompiled_libraries = 5;
+  repeated ChunkProto chunks = 6;
+  int32 unique_name_id = 7;
+  repeated UniqueIdProto unique_id_supplier = 8;
+  repeated string exported_names = 9;
+  bool has_css_names = 10;
+  repeated string css_names = 11;
+  optional string id_generator_map = 12;
+  bool transpiled_files = 13;
+  int32 id_generator_current_id = 14;
+  bool run_j2cl_passes = 15;
+  repeated string externs = 16;
+  repeated string injected_libraries = 17;
+  int32 last_injected_library_index_in_first_script = 18;
+  optional AccessorSummaryProto accessor_summary = 19;
+  bool has_string_map = 20;
+  repeated VariableMapEntryProto string_map = 21;
+  bool has_instrumentation_mapping = 22;
+  repeated VariableMapEntryProto instrumentation_mapping = 23;
+
+  // JSCompilerState fields
+  repeated ConformanceViolationsProto conformance_violations = 24;
+  repeated ViolationProto unattributed_conformance_violations = 25;
+}
+
+enum FeatureProto {
+  FEATURE_UNKNOWN = 0;
+  FEATURE_REGEXP_SYNTAX = 1;
+  FEATURE_ES3_KEYWORDS_AS_IDENTIFIERS = 2;
+  FEATURE_GETTER = 3;
+  FEATURE_KEYWORDS_AS_PROPERTIES = 4;
+  FEATURE_SETTER = 5;
+  FEATURE_STRING_CONTINUATION = 6;
+  FEATURE_TRAILING_COMMA = 7;
+  FEATURE_ARRAY_DESTRUCTURING = 8;
+  FEATURE_ARRAY_PATTERN_REST = 9;
+  FEATURE_ARROW_FUNCTIONS = 10;
+  FEATURE_BINARY_LITERALS = 11;
+  FEATURE_BLOCK_SCOPED_FUNCTION_DECLARATION = 12;
+  FEATURE_CLASSES = 13;
+  FEATURE_CLASS_GETTER_SETTER = 14;
+  FEATURE_COMPUTED_PROPERTIES = 15;
+  FEATURE_CONST_DECLARATIONS = 16;
+  FEATURE_DEFAULT_PARAMETERS = 17;
+  FEATURE_FOR_OF = 18;
+  FEATURE_GENERATORS = 19;
+  FEATURE_LET_DECLARATIONS = 20;
+  FEATURE_MEMBER_DECLARATIONS = 21;
+  FEATURE_NEW_TARGET = 22;
+  FEATURE_OBJECT_DESTRUCTURING = 23;
+  FEATURE_OCTAL_LITERALS = 24;
+  FEATURE_REGEXP_FLAG_U = 25;
+  FEATURE_REGEXP_FLAG_Y = 26;
+  FEATURE_REST_PARAMETERS = 27;
+  FEATURE_SHORTHAND_OBJECT_PROPERTIES = 28;
+  FEATURE_SPREAD_EXPRESSIONS = 29;
+  FEATURE_SUPER = 30;
+  FEATURE_TEMPLATE_LITERALS = 31;
+  FEATURE_MODULES = 32;
+  FEATURE_EXPONENT_OP = 33;
+  FEATURE_ASYNC_FUNCTIONS = 34;
+  FEATURE_OBJECT_LITERALS_WITH_SPREAD = 35;
+  FEATURE_OBJECT_PATTERN_REST = 36;
+  FEATURE_ASYNC_GENERATORS = 37;
+  FEATURE_FOR_AWAIT_OF = 38;
+  FEATURE_REGEXP_FLAG_S = 39;
+  FEATURE_REGEXP_NAMED_GROUPS = 40;
+  FEATURE_REGEXP_UNICODE_PROPERTY_ESCAPE = 41;
+  FEATURE_REGEXP_LOOKBEHIND = 42;
+  FEATURE_UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP = 43;
+  FEATURE_OPTIONAL_CATCH_BINDING = 44;
+  FEATURE_DYNAMIC_IMPORT = 45;
+  FEATURE_BIGINT = 46;
+  FEATURE_IMPORT_META = 47;
+  FEATURE_NULL_COALESCE_OP = 48;
+  FEATURE_OPTIONAL_CHAINING = 49;
+  FEATURE_NUMERIC_SEPARATOR = 50;
+  FEATURE_LOGICAL_ASSIGNMENT = 51;
+  FEATURE_PUBLIC_CLASS_FIELDS = 52;
+  FEATURE_CLASS_STATIC_BLOCK = 53;
+  FEATURE_REGEXP_FLAG_D = 54;
+  FEATURE_TOP_LEVEL_AWAIT = 55;
+  FEATURE_ES_NEXT_RUNTIME = 56;
+  FEATURE_ES_UNSTABLE_RUNTIME = 57;
+  FEATURE_PRIVATE_ELEMENTS = 58;
+  FEATURE_TYPE_ANNOTATION = 59;
+}
+
+enum LifeCycleStageProto {
+  LIFE_CYCLE_STAGE_UNKNOWN = 0;
+  LIFE_CYCLE_STAGE_RAW = 1;
+  LIFE_CYCLE_STAGE_COLORS_AND_SIMPLIFIED_JSDOC = 2;
+  LIFE_CYCLE_STAGE_NORMALIZED = 3;
+  LIFE_CYCLE_STAGE_NORMALIZED_OBFUSCATED = 4;
+}
+
+message ChunkProto {
+  string name = 1;
+  repeated int32 dependencies = 2;
+  repeated string input_ids = 3;
+}
+
+message UniqueIdProto {
+  int32 hash = 1;
+  int32 counter = 2;
+}
+
+enum PropertyAccessKindProto {
+  KIND_UNKNOWN = 0;
+  KIND_NORMAL = 1;
+  KIND_GETTER_ONLY = 2;
+  KIND_SETTER_ONLY = 3;
+  KIND_GETTER_AND_SETTER = 4;
+}
+
+message AccessorSummaryEntryProto {
+  string name = 1;
+  PropertyAccessKindProto kind = 2;
+}
+
+message AccessorSummaryProto {
+  bool assume_always_getter_and_setter = 1;
+  repeated AccessorSummaryEntryProto accessors = 2;
+}
+
+message VariableMapEntryProto {
+  string original_name = 1;
+  string new_name = 2;
+}
+
+message ConformanceViolationsProto {
+  string input_name = 1;
+  repeated ViolationProto violations = 2;
+}
+
+message ViolationProto {
+  Requirement requirement = 1;
+  optional RequirementScopeEntry allowlist_entry = 2;
+  optional string source_name = 3;
+  int32 line_number = 4;
+  int32 char_number = 5;
+  bool should_report_during_library_deps_conformance_checker = 6;
+}
