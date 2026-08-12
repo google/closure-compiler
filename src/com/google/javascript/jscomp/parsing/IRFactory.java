@@ -3877,6 +3877,7 @@ class IRFactory {
         case 'D':
         case 'f':
         case 'n':
+        case 'k': // 2018 named backreferences
         case 'p': // 2018 unicode property escapes
         case 'P': // 2018 unicode property escapes
         case 'r':

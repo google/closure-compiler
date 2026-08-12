@@ -3234,6 +3234,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("/\\0/");
     assertPrintSame("/\\\\/");
     assertPrintSame("/(.)\\1/");
+    assertPrintSame("/\\k<group>/");
+    assertPrintSame("/(?<group>a)\\k<group>/");
     assertPrintSame("/\\x0B/"); // Don't print this as \v (as is done in strings)
   }
 

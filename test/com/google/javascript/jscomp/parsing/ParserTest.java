@@ -5513,6 +5513,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(parse("/\\s/"), script(expr(regex("\\s"))));
     assertNodeEquality(parse("/\\u000A/"), script(expr(regex("\\u000A"))));
     assertNodeEquality(parse("/[\\]]/"), script(expr(regex("[\\]]"))));
+    assertNodeEquality(parse("/\\k<group>/"), script(expr(regex("\\k<group>"))));
+    assertNodeEquality(
+        parse("/(?<group>a)\\k<group>/"), script(expr(regex("(?<group>a)\\k<group>"))));
   }
 
   @Test
