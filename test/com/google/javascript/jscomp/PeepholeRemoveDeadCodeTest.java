@@ -545,6 +545,10 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   public void testOptimizeSwitch() {
     fold("switch(a){}", "");
     fold("switch(foo()){}", "foo()");
+    fold("switch(x++){}", "x++");
+    fold("switch(a=b){}", "a=b");
+    fold("switch(x++){default:foo();}", "x++; foo()");
+    fold("switch(a=b){default:foo();}", "a=b; foo()");
     fold("switch(a){default:}", "");
     fold("switch(a){default:break;}", "");
     fold("switch(a){default:var b;break;}", "var b");

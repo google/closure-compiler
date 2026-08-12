@@ -517,8 +517,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       reportChangeToEnclosingScope(replacement);
       return replacement;
     } else if (switchBody.hasOneChild() && switchBody.getOnlyChild().isDefaultCase()) {
-      if (n.getFirstChild().isCall() || n.getFirstChild().isOptChainCall()) {
-        // Before removing switch, we must preserve the switch condition if it is a call
+      if (mayHaveSideEffects(n.getFirstChild())) {
+        // Before removing switch, we must preserve the switch condition if it has side effects
         return tryRemoveSwitchWithSingleCase(n, true);
       } else {
         return tryRemoveSwitchWithSingleCase(n, false);
