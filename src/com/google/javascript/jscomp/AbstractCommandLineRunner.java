@@ -1550,13 +1550,19 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
         }
       } else {
         long outputStartNanos = System.nanoTime();
+        long[] outputPhaseNanos = new long[2];
         DiagnosticType error;
         try {
-          error = outputChunkBinaryAndSourceMaps(compiler.getChunkGraph(), options);
+          error =
+              outputChunkBinaryAndSourceMaps(
+                  compiler.getChunkGraph(), options, outputPhaseNanos);
         } finally {
+          long outputNanos = System.nanoTime() - outputStartNanos;
+          compiler.recordPassRuntime("outputChunkCode", outputPhaseNanos[0] / 1_000_000);
+          compiler.recordPassRuntime("outputChunkSourceMaps", outputPhaseNanos[1] / 1_000_000);
           compiler.recordPassRuntime(
-              "outputChunkBinaryAndSourceMaps",
-              (System.nanoTime() - outputStartNanos) / 1_000_000);
+              "outputChunkIoAndSetup",
+              (outputNanos - outputPhaseNanos[0] - outputPhaseNanos[1]) / 1_000_000);
         }
         if (error != null) {
           compiler.report(JSError.make(error));
@@ -1672,7 +1678,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   private @Nullable DiagnosticType outputChunkBinaryAndSourceMaps(
-      JSChunkGraph chunkGraph, B options) throws IOException {
+      JSChunkGraph chunkGraph, B options, long[] outputPhaseNanos) throws IOException {
     Iterable<JSChunk> chunks = chunkGraph.getAllChunks();
     parsedChunkWrappers = parseChunkWrappers(config.chunkWrapper, chunks);
     if (!isOutputInJson()) {
@@ -1715,9 +1721,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
             compiler.resetAndIntitializeSourceMap();
           }
           mlicenseTracker.setCurrentChunkContext(m);
+          long codeStartNanos = System.nanoTime();
           writeChunkOutput(chunkFilename, writer, mlicenseTracker, m);
+          outputPhaseNanos[0] += System.nanoTime() - codeStartNanos;
           if (options.shouldGatherSourceMapInfo()) {
+            long sourceMapStartNanos = System.nanoTime();
             compiler.getSourceMap().appendTo(mapFileOut, chunkFilename);
+            outputPhaseNanos[1] += System.nanoTime() - sourceMapStartNanos;
           }
         }
 
