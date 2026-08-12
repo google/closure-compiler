@@ -2216,6 +2216,46 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testOutputRemoveUnusedCodeReport() throws IOException {
+    File input = temporaryFolder.newFile("input.js");
+    File compiledOutput = temporaryFolder.newFile("compiled.js");
+    File removalReport = new File(temporaryFolder.getRoot(), "removal-report");
+    writeFile(input, "function unused() { return 1; } throw 2;");
+
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            new String[] {
+              "--compilation_level=ADVANCED",
+              "--env=CUSTOM",
+              "--js=" + input,
+              "--js_output_file=" + compiledOutput,
+              "--output_remove_unused_code_report=" + removalReport,
+            },
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+
+    int exitCode = runner.doRun();
+    assertWithMessage(errReader.toString(UTF_8)).that(exitCode).isEqualTo(0);
+    List<Path> reportFiles;
+    try (var paths = java.nio.file.Files.walk(removalReport.toPath())) {
+      reportFiles = paths.filter(java.nio.file.Files::isRegularFile).toList();
+    }
+    assertThat(reportFiles).isNotEmpty();
+    String report =
+        reportFiles.stream()
+            .map(
+                path -> {
+                  try {
+                    return java.nio.file.Files.readString(path);
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                })
+            .collect(java.util.stream.Collectors.joining());
+    assertThat(report).contains("var\tunused\t");
+  }
+
+  @Test
   public void testRunCompilerCanRunTwiceInSameJvm() throws IOException {
     File input = temporaryFolder.newFile("input.js");
     File firstOutput = temporaryFolder.newFile("first-output.js");

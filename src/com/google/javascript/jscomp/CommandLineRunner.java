@@ -663,6 +663,14 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private String outputInputReductionReport = "";
 
     @Option(
+        name = "--output_remove_unused_code_report",
+        usage =
+            "Writes a directory of tab-separated RemoveUnusedCode logs. Each entry identifies an "
+                + "unused variable, property, polyfill, or function argument removed by an "
+                + "optimization pass. This diagnostic can substantially increase output volume.")
+    private String outputRemoveUnusedCodeReport = "";
+
+    @Option(
         name = "--output_chunk_dependencies",
         usage = "Prints out a JSON file of dependencies between chunks.")
     private String outputChunkDependencies = "";
@@ -1070,6 +1078,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 ImmutableList.of(
                     "create_source_map",
                     "output_input_reduction_report",
+                    "output_remove_unused_code_report",
                     "output_manifest",
                     "output_chunk_dependencies",
                     "property_renaming_report",
@@ -1909,6 +1918,10 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     if (flags.typedAstOutputFile != null) {
       options.setTypedAstOutputFile(Path.of(flags.typedAstOutputFile));
+    }
+    if (!flags.outputRemoveUnusedCodeReport.isEmpty()) {
+      options.setDebugLogDirectory(Path.of(flags.outputRemoveUnusedCodeReport));
+      options.setDebugLogFilter("removals.log");
     }
     options.setGenerateExports(flags.generateExports);
     options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
