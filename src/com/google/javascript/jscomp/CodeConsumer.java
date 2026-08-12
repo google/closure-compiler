@@ -93,8 +93,8 @@ public abstract class CodeConsumer {
       // need space to separate. This is not pretty printing.
       // For example: "return foo;"
       append(" ");
-    } else if (c == '/' && getLastChar() == '/') {
-      // Do not allow a forward slash to appear after a DIV.
+    } else if (c == '/' && (getLastChar() == '/' || getLastChar() == '<')) {
+      // Do not allow a forward slash to appear after a DIV or LT.
       // For example,
       // REGEXP DIV REGEXP
       // is valid and should print like

@@ -3248,6 +3248,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testRegexp_afterLt() {
+    assertPrint("x < /script/", "x< /script/");
+    assertPrint("x << /script/", "x<< /script/");
+  }
+
+  @Test
   public void testKeywordProperties1() {
     languageMode = LanguageMode.ECMASCRIPT5;
     assertPrintSame("x.foo=2");
