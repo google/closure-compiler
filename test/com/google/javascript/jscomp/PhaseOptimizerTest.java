@@ -95,6 +95,55 @@ public final class PhaseOptimizerTest {
   }
 
   @Test
+  public void testOptimizationLoopSizeThresholdStopsSmallChangesEarly() {
+    for (int i = 0; i < 1_000; i++) {
+      dummyScript.addChildToBack(IR.empty());
+    }
+    compiler.getOptions().setOptimizationLoopSizeThreshold(0.1);
+    optimizer = new PhaseOptimizer(compiler, tracker);
+    Loop loop = optimizer.addFixedPointLoop();
+    loop.addLoopedPass(
+        createPassFactory(
+            PassNames.PEEPHOLE_OPTIMIZATIONS,
+            (externs, root) -> {
+              passesRun.add(PassNames.PEEPHOLE_OPTIMIZATIONS);
+              dummyScript.getLastChild().detach();
+              compiler.reportChangeToEnclosingScope(dummyScript);
+            },
+            false));
+
+    assertPasses(PassNames.PEEPHOLE_OPTIMIZATIONS, PassNames.PEEPHOLE_OPTIMIZATIONS);
+  }
+
+  @Test
+  public void testOptimizationLoopSizeThresholdCanPreserveSmallChanges() {
+    for (int i = 0; i < 1_000; i++) {
+      dummyScript.addChildToBack(IR.empty());
+    }
+    compiler.getOptions().setOptimizationLoopSizeThreshold(0.05);
+    optimizer = new PhaseOptimizer(compiler, tracker);
+    Loop loop = optimizer.addFixedPointLoop();
+    int[] remainingChanges = {3};
+    loop.addLoopedPass(
+        createPassFactory(
+            PassNames.PEEPHOLE_OPTIMIZATIONS,
+            (externs, root) -> {
+              passesRun.add(PassNames.PEEPHOLE_OPTIMIZATIONS);
+              if (remainingChanges[0]-- > 0) {
+                dummyScript.getLastChild().detach();
+                compiler.reportChangeToEnclosingScope(dummyScript);
+              }
+            },
+            false));
+
+    assertPasses(
+        PassNames.PEEPHOLE_OPTIMIZATIONS,
+        PassNames.PEEPHOLE_OPTIMIZATIONS,
+        PassNames.PEEPHOLE_OPTIMIZATIONS,
+        PassNames.PEEPHOLE_OPTIMIZATIONS);
+  }
+
+  @Test
   public void testIncrementalAstSizeMatchesFullCount() {
     Node function =
         IR.function(IR.name("f"), IR.paramList(), IR.block(IR.returnNode(IR.number(1))));

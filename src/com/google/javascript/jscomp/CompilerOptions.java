@@ -560,6 +560,9 @@ public class CompilerOptions {
 
   private boolean useSizeHeuristicToStopOptimizationLoop = true;
 
+  /** Minimum percentage AST-size change considered significant in optimization fixed-point loops. */
+  private double optimizationLoopSizeThreshold = 0.1;
+
   /**
    * Do up to this many iterations of the optimization loop. Setting this field to some small
    * number, say 3 or 4, allows a large project to build faster, but sacrifice some code size.
@@ -3373,6 +3376,15 @@ public class CompilerOptions {
 
   boolean shouldUseSizeHeuristicToStopOptimizationLoop() {
     return this.useSizeHeuristicToStopOptimizationLoop;
+  }
+
+  public void setOptimizationLoopSizeThreshold(double threshold) {
+    checkArgument(threshold >= 0 && threshold <= 100, "invalid threshold: %s", threshold);
+    this.optimizationLoopSizeThreshold = threshold;
+  }
+
+  double getOptimizationLoopSizeThreshold() {
+    return this.optimizationLoopSizeThreshold;
   }
 
   public void setMaxOptimizationLoopIterations(int maxIterations) {

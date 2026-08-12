@@ -58,6 +58,7 @@ class PhaseOptimizer implements CompilerPass {
   private final Node jsRoot;
 
   private final boolean useSizeHeuristicToStopOptimizationLoop;
+  private final double optimizationLoopSizeThreshold;
 
   // Checks that passes have reported code changes correctly.
   private ChangeVerifier changeVerifier;
@@ -163,6 +164,7 @@ class PhaseOptimizer implements CompilerPass {
     this.lastChange = START_TIME;
     this.useSizeHeuristicToStopOptimizationLoop =
         comp.getOptions().shouldUseSizeHeuristicToStopOptimizationLoop();
+    this.optimizationLoopSizeThreshold = comp.getOptions().getOptimizationLoopSizeThreshold();
     int maxIterations = comp.getOptions().getMaxOptimizationLoopIterations();
     if (maxIterations > 0 && maxIterations <= MAX_LOOPS) {
       this.optimizationLoopMaxIterations = maxIterations;
@@ -490,10 +492,10 @@ class PhaseOptimizer implements CompilerPass {
     }
 
     /**
-     * If two loop batches in a row made the code less than 0.05% smaller than the previous batches,
-     * stop before the fixpoint. The 0.05% threshold is based on the following heuristic: 1% size
-     * difference matters to our users. 0.1% size difference is borderline relevant. 0.05%
-     * difference between loop batches is unlikely to grow the final output more than 0.1%.
+     * If two loop batches in a row made the code less than 0.1% smaller than the previous batches,
+     * stop before the fixpoint. The 0.1% threshold is based on the following heuristic: 1% size
+     * difference matters to our users, while 0.1% is borderline relevant. Requiring two
+     * consecutive batches below that threshold limits the likely final output difference.
      *
      * <p>Use this criterion only for the two code-removing loops. The code-motion loop may move
      * code around but not remove code, so this criterion is not correct for stopping early.
@@ -508,7 +510,7 @@ class PhaseOptimizer implements CompilerPass {
     private boolean isAstSufficientlyChanging(int oldAstSize, int newAstSize) {
       if (useSizeHeuristicToStopOptimizationLoop && this.isCodeRemovalLoop) {
         float percentChange = 100 * (Math.abs(newAstSize - oldAstSize) / (float) oldAstSize);
-        if (percentChange < 0.05) {
+        if (percentChange < optimizationLoopSizeThreshold) {
           this.howmanyIterationsUnderThreshold++;
         } else {
           this.howmanyIterationsUnderThreshold = 0;

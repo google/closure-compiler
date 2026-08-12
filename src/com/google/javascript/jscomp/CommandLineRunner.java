@@ -507,6 +507,14 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private int numParallelThreads = 1;
 
     @Option(
+        name = "--optimization_loop_size_threshold",
+        hidden = true,
+        usage =
+            "Stop code-removal fixed-point loops after two batches whose AST size changes by less"
+                + " than this percentage.")
+    private double optimizationLoopSizeThreshold = 0.1;
+
+    @Option(
         name = "--checks_only",
         aliases = {"--checks-only"},
         handler = BooleanOptionHandler.class,
@@ -1875,6 +1883,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     options.setNumParallelThreads(flags.numParallelThreads);
+    options.setOptimizationLoopSizeThreshold(flags.optimizationLoopSizeThreshold);
 
     options.setEnvironment(flags.environment);
 
