@@ -397,7 +397,7 @@ class PhaseOptimizer implements CompilerPass {
           }
 
           int previousAstSize = astSize;
-          if (trackAstSize) {
+          if (trackAstSize && lastIterMadeChanges) {
             astSize = NodeUtil.countAstSize(root);
           }
           if (state == State.RUN_PASSES_NOT_RUN_IN_PREV_ITER) {
