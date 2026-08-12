@@ -515,6 +515,14 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private double optimizationLoopSizeThreshold = 0.1;
 
     @Option(
+        name = "--optimization_loop_max_iterations",
+        hidden = true,
+        usage =
+            "Run at most this many iterations of each code-removal optimization loop. A value of "
+                + "zero uses the compiler default limit.")
+    private int optimizationLoopMaxIterations = 0;
+
+    @Option(
         name = "--checks_only",
         aliases = {"--checks-only"},
         handler = BooleanOptionHandler.class,
@@ -1893,6 +1901,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     options.setNumParallelThreads(flags.numParallelThreads);
     options.setOptimizationLoopSizeThreshold(flags.optimizationLoopSizeThreshold);
+    options.setMaxOptimizationLoopIterations(flags.optimizationLoopMaxIterations);
 
     options.setEnvironment(flags.environment);
 

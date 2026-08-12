@@ -3438,6 +3438,16 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
   }
 
   @Test
+  public void testOptimizationLoopMaxIterations() {
+    testSame("");
+    assertThat(lastCompiler.getOptions().getMaxOptimizationLoopIterations()).isEqualTo(0);
+
+    args.add("--optimization_loop_max_iterations=3");
+    testSame("");
+    assertThat(lastCompiler.getOptions().getMaxOptimizationLoopIterations()).isEqualTo(3);
+  }
+
+  @Test
   public void testParamModification1() {
     args.add("--compilation_level=ADVANCED");
     test(
