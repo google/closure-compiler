@@ -221,17 +221,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Configured {@link SourceMapInput}s, plus any source maps discovered in source files. */
   ConcurrentHashMap<String, SourceMapInput> inputSourceMaps = new ConcurrentHashMap<>();
 
-  /** Resolved source names and contents, cached because outputting each chunk resets the map. */
-  private final ConcurrentHashMap<SourceMapInput, ImmutableList<SourceMapSourceFile>>
-      sourceMapSourceFiles = new ConcurrentHashMap<>();
-
-  private record SourceMapSourceFile(String name, String code) {}
-
   // Map from filenames to lists of all the comments in each file.
   private Map<String, List<Comment>> commentsPerFile = new ConcurrentHashMap<>();
 
   /** The source code map */
   private SourceMap sourceMap;
+
+  /** Whether all input and compilation source contents have been added to {@link #sourceMap}. */
+  private boolean sourceMapSourcesContentInitialized = false;
 
   /** Extra context appended to the "print source after each pass" output. */
   private String debugMessage;
@@ -844,6 +841,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Create the source map if necessary.
     if (options.shouldGatherSourceMapInfo()) {
       sourceMap = options.getSourceMapFormat().getInstance();
+      sourceMapSourcesContentInitialized = false;
       sourceMap.setPrefixMappings(options.getSourceMapLocationMappings());
       if (options.getApplyInputSourceMaps()) {
         sourceMap.setSourceFileMapping(this);
@@ -3570,14 +3568,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   private synchronized void addSourceMapSourceFiles(SourceMapInput inputSourceMap) {
     // synchronized annotation guards concurrent access to sourceMap during parsing.
-    ImmutableList<SourceMapSourceFile> sourceFiles = sourceMapSourceFiles.get(inputSourceMap);
-    if (sourceFiles != null) {
-      for (SourceMapSourceFile sourceFile : sourceFiles) {
-        sourceMap.addSourceFile(sourceFile.name(), sourceFile.code());
-      }
-      return;
-    }
-
     SourceMapConsumerV3 consumer = inputSourceMap.getSourceMap(errorManager);
     if (consumer == null) {
       return;
@@ -3588,24 +3578,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     Iterator<String> content = sourcesContent.iterator();
     Iterator<String> sources = consumer.getOriginalSources().iterator();
-    ImmutableList.Builder<SourceMapSourceFile> sourceFilesBuilder = ImmutableList.builder();
     while (sources.hasNext() && content.hasNext()) {
       String code = content.next();
       SourceFile source =
           SourceMapResolver.getRelativePath(inputSourceMap.getOriginalPath(), sources.next());
       if (source != null) {
-        sourceFilesBuilder.add(new SourceMapSourceFile(source.getName(), code));
+        sourceMap.addSourceFile(source.getName(), code);
       }
     }
     if (sources.hasNext() || content.hasNext()) {
       throw new RuntimeException(
           "Source map's \"sources\" and \"sourcesContent\" lengths do not match.");
-    }
-
-    sourceFiles = sourceFilesBuilder.build();
-    sourceMapSourceFiles.put(inputSourceMap, sourceFiles);
-    for (SourceMapSourceFile sourceFile : sourceFiles) {
-      sourceMap.addSourceFile(sourceFile.name(), sourceFile.code());
     }
   }
 
@@ -4663,15 +4646,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
     sourceMap.reset();
-    if (options.getSourceMapIncludeSourcesContent()) {
+    if (!sourceMapSourcesContentInitialized && options.getSourceMapIncludeSourcesContent()) {
       if (options.getApplyInputSourceMaps()) {
-        // Add any input source map content files to the source map as potential sources
+        // Add any input source map content files to the source map as potential sources.
         for (SourceMapInput inputSourceMap : inputSourceMaps.values()) {
           addSourceMapSourceFiles(inputSourceMap);
         }
       }
 
-      // Add all the compilation sources to the source map as potential sources
+      // Add all compilation sources to the map. SourceMapGeneratorV3 retains source contents across
+      // reset(), so this only needs to happen once for each newly created source map generator.
       Iterable<JSChunk> allChunks = getChunks();
       if (allChunks != null) {
         List<SourceFile> sourceFiles = new ArrayList<>();
@@ -4679,14 +4663,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           for (CompilerInput input : chunk.getInputs()) {
             SourceFile sourceFile = input.getSourceFile();
             if (sourceFile.isStubSourceFileForAlreadyProvidedInput()) {
-              // do not add stub source files to the source map
               continue;
             }
-            sourceFiles.add(input.getSourceFile());
+            sourceFiles.add(sourceFile);
           }
         }
         addFilesToSourceMap(sourceFiles);
       }
+      sourceMapSourcesContentInitialized = true;
     }
   }
 
