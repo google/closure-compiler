@@ -118,7 +118,7 @@ public final class PerformanceTrackerTest {
                             IR.hook(IR.string("a"), IR.string("b"), IR.string("c")))),
                     IR.function(IR.name("name"), IR.paramList(), IR.block()))));
     PerformanceTracker tracker =
-        new PerformanceTracker(emptyExternRoot, main, TracerMode.TIMING_ONLY);
+        new PerformanceTracker(emptyExternRoot, main, TracerMode.RAW_SIZE);
 
     // When
     tracker.recordPassStart(PassNames.PARSE_INPUTS, true);
@@ -143,6 +143,18 @@ public final class PerformanceTrackerTest {
                 STRINGLIT,3
                 """,
                 Pattern.DOTALL));
+  }
+
+  @Test
+  public void testTimingOnlyOmitsAstManifest() {
+    Node main = IR.root(IR.script(IR.exprResult(IR.name("x"))));
+    PerformanceTracker tracker =
+        new PerformanceTracker(emptyExternRoot, main, TracerMode.TIMING_ONLY);
+
+    tracker.recordPassStart(PassNames.PARSE_INPUTS, true);
+    tracker.recordPassStop(PassNames.PARSE_INPUTS, 0);
+
+    assertThat(extractReport(tracker)).doesNotContain("Input AST Manifest:");
   }
 
   @Test

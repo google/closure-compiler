@@ -244,7 +244,7 @@ public final class PerformanceTracker {
   }
 
   public boolean tracksAstManifest() {
-    return this.mode.isOn();
+    return this.mode != TracerMode.TIMING_ONLY;
   }
 
   public int getRuntime() {
