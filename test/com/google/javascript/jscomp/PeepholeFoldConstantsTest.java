@@ -1480,6 +1480,10 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("x = [foo(), 0][1]");
     test("x = [0, foo()][1]", "x = foo()");
     testSame("x = [0, foo()][0]");
+    testSame("x = [foo(), 0][-1]");
+    testSame("x = [0, foo()][-1]");
+    testSame("x = [foo(), 0][2]");
+    testSame("x = [0, foo()][2]");
     testSame("for([1][0] in {});");
   }
 
@@ -1498,6 +1502,10 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("x = [foo(), 0]?.[1]");
     test("x = [0, foo()]?.[1]", "x = foo()");
     testSame("x = [0, foo()]?.[0]");
+    testSame("x = [foo(), 0]?.[-1]");
+    testSame("x = [0, foo()]?.[-1]");
+    testSame("x = [foo(), 0]?.[2]");
+    testSame("x = [0, foo()]?.[2]");
   }
 
   @Test

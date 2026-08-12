@@ -1690,7 +1690,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     int intIndex = index.intValue();
-    Node current = intIndex >= 0 ? left.getFirstChild() : null;
+    Node current = left.getFirstChild();
     Node elem = null;
     for (int i = 0; current != null; i++) {
       if (current.isSpread()) {
