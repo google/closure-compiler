@@ -902,6 +902,8 @@ class RemoveUnusedCode implements CompilerPass {
       // exceptionNameNode can be an empty node if not using a binding in 2019.
       VarInfo exceptionVarInfo = traverseNameNode(exceptionNameNode, scope);
       exceptionVarInfo.setIsExplicitlyNotRemovable(() -> "catch variable");
+    } else {
+      traverseNode(exceptionNameNode, scope);
     }
     traverseNode(block, scope);
   }
