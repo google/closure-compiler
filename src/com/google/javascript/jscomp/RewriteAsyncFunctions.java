@@ -46,6 +46,7 @@ import org.jspecify.annotations.Nullable;
  * function foo(a, b) {
  *   let $jscomp$async$this = this;
  *   let $jscomp$async$arguments = arguments;
+ *   let $jscomp$async$new$target = new.target;
  *   let $jscomp$async$super$get$x = () => super.x;
  *   return $jscomp.asyncExecutePromiseGeneratorFunction(
  *       function* () {
@@ -53,6 +54,7 @@ import org.jspecify.annotations.Nullable;
  *         // - await (x) replaced with yield (x)
  *         // - arguments replaced with $jscomp$async$arguments
  *         // - this replaced with $jscomp$async$this
+ *         // - new.target replaced with $jscomp$async$new$target
  *         // - super.x replaced with $jscomp$async$super$get$x()
  *         // - super.x(5) replaced with $jscomp$async$super$get$x().call($jscomp$async$this, 5)
  *       });
@@ -63,6 +65,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
 
   private static final String ASYNC_ARGUMENTS = "$jscomp$async$arguments$";
   private static final String ASYNC_THIS = "$jscomp$async$this$";
+  private static final String ASYNC_NEW_TARGET = "$jscomp$async$new$target$";
   private static final String ASYNC_SUPER_PROP_GETTER_PREFIX = "$jscomp$async$super$get$";
   private final StaticScope namespace;
 
@@ -269,6 +272,9 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
     // null if mustAddAsyncThisVariable is false
     AstFactory.@Nullable Type typeOfThis;
     boolean mustAddAsyncArgumentsVariable = false;
+    boolean mustAddAsyncNewTargetVariable = false;
+    // null if mustAddAsyncNewTargetVariable is false
+    AstFactory.@Nullable Type typeOfNewTarget;
 
     FunctionContext(Node contextRootNode, String uniqueId) {
       super(contextRootNode, uniqueId);
@@ -336,12 +342,23 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
       asyncThisAndArgumentsContext.mustAddAsyncArgumentsVariable = true;
     }
 
+    private void recordAsyncNewTargetReplacementWasDone(AstFactory.Type typeOfNewTarget) {
+      asyncThisAndArgumentsContext.mustAddAsyncNewTargetVariable = true;
+      asyncThisAndArgumentsContext.typeOfNewTarget = typeOfNewTarget;
+    }
+
     /**
      * Creates a new reference to the variable used to hold the value of `this` for async functions.
      */
     private Node createThisVariableReference(AstFactory.Type typeOfThis) {
       recordAsyncThisReplacementWasDone(typeOfThis);
       return astFactory.createName(ASYNC_THIS + asyncThisAndArgumentsContext.uniqueId, typeOfThis);
+    }
+
+    private Node createNewTargetVariableReference(AstFactory.Type typeOfNewTarget) {
+      recordAsyncNewTargetReplacementWasDone(typeOfNewTarget);
+      return astFactory.createName(
+          ASYNC_NEW_TARGET + asyncThisAndArgumentsContext.uniqueId, typeOfNewTarget);
     }
 
     private Node createWrapperArrowFunction(SuperPropertyWrapperInfo wrapperInfo) {
@@ -377,6 +394,10 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
           }
           case THIS -> {
             n.replaceWith(asyncThisAndArgumentsContext.createThisVariableReference(type(n)));
+            compiler.reportChangeToChangeScope(contextRootNode);
+          }
+          case NEW_TARGET -> {
+            n.replaceWith(asyncThisAndArgumentsContext.createNewTargetVariableReference(type(n)));
             compiler.reportChangeToChangeScope(contextRootNode);
           }
           case SUPER -> {
@@ -517,6 +538,14 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
       newBody.addChildToBack(
           astFactory.createArgumentsAliasDeclaration(
               ASYNC_ARGUMENTS + functionContext.asyncThisAndArgumentsContext.uniqueId));
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
+    }
+    if (functionContext.mustAddAsyncNewTargetVariable) {
+      // const newTarget$ = new.target;
+      newBody.addChildToBack(
+          astFactory.createSingleConstNameDeclaration(
+              ASYNC_NEW_TARGET + functionContext.asyncThisAndArgumentsContext.uniqueId,
+              astFactory.createNewTarget(functionContext.typeOfNewTarget)));
       NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
     }
     for (SuperPropertyWrapperInfo superPropertyWrapperInfo :

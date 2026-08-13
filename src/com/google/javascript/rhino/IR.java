@@ -794,7 +794,11 @@ public class IR {
   public static Node importMeta() {
     return new Node(Token.IMPORT_META);
   }
-  
+
+  public static Node newTarget() {
+    return new Node(Token.NEW_TARGET);
+  }
+
   // helper methods
 
   private static Node binaryOp(Token token, Node expr1, Node expr2) {

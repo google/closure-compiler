@@ -45,6 +45,8 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
           "$jscomp$async$this$",
           "ASYNC_ARGUMENTS",
           "$jscomp$async$arguments$",
+          "ASYNC_NEW_TARGET",
+          "$jscomp$async$new$target$",
           "ASYNC_SUPER_GET",
           "$jscomp$async$super$get$");
 
@@ -794,7 +796,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         "Transpilation of 'assignment to super property' is not yet implemented.");
   }
 
-  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
   @Test
   public void testAsyncArrowUsingNewTargetInConstructor() {
     test(
@@ -811,9 +812,10 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         class X {
           constructor() {
             const f = () => {
+              const ASYNC_NEW_TARGET$3 = new.target;
               return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
                   function* () {
-                    return new.target;
+                    return ASYNC_NEW_TARGET$3;
                   });
             };
           }
@@ -821,7 +823,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
   @Test
   public void testAsyncArrowUsingNewTargetInFunction() {
     test(
@@ -835,16 +836,16 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         """
         function Foo() {
           const f = () => {
+            const ASYNC_NEW_TARGET$3 = new.target;
             return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
                 function* () {
-                  return new.target;
+                  return ASYNC_NEW_TARGET$3;
                 });
           };
         }
         """);
   }
 
-  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
   @Test
   public void testNestedArrowFunctionUsingNewTarget() {
     test(
@@ -856,10 +857,11 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         """
         function Foo() {
           const f = () => {
+            const ASYNC_NEW_TARGET$3 = new.target;
             return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
                 function* () {
                   return () => {
-                    return new.target;
+                    return ASYNC_NEW_TARGET$3;
                   };
                 });
           };
@@ -867,7 +869,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
   @Test
   public void testAsyncFunctionUsingNewTarget() {
     test(
@@ -878,15 +879,15 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         """,
         """
         function f() {
+          const ASYNC_NEW_TARGET$1 = new.target;
           return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
               function* () {
-                return new.target;
+                return ASYNC_NEW_TARGET$1;
               });
         }
         """);
   }
 
-  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
   @Test
   public void testAsyncClassMethodWithAsyncArrowUsingNewTarget() {
     test(
@@ -904,12 +905,13 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             """
             class A {
               f() {
+                const ASYNC_NEW_TARGET$1 = new.target;
                 return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
                     function* () {
                       let g = () => {
                         return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
                             function* () {
-                              console.log(new.target);
+                              console.log(ASYNC_NEW_TARGET$1);
                             });
                       };
                       g();
@@ -919,7 +921,6 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             """));
   }
 
-  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
   @Test
   public void testNonAsyncClassMethodWithAsyncArrowUsingNewTarget() {
     test(
@@ -938,9 +939,10 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             class A {
               f() {
                 let g = () => {
+                  const ASYNC_NEW_TARGET$3 = new.target;
                   return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
                       function* () {
-                        console.log(new.target);
+                        console.log(ASYNC_NEW_TARGET$3);
                       });
                 };
                 g();

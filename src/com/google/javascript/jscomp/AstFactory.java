@@ -392,6 +392,12 @@ final class AstFactory {
     return result;
   }
 
+  Node createNewTarget(Type newTargetType) {
+    Node result = IR.newTarget();
+    setJSTypeOrColor(newTargetType, result);
+    return result;
+  }
+
   /**
    * Creates a THIS node with the correct type for the given ES6 class node.
    *

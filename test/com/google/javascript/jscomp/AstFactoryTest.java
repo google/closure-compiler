@@ -452,6 +452,15 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void testCreateNewTargetReference() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node x = astFactory.createNewTarget(type(getNativeType(JSTypeNative.STRING_TYPE)));
+    assertNode(x).hasType(Token.NEW_TARGET);
+    assertType(x.getJSType()).isString();
+  }
+
+  @Test
   public void createThisForEs6ClassMember_jstypes() {
     AstFactory astFactory = createTestAstFactory();
 

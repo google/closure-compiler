@@ -57,6 +57,10 @@ public class IRTest {
     testIR(IR.empty(), "EMPTY\n");
   }
 
+  @Test
+  public void testNewTarget() {
+    testIR(IR.newTarget(), "NEW_TARGET\n");
+  }
 
   @Test
   public void testFunction() {
