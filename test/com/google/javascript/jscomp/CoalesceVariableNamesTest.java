@@ -34,6 +34,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   // picking out which variable names are merged.
 
   private boolean usePseudoName = false;
+  private int parallelism;
   private OptimizationWorkReporter workReporter;
 
   @Override
@@ -41,12 +42,14 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     usePseudoName = false;
+    parallelism = 1;
     workReporter = null;
   }
 
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
+    options.setNumParallelThreads(parallelism);
     if (workReporter != null) {
       options.setOptimizationWorkReporter(workReporter);
     }
@@ -65,6 +68,18 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         new CoalesceVariableNames(compiler, usePseudoName).process(externs, root);
       }
     };
+  }
+
+  @Test
+  public void testParallelScripts() {
+    parallelism = 2;
+    test(
+        srcs(
+            "function f(){var x=1;var y=x+1;return y}",
+            "function g(){var a=2;var b=a+1;return b}"),
+        expected(
+            "function f(){var x=1;x=x+1;return x}",
+            "function g(){var a=2;a=a+1;return a}"));
   }
 
   @Test

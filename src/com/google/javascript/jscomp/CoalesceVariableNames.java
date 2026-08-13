@@ -42,9 +42,14 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -76,6 +81,8 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
   private final Deque<LiveVariablesAnalysis> liveAnalyses;
   private final boolean usePseudoNames;
   private final AstFactory astFactory;
+  // Worker traversals collect changes locally because the compiler's ChangeTracker is mutable.
+  private final Set<Node> changedScopes = new LinkedHashSet<>();
   private LiveVariablesAnalysis liveness;
 
   private final Comparator<Var> coloringTieBreaker =
@@ -106,12 +113,92 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
   public void process(Node externs, Node root) {
     checkNotNull(externs);
     checkNotNull(root);
+    int parallelism = compiler.getOptions().getNumParallelThreads();
+    // Detailed work reporting preserves traversal order and uses a mutable writer, so keep that
+    // diagnostic mode serial.
+    if (parallelism > 1
+        && root.isRoot()
+        && root.hasMoreThanOneChild()
+        && compiler.getOptions().getOptimizationWorkReporter() == null) {
+      processScriptsConcurrently(root, parallelism);
+    } else {
+      traverse(root);
+    }
+    for (Node changedScope : changedScopes) {
+      compiler.reportChangeToChangeScope(changedScope);
+    }
+    compiler.setLifeCycleStage(LifeCycleStage.RAW);
+  }
+
+  private void traverse(Node root) {
     NodeTraversal.builder()
         .setCompiler(compiler)
         .setCallback(this)
         .setScopeCreator(this.scopeCreator)
         .traverse(root);
-    compiler.setLifeCycleStage(LifeCycleStage.RAW);
+  }
+
+  private void traverseWithScope(Node root, AbstractScope<?, ?> scope) {
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .setScopeCreator(this.scopeCreator)
+        .traverseWithScope(root, scope);
+  }
+
+  private void processScriptsConcurrently(Node root, int parallelism) {
+    ArrayList<Node> scripts = new ArrayList<>();
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+      if (!script.isScript()) {
+        traverse(root);
+        return;
+      }
+      scripts.add(script);
+    }
+    // Function-local CFGs and rewrites in different scripts touch disjoint AST subtrees. Build the
+    // whole-program global scope once so every traversal still resolves names exactly as the serial
+    // root traversal does, then treat that scope as read-only in the workers.
+    AbstractScope<?, ?> globalScope = scopeCreator.createScope(root, null);
+
+    ExecutorService executor =
+        Executors.newFixedThreadPool(
+            Math.min(parallelism, scripts.size()),
+            runnable -> {
+              Thread thread = new Thread(runnable, "jscompiler-CoalesceVariableNames");
+              thread.setDaemon(true);
+              return thread;
+            });
+    ArrayList<Future<Set<Node>>> futures = new ArrayList<>(scripts.size());
+    boolean completed = false;
+    try {
+      for (Node script : scripts) {
+        futures.add(
+            executor.submit(
+                () -> {
+                  CoalesceVariableNames worker =
+                      new CoalesceVariableNames(compiler, usePseudoNames);
+                  worker.traverseWithScope(script, globalScope);
+                  return worker.changedScopes;
+                }));
+      }
+      executor.shutdown();
+      for (Future<Set<Node>> future : futures) {
+        try {
+          changedScopes.addAll(future.get());
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IllegalStateException("Interrupted while coalescing variable names", e);
+        } catch (ExecutionException e) {
+          throw new IllegalStateException(
+              "Cannot coalesce variable names concurrently", e.getCause());
+        }
+      }
+      completed = true;
+    } finally {
+      if (!completed) {
+        executor.shutdownNow();
+      }
+    }
   }
 
   /** Returns populated AllVarsDeclaredInFunction object iff shouldOptimizeScope is true. */
@@ -226,7 +313,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
 
       // Rename.
       n.setString(coalescedVar.getName());
-      compiler.reportChangeToEnclosingScope(n);
+      changedScopes.add(checkNotNull(ChangeTracker.getEnclosingChangeScopeRoot(n)));
       updateDeclarationsPostCoalescing(n, coalescedVar, parent);
     } else {
       // This code block is slow but since usePseudoName is for debugging,
@@ -255,7 +342,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
 
       // Rename.
       n.setString(pseudoName);
-      compiler.reportChangeToEnclosingScope(n);
+      changedScopes.add(checkNotNull(ChangeTracker.getEnclosingChangeScopeRoot(n)));
 
       if (vNode.getValue().equals(coalescedVar)) {
         return;
