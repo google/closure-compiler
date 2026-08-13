@@ -50,6 +50,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -59,8 +60,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.jspecify.annotations.Nullable;
@@ -2317,11 +2316,9 @@ public final class CommandLineRunnerTest {
       int serializerExitCode = serializer.doRun();
       assertWithMessage(errReader.toString(UTF_8)).that(serializerExitCode).isEqualTo(0);
     }
-    try (GZIPOutputStream combinedOutput =
-        new GZIPOutputStream(new FileOutputStream(combinedTypedAst))) {
+    try (FileOutputStream combinedOutput = new FileOutputStream(combinedTypedAst)) {
       for (File shard : new File[] {firstTypedAst, secondTypedAst}) {
-        try (GZIPInputStream shardInput =
-            new GZIPInputStream(java.nio.file.Files.newInputStream(shard.toPath()))) {
+        try (InputStream shardInput = java.nio.file.Files.newInputStream(shard.toPath())) {
           shardInput.transferTo(combinedOutput);
         }
       }
