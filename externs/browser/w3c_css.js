@@ -3172,6 +3172,258 @@ CSSStyleProperties.prototype.scrollPaddingInlineEnd;
 CSSStyleProperties.prototype.scrollPaddingInlineStart;
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-left
+ */
+CSSStyleProperties.prototype.scrollPaddingLeft;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-right
+ */
+CSSStyleProperties.prototype.scrollPaddingRight;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-top
+ */
+CSSStyleProperties.prototype.scrollPaddingTop;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-timeline
+ */
+CSSStyleProperties.prototype.scrollTimeline;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-timeline-axis
+ */
+CSSStyleProperties.prototype.scrollTimelineAxis;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-timeline-name
+ */
+CSSStyleProperties.prototype.scrollTimelineName;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/text-autospace
+ */
+CSSStyleProperties.prototype.textAutospace;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/text-justify
+ */
+CSSStyleProperties.prototype.textJustify;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/timeline-scope
+ */
+CSSStyleProperties.prototype.timelineScope;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action
+ */
+CSSStyleProperties.prototype.touchAction;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/translate
+ */
+CSSStyleProperties.prototype.translate;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/view-transition-name
+ */
+CSSStyleProperties.prototype.viewTransitionName;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAlignContent;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAlignItems;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAlignSelf;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAnimation;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAnimationDelay;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAnimationDirection;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAnimationDuration;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAnimationFillMode;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAnimationIterationCount;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAnimationName;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAnimationPlayState;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAnimationTimingFunction;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitAppearance;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBackfaceVisibility;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBackgroundClip;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBackgroundOrigin;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBackgroundSize;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBorderBottomLeftRadius;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBorderBottomRightRadius;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBorderRadius;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBorderTopLeftRadius;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBorderTopRightRadius;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBoxAlign;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBoxFlex;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBoxOrdinalGroup;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBoxOrient;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBoxPack;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBoxShadow;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitBoxSizing;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitFilter;
+
+/**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
  * Externs for the CSSOM View Module.
  * @see http://www.w3.org/TR/cssom-view/
