@@ -33,12 +33,17 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -73,6 +78,9 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
   private final AbstractCompiler compiler;
 
   private final SideEffectPredicate sideEffectPredicate;
+
+  // Worker traversals collect changes locally because the compiler's ChangeTracker is mutable.
+  private final Set<Node> changedScopes = new LinkedHashSet<>();
 
   // These two pieces of data is persistent in the whole execution of enter
   // scope.
@@ -320,10 +328,90 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
   @Override
   public void process(Node externs, Node root) {
+    int parallelism = compiler.getOptions().getNumParallelThreads();
+    if (parallelism > 1
+        && root.isRoot()
+        && root.hasMoreThanOneChild()
+        && compiler.getOptions().getOptimizationWorkReporter() == null) {
+      processScriptsConcurrently(externs, root, parallelism);
+    } else {
+      traverseRoots(externs, root);
+    }
+    for (Node changedScope : changedScopes) {
+      compiler.reportChangeToChangeScope(changedScope);
+    }
+  }
+
+  private void traverseRoots(Node externs, Node root) {
     NodeTraversal.builder()
         .setCompiler(compiler)
         .setCallback(this)
         .traverseRoots(externs, root);
+  }
+
+  private void traverseWithScope(Node root, AbstractScope<?, ?> scope) {
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .traverseWithScope(root, scope);
+  }
+
+  private void processScriptsConcurrently(Node externs, Node root, int parallelism) {
+    ArrayList<Node> scripts = new ArrayList<>();
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+      if (!script.isScript()) {
+        traverseRoots(externs, root);
+        return;
+      }
+      scripts.add(script);
+    }
+    Node globalRoot = checkNotNull(externs.getParent());
+    checkState(root.getParent() == globalRoot);
+    // Function-local analyses and rewrites in different scripts touch disjoint AST subtrees. Give
+    // every worker the same read-only whole-program scope so name resolution remains identical to
+    // the serial traversal.
+    AbstractScope<?, ?> globalScope =
+        new SyntacticScopeCreator(compiler).createScope(globalRoot, null);
+
+    ExecutorService executor =
+        Executors.newFixedThreadPool(
+            Math.min(parallelism, scripts.size()),
+            runnable -> {
+              Thread thread = new Thread(runnable, "jscompiler-FlowSensitiveInlineVariables");
+              thread.setDaemon(true);
+              return thread;
+            });
+    ArrayList<Future<Set<Node>>> futures = new ArrayList<>(scripts.size());
+    boolean completed = false;
+    try {
+      for (Node script : scripts) {
+        futures.add(
+            executor.submit(
+                () -> {
+                  FlowSensitiveInlineVariables worker =
+                      new FlowSensitiveInlineVariables(compiler);
+                  worker.traverseWithScope(script, globalScope);
+                  return worker.changedScopes;
+                }));
+      }
+      executor.shutdown();
+      for (Future<Set<Node>> future : futures) {
+        try {
+          changedScopes.addAll(future.get());
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IllegalStateException("Interrupted while inlining variables", e);
+        } catch (ExecutionException e) {
+          throw new IllegalStateException(
+              "Cannot inline variables concurrently", e.getCause());
+        }
+      }
+      completed = true;
+    } finally {
+      if (!completed) {
+        executor.shutdownNow();
+      }
+    }
   }
 
   @Override
@@ -557,7 +645,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         while (defParent.getParent().isLabel()) {
           defParent = defParent.getParent();
         }
-        compiler.reportChangeToEnclosingScope(defParent);
+        changedScopes.add(checkNotNull(ChangeTracker.getEnclosingChangeScopeRoot(defParent)));
         defParent.detach();
         use.replaceWith(rhs);
       } else if (NodeUtil.isNameDeclaration(defParent)) {
@@ -573,7 +661,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       } else {
         throw new IllegalStateException("No other definitions can be inlined.");
       }
-      compiler.reportChangeToEnclosingScope(useParent);
+      changedScopes.add(checkNotNull(ChangeTracker.getEnclosingChangeScopeRoot(useParent)));
     }
 
     /**

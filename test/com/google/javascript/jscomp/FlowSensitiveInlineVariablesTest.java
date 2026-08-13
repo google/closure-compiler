@@ -29,6 +29,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 
+  private int parallelism;
   private OptimizationWorkReporter workReporter;
 
   public static final String EXTERN_FUNCTIONS =
@@ -45,6 +46,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
     enableNormalize();
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
+    parallelism = 1;
   }
 
   @Override
@@ -56,6 +58,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
+    options.setNumParallelThreads(parallelism);
     if (workReporter != null) {
       options.setOptimizationWorkReporter(workReporter);
     }
@@ -71,6 +74,16 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
         new FlowSensitiveInlineVariables(compiler).process(externs, root);
       }
     };
+  }
+
+  @Test
+  public void testParallelScripts() {
+    parallelism = 2;
+    test(
+        srcs(
+            "function f(){var x;x=1;print(x)}",
+            "function g(){var y;y=2;print(y)}"),
+        expected("function f(){var x;print(1)}", "function g(){var y;print(2)}"));
   }
 
   @Test
