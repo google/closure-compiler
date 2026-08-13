@@ -4526,7 +4526,8 @@ async function abc() {
   var $jscomp$forAwait$retFn0;
   try {
     for (var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());;) {
-      var $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
+      var $jscomp$forAwait$tempResult0 = void 0;
+      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
       if ($jscomp$forAwait$tempResult0.done) {
         break;
       }

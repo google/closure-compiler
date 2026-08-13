@@ -111,6 +111,7 @@ async function test() {
   try {
     var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(source());
     for (;;) {
+      $jscomp$forAwait$tempResult0 = void 0;
       $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
       if ($jscomp$forAwait$tempResult0.done) {
         break;
@@ -164,6 +165,7 @@ window.onload = async function() {
   try {
 var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(window["unknownAsyncIterable"]);
     for (;;) {
+      $jscomp$forAwait$tempResult0 = void 0;
       $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
       if ($jscomp$forAwait$tempResult0.done) {
         break;
@@ -207,6 +209,7 @@ window.onload = async function() {
   try {
 var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(window["unknownAsyncIterable"]);
     for (;;) {
+      $jscomp$forAwait$tempResult0 = void 0;
       $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
       if ($jscomp$forAwait$tempResult0.done) {
         break;
@@ -673,6 +676,7 @@ async function abc() {
   try {
     var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
     for (;;) {
+      $jscomp$forAwait$tempResult0 = void 0;
       $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
       if ($jscomp$forAwait$tempResult0.done) {
         break;
@@ -719,18 +723,21 @@ function foo() {
     Node makeAsyncIteratorCall = tempIterator0.getFirstChild();
     Node block = forNode.getLastChild();
     assertNode(block).isBlock();
+    // Find $jscomp$forAwait$tempResult0 = void 0;
+    Node resetTempResult0 = block.getFirstFirstChild();
+    assertNode(resetTempResult0).isAssign();
     // Find $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
-    Node tempResult0 = block.getFirstFirstChild();
+    Node tempResult0 = block.getSecondChild().getFirstChild();
     assertNode(tempResult0).isAssign();
     Node await = tempResult0.getFirstChild().getNext();
     Node nextCall = await.getFirstChild();
     Node done =
         block
-            .getSecondChild() // if
+            .getChildAtIndex(2) // if
             .getFirstChild();
     Node value =
         block
-            .getChildAtIndex(2) // exprResult
+            .getChildAtIndex(3) // exprResult
             .getFirstChild() // assign
             .getLastChild(); // getprop
     assertNode(tempIterator0)
@@ -754,6 +761,7 @@ async function abc() {
  try {
    var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
    for (;;) {
+     $jscomp$forAwait$tempResult0 = void 0;
      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
      if ($jscomp$forAwait$tempResult0.done) {
        break;
@@ -789,6 +797,7 @@ async function abc() {
  try {
    var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
    for (;;) {
+     $jscomp$forAwait$tempResult0 = void 0;
      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
      if ($jscomp$forAwait$tempResult0.done) {
        break;
@@ -824,6 +833,7 @@ async function abc() {
  try {
    var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
    for (;;) {
+     $jscomp$forAwait$tempResult0 = void 0;
      $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
      if ($jscomp$forAwait$tempResult0.done) {
        break;
@@ -862,6 +872,7 @@ async() => {
   try {
 var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
     for (;;) {
+      $jscomp$forAwait$tempResult0 = void 0;
       $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
       if ($jscomp$forAwait$tempResult0.done) {
         break;
@@ -908,6 +919,7 @@ async() => {
 // rewriting does not lose the label with the for await of statement
   var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(foo());
     label: for (;;) {
+      $jscomp$forAwait$tempResult0 = void 0;
       $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
       if ($jscomp$forAwait$tempResult0.done) {
         break;
@@ -953,6 +965,7 @@ function foo() {
     try {
 var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(bar());
       for (;;) {
+        $jscomp$forAwait$tempResult0 = void 0;
         $jscomp$forAwait$tempResult0 = yield new $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.AWAIT_VALUE, $jscomp$forAwait$tempIterator0.next());
         if ($jscomp$forAwait$tempResult0.done) {
           break;
@@ -980,7 +993,6 @@ var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(bar());
 """);
   }
 
-  // TODO(b/538171093): RewriteAsyncIteration emits extra assignment tempResult = void 0
   @Test
   public void testForAwaitResetsTempResultBeforeAwaitNext() {
     test(
@@ -999,6 +1011,7 @@ var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(bar());
           try {
             var $jscomp$forAwait$tempIterator0 = (0, $jscomp.makeAsyncIterator)(source());
             for (;;) {
+              $jscomp$forAwait$tempResult0 = void 0;
               $jscomp$forAwait$tempResult0 = await $jscomp$forAwait$tempIterator0.next();
               if ($jscomp$forAwait$tempResult0.done) {
                 break;

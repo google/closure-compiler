@@ -487,6 +487,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
    * var errorRes, retFn, tmpRes;
    * try {
    *   for (var tmpIterator = makeAsyncIterator(rhs);;) {
+   *      tmpRes = void 0;
    *      tmpRes = await tmpIterator.next();
    *      if (tmpRes.done) {
    *        break;
@@ -607,6 +608,11 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
             .createSingleVarNameDeclaration(returnFuncTempName)
             .srcrefTreeIfMissing(forAwaitOf);
 
+    // Generate `tmpRes = void 0;`
+    Node resetTempResult =
+        astFactory.exprResult(
+            astFactory.createAssign(resultTempName, astFactory.createUndefinedValue()));
+
     // Generate `tmpRes = await tmpIterator.next()`
     Node resultDeclaration =
         astFactory.exprResult(
@@ -620,7 +626,11 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
             astFactory.createEmpty(),
             astFactory.createEmpty(),
             astFactory.createBlock(
-                resultDeclaration, breakIfDone, lhsAssignment, ensureBlock(originalBody)));
+                resetTempResult,
+                resultDeclaration,
+                breakIfDone,
+                lhsAssignment,
+                ensureBlock(originalBody)));
 
     if (replacementPoint.isLabel()) {
       newForLoop = astFactory.createLabel(replacementPoint.getFirstChild().cloneNode(), newForLoop);
