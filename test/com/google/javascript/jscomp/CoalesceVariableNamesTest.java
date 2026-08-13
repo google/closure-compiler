@@ -300,6 +300,22 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testOptionalChainingUnsafeCoalesce() {
+    inFunction(
+        """
+        var x = 1;
+        try {
+          cb?.();
+          x = 2;
+        } catch (e) {
+          var y = 3;
+          use(y);
+        }
+        use(x);
+        """);
+  }
+
+  @Test
   public void testDeadAssignment() {
     inFunction("var x = 6; var y; y = 4 ; x");
     inFunction("var y = 3; y = y + 4; x");
@@ -1631,10 +1647,11 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538168027): Fix DataFlowAnalysis.computeEscaped to mark variables captured by instance
+  // class fields as escaped
   @Test
-  public void testInstanceFieldInitializerCaptureIsClobbered() {
+  public void testInstanceFieldInitializerCaptureIsNotClobbered() {
     test(
-        // input JS
         """
         function render(input) {
           let s = sanitize(input);
@@ -1644,8 +1661,6 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
           return new Box();
         }
         """,
-        // TODO(b/538168027): buggy output: `t` coalesced onto `s`; the class-field initializer now
-        // observes raw `input` at [[Construct]] time instead of the sanitized value.
         """
         function render(input) {
           var s = sanitize(input);
@@ -1673,8 +1688,10 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538168027): Fix DataFlowAnalysis.computeEscaped to mark variables captured by instance
+  // class fields as escaped
   @Test
-  public void testComputedFieldInitializerCaptureIsClobbered() {
+  public void testComputedFieldInitializerCaptureIsNotClobbered() {
     test(
         """
         function render(input) {
@@ -1685,7 +1702,6 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
           return new Box();
         }
         """,
-        // TODO(b/538168027): buggy output, ["html"] = s; is reading `input` instead.
         """
         function render(input) {
           var s = sanitize(input);

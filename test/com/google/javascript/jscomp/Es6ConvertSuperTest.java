@@ -15,9 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.testing.CodeSubTree.findClassDefinition;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.fail;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.colors.Color;
@@ -1284,5 +1286,93 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
               constructor() { }
             }
             """));
+  }
+
+  // TODO(b/538155986): Report CANNOT_CONVERT_YET on super in object literal methods in
+  // Es6ConvertSuper
+  @Test
+  public void testSuperCallInObjectLiteralMethodFails() {
+    test(
+        """
+        class B {
+          render() {}
+        }
+        class C extends B {
+          make() {
+            return {
+              render() { return super.render(); }
+            };
+          }
+        }
+        """,
+        """
+        class B {
+          constructor() {}
+          render() {}
+        }
+        class C extends B {
+          constructor() {
+            super(...arguments);
+          }
+          make() {
+            return {
+              render() { return B.prototype.render.call(this); }
+            };
+          }
+        }
+        """);
+  }
+
+  // TODO(b/538155986): Report CANNOT_CONVERT_YET on super in object literal methods in
+  // Es6ConvertSuper
+  @Test
+  public void testSuperAccessInObjectLiteralMethodFails() {
+    test(
+        """
+        class B {
+          get render() { return 1; }
+        }
+        class C extends B {
+          make() {
+            return {
+              render() { return super.render; }
+            };
+          }
+        }
+        """,
+        """
+        class B {
+          constructor() {}
+          get render() { return 1; }
+        }
+        class C extends B {
+          constructor() {
+            super(...arguments);
+          }
+          make() {
+            return {
+              render() { return Reflect.get(B.prototype, JSCompiler_renameProperty("render", B), this); }
+            };
+          }
+        }
+        """);
+  }
+
+  // TODO(b/538155986): Report CANNOT_CONVERT_YET on super in object literal methods in
+  // Es6ConvertSuper
+  @Test
+  public void testSuperInNonNestedObjectLiteralMethodFails() {
+    try {
+      test(
+          """
+          const obj = {
+            render() { return super.render(); }
+          };
+          """,
+          "");
+      fail("Expected NPE");
+    } catch (RuntimeException e) {
+      assertThat(e.getCause() instanceof NullPointerException).isTrue();
+    }
   }
 }

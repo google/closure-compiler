@@ -78,6 +78,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         "var x = {a: function() { return 0; } };");
   }
 
+  // TODO(b/538171097): Reinitialize computed property temporary variables in LateEs6ToEs3Converter
   @Test
   public void testInitSymbolIterator() {
     test(
@@ -98,6 +99,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test("var obj = { f() { alert(1); }, x };", "var obj = { f: function() { alert(1); }, x: x };");
   }
 
+  // TODO(b/538171097): Reinitialize computed property temporary variables in LateEs6ToEs3Converter
   @Test
   public void testComputedPropertiesWithMethod() {
     test(
@@ -110,6 +112,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538171097): Reinitialize computed property temporary variables in LateEs6ToEs3Converter
   @Test
   public void testComputedProperties() {
     test(
@@ -209,6 +212,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538171097): Reinitialize computed property temporary variables in LateEs6ToEs3Converter
   @Test
   public void testComputedPropGetterSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -219,8 +223,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         "var obj = {'a' : 2, get l () {return null;}, ['f' + 1] : 1}",
         """
         var COMP_PROP_VAR$0 = {get l () {return null;}};
-        var obj = (COMP_PROP_VAR$0['a'] = 2,
-          (COMP_PROP_VAR$0['f' + 1] = 1, COMP_PROP_VAR$0));
+        var obj = (COMP_PROP_VAR$0['a'] = 2, (COMP_PROP_VAR$0['f' + 1] = 1, COMP_PROP_VAR$0));
         """);
     test(
         "var obj = {['a' + 'b'] : 2, set l (strParam) {}}",
@@ -280,6 +283,8 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
    * uniqueID in them. This uniqueID is obfucated by using a generic name `TAGGED_TEMPLATE_TMP_VAR`
    * here that gets replaced by the runtime-computed uniqueID before test execution.
    */
+  // TODO(b/538150835): Do not mark property tagged template calls as FREE_CALL in
+  // Es6TemplateLiterals
   @Test
   public void testTaggedTemplateLiteral_singleScript() {
     test(
@@ -350,6 +355,16 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
                 $jscomp.createTemplateTagFirstArg(['', ' world']);
             a.b(TAGGED_TEMPLATE_TMP_VAR$0, hello);
+            """));
+
+    test(
+        externs(RUNTIME_STUBS, "var a = {}; var b; a[b];"),
+        srcs("a[b]`${hello} world`"),
+        expected(
+            """
+            /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
+                $jscomp.createTemplateTagFirstArg(['', ' world']);
+            (0, a[b])(TAGGED_TEMPLATE_TMP_VAR$0, hello);
             """));
 
     // https://github.com/google/closure-compiler/issues/1299
@@ -493,6 +508,31 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             var a = {};
             function foo() {function bar() {tag(TAGGED_TEMPLATE_TMP_VAR$0);}}
             """));
+  }
+
+  // TODO(b/538171097): Reinitialize computed property temporary variables in LateEs6ToEs3Converter
+  @Test
+  public void testComputedPropertyInLoopHeader() {
+    test(
+        "for (; {[foo]: bar}; ) {}",
+        """
+        var COMP_PROP_VAR$0 = {};
+        for (; (COMP_PROP_VAR$0[foo] = bar, COMP_PROP_VAR$0); ) {}
+        """);
+
+    test(
+        "while ({[foo]: bar}) {}",
+        """
+        var COMP_PROP_VAR$0 = {};
+        for (; (COMP_PROP_VAR$0[foo] = bar, COMP_PROP_VAR$0); ) {}
+        """);
+
+    test(
+        "do {} while ({[foo]: bar});",
+        """
+        var COMP_PROP_VAR$0 = {};
+        do {} while ((COMP_PROP_VAR$0[foo] = bar, COMP_PROP_VAR$0));
+        """);
   }
 
   @Test

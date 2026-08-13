@@ -1241,6 +1241,146 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
         "var x = 1; if (true) { x = 2; } var y    ; var z; z = x = x + 1;");
   }
 
+  // TODO(b/538150836): Support tagged template in FlowSensitiveInlineVariables
+  @Test
+  public void testPathCheckWithSideEffects() {
+    // Control: call blocks inlining
+    noInline("var x = 1; hasSFX(); var z = 1; print(x);");
+
+    // Tagged template blocks inlining in fixed compiler, inlined in baseline
+    inline(
+        "var x = 1; hasSFX`${1}`; var z = 1; print(x);",
+        "var x; hasSFX`${1}`; var z = 1; print(1);");
+
+    // Optional chain call blocks inlining in fixed compiler, inlined in baseline
+    inline(
+        "var x = 1; hasSFX?.(1); var z = 1; print(x);", "var x; hasSFX?.(1); var z = 1; print(1);");
+  }
+
+  @Test
+  public void testPathCheckWithoutSideEffects() {
+    // Optional chain call without side effects allows inlining
+    inline("var x = 1; noSFX?.(1); var a = x;", "var x; noSFX?.(1); var a = 1;");
+
+    // Tagged template without side effects allows inlining
+    inline("var x = 1; noSFX`${1}`; var a = x;", "var x; noSFX`${1}`; var a = 1;");
+  }
+
+  // TODO(b/538125080): Fix FlowSensitiveInlineVariables inlines functions reading properties across
+  // property writes
+  @Test
+  public void testNoInlineAcrossPropertyWrites() {
+    // Property assignment via dot notation (obj.p = v)
+    inline(
+        """
+        var user = {};
+        var r = (function(){ return user.role; })();
+        user.role = 'admin';
+        if (r !== 'admin') doPrivileged();
+        """,
+        """
+        var user = {};
+        var r;
+        user.role = 'admin';
+        if ((function(){ return user.role; })() !== 'admin') doPrivileged();
+        """);
+
+    // Property assignment via bracket notation (obj[k] = v)
+    inline(
+        """
+        var user = {};
+        var r = (function(){ return user['role']; })();
+        user['role'] = 'admin';
+        if (r !== 'admin') doPrivileged();
+        """,
+        """
+        var user = {};
+        var r;
+        user['role'] = 'admin';
+        if ((function(){ return user['role']; })() !== 'admin') doPrivileged();
+        """);
+
+    // Compound property assignment (obj.p += v)
+    inline(
+        """
+        var user = {};
+        var r = (function(){ return user.role; })();
+        user.role += 'admin';
+        if (r !== 'admin') doPrivileged();
+        """,
+        """
+        var user = {};
+        var r;
+        user.role += 'admin';
+        if ((function(){ return user.role; })() !== 'admin') doPrivileged();
+        """);
+
+    // Property increment/decrement (obj.p++)
+    inline(
+        """
+        var user = {};
+        var r = (function(){ return user.role; })();
+        user.role++;
+        if (r !== 'admin') doPrivileged();
+        """,
+        """
+        var user = {};
+        var r;
+        user.role++;
+        if ((function(){ return user.role; })() !== 'admin') doPrivileged();
+        """);
+  }
+
+  // TODO(b/538125187): Fix FlowSensitiveInlineVariables inlines into/across loop headers
+  @Test
+  public void testNoInlineEnhancedForLoopsLhs() {
+    // For-in variant
+    test(
+        externs(EXTERN_FUNCTIONS),
+        srcs(
+            """
+            function f(input, obj, sink) {
+              var x; x = input;
+              x = '';
+              print(x);
+              for (x in obj) {}
+              sink(x);
+            }
+            """),
+        expected(
+            """
+            function f(input, obj, sink) {
+              var x; x = input;
+              print('');
+              for (x in obj) {}
+              sink(x);
+            }
+            """));
+
+    // For-of variant
+    test(
+        externs(EXTERN_FUNCTIONS),
+        srcs(
+            """
+            function f(input, arr, sink) {
+              var x; x = input;
+              x = '';
+              print(x);
+              for (x of arr) {}
+              sink(x);
+            }
+            """),
+        expected(
+            """
+            function f(input, arr, sink) {
+              var x; x = input;
+              print('');
+              for (x of arr) {}
+              sink(x);
+            }
+            """));
+  }
+
   private void noInline(String input) {
     inline(input, input);
   }

@@ -1820,6 +1820,132 @@ public final class InlineVariablesTest extends CompilerTestCase {
     testSame("function f() { var a = this; var g = function() { a.y(); }; a.z(); }");
   }
 
+  // TODO(b/538171094): Don't inline this alias into class field def value
+  @Test
+  public void testThisAlias_classMemberFieldDef() {
+    test(
+        """
+        function f() {
+          var self = this;
+          use(self);
+          class H {
+            owner = self;
+          }
+        }
+        """,
+        """
+        function f() {
+          use(this);
+          class H {
+            owner = this;
+          }
+        }
+        """);
+  }
+
+  // TODO(b/538171094): Don't inline this alias into class field def value
+  @Test
+  public void testThisAlias_classStaticMemberFieldDef() {
+    test(
+        """
+        function f() {
+          var self = this;
+          use(self);
+          class H {
+            static owner = self;
+          }
+        }
+        """,
+        """
+        function f() {
+          use(this);
+          class H {
+            static owner = this;
+          }
+        }
+        """);
+  }
+
+  // TODO(b/538171094): Don't inline this alias into class field def value
+  @Test
+  public void testThisAlias_classComputedFieldDefValue() {
+    test(
+        """
+        function f() {
+          var self = this;
+          use(self);
+          class H {
+            ['owner'] = self;
+          }
+        }
+        """,
+        """
+        function f() {
+          use(this);
+          class H {
+            ['owner'] = this;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testThisAlias_classComputedFieldDefKey() {
+    test(
+        """
+        function f() {
+          var self = this;
+          use(self);
+          class H {
+            [self] = 1;
+          }
+        }
+        """,
+        """
+        function f() {
+          use(this);
+          class H {
+            [this] = 1;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testThisAlias_classStaticBlock() {
+    testSame(
+        """
+        function f() {
+          var self = this;
+          use(self);
+          class H {
+            static {
+              use(self);
+            }
+          }
+        }
+        """);
+  }
+
+  // TODO(b/538171094): Don't inline this alias into class field def value
+  @Test
+  public void testThisAlias_globalClassMemberFieldDef() {
+    test(
+        """
+        var self = this;
+        use(self);
+        class H {
+          owner = self;
+        }
+        """,
+        """
+        use(this);
+        class H {
+          owner = this;
+        }
+        """);
+  }
+
   @Test
   public void testInlineNamedFunction() {
     test("function f() {} f();", "(function(){})()");
@@ -2423,6 +2549,81 @@ public final class InlineVariablesTest extends CompilerTestCase {
         """
         function factorial(x) { if (x == 1) return 1; return x + factorial(x - 1); };
         exports.x = factorial;
+        """);
+  }
+
+  // TODO(b/538170229): InlineVariables: treat OPTCHAIN_GETPROP as canBeSideEffected
+  @Test
+  public void testNoInlinePastOptionalChainGetProp() {
+    test(
+        """
+        function f() {
+          var t = this.consume();
+          var ready = this?.ready;
+          return t + ready;
+        }
+        """,
+        """
+        function f() {
+          var ready = this?.ready;
+          return this.consume() + ready;
+        }
+        """);
+  }
+
+  @Test
+  public void testNoInlinePastGetProp() {
+    test(
+        """
+        function f() {
+          var t = this.consume();
+          var ready = this.ready;
+          return t + ready;
+        }
+        """,
+        """
+        function f() {
+          var t = this.consume();
+          return t + this.ready;
+        }
+        """);
+  }
+
+  @Test
+  public void testNoInlinePastOptionalChainCall() {
+    testSame(
+        """
+        function f() {
+          var t = this.consume();
+          var ready = this?.ready();
+          return t + ready;
+        }
+        """);
+  }
+
+  // TODO(b/538125083): InlineVariables: fix cross-scope alias chain with intervening reassignment
+  @Test
+  public void testCrossScopeAliasChainWithInterveningReassignment() {
+    test(
+        """
+        function f() {
+          var C = compute();
+          var D = C;
+          {
+            let A = D;
+            C = attacker();
+            sink(A); sink(A);
+          }
+        }
+        """,
+        """
+        function f() {
+          var C = compute();
+          {
+            C = attacker();
+            sink(C); sink(C);
+          }
+        }
         """);
   }
 }

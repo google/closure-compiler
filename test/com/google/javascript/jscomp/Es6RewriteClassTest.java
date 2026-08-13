@@ -1731,6 +1731,73 @@ $jscomp.inherits(FooPromise, Promise);
         """);
   }
 
+  // TODO(b/538125081): Fix Es6RewriteClass drops side effects in super(foo()) when extending Object
+  @Test
+  public void testExtendObject_withSideEffectfulSuperArgs() {
+    test(
+        """
+        class Foo extends Object {
+          constructor() {
+            super(foo());
+          }
+        }
+        """,
+        """
+        /**
+         * @constructor
+         */
+        let Foo = function() {
+          this;
+        };
+        $jscomp.inherits(Foo, Object);
+        """);
+  }
+
+  // TODO(b/538125081): Fix Es6RewriteClass drops side effects in super(foo()) when extending Object
+  @Test
+  public void testExtendObject_withMultipleSideEffectfulSuperArgs() {
+    ignoreWarnings(TypeCheck.WRONG_ARGUMENT_COUNT);
+    test(
+        """
+        class Foo extends Object {
+          constructor() {
+            super(foo(), 1, bar());
+          }
+        }
+        """,
+        """
+        /**
+         * @constructor
+         */
+        let Foo = function() {
+          this;
+        };
+        $jscomp.inherits(Foo, Object);
+        """);
+  }
+
+  // TODO(b/538125081): Fix Es6RewriteClass drops side effects in super(foo()) when extending Object
+  @Test
+  public void testExtendObject_withSpreadSideEffectfulSuperArgs() {
+    test(
+        """
+        class Foo extends Object {
+          constructor() {
+            super(...foo());
+          }
+        }
+        """,
+        """
+        /**
+         * @constructor
+         */
+        let Foo = function() {
+          this;
+        };
+        $jscomp.inherits(Foo, Object);
+        """);
+  }
+
   @Test
   public void testExtendObject_withImplicitConstructor() {
     test(
@@ -2303,6 +2370,35 @@ $jscomp.inherits(FooPromise, Promise);
         """);
   }
 
+  // TODO(b/538155997): Es6RewriteClass proto accessor lowering
+  @Test
+  public void testEs5GettersAndSettersClasses_protoAccessor() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        """
+        class C {
+          get __proto__() {
+            return null;
+          }
+          set __proto__(v) {}
+        }
+        """,
+        """
+        /** @constructor */
+        let C = function() {};
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          __proto__: {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              return null;
+            },
+            set: function(v) {}
+          }
+        });
+        """);
+  }
+
   @Test
   public void testEs5GettersAndSettersClasses_withTwoGetters() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -2682,6 +2778,7 @@ $jscomp.inherits(FooPromise, Promise);
         """);
   }
 
+  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
   @Test
   public void testClassComputedPropGetterAndSetter_mixedWithOtherMembers() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -2738,6 +2835,173 @@ $jscomp.inherits(FooPromise, Promise);
               b: {configurable: true, enumerable: true, get: function() {}},
             });
             """));
+  }
+
+  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
+  @Test
+  public void testGetterFollowedByMethodWithSameName() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        """
+        /** @unrestricted */
+        class C {
+          get clean() { return 1; }
+          clean(x) { return 2; }
+        }
+        """,
+        """
+        /** @constructor */
+        let C = function() {};
+        C.prototype.clean = function(x) { return 2; };
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          clean: {
+            configurable: true,
+            enumerable: true,
+            get: function() { return 1; }
+          }
+        });
+        """);
+  }
+
+  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
+  @Test
+  public void testGetterFollowedByComputedGetterWithSameName() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        """
+        /** @unrestricted */
+        class C {
+          get clean() { return 1; }
+          get ['clean']() { return 2; }
+        }
+        """,
+        """
+        /** @constructor */
+        let C = function() {};
+        $jscomp.global.Object.defineProperty(C.prototype, "clean", {
+          configurable: true,
+          enumerable: true,
+          get: function() { return 2; }
+        });
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          clean: {
+            configurable: true,
+            enumerable: true,
+            get: function() { return 1; }
+          }
+        });
+        """);
+  }
+
+  @Test
+  public void testMethodFollowedByGetterWithSameName() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        """
+        /** @unrestricted @suppress {checkTypes} */
+        class C {
+          clean(x) { return 1; }
+          get clean() { return 2; }
+        }
+        """,
+        """
+        /** @constructor */
+        let C = function() {};
+        C.prototype.clean = function(x) { return 1; };
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          clean: {
+            configurable: true,
+            enumerable: true,
+            get: function() { return 2; }
+          }
+        });
+        """);
+  }
+
+  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
+  @Test
+  public void testDuplicateGettersWithSameName() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        """
+        /** @unrestricted */
+        class C {
+          get clean() { return 1; }
+          get clean() { return 2; }
+        }
+        """,
+        """
+        /** @constructor */
+        let C = function() {};
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          clean: {
+            configurable: true,
+            enumerable: true,
+            get: function() { return 1; },
+            get: function() { return 2; }
+          }
+        });
+        """);
+  }
+
+  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
+  @Test
+  public void testStaticGetterFollowedByStaticMethodWithSameName() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        """
+        /** @unrestricted */
+        class C {
+          static get clean() { return 1; }
+          static clean(x) { return 2; }
+        }
+        """,
+        """
+        /** @constructor */
+        let C = function() {};
+        /** @nocollapse */
+        C.clean;
+        C.clean = function(x) { return 2; };
+        $jscomp.global.Object.defineProperties(C, {
+          clean: {
+            configurable: true,
+            enumerable: true,
+            get: function() { return 1; }
+          }
+        });
+        """);
+  }
+
+  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
+  @Test
+  public void testStaticGetterFollowedByStaticComputedGetterWithSameName() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        """
+        /** @unrestricted */
+        class C {
+          static get clean() { return 1; }
+          static get ['clean']() { return 2; }
+        }
+        """,
+        """
+        /** @constructor */
+        let C = function() {};
+        /** @nocollapse */
+        C.clean;
+        $jscomp.global.Object.defineProperty(C, "clean", {
+          configurable: true,
+          enumerable: true,
+          get: function() { return 2; }
+        });
+        $jscomp.global.Object.defineProperties(C, {
+          clean: {
+            configurable: true,
+            enumerable: true,
+            get: function() { return 1; }
+          }
+        });
+        """);
   }
 
   @Test

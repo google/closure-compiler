@@ -249,4 +249,45 @@ public final class RewriteLogicalAssignmentOperatorsTest extends CompilerTestCas
             [$jscomp$logical$assign$tmpindexm1146332801$0] = a[x]));
             """));
   }
+
+  // TODO(b/538141070): Fix Normalize to scope logical assignment temps inside concise arrow
+  // functions
+  @Test
+  public void testArrowFunction() {
+    disableValidateAstChangeMarking();
+    test(
+        srcs("const f = (a, b) => a.x ||= b;"),
+        expected(
+            """
+            let $jscomp$logical$assign$tmpm1146332801$0;
+            const f = (a, b) => ($jscomp$logical$assign$tmpm1146332801$0 = a).x
+                || ($jscomp$logical$assign$tmpm1146332801$0.x = b);
+            """));
+
+    test(
+        srcs("const f = (map, k, v) => (map[k] ??= v);"),
+        expected(
+            """
+            let $jscomp$logical$assign$tmpm1146332801$0;
+            let $jscomp$logical$assign$tmpindexm1146332801$0;
+            const f = (map, k, v) => ($jscomp$logical$assign$tmpm1146332801$0 = map)
+                [$jscomp$logical$assign$tmpindexm1146332801$0 = k]
+                ??
+                ($jscomp$logical$assign$tmpm1146332801$0
+                [$jscomp$logical$assign$tmpindexm1146332801$0] = v);
+            """));
+
+    test(
+        srcs("const f = (a) => (b) => a[b] &&= 1;"),
+        expected(
+            """
+            let $jscomp$logical$assign$tmpm1146332801$0;
+            let $jscomp$logical$assign$tmpindexm1146332801$0;
+            const f = (a) => (b) => ($jscomp$logical$assign$tmpm1146332801$0 = a)
+                [$jscomp$logical$assign$tmpindexm1146332801$0 = b]
+                &&
+                ($jscomp$logical$assign$tmpm1146332801$0
+                [$jscomp$logical$assign$tmpindexm1146332801$0] = 1);
+            """));
+  }
 }

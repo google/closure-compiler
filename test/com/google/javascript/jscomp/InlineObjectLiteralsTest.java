@@ -97,7 +97,27 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
     // Inlining the 'y' would cause the 'this' to be different in the
     // target function.
     testSameLocal("var a = {y:y,x:x}; a.y(); f(a.x);");
-    testSameLocal("var a; a = {y:y,x:x}; a.y(); f(a.x);");
+    testSameLocal("var a = {y:y,x:x}; a?.y(); f(a.x);");
+  }
+
+  // TODO(b/538130097): Fix InlineObjectLiterals to reject objects with optional chaining calls
+  @Test
+  public void testObject3_optChainCall() {
+    disableCompareAsTree();
+    test(
+        "function local(){var a = {y:y,x:x}; a.y?.(); f(a.x);}",
+        "function local(){var JSCompiler_object_inline_y_0=y;var"
+            + " JSCompiler_object_inline_x_1=x;JSCompiler_object_inline_y_0?.();f(JSCompiler_object_inline_x_1)}");
+  }
+
+  // TODO(b/538130097): Fix InlineObjectLiterals to reject objects with tagged template calls
+  @Test
+  public void testObject3_taggedTemplate() {
+    disableCompareAsTree();
+    test(
+        "function local(){var a = {y:y,x:x}; a.y`hi`; f(a.x);}",
+        "function local(){var JSCompiler_object_inline_y_0=y;var"
+            + " JSCompiler_object_inline_x_1=x;JSCompiler_object_inline_y_0`hi`;f(JSCompiler_object_inline_x_1)}");
   }
 
   @Test

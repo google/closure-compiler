@@ -1109,6 +1109,7 @@ const MSG_ICU_SELECT =
         """);
   }
 
+  // TODO(b/538170233): ReplaceMessages preserving side effects in placeholders
   @Test
   public void testMethodCallReplacementEmptyMessage() {
     registerMessage(getTestMessageBuilder("MSG_M").build());
@@ -1129,7 +1130,10 @@ const MSG_ICU_SELECT =
                   "msg_text":"${$amount}",
                 }, {'amount': obj.getAmt()});
         """,
-        "/** @desc d */\n var MSG_M=''");
+        """
+        /** @desc d */
+        var MSG_M = "";
+        """);
   }
 
   @Test
@@ -2603,6 +2607,130 @@ var MSG_E = function(namem1146332801$0, devicem1146332801$0) {
         """
         /** @desc d */
         var MSG_StartWithPlaceholder = goog.msgKind.MASCULINE ? '{PH} suffix' : '{PH} suffix';
+        """);
+  }
+
+  // TODO(b/538170233): ReplaceMessages preserving side effects in placeholders
+  @Test
+  public void testRepeatedPlaceholderWithSideEffects() {
+    registerMessage(
+        getTestMessageBuilder("MSG_REPEATED_SE")
+            .appendJsPlaceholderReference("t")
+            .appendStringPart(" - ")
+            .appendJsPlaceholderReference("t")
+            .build());
+
+    multiPhaseTest(
+        """
+        /** @desc d */
+        var MSG_REPEATED_SE = goog.getMsg('{$t} - {$t}', {t: nextToken()});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_REPEATED_SE =
+            __jscomp_define_msg__(
+                {
+                  "key": "MSG_REPEATED_SE",
+                  "msg_text": "{$t} - {$t}"
+                },
+                {"t": nextToken()});
+        """,
+        """
+        /** @desc d */
+        var MSG_REPEATED_SE = nextToken() + " - " + nextToken();
+        """);
+  }
+
+  // TODO(b/538170233): ReplaceMessages preserving side effects in placeholders
+  @Test
+  public void testDroppedPlaceholderWithSideEffects() {
+    registerMessage(getTestMessageBuilder("MSG_DROPPED_SE").appendStringPart("Bonjour").build());
+
+    multiPhaseTest(
+        """
+        /** @desc d */
+        var MSG_DROPPED_SE = goog.getMsg('Hi {$x}', {x: nextToken()});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_DROPPED_SE =
+            __jscomp_define_msg__(
+                {
+                  "key": "MSG_DROPPED_SE",
+                  "msg_text": "Hi {$x}"
+                },
+                {"x": nextToken()});
+        """,
+        """
+        /** @desc d */
+        var MSG_DROPPED_SE = "Bonjour";
+        """);
+  }
+
+  @Test
+  public void testPlaceholderWithoutSideEffectsNoIIFE() {
+    registerMessage(
+        getTestMessageBuilder("MSG_NO_SE")
+            .appendStringPart("Hi ")
+            .appendJsPlaceholderReference("x")
+            .build());
+
+    multiPhaseTest(
+        """
+        /** @desc d */
+        var MSG_NO_SE = goog.getMsg('Hi {$x}', {x: 'User'});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_NO_SE =
+            __jscomp_define_msg__(
+                {
+                  "key": "MSG_NO_SE",
+                  "msg_text": "Hi {$x}"
+                },
+                {"x": "User"});
+        """,
+        """
+        /** @desc d */
+        var MSG_NO_SE = "Hi User";
+        """);
+  }
+
+  @Test
+  public void testRepeatedPlaceholderWithoutSideEffectsNoIIFE() {
+    registerMessage(
+        getTestMessageBuilder("MSG_REPEATED_NO_SE")
+            .appendJsPlaceholderReference("x")
+            .appendStringPart(" - ")
+            .appendJsPlaceholderReference("x")
+            .build());
+
+    multiPhaseTest(
+        """
+        /** @desc d */
+        var MSG_REPEATED_NO_SE = goog.getMsg('{$x} - {$x}', {x: 'User'});
+        """,
+        """
+        /**
+         * @desc d
+         */
+        var MSG_REPEATED_NO_SE =
+            __jscomp_define_msg__(
+                {
+                  "key": "MSG_REPEATED_NO_SE",
+                  "msg_text": "{$x} - {$x}"
+                },
+                {"x": "User"});
+        """,
+        """
+        /** @desc d */
+        var MSG_REPEATED_NO_SE = "User - User";
         """);
   }
 

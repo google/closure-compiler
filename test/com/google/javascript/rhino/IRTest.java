@@ -57,6 +57,7 @@ public class IRTest {
     testIR(IR.empty(), "EMPTY\n");
   }
 
+
   @Test
   public void testFunction() {
     testIR(

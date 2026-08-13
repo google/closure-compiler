@@ -2649,6 +2649,14 @@ public final class NodeUtilTest {
 
       assertThat(executedOnceTestCase("1 && (x || 1);")).isFalse();
 
+      assertThat(executedOnceTestCase("x ||= 1;")).isTrue();
+      // TODO(b/538155254): Fix NodeUtil.isExecutedExactlyOnce for logical assignment RHS
+      assertThat(executedOnceTestCase("y ||= x;")).isTrue();
+      assertThat(executedOnceTestCase("x &&= 1;")).isTrue();
+      assertThat(executedOnceTestCase("y &&= x;")).isTrue();
+      assertThat(executedOnceTestCase("x ??= 1;")).isTrue();
+      assertThat(executedOnceTestCase("y ??= x;")).isTrue();
+
       assertThat(executedOnceTestCase("x ? 1 : 2;")).isTrue();
       assertThat(executedOnceTestCase("1 ? 1 : x;")).isFalse();
       assertThat(executedOnceTestCase("1 ? x : 2;")).isFalse();
@@ -2673,6 +2681,23 @@ public final class NodeUtilTest {
       assertThat(executedOnceTestCase("for({}.a in {}){x}")).isFalse();
 
       assertThat(executedOnceTestCase("if (1) { for(x in {}){} }")).isFalse();
+
+      // TODO(b/538125187): NodeUtil.isExecutedExactlyOnce accounts for for-of and for-await-of loop
+      // lhs
+      assertThat(executedOnceTestCase("for(x of {}){}")).isTrue();
+      assertThat(executedOnceTestCase("for({}.a of x){}")).isTrue();
+      assertThat(executedOnceTestCase("for({}.a of {}){x}")).isTrue();
+
+      assertThat(executedOnceTestCase("if (1) { for(x of {}){} }")).isFalse();
+
+      // TODO(b/538125187): NodeUtil.isExecutedExactlyOnce accounts for for-of and for-await-of loop
+      // lhs
+      assertThat(executedOnceTestCase("async function f() { for await(x of {}){} }")).isTrue();
+      assertThat(executedOnceTestCase("async function f() { for await({}.a of x){} }")).isTrue();
+      assertThat(executedOnceTestCase("async function f() { for await({}.a of {}){x} }")).isTrue();
+
+      assertThat(executedOnceTestCase("async function f() { if (1) { for await(x of {}){} } }"))
+          .isFalse();
 
       assertThat(executedOnceTestCase("switch (x) {}")).isTrue();
       assertThat(executedOnceTestCase("switch (1) {case x:}")).isFalse();
@@ -4925,6 +4950,10 @@ public final class NodeUtilTest {
             {"({ f() { super.a() } })", false, true},
             {"({ f() { () => super.a(); } })", false, true},
             {"() => ({ f() { super.a(); } })", false, false},
+            // TODO(b/538170231): NodeUtil.referencesOwnReceiver accounts for new.target
+            {"function f() { new.target; }", false, false},
+            {"function f() { () => new.target; }", false, false},
+            {"() => function f() { new.target; }", false, false},
           });
 
       return cases.build();
@@ -5116,6 +5145,16 @@ public final class NodeUtilTest {
             // Well-known Symbols
             {GETPROP, "Symbol.iterator", false},
             {GETPROP, "Fake.Symbol.iterator", true},
+
+            // TAGGED_TEMPLATELIT
+            {Token.TAGGED_TEMPLATELIT, "tag`literal`", true},
+
+            // AWAIT
+            {AWAIT, "(async () => { await p; })", true},
+
+            // DYNAMIC_IMPORT
+            // TODO(b/538171095): Dynamic import canBeSideEffected returns true
+            {Token.DYNAMIC_IMPORT, "import('m')", false},
           });
     }
 

@@ -789,6 +789,37 @@ public final class NormalizeTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538141070): Fix Normalize to scope logical assignment temps inside concise arrow
+  // functions
+  @Test
+  public void testLogicalAssignmentInConciseArrowFunction() {
+    test(
+        srcs("const f = (a, b) => a.x ||= b;"),
+        expected(
+            """
+            let $jscomp$logical$assign$tmpm1146332801$0;
+            const f = (a, b) => {
+              return ($jscomp$logical$assign$tmpm1146332801$0 = a).x
+                  || ($jscomp$logical$assign$tmpm1146332801$0.x = b);
+            };
+            """));
+
+    test(
+        srcs("const f = (map, k, v) => (map[k] ??= v);"),
+        expected(
+            """
+            let $jscomp$logical$assign$tmpm1146332801$0;
+            let $jscomp$logical$assign$tmpindexm1146332801$0;
+            const f = (map, k, v) => {
+              return ($jscomp$logical$assign$tmpm1146332801$0 = map)
+                  [$jscomp$logical$assign$tmpindexm1146332801$0 = k]
+                  ??
+                  ($jscomp$logical$assign$tmpm1146332801$0
+                  [$jscomp$logical$assign$tmpindexm1146332801$0] = v);
+            };
+            """));
+  }
+
   @Test
   public void testDuplicateVarInExterns() {
     test(

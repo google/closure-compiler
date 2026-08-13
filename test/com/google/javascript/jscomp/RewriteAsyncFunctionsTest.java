@@ -280,6 +280,32 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     assertNode(methodCallNode).isCall().hasColorThat().isEqualTo(StandardColors.UNKNOWN);
   }
 
+  // TODO(b/538135765): Fix RewriteAsyncFunctions to bind this for super tagged templates
+  @Test
+  public void testInnerSuperTaggedTemplateLiteral() {
+    disableCompareAsTree();
+    test(
+        externs(new TestExternsBuilder().addPromise().addJSCompLibraries().build()),
+        srcs(
+            """
+            class A {
+              m(strings, ...values) {
+                return Promise.resolve(this);
+              }
+            }
+            class X extends A {
+              async m() {
+                return super.m`<p>hello</p>`;
+              }
+            }
+            """),
+        expected(
+            "class A{m(strings,...values){return Promise.resolve(this)}}class X extends A{m(){const"
+                + " ASYNC_SUPER_GET$5$m=()=>{return"
+                + " super.m};return(0,$jscomp.asyncExecutePromiseGeneratorFunction)(function*(){return"
+                + " ASYNC_SUPER_GET$5$m()`<p>hello</p>`})}}"));
+  }
+
   @Test
   public void testInnerSuperReference() {
     test(
@@ -766,5 +792,160 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         """,
         TranspilationUtil.CANNOT_CONVERT_YET,
         "Transpilation of 'assignment to super property' is not yet implemented.");
+  }
+
+  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
+  @Test
+  public void testAsyncArrowUsingNewTargetInConstructor() {
+    test(
+        """
+        class X {
+          constructor() {
+            const f = async () => {
+              return new.target;
+            };
+          }
+        }
+        """,
+        """
+        class X {
+          constructor() {
+            const f = () => {
+              return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                  function* () {
+                    return new.target;
+                  });
+            };
+          }
+        }
+        """);
+  }
+
+  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
+  @Test
+  public void testAsyncArrowUsingNewTargetInFunction() {
+    test(
+        """
+        function Foo() {
+          const f = async () => {
+            return new.target;
+          };
+        }
+        """,
+        """
+        function Foo() {
+          const f = () => {
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function* () {
+                  return new.target;
+                });
+          };
+        }
+        """);
+  }
+
+  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
+  @Test
+  public void testNestedArrowFunctionUsingNewTarget() {
+    test(
+        """
+        function Foo() {
+          const f = async () => (() => new.target);
+        }
+        """,
+        """
+        function Foo() {
+          const f = () => {
+            return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                function* () {
+                  return () => {
+                    return new.target;
+                  };
+                });
+          };
+        }
+        """);
+  }
+
+  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
+  @Test
+  public void testAsyncFunctionUsingNewTarget() {
+    test(
+        """
+        async function f() {
+          return new.target;
+        }
+        """,
+        """
+        function f() {
+          return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+              function* () {
+                return new.target;
+              });
+        }
+        """);
+  }
+
+  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
+  @Test
+  public void testAsyncClassMethodWithAsyncArrowUsingNewTarget() {
+    test(
+        externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
+        srcs(
+            """
+            class A {
+              async f() {
+                let g = async () => { console.log(new.target); };
+                g();
+              }
+            }
+            """),
+        expected(
+            """
+            class A {
+              f() {
+                return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                    function* () {
+                      let g = () => {
+                        return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                            function* () {
+                              console.log(new.target);
+                            });
+                      };
+                      g();
+                    });
+              }
+            }
+            """));
+  }
+
+  // TODO(b/538150153): Fix RewriteAsyncFunctions to alias new.target in async arrow functions
+  @Test
+  public void testNonAsyncClassMethodWithAsyncArrowUsingNewTarget() {
+    test(
+        externs(new TestExternsBuilder().addConsole().addJSCompLibraries().build()),
+        srcs(
+            """
+            class A {
+              f() {
+                let g = async () => { console.log(new.target); };
+                g();
+              }
+            }
+            """),
+        expected(
+            """
+            class A {
+              f() {
+                let g = () => {
+                  return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                      function* () {
+                        console.log(new.target);
+                      });
+                };
+                g();
+              }
+            }
+            """));
   }
 }

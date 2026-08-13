@@ -46,7 +46,10 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     enableTypeInfoValidation();
     replaceTypesWithColors();
     enableMultistageCompilation();
-    setGenericNameReplacements(ImmutableMap.of("KEY", "$jscomp$key$", "ITER", "$jscomp$iter$"));
+    setGenericNameReplacements(
+        ImmutableMap.of(
+            "KEY", "$jscomp$key$",
+            "ITER", "$jscomp$iter$"));
   }
 
   @Override
@@ -361,10 +364,10 @@ for (;
             /** @const */
             var $jscomp = {};
             /**
-             * @param {?} iterable
-             * @return {!Iterator<T>}
-             * @template T
-             */
+              * @param {?} iterable
+              * @return {!Iterator<T>}
+              * @template T
+              */
             $jscomp.makeIterator = function(iterable) {};
             """),
         srcs("for (let x of [1, 2, 3]) {}"),
@@ -378,5 +381,70 @@ for (;
               {}
             }
             """));
+  }
+
+  // TODO(b/538171099): Support iterator closing (calling return() in finally) in Es6ForOfConverter
+  @Test
+  public void testForOfBreak() {
+    test(
+        "for (var x of [1, 2, 3]) { if (x === 2) break; }",
+        """
+        var x;
+        var ITER$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
+        var KEY$1$x = ITER$0.next();
+        for (;
+            !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+          x = KEY$1$x.value;
+          {
+            if (x === 2) {
+              break;
+            }
+          }
+        }
+        """);
+  }
+
+  // TODO(b/538171099): Support iterator closing (calling return() in finally) in Es6ForOfConverter
+  @Test
+  public void testForOfReturn() {
+    test(
+        "function f() { for (var x of [1, 2, 3]) { if (x === 2) return x; } }",
+        """
+        function f() {
+          var x;
+          var ITER$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
+          var KEY$1$x = ITER$0.next();
+          for (;
+              !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+            x = KEY$1$x.value;
+            {
+              if (x === 2) {
+                return x;
+              }
+            }
+          }
+        }
+        """);
+  }
+
+  // TODO(b/538171099): Support iterator closing (calling return() in finally) in Es6ForOfConverter
+  @Test
+  public void testForOfThrow() {
+    test(
+        "for (var x of [1, 2, 3]) { if (x === 2) throw new Error(); }",
+        """
+        var x;
+        var ITER$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
+        var KEY$1$x = ITER$0.next();
+        for (;
+            !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+          x = KEY$1$x.value;
+          {
+            if (x === 2) {
+              throw new Error();
+            }
+          }
+        }
+        """);
   }
 }

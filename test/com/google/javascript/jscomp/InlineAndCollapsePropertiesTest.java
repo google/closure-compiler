@@ -3276,6 +3276,67 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         PARTIAL_NAMESPACE_WARNING);
   }
 
+  // TODO(b/538122483): InlineAndCollapseProperties: handle destructuring patterns without creating
+  // extra variables or losing side effects
+  @Test
+  public void testDestructuringQualifiedNameMultipleKeysEvaluatesOnce() {
+    test(
+        """
+        const {a, b} = this.validated;
+        use(a, b);
+        """,
+        """
+        const a = this.validated.a;
+        const b = this.validated.b;
+        use(a, b);
+        """);
+  }
+
+  @Test
+  public void testDestructuringQualifiedNameSingleKeyEvaluatesDirectly() {
+    test(
+        """
+        const {a} = this.validated;
+        use(a);
+        """,
+        """
+        const a = this.validated.a;
+        use(a);
+        """);
+  }
+
+  // TODO(b/538122483): InlineAndCollapseProperties: handle destructuring patterns without creating
+  // extra variables or losing side effects
+  @Test
+  public void testEmptyDestructuringPatternNotStripped() {
+    test("const {} = this.validated;", "");
+    test("const {} = obj;", "");
+  }
+
+  // TODO(b/538122483): InlineAndCollapseProperties: handle destructuring patterns without creating
+  // extra variables or losing side effects
+  @Test
+  public void testDestructuringQualifiedNameWithCollapsibleNamespace() {
+    test(
+        """
+        const ns = {
+          sub: {
+            a: 1,
+            b: 2,
+          },
+        };
+        const {a, b} = ns.sub;
+        use(a, b);
+        """,
+        """
+        var ns$sub$a = 1;
+        var ns$sub$b = 2;
+        const a = null;
+        const b = null;
+        use(ns$sub$a, ns$sub$b);
+        """);
+  }
+
   @Test
   public void testDefaultParamAlias1() {
     test(

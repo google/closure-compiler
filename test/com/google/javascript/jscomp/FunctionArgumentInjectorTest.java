@@ -72,6 +72,7 @@ public final class FunctionArgumentInjectorTest {
     assertNode(result).isEqualTo(getFunctionBody(parseFunction("function f() { alert(null); }")));
   }
 
+  // TODO(b/538149733): fix this output - we should not replace 'this' with null.
   @Test
   public void testInject_thisRef_classField_instance() {
     Node result =
@@ -81,12 +82,12 @@ public final class FunctionArgumentInjectorTest {
             null,
             ImmutableMap.of("this", parse("null").getFirstFirstChild()));
 
-    // TODO(b/538149733): fix this output - we should not replace 'this' with null.
     assertNode(result)
         .isEqualTo(
             getFunctionBody(parseFunction("function f() { return class { field = null; }; }")));
   }
 
+  // TODO(b/538149733): fix this output - we should not replace 'this' with null.
   @Test
   public void testInject_thisRef_classField_static() {
     Node result =
@@ -101,6 +102,74 @@ public final class FunctionArgumentInjectorTest {
         .isEqualTo(
             getFunctionBody(
                 parseFunction("function f() { return class { static field = null; }; }")));
+  }
+
+  // TODO(b/538149733): fix this output - we should not replace 'this' with x.
+  @Test
+  public void testInject_thisRef_classField_computed() {
+    Node result =
+        functionArgumentInjector.inject(
+            compiler,
+            getFunctionBody(parseFunction("function f() { return class { [this.k] = this.v; }; }")),
+            null,
+            ImmutableMap.of("this", parse("x").getFirstFirstChild()));
+
+    assertNode(result)
+        .isEqualTo(
+            getFunctionBody(parseFunction("function f() { return class { [x.k] = x.v; }; }")));
+  }
+
+  // TODO(b/538149733): fix this output - we should not replace 'this' with x.
+  @Test
+  public void testInject_thisRef_classField_staticComputed() {
+    Node result =
+        functionArgumentInjector.inject(
+            compiler,
+            getFunctionBody(
+                parseFunction("function f() { return class { static [this.k] = this.v; }; }")),
+            null,
+            ImmutableMap.of("this", parse("x").getFirstFirstChild()));
+
+    assertNode(result)
+        .isEqualTo(
+            getFunctionBody(
+                parseFunction("function f() { return class { static [x.k] = x.v; }; }")));
+  }
+
+  // TODO(b/538149733): fix this output - we should not replace 'this' with null.
+  @Test
+  public void testInject_thisRef_classStaticBlock() {
+    Node result =
+        functionArgumentInjector.inject(
+            compiler,
+            getFunctionBody(
+                parseFunction("function f() { return class { static { alert(this); } }; }")),
+            null,
+            ImmutableMap.of("this", parse("null").getFirstFirstChild()));
+
+    assertNode(result)
+        .isEqualTo(
+            getFunctionBody(
+                parseFunction("function f() { return class { static { alert(null); } }; }")));
+  }
+
+  // TODO(b/538149733): fix this output - we should not replace 'this' with null.
+  @Test
+  public void testInject_thisRef_classField_paramSubstitution() {
+    Node result =
+        functionArgumentInjector.inject(
+            compiler,
+            getFunctionBody(
+                parseFunction("function f(val) { return class { field = val; [val] = this; }; }")),
+            null,
+            ImmutableMap.of(
+                "val", parse("123").getFirstFirstChild(),
+                "this", parse("null").getFirstFirstChild()));
+
+    assertNode(result)
+        .isEqualTo(
+            getFunctionBody(
+                parseFunction("function f(val) { return class { field = 123; [123] = null; }; }")));
   }
 
   // TODO(johnlenz): Add more unit tests for "inject"
@@ -256,6 +325,26 @@ public final class FunctionArgumentInjectorTest {
             functionArgumentInjector.findModifiedParameters(
                 parseFunction("function f(a){ var [a] = [2]; }")))
         .containsExactly("a");
+  }
+
+  // TODO(b/538122445): Fix FunctionArgumentInjector to detect parameter reassignments in let/const
+  // initializers
+  @Test
+  public void testFindModifiedParameters19() {
+    assertThat(
+            functionArgumentInjector.findModifiedParameters(
+                parseFunction("function f(p){ const stash = (p = 42); }")))
+        .isEmpty();
+  }
+
+  // TODO(b/538122445): Fix FunctionArgumentInjector to detect parameter reassignments in let/const
+  // initializers
+  @Test
+  public void testFindModifiedParameters20() {
+    assertThat(
+            functionArgumentInjector.findModifiedParameters(
+                parseFunction("function f(p){ let stash = (p = 42); }")))
+        .isEmpty();
   }
 
   @Test

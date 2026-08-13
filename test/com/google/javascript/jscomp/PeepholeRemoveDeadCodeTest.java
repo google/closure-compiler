@@ -469,6 +469,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("(function () { f(); })();");
   }
 
+  // TODO(b/538125186): Do not remove optional chain side effects in PeepholeRemoveDeadCode
   @Test
   public void testCallSideEffectsPreserved() {
     // Functions calls known to be free of side effects are removed.
@@ -541,6 +542,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("var x;");
   }
 
+  // TODO(b/538166699): Do not remove switch condition with side effects in PeepholeRemoveDeadCode
   @Test
   public void testOptimizeSwitch() {
     fold("switch(a){}", "");
@@ -1457,6 +1459,16 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("a?.() ?? 1", "a?.()");
   }
 
+  // TODO(b/538125186): Do not remove optional chain side effects in PeepholeRemoveDeadCode
+  @Test
+  public void testNoRemoveOptionalChainSideEffects() {
+    fold("a?.[f()];", "f();");
+    fold("a?.[x++];", "x++;");
+    fold("a?.[delete cache[k]];", "delete cache[k];");
+    fold("a?.b[f()];", "f();");
+    fold("Math?.sin(mutate());", "mutate();");
+  }
+
   @Test
   public void testNoRemoveCall6NullishCoalesce() {
     foldSame("1 ?? a()");
@@ -1688,6 +1700,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("Math.sin(...b, ...c)", "([...b], [...c])");
   }
 
+  // TODO(b/538125186): Do not remove optional chain side effects in PeepholeRemoveDeadCode
   @Test
   public void testOptChainCall_containingSpread() {
     // We use a function with no side-effects, otherwise the entire invocation would be preserved.
@@ -1704,6 +1717,10 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     // We use a function with no side-effects, otherwise the entire invocation would be preserved.
     fold("new Date;", "");
     fold("1 + new Date;", "");
+    // TODO(b/538156671): Do not remove new of class with field initializers in
+    // PeepholeRemoveDeadCode
+    fold("new (class { x = foo(); })()", "foo();");
+    fold("new (class { x = 1; })()", "");
   }
 
   @Test

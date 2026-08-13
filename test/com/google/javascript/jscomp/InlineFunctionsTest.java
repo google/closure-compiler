@@ -421,6 +421,35 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "4");
   }
 
+  // TODO(b/538123284): InlineFunctions: support inlining arrow functions called via .call()
+  @Test
+  public void testInlineArrowFunction_call() {
+    testSame(
+        """
+        const fn = () => this.x;
+        fn.call(obj);
+        """);
+  }
+
+  // TODO(b/538123284): InlineFunctions: support inlining arrow functions called via .call()
+  @Test
+  public void testInlineArrowFunction_callWithArgs() {
+    testSame(
+        """
+        const fn = (a) => this.x + a;
+        fn.call(obj, 1);
+        """);
+  }
+
+  @Test
+  public void testInlineArrowFunction_apply() {
+    testSame(
+        """
+        const fn = () => this.x;
+        fn.apply(obj);
+        """);
+  }
+
   @Test
   public void testInlineFunctions2() {
     // inline simple constants
@@ -1444,6 +1473,30 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testInlineIfParametersModified9() {
     // OK, array parameter modified.
     test("function f(a){return a[2]=2}f(o)", "o[2]=2");
+  }
+
+  // TODO(b/538149733): InlineFunctions: handle parameter modification in sub-expressions
+  @Test
+  public void testInlineIfParametersModified10() {
+    test(
+        """
+        function f(p) {
+          const stash = (p = 42);
+          return p + stash;
+        }
+        var x = 7;
+        var y = f(x);
+        use(x);
+        """,
+        """
+        var x = 7;
+        var y;
+        {
+          const stash$jscomp$inline_1 = (x = 42);
+          y = x + stash$jscomp$inline_1;
+        }
+        use(x);
+        """);
   }
 
   @Test
@@ -5073,6 +5126,42 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538170231): InlineFunctions: do not inline functions referencing new.target
+  @Test
+  public void testNotInliningFunctionWithNewTarget() {
+    test(
+        """
+        function isCalled() { return new.target === undefined; }
+        class Widget {
+          constructor(data) {
+            if (isCalled()) { this.data = sanitize(data); } else { this.data = data; }
+          }
+        }
+        new Widget(externalInput);
+        """,
+        """
+        class Widget {
+          constructor(data) {
+            if (new.target === undefined) { this.data = sanitize(data); } else { this.data = data; }
+          }
+        }
+        new Widget(externalInput);
+        """);
+
+    test(
+        """
+        window.g = function() {
+          function f() { return new.target; }
+          var x = f();
+        };
+        """,
+        """
+        window.g = function() {
+          var x = new.target;
+        };
+        """);
+  }
+
   @Test
   public void testClassField() {
     test(
@@ -5147,6 +5236,141 @@ public class InlineFunctionsTest extends CompilerTestCase {
         }
         class Foo { x = 0; }
         f(new Foo());
+        """);
+  }
+
+  // TODO(b/538171094): InlineFunctions: do not inline this alias into class field def value
+  @Test
+  public void testClassField_inlinedFunctionCalledWithReceiver_instanceField() {
+    assumeStrictThis = true;
+    test(
+        """
+        function f() {
+          return class {
+            owner = this;
+          };
+        }
+        const x = {};
+        const C = f.call(x);
+        """,
+        """
+        const x = {};
+        var JSCompiler_inline_result$jscomp$v0;
+        {
+          JSCompiler_inline_result$jscomp$v0 = class {
+            owner = x;
+          };
+        }
+        const C = JSCompiler_inline_result$jscomp$v0;
+        """);
+  }
+
+  // TODO(b/538171094): InlineFunctions: do not inline this alias into class field def value
+  @Test
+  public void testClassField_inlinedFunctionCalledWithReceiver_computedField() {
+    assumeStrictThis = true;
+    test(
+        """
+        function f() {
+          return class {
+            [this.key] = this;
+          };
+        }
+        const x = {key: 'k'};
+        const C = f.call(x);
+        """,
+        """
+        const x = {key: 'k'};
+        var JSCompiler_inline_result$jscomp$v0;
+        {
+          JSCompiler_inline_result$jscomp$v0 = class {
+            [x.key] = x;
+          };
+        }
+        const C = JSCompiler_inline_result$jscomp$v0;
+        """);
+  }
+
+  // TODO(b/538171094): InlineFunctions: do not inline this alias into class field def value
+  @Test
+  public void testClassField_inlinedFunctionCalledWithReceiver_staticFieldAndBlock() {
+    assumeStrictThis = true;
+    test(
+        """
+        function f() {
+          return class {
+            static field = this;
+            static {
+              alert(this);
+            }
+          };
+        }
+        const x = {};
+        const C = f.call(x);
+        """,
+        """
+        const x = {};
+        var JSCompiler_inline_result$jscomp$v0;
+        {
+          JSCompiler_inline_result$jscomp$v0 = class {
+            static field = x;
+            static {
+              alert(x);
+            }
+          };
+        }
+        const C = JSCompiler_inline_result$jscomp$v0;
+        """);
+  }
+
+  // TODO(b/538171094): InlineFunctions: do not inline this alias into class field def value
+  @Test
+  public void testClassField_inlinedFunctionCalledWithReceiver_paramSubstitution() {
+    assumeStrictThis = true;
+    test(
+        """
+        function f(val) {
+          return class {
+            prop = val;
+            owner = this;
+          };
+        }
+        const x = {};
+        const C = f.call(x, 42);
+        """,
+        """
+        const x = {};
+        var JSCompiler_inline_result$jscomp$v0;
+        {
+          JSCompiler_inline_result$jscomp$v0 = class {
+            prop = 42;
+            owner = x;
+          };
+        }
+        const C = JSCompiler_inline_result$jscomp$v0;
+        """);
+  }
+
+  @Test
+  public void testClassField_inlinedFunctionCalledWithThis_directInlining() {
+    assumeStrictThis = true;
+    test(
+        """
+        function f() {
+          return class {
+            owner = this;
+          };
+        }
+        function _g() {
+          return f.call(this);
+        }
+        """,
+        """
+        function _g() {
+          return class {
+            owner = this;
+          };
+        }
         """);
   }
 
@@ -5473,4 +5697,120 @@ JSCompiler_temp_const$jscomp$v0.bug = JSCompiler_inline_result$jscomp$v1;
         };
         """);
   }
+
+  // TODO(b/538155258): InlineFunctions: uninitialized var in loop body
+  @Test
+  public void testInlineInLoopUninitializedVarInLoop() {
+    test(
+        """
+        function f() {
+          for (var i = 0; i < 10; i++) {
+            var ok;
+            if (ok) {
+              chg();
+            }
+            ok = true;
+          }
+        }
+        while (true) {
+          f();
+        }
+        """,
+        """
+        while (true) {
+          {
+            for (var i$jscomp$inline_0 = 0; i$jscomp$inline_0 < 10; i$jscomp$inline_0++) {
+              var ok$jscomp$inline_1;
+              if (ok$jscomp$inline_1) {
+                chg();
+              }
+              ok$jscomp$inline_1 = true;
+            }
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testInlineInLoopUninitializedLetInLoop() {
+    test(
+        """
+        function f() {
+          for (var i = 0; i < 10; i++) {
+            let ok;
+            if (ok) {
+              chg();
+            }
+            ok = true;
+          }
+        }
+        while (true) {
+          f();
+        }
+        """,
+        """
+        while (true) {
+          {
+            for (var i$jscomp$inline_0 = 0; i$jscomp$inline_0 < 10; i$jscomp$inline_0++) {
+              let ok$jscomp$inline_1;
+              if (ok$jscomp$inline_1) {
+                chg();
+              }
+              ok$jscomp$inline_1 = true;
+            }
+          }
+        }
+        """);
+  }
+
+  // TODO(b/538122488): InlineFunctions: do not inline functions reassigned in destructuring
+  @Test
+  public void testNoInlineArrayDestructuringReassignment() {
+    test(
+        """
+        function sanitize(x) { return x; }
+        [sanitize] = getStrictSanitizers();
+        el.innerHTML = sanitize(untrusted);
+        """,
+        """
+        function sanitize(x) { return x; }
+        [sanitize] = getStrictSanitizers();
+        el.innerHTML = untrusted;
+        """);
+  }
+
+  // TODO(b/538122488): InlineFunctions: do not inline functions reassigned in destructuring
+  @Test
+  public void testNoInlineObjectDestructuringReassignment() {
+    test(
+        """
+        function sanitize(x) { return x; }
+        ({sanitize} = getStrictSanitizers());
+        el.innerHTML = sanitize(untrusted);
+        """,
+        """
+        function sanitize(x) { return x; }
+        ({sanitize} = getStrictSanitizers());
+        el.innerHTML = untrusted;
+        """);
+  }
+
+  // TODO(b/538122488): InlineFunctions: do not inline functions reassigned in for-of loop
+  @Test
+  public void testNoInlineForOfLoopReassignment() {
+    test(
+        """
+        function sanitize(x) { return x; }
+        for (sanitize of getStrictSanitizers()) {
+          el.innerHTML = sanitize(untrusted);
+        }
+        """,
+        """
+        function sanitize(x) { return x; }
+        for (sanitize of getStrictSanitizers()) {
+          el.innerHTML = untrusted;
+        }
+        """);
+  }
 }
+

@@ -757,6 +757,49 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
                 """));
   }
 
+  // TODO(b/538170230): PureFunctionIdentifier treats class field initializers with side effects as
+  // pure
+  @Test
+  public void testClassFieldSideEffects() {
+    assertPureCallsMarked(
+        """
+        class C {
+          x = externSef1();
+        }
+        new C();
+        """,
+        ImmutableList.of("C"));
+  }
+
+  // TODO(b/538170230): PureFunctionIdentifier treats class field initializers with side effects as
+  // pure
+  @Test
+  public void testClassComputedFieldInitializerSideEffects() {
+    disableTypeCheck();
+    assertPureCallsMarked(
+        """
+        class C {
+          ['x'] = externSef1();
+        }
+        new C();
+        """,
+        ImmutableList.of("C"));
+  }
+
+  @Test
+  public void testClassFieldPureInitializers() {
+    disableTypeCheck();
+    assertPureCallsMarked(
+        """
+        class C {
+          x = 1;
+          ['y'] = 2;
+        }
+        new C();
+        """,
+        ImmutableList.of("C"));
+  }
+
   @Test
   public void testNoSideEffectsJsDoc_errorIfCannotBeApplied_ambiguousDefWithThrow() {
     this.enableArtificialPurityDebugError = true;

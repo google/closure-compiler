@@ -318,6 +318,32 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         .inOrder();
   }
 
+  @Test
+  public void testIsAllowedReference_taggedTemplateLiteral() {
+    considerExterns = false;
+
+    test(
+        srcs(
+            """
+            var obj = {
+              tag() {}
+            };
+            obj.tag`template`;
+            """));
+
+    final ImmutableMap<String, ArrayList<Node>> nameToRefs =
+        ImmutableMap.copyOf(references.getNameReferences());
+    ArrayList<Node> objRefs = nameToRefs.get("obj");
+    assertThat(objRefs).isNotNull();
+    boolean hasDisallowedRef = false;
+    for (Node ref : objRefs) {
+      if (!OptimizeCalls.isAllowedReference(ref)) {
+        hasDisallowedRef = true;
+      }
+    }
+    assertThat(hasDisallowedRef).isTrue();
+  }
+
   private static final Correspondence<Map.Entry<String, Node>, String> KEY_EQUALITY =
       Correspondence.transforming(Map.Entry::getKey, "has key");
 

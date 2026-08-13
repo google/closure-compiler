@@ -1798,8 +1798,170 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538125183): Fix DeadPropertyAssignmentElimination to treat destructuring property access
+  // as potential read/getter
+  @Test
+  public void testDestructuring() {
+    test(
+        """
+        function f(a, alias) {
+          a.token = 1;
+          const {token: t = 9} = alias;
+          a.token = 2;
+          return t;
+        }
+        """,
+        """
+        function f(a, alias) {
+          1;
+          const {token: t = 9} = alias;
+          a.token = 2;
+          return t;
+        }
+        """);
+
+    test(
+        """
+        function f(a, alias, k) {
+          a.token = 1;
+          const {[k]: t} = alias;
+          a.token = 2;
+          return t;
+        }
+        """,
+        """
+        function f(a, alias, k) {
+          1;
+          const {[k]: t} = alias;
+          a.token = 2;
+          return t;
+        }
+        """);
+
+    test(
+        """
+        function f(a, alias) {
+          a.token = 1;
+          const {...r} = alias;
+          a.token = 2;
+          return r.token;
+        }
+        """,
+        """
+        function f(a, alias) {
+          1;
+          const {...r} = alias;
+          a.token = 2;
+          return r.token;
+        }
+        """);
+
+    test(
+        """
+        function f(a, alias) {
+          a.token = 1;
+          const [x] = alias;
+          a.token = 2;
+          return x;
+        }
+        """,
+        """
+        function f(a, alias) {
+          1;
+          const [x] = alias;
+          a.token = 2;
+          return x;
+        }
+        """);
+  }
+
+  // TODO(b/538125167): Account for JS iteration protocol side effects in
+  // DeadPropertyAssignmentElimination
+  @Test
+  public void testForAwaitOf_preservesPriorWrite() {
+    test(
+        """
+        async function foo(stream) {
+          this.current = 10;
+          for await (const x of stream) {}
+          this.current = 20;
+        }
+        """,
+        """
+        async function foo(stream) {
+          10;
+          for await (const x of stream) {}
+          this.current = 20;
+        }
+        """);
+  }
+
+  // TODO(b/538125167): Account for JS iteration protocol side effects in
+  // DeadPropertyAssignmentElimination
+  @Test
+  public void testForOf_preservesPriorWrite() {
+    test(
+        """
+        function foo(iter) {
+          this.current = 10;
+          for (const x of iter) {}
+          this.current = 20;
+        }
+        """,
+        """
+        function foo(iter) {
+          10;
+          for (const x of iter) {}
+          this.current = 20;
+        }
+        """);
+  }
+
+  // TODO(b/538125167): Account for JS iteration protocol side effects in
+  // DeadPropertyAssignmentElimination
+  @Test
+  public void testIterSpread_preservesPriorWrite() {
+    test(
+        """
+        function foo(iter) {
+          this.current = 10;
+          var arr = [...iter];
+          this.current = 20;
+        }
+        """,
+        """
+        function foo(iter) {
+          10;
+          var arr = [...iter];
+          this.current = 20;
+        }
+        """);
+  }
+
+  // TODO(b/538125167): Account for JS iteration protocol side effects in
+  // DeadPropertyAssignmentElimination
+  @Test
+  public void testArrayPatternDestructure_preservesPriorWrite() {
+    test(
+        """
+        function foo(iter) {
+          this.current = 10;
+          var [a, b] = iter;
+          this.current = 20;
+        }
+        """,
+        """
+        function foo(iter) {
+          10;
+          var [a, b] = iter;
+          this.current = 20;
+        }
+        """);
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new DeadPropertyAssignmentElimination(compiler);
   }
 }
+

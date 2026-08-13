@@ -1860,6 +1860,166 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538155997): Fix RewriteClassMembers to define __proto__ fields using
+  // Object.defineProperty
+  @Test
+  public void testProtoField_instance() {
+    var src =
+        """
+        /** @unrestricted */
+        class C {
+          __proto__ = {a: 1};
+          ['__proto__'] = {b: 2};
+          '__proto__' = {c: 3};
+        }
+        """;
+    test(
+        src,
+        """
+        class C {
+          constructor() {
+            this.__proto__ = {a: 1};
+            this["__proto__"] = {b: 2};
+            this["__proto__"] = {c: 3};
+          }
+        }
+        """);
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        class C {
+          __proto__ = {a: 1};
+          ["__proto__"] = {b: 2};
+          ["__proto__"] = {c: 3};
+        }
+        """);
+  }
+
+  // TODO(b/538155997): Fix RewriteClassMembers to define __proto__ fields using
+  // Object.defineProperty
+  @Test
+  public void testProtoField_uninitializedInstance() {
+    var src =
+        """
+        /** @unrestricted */
+        class C {
+          __proto__;
+          ['__proto__'];
+        }
+        """;
+    test(
+        src,
+        """
+        class C {
+          constructor() {
+            this.__proto__ = void 0;
+            this["__proto__"] = void 0;
+          }
+        }
+        """);
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        class C {
+          __proto__;
+          ["__proto__"];
+        }
+        """);
+  }
+
+  // TODO(b/538155997): Fix RewriteClassMembers to define __proto__ fields using
+  // Object.defineProperty
+  @Test
+  public void testProtoField_static() {
+    var src =
+        """
+        /** @unrestricted */
+        class C {
+          static __proto__ = {a: 1};
+          static ['__proto__'] = {b: 2};
+        }
+        """;
+    test(
+        src,
+        """
+        class C {}
+        C.__proto__ = {a: 1};
+        C["__proto__"] = {b: 2};
+        """);
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        class C {
+          static __proto__;
+          static ["__proto__"];
+        }
+        C.__proto__ = {a: 1};
+        C["__proto__"] = {b: 2};
+        """);
+  }
+
+  // TODO(b/538155997): Fix RewriteClassMembers to define __proto__ fields using
+  // Object.defineProperty
+  @Test
+  public void testProtoField_uninitializedStatic() {
+    var src =
+        """
+        /** @unrestricted */
+        class C {
+          static __proto__;
+          static ['__proto__'];
+        }
+        """;
+    test(
+        src,
+        """
+        class C {}
+        C.__proto__ = void 0;
+        C["__proto__"] = void 0;
+        """);
+    test(
+        withOptions().useEs2022LanguageOut(),
+        src,
+        """
+        class C {
+          static __proto__;
+          static ["__proto__"];
+        }
+        """);
+  }
+
+  // TODO(b/538155997): Fix RewriteClassMembers to define __proto__ fields using
+  // Object.defineProperty
+  @Test
+  public void testProtoField_interleavedWithNormalFields() {
+    test(
+        """
+        class C {
+          x = 1;
+          __proto__ = 2;
+          y = 3;
+          static a = 4;
+          static __proto__ = 5;
+          static b = 6;
+        }
+        """,
+        """
+        class C {
+          constructor() {
+            this.x = 1;
+            this.__proto__ = 2;
+            this.y = 3;
+          }
+        }
+        C.a = 4;
+        C.__proto__ = 5;
+        C.b = 6;
+        """);
+  }
+
   @Test
   public void testComputedPropInStaticField() {
     var src =

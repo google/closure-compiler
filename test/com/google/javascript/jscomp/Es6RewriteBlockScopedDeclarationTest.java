@@ -77,6 +77,13 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                 (FlatSources) srcs,
                 modifiedExpected,
                 ImmutableMap.of("$PARAM", "$jscomp$loop_param$")));
+    // change the "$THIS" and "$ARGUMENTS" in expected with "$jscomp$this$" and "$jscomp$arguments$"
+    modifiedExpected =
+        expected(
+            UnitTestUtils.updateGenericVarNamesInExpectedFiles(
+                (FlatSources) srcs,
+                modifiedExpected,
+                ImmutableMap.of("$THIS", "$jscomp$this$", "$ARGUMENTS", "$jscomp$arguments$")));
     test(externs, srcs, modifiedExpected);
   }
 
@@ -2136,6 +2143,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   // Regression test for https://github.com/google/closure-compiler/issues/3599
+  // TODO(b/538167732): Fix parameter indexing in loop closure object getters/setters
   @Test
   public void testReferenceToLoopScopedLetInObjectGetterAndSetter() {
     Sources srcs =
@@ -2185,6 +2193,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     loopClosureTest(srcs, expected);
   }
 
+  // TODO(b/538167732): Fix parameter indexing in loop closure object getters
   @Test
   public void testReferenceToMultipleLoopScopedLetConstInObjectWithGetter() {
     Sources srcs =
@@ -2224,6 +2233,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     loopClosureTest(srcs, expected);
   }
 
+  // TODO(b/538167732): Fix parameter indexing in loop closure object setters
   @Test
   public void testReferenceToMultipleLoopScopedLetsInObjectWithSetter() {
     Sources srcs =
@@ -2315,4 +2325,196 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             """);
     test(srcs, expected);
   }
+
+  @Test
+  public void testLoopClosure_overlappingLoopObjectNames() {
+    Sources srcs =
+        srcs(
+            """
+            const arr = [];
+            for (let i0 = 0; i0 < 10; i0++) {
+              arr.push(function() { return i0; });
+              for (let i1 = 0; i1 < 10; i1++) {
+                arr.push(function() { return i1; });
+                for (let i2 = 0; i2 < 10; i2++) {
+                  arr.push(function() { return i2; });
+                  for (let i3 = 0; i3 < 10; i3++) {
+                    arr.push(function() { return i3; });
+                    for (let i4 = 0; i4 < 10; i4++) {
+                      arr.push(function() { return i4; });
+                      for (let i5 = 0; i5 < 10; i5++) {
+                        arr.push(function() { return i5; });
+                        for (let i6 = 0; i6 < 10; i6++) {
+                          arr.push(function() { return i6; });
+                          for (let i7 = 0; i7 < 10; i7++) {
+                            arr.push(function() { return i7; });
+                            for (let i8 = 0; i8 < 10; i8++) {
+                              arr.push(function() { return i8; });
+                              for (let i9 = 0; i9 < 10; i9++) {
+                                arr.push(function() { return i9; });
+                                for (let i10 = 0; i10 < 10; i10++) {
+                                  arr.push(function() { return i1 + i10; });
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+    Expected expected =
+        expected(
+            """
+            /** @const */ var arr = [];
+            var LOOP$0 = {};
+            LOOP$0.i0 = 0;
+            for (; LOOP$0.i0 < 10;
+                LOOP$0 = {i0: LOOP$0.i0},
+                LOOP$0.i0++) {
+              arr.push((function(LOOP$0$PARAM$11) {
+                return function() { return LOOP$0$PARAM$11.i0; };
+              })(LOOP$0));
+              var LOOP$1 = {};
+              LOOP$1.i1 = 0;
+              for (; LOOP$1.i1 < 10;
+                  LOOP$1 = {i1: LOOP$1.i1},
+                  LOOP$1.i1++) {
+                arr.push((function(LOOP$1$PARAM$12) {
+                  return function() { return LOOP$1$PARAM$12.i1; };
+                })(LOOP$1));
+                var LOOP$2 = {};
+                LOOP$2.i2 = 0;
+                for (; LOOP$2.i2 < 10;
+                    LOOP$2 = {i2: LOOP$2.i2},
+                    LOOP$2.i2++) {
+                  arr.push((function(LOOP$2$PARAM$13) {
+                    return function() { return LOOP$2$PARAM$13.i2; };
+                  })(LOOP$2));
+                  var LOOP$3 = {};
+                  LOOP$3.i3 = 0;
+                  for (; LOOP$3.i3 < 10;
+                      LOOP$3 = {i3: LOOP$3.i3},
+                      LOOP$3.i3++) {
+                    arr.push((function(LOOP$3$PARAM$14) {
+                      return function() { return LOOP$3$PARAM$14.i3; };
+                    })(LOOP$3));
+                    var LOOP$4 = {};
+                    LOOP$4.i4 = 0;
+                    for (; LOOP$4.i4 < 10;
+                        LOOP$4 = {i4: LOOP$4.i4},
+                        LOOP$4.i4++) {
+                      arr.push((function(LOOP$4$PARAM$15) {
+                        return function() { return LOOP$4$PARAM$15.i4; };
+                      })(LOOP$4));
+                      var LOOP$5 = {};
+                      LOOP$5.i5 = 0;
+                      for (; LOOP$5.i5 < 10;
+                          LOOP$5 = {i5: LOOP$5.i5},
+                          LOOP$5.i5++) {
+                        arr.push((function(LOOP$5$PARAM$16) {
+                          return function() { return LOOP$5$PARAM$16.i5; };
+                        })(LOOP$5));
+                        var LOOP$6 = {};
+                        LOOP$6.i6 = 0;
+                        for (; LOOP$6.i6 < 10;
+                            LOOP$6 = {i6: LOOP$6.i6},
+                            LOOP$6.i6++) {
+                          arr.push((function(LOOP$6$PARAM$17) {
+                            return function() { return LOOP$6$PARAM$17.i6; };
+                          })(LOOP$6));
+                          var LOOP$7 = {};
+                          LOOP$7.i7 = 0;
+                          for (; LOOP$7.i7 < 10;
+                              LOOP$7 = {i7: LOOP$7.i7},
+                              LOOP$7.i7++) {
+                            arr.push((function(LOOP$7$PARAM$18) {
+                              return function() { return LOOP$7$PARAM$18.i7; };
+                            })(LOOP$7));
+                            var LOOP$8 = {};
+                            LOOP$8.i8 = 0;
+                            for (; LOOP$8.i8 < 10;
+                                LOOP$8 = {i8: LOOP$8.i8},
+                                LOOP$8.i8++) {
+                              arr.push((function(LOOP$8$PARAM$19) {
+                                return function() { return LOOP$8$PARAM$19.i8; };
+                              })(LOOP$8));
+                              var LOOP$9 = {};
+                              LOOP$9.i9 = 0;
+                              for (; LOOP$9.i9 < 10;
+                                  LOOP$9 = {i9: LOOP$9.i9},
+                                  LOOP$9.i9++) {
+                                arr.push((function(LOOP$9$PARAM$20) {
+                                  return function() { return LOOP$9$PARAM$20.i9; };
+                                })(LOOP$9));
+                                var LOOP$10 = {};
+                                LOOP$10.i10 = 0;
+                                for (; LOOP$10.i10 < 10;
+                                    LOOP$10 = {i10: LOOP$10.i10},
+                                    LOOP$10.i10++) {
+                                  arr.push((function(LOOP$1$PARAM$21, LOOP$10$PARAM$22) {
+                                    return function() { return LOOP$1$PARAM$21.i1 + LOOP$1$PARAM$21.i10; };
+                                  })(LOOP$1, LOOP$10));
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+    loopClosureTest(srcs, expected);
+  }
+
+  // TODO(b/538167732): Fix this/arguments handling in loop closure object getters/setters
+  @Test
+  public void testReferenceToLoopScopedLetInObjectWithThisAndArguments() {
+    Sources srcs =
+        srcs(
+            """
+            function h(userInput) {
+              var out = [];
+              for (let i = 0; i < 3; i++) {
+                out.push({
+                  get idx() { return i; },
+                  ctx: this.policy,
+                  raw: arguments[0]
+                });
+              }
+              return out;
+            }
+            """);
+    Expected expected =
+        expected(
+            """
+            function h(userInput) {
+              var out = [];
+              var LOOP$0 = {};
+              LOOP$0.i = 0;
+              for (; LOOP$0.i < 3;
+                  LOOP$0 = { i: LOOP$0.i },
+                  LOOP$0.i++) {
+                out.push((function(LOOP$0$PARAM$1) {
+                  return {
+                    get idx() {
+                      return LOOP$0$PARAM$1.i;
+                    },
+                    ctx: this.policy,
+                    raw: arguments[0]
+                  };
+                })(LOOP$0));
+              }
+              return out;
+            }
+            """);
+    loopClosureTest(externs("var policy;"), srcs, expected);
+  }
 }
+

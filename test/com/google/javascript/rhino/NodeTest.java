@@ -226,6 +226,17 @@ public class NodeTest {
   }
 
   @Test
+  public void isEquivalentToConsidersDirectEval() {
+    Node directEvalCall = IR.call(IR.name("eval"));
+    directEvalCall.getFirstChild().putBooleanProp(Node.DIRECT_EVAL, true);
+
+    Node indirectEvalCall = IR.call(IR.name("eval"));
+    indirectEvalCall.getFirstChild().putBooleanProp(Node.DIRECT_EVAL, false);
+    // TODO(b/538169809): fix this it should not be equivalent
+    assertNode(directEvalCall).isEquivalentTo(indirectEvalCall);
+  }
+
+  @Test
   public void isEquivalentToForFunctionsConsidersKindOfFunction() {
     Node normalFunction = IR.function(IR.name(""), IR.paramList(), IR.block());
     assertNode(normalFunction).isEquivalentTo(normalFunction.cloneTree());

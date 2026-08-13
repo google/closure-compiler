@@ -157,6 +157,11 @@ public final class ControlFlowAnalysisTest {
     assertThat(getAllEdges(cfg, startToken, endToken)).isEmpty();
   }
 
+  private static void assertNoEdge(
+      ControlFlowGraph<Node> cfg, Token startToken, Token endToken, Branch type) {
+    assertThat(getAllEdges(cfg, startToken, endToken, type)).isEmpty();
+  }
+
   /**
    * Assert that there exists a control flow edge of the given type from some node with the first
    * token to some node with the second token. This edge must flow from a parent to one of its
@@ -538,14 +543,56 @@ public final class ControlFlowAnalysisTest {
     assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
   }
 
+  // TODO(b/538135521): Fix ControlFlowAnalysis mayThrowException to include optional chaining and
+  // tagged templates
   @Test
   public void testOptChainCallThrowingException() throws IOException {
     String src = "function f() {try { obj?.a(); } catch (e) {e()}}";
     ControlFlowGraph<Node> cfg = createCfg(src);
-    // TODO(b/538135521): fix this - currently ControlFlowAnalysis fails to understand that the
-    // OPTCHAIN_CALL might throw an exception.
-    assertNoEdge(cfg, Token.EXPR_RESULT, Token.BLOCK);
-    assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
+    assertNoEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+  }
+
+  // TODO(b/538135521): Fix ControlFlowAnalysis mayThrowException to include optional chaining and
+  // tagged templates
+  @Test
+  public void testOptChainGetPropThrowingException() throws IOException {
+    String src = "function f() {try { obj?.a; } catch (e) {e()}}";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertNoEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+  }
+
+  // TODO(b/538135521): Fix ControlFlowAnalysis mayThrowException to include optional chaining and
+  // tagged templates
+  @Test
+  public void testOptChainGetElemThrowingException() throws IOException {
+    String src = "function f() {try { obj?.[a]; } catch (e) {e()}}";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertNoEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+  }
+
+  // TODO(b/538132401): Fix ControlFlowAnalysis to unconditionally create exception edges for
+  // enhanced for loops
+  @Test
+  public void testForOfThrowingException() throws IOException {
+    String src = "function f() {try { for (var x of y) {} } catch (e) {e()}}";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertNoEdge(cfg, Token.FOR_OF, Token.BLOCK, Branch.ON_EX);
+  }
+
+  // TODO(b/538132401): Fix ControlFlowAnalysis to unconditionally create exception edges for
+  // enhanced for loops
+  @Test
+  public void testForAwaitOfThrowingException() throws IOException {
+    String src = "async function f() {try { for await (var x of y) {} } catch (e) {e()}}";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertNoEdge(cfg, Token.FOR_AWAIT_OF, Token.BLOCK, Branch.ON_EX);
+  }
+
+  @Test
+  public void testForInNoThrowingException() throws IOException {
+    String src = "function f() {try { for (var x in y) {} } catch (e) {e()}}";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertNoEdge(cfg, Token.FOR_IN, Token.BLOCK, Branch.ON_EX);
   }
 
   // Test a simple FOR loop.

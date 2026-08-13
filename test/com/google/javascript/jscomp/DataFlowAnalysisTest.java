@@ -705,6 +705,90 @@ public final class DataFlowAnalysisTest {
         .isEmpty();
   }
 
+  // TODO(b/538168027): Fix DataFlowAnalysis.computeEscaped to mark variables captured by instance
+  // class fields as escaped
+  @Test
+  public void testEscapedInstanceClassField() {
+    assertThat(
+            computeEscapedLocals(
+                """
+                function f() {
+                  let s = 1;
+                  class Box {
+                    html = s;
+                  }
+                  return new Box();
+                }
+                """))
+        .isEmpty();
+  }
+
+  // TODO(b/538168027): Fix DataFlowAnalysis.computeEscaped to mark variables captured by instance
+  // class fields as escaped
+  @Test
+  public void testEscapedComputedInstanceClassField() {
+    assertThat(
+            computeEscapedLocals(
+                """
+                function f() {
+                  let s = 1;
+                  class Box {
+                    ['html'] = s;
+                  }
+                  return new Box();
+                }
+                """))
+        .isEmpty();
+  }
+
+  @Test
+  public void testNotEscapedStaticClassField() {
+    assertThat(
+            computeEscapedLocals(
+                """
+                function f() {
+                  let s = 1;
+                  class Box {
+                    static html = s;
+                  }
+                  return Box;
+                }
+                """))
+        .isEmpty();
+  }
+
+  @Test
+  public void testNotEscapedStaticComputedClassField() {
+    assertThat(
+            computeEscapedLocals(
+                """
+                function f() {
+                  let s = 1;
+                  class Box {
+                    static ['html'] = s;
+                  }
+                  return Box;
+                }
+                """))
+        .isEmpty();
+  }
+
+  @Test
+  public void testNotEscapedComputedClassFieldKey() {
+    assertThat(
+            computeEscapedLocals(
+                """
+                function f() {
+                  let s = 'key';
+                  class Box {
+                    [s] = 1;
+                  }
+                  return new Box();
+                }
+                """))
+        .isEmpty();
+  }
+
   // test computeEscaped helper method that returns the liveness analysis performed by the
   // LiveVariablesAnalysis class
   private Set<? extends Var> computeEscapedLocals(String src) {

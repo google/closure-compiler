@@ -482,9 +482,13 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("1n > null", "true");
   }
 
+  // TODO(b/538125197): Fix PeepholeFoldConstants BigInt with invalid string comparison
   @Test
   public void testBigIntStringComparison() {
     test("1n < '2'", "true");
+    test("1n > '2'", "false");
+    test("1n <= '2'", "true");
+    test("1n >= '2'", "false");
     test("2n > '1'", "true");
     test("123n > '34'", "true");
     test("1n == '1'", "true");
@@ -492,8 +496,41 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("1n != '1'", "false");
     test("1n === '1'", "false");
     test("1n !== '1'", "true");
+
+    // Invalid BigInt strings in baseline evaluate according to string comparison
+    test("1n < 'foo'", "false");
+    test("1n > 'foo'", "false");
+    test("1n <= 'foo'", "false");
+    test("1n >= 'foo'", "false");
+    test("1n == 'foo'", "false");
+    test("1n != 'foo'", "true");
+
+    test("1n < '1e2'", "true");
+    test("1n > '1e2'", "false");
+    test("1n <= '1e2'", "true");
+    test("1n >= '1e2'", "false");
+    test("1n == '1e2'", "false");
+    test("1n != '1e2'", "true");
+
+    test("1n < '1.5'", "true");
+    test("1n > '1.5'", "false");
+    test("1n <= '1.5'", "true");
+    test("1n >= '1.5'", "false");
+    test("1n == '1.5'", "false");
+    test("1n != '1.5'", "true");
+
+    test("1n < 'Infinity'", "true");
+    test("1n > 'Infinity'", "false");
+    test("1n <= 'Infinity'", "true");
+    test("1n >= 'Infinity'", "false");
+
+    test("1n < '-Infinity'", "false");
+    test("1n > '-Infinity'", "true");
+    test("1n <= '-Infinity'", "false");
+    test("1n >= '-Infinity'", "true");
   }
 
+  // TODO(b/538125197): Fix PeepholeFoldConstants BigInt with invalid string comparison
   @Test
   public void testStringBigIntComparison() {
     test("'1' < 2n", "true");
@@ -504,6 +541,31 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("'1' != 1n", "false");
     test("'1' === 1n", "false");
     test("'1' !== 1n", "true");
+
+    test("'foo' < 1n", "false");
+    test("'foo' > 1n", "false");
+    test("'foo' <= 1n", "false");
+    test("'foo' >= 1n", "false");
+    test("'foo' == 1n", "false");
+    test("'foo' != 1n", "true");
+
+    test("'1e2' < 1n", "false");
+    test("'1e2' > 1n", "true");
+    test("'1e2' <= 1n", "false");
+    test("'1e2' >= 1n", "true");
+
+    test("'1.5' < 1n", "false");
+    test("'1.5' > 1n", "true");
+    test("'1.5' <= 1n", "false");
+    test("'1.5' >= 1n", "true");
+  }
+
+  @Test
+  public void testBigIntEqualityWithVariables() {
+    testSame("x == 1n");
+    testSame("1n == y");
+    testSame("x != 1n");
+    testSame("1n != y");
   }
 
   @Test
@@ -1477,6 +1539,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = [10, 20][-1]", "x = void 0;");
     test("x = [10, 20][2]", "x = void 0;");
 
+    // TODO(b/538156673): Fix PeepholeFoldConstants to not fold out-of-bounds GETELEM on arrays with
+    // side-effect elements
     testSame("x = [foo(), 0][1]");
     test("x = [0, foo()][1]", "x = foo()");
     testSame("x = [0, foo()][0]");
@@ -1488,6 +1552,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   /** Optional versions of the above `testFoldGetElem1` tests */
+  // TODO(b/538156673): Fix PeepholeFoldConstants to not fold out-of-bounds GETELEM on arrays with
+  // side-effect elements
   @Test
   public void testFoldOptChainGetElem1() {
     numRepetitions = 1;
@@ -1582,6 +1648,10 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = [...[...[0], 1], 2]", "x = [0, 1, 2]");
     testSame("[...[x]] = arr");
     test("foo([...[...[0], 1], 2])", "foo([0, 1, 2])");
+    // TODO(b/538171096): Do not fold sparse array spread in PeepholeFoldConstants
+    test("x = [1, ...[,], 2];", "x = [1, , 2];");
+    test("x = [0, ...[,,], 3];", "x = [0, , , 3];");
+    test("x = [...[,]];", "x = [,];");
   }
 
   @Test
@@ -1689,6 +1759,11 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // Cannot fold
     test("x = [foo(), 0].length", "x = [foo(),0].length");
     testSame("x = y.length");
+    // TODO(b/538122453): Fix PeepholeFoldConstants to not fold array length for string or template
+    // spreads
+    test("x = [...'abc'].length", "x = 1");
+    test("x = [1, ...'ab', 3].length", "x = 3");
+    test("x = [...`abc`].length", "x = 1");
   }
 
   @Test
@@ -1793,6 +1868,14 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("x=x&&y&&z");
     test("x=x*y", "x*=y");
     test("x=y*x", "x*=y");
+    // TODO(b/538122485): Fix PeepholeFoldConstants to prevent invalid variable assignments from
+    // commutative op folding
+    test("x=foo()*x", "x*=foo()");
+    test("x=(x=5)*x", "x*=(x=5)");
+    test("x=(y++)*x", "x*=(y++)");
+    test("x=foo()|x", "x|=foo()");
+    test("x=foo()&x", "x&=foo()");
+    test("x=foo()^x", "x^=foo()");
     test("x=x**y", "x**=y");
     testSame("x=y**x");
     test("x.y=x.y+z", "x.y+=z");
@@ -2095,6 +2178,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("var a = {['a']:x}['a']", "var a = x");
     test("var a = {['a']:x}?.['a']", "var a = x");
     test("var a = {['a']:x}?.['a'].b", "var a = x.b");
+    // TODO(b/538141064): Fix PeepholeFoldConstants to not drop optional chaining in nested object
+    // literal access
+    test("var a = {a: {b: 1}}?.a?.b", "var a = 1");
+    test("var a = {a: null}?.a?.b", "var a = null.b");
+    test("var a = {['a']: {b: 1}}?.['a']?.b", "var a = 1");
+    test("var a = {['a']: null}?.['a']?.b", "var a = null.b");
 
     test("var a = { get ['a']() { return 1; }}['a']", "var a = function() { return 1; }();");
     test("var a = {'a': x, ['a']: y}['a']", "var a = y;");
@@ -2116,6 +2205,13 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("var x = {a: 1, a() { 2; }}.a;", "var x = function() { 2; };");
     test("var x = {a() {}, a: 1}.a;", "var x = 1;");
     testSame("var x = {a() {}}.b");
+
+    // TODO(b/538141094): Fix PeepholeFoldConstants to not fold computed setters
+    test(
+        "var x = ({ set ['a'](v) { sideEffect(); } }).a;",
+        "var x = function(v) { sideEffect(); }();");
+    // Fold computed getters.
+    test("var x = ({ get ['a']() { return 1; } }).a;", "var x = function() { return 1; }();");
   }
 
   @Test
@@ -2537,6 +2633,11 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         """
         const a = foo`${b}` + bar`${b}`;
         """);
+
+    // TODO(b/538140050): Fix PeepholeFoldConstants template literal concatenation on adjacent
+    // boundary
+    disableCompareAsTree();
+    test("`${x}$` + `{y}${z}`", "`${x}${y}${z}`");
   }
 
   @Test

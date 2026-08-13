@@ -527,6 +527,12 @@ public final class LiveVariablesAnalysisTest {
     assertLiveBeforeX("var x = 3; X: var {key: y = x} = {};", "x");
     assertLiveBeforeX("var x = 3; X: var {[x + x]: foo} = obj; x;", "x");
     assertLiveBeforeX("var x = 3; X: var {[x + x]: x} = obj; x;", "x");
+
+    // TODO(b/538153547): Fix LiveVariablesAnalysis to handle destructuring default values
+    // conditionally
+    // Nested assignments in default values are conditional and should not kill the variable
+    assertNotLiveBeforeX("var a, x, obj; a = 1; X: [x = (a = 2)] = obj; a();", "a");
+    assertNotLiveBeforeX("var a, x, obj; a = 1; X: ({x = (a = 2)} = obj); a();", "a");
   }
 
   @Test

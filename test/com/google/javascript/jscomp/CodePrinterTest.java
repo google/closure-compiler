@@ -845,6 +845,36 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("/(?=x)/", "/(?=x)/");
   }
 
+  // TODO(b/538150822): CodePrinter: break script tags / comments in template literals
+  @Test
+  public void testBreakTemplateLiterals() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+
+    // Break scripts in template literals
+    assertPrint("`</script>`", "`</script>`");
+    assertPrint("`</SCRIPT>`", "`</SCRIPT>`");
+    assertPrint("`</style>`", "`</style>`");
+    assertPrint("`</STYLE>`", "`</STYLE>`");
+
+    // Break comments in template literals
+    assertPrint("`-->`", "`-->`");
+    assertPrint("`]]>`", "`]]>`");
+    assertPrint("` --></script>`", "` --></script>`");
+    assertPrint("`<!-- I am a string -->`", "`<!-- I am a string -->`");
+  }
+
+  // TODO(b/538150822): CodePrinter: break script tags / comments in template literals
+  @Test
+  public void testBreakUntrustedTemplateLiterals() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    trustedStrings = false;
+
+    // Break scripts in template literals
+    assertPrint("`</script>`", "`</script>`");
+    assertPrint("`<!-- I am a string -->`", "`<!-- I am a string -->`");
+    assertPrint("`<=&>`", "`<=&>`");
+  }
+
   @Test
   public void testHtmlComments() {
     assertPrint("3< !(--x)", "3< !--x");

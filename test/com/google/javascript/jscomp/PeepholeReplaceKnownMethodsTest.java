@@ -161,6 +161,10 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
         "x = '1abcdef2abcdef3'");
 
     fold("x = [1,2].join()", "x = '1,2'");
+    // TODO(b/538138151): Fix Array.prototype.join folding when separator is undefined or void 0.
+    foldSame("[1, 2].join(undefined)");
+    fold("[1, 2].join(void 0)", "'1undefined2'");
+    fold("[1, 2].join()", "'1,2'");
     fold("x = [null,undefined,''].join(',')", "x = ',,'");
     fold("x = [null,undefined,0].join(',')", "x = ',,0'");
     // This can be folded but we don't currently.
@@ -637,9 +641,13 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Number.isNaN(1)", "false");
     fold("Number.isNaN(1.5)", "false");
     fold("Number.isNaN(NaN)", "true");
+    // TODO(b/538206186): Fix Number.isNaN folding for non-Number constants.
     foldSame("Number.isNaN('a')");
     foldSame("Number.isNaN(undefined)");
     foldSame("Number.isNaN(void 0)");
+    foldSame("Number.isNaN(null)");
+    foldSame("Number.isNaN('str')");
+    fold("Number.isNaN(0)", "false");
     // unknown function may have side effects
     foldSame("Number.isNaN(+(void unknown()))");
   }
@@ -680,6 +688,8 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt('12', 13)", "x = 15");
     fold("x = parseInt(15.99, 10)", "x = 15");
     fold("x = parseInt(-15.99, 10)", "x = -15");
+    // TODO(b/538155369): Fix integer truncation and precision loss in parseInt folding in
+    // PeepholeReplaceKnownMethods.
     // Java's Integer.parseInt("-15.99", 10) throws an exception, because of the decimal point.
     foldSame("x = parseInt('-15.99', 10)");
     fold("x = parseFloat('3.14')", "x = 3.14");
@@ -694,15 +704,28 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = parseInt('15e2', 10)");
     foldSame("x = parseInt('15px', 10)");
     foldSame("x = parseInt('-0x08')");
+    foldSame("x = parseInt('0xa', 10)");
+    fold("x = parseInt('+123')", "x = 123");
+    foldSame("x = parseInt('+0xA')");
     foldSame("x = parseInt('1', -1)");
     foldSame("x = parseFloat('3.14more non-digit characters')");
     foldSame("x = parseFloat('314e-2')");
     foldSame("x = parseFloat('0.0314E+2')");
     foldSame("x = parseFloat('3.333333333333333333333333')");
 
-    // Invalid calls
-    foldSame("x = parseInt('0xa', 10)");
+    // Invalid calls / un-foldable
     foldSame("x = parseInt('')");
+
+    // Large numbers and precision tests (beyond 32-bit int)
+    foldSame("x = parseInt('2147483648')");
+    fold("x = parseInt(2147483648)", "x = 2147483647");
+    foldSame("x = parseInt('9007199254740991')");
+    fold("x = parseInt(9007199254740991)", "x = 2147483647");
+    foldSame("x = parseInt('0x80000000')");
+    foldSame("x = parseInt('0x80000000', 16)");
+    fold("x = parseInt(1234567890123.45)", "x = 2147483647");
+    fold("x = parseInt(1e21)", "x = 2147483647");
+    fold("x = parseInt(0.0000001)", "x = 0");
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
     foldSame("x = parseInt('08')");

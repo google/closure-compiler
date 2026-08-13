@@ -188,6 +188,16 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x; try{throw 1} catch(e){x=2} finally{x}");
     inFunction(
         "var x; try{x=1;throw 1;x} finally{x=2}; x", "var x; try{1;throw 1;x} finally{x=2}; x");
+    // TODO(b/538155252): Do not remove assignment before for-of or for-await-of loop with try-catch
+    inFunction(
+        "var x; x = 1; try { for (var y of iter) {} } catch (e) { x; }",
+        "var x; 1; try { for (var y of iter) {} } catch (e) { x; }");
+    inAsyncFunction(
+        "var x; x = 1; try { for await (var y of iter) {} } catch (e) { x; }",
+        "var x; 1; try { for await (var y of iter) {} } catch (e) { x; }");
+    inFunction(
+        "var x; x = 1; try { for (var y in iter) {} } catch (e) { x; }",
+        "var x; 1; try { for (var y in iter) {} } catch (e) { x; }");
   }
 
   @Test
@@ -1317,6 +1327,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538135521): Fix DeadAssignmentsElimination to not remove x = 0 initializer
   @Test
   public void testClassField_instance_doesNotClobberAssignment() {
     inFunction(
@@ -1327,7 +1338,6 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         }
         use(x);
         """,
-        // TODO(b/538135521): fix this output - we should not remove the `x = 0` initializer.
         """
         let x;
         0;
@@ -1338,6 +1348,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538135521): Fix DeadAssignmentsElimination to not remove x = 0 initializer
   @Test
   public void testClassField_instance_doesNotClobberAssignment_computed() {
     inFunction(
@@ -1348,7 +1359,6 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         }
         use(x);
         """,
-        // TODO(b/538135521): fix this output - we should not remove the `x = 0` initializer.
         """
         let x;
         0;
@@ -1359,6 +1369,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538135521): Fix DeadAssignmentsElimination to not remove x = 1 assignment
   @Test
   public void testClassField_instanceRead_preserved() {
     inFunction(
@@ -1371,8 +1382,6 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         x = 1;
         use(new C().field); // reads x
         """,
-
-        // TODO(b/538135521): fix this output - we should not remove the `x = 1;` assignment.
         """
         let x = 0;
         class C {
@@ -1384,6 +1393,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538153547): Fix DeadAssignmentsElimination to not remove result = sanitize(result)
   @Test
   public void testDefaultValueNestedAssign_arrayPattern() {
     test(
@@ -1396,7 +1406,6 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
           use(result);
         }
         """,
-        // TODO(b/538153547): fix this output - we should not remove the `result = sanitize(` assign
         """
         function render(input, opts) {
           var x;
@@ -1408,6 +1417,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538153547): Fix DeadAssignmentsElimination to not remove result = sanitize(result)
   @Test
   public void testDefaultValueNestedAssign_objectPattern() {
     test(
@@ -1420,7 +1430,6 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
           use(result);
         }
         """,
-        // TODO(b/538153547): fix this output - we should not remove the `result = sanitize(` assign
         """
         function render(input, opts) {
           var x;
@@ -1428,6 +1437,61 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
           sanitize(result);
           ({x = (result = VAL)} = opts);
           use(result);
+        }
+        """);
+  }
+
+  // TODO(b/538153547): Fix DeadAssignmentsElimination to not remove html = sanitize(html)
+  @Test
+  public void testDefaultValueNestedAssign_poc() {
+    test(
+        """
+        function render(input, opts) {
+          var x;
+          var html = input;
+          html = sanitize(html);
+          [x = (html = 'SAFE_FALLBACK')] = opts;
+          el.innerHTML = html;
+        }
+        """,
+        """
+        function render(input, opts) {
+          var x;
+          var html = input;
+          sanitize(html);
+          [x = (html = 'SAFE_FALLBACK')] = opts;
+          el.innerHTML = html;
+        }
+        """);
+  }
+
+  // TODO(b/538123282): Fix DeadAssignmentsElimination to not remove assignment in optional chaining
+  @Test
+  public void testOptionalChaining() {
+    test(
+        """
+        function f(a, raw) {
+          var x;
+          (x = sanitize(raw), a?.m(x = a.cached), el.innerHTML = x);
+        }
+        """,
+        """
+        function f(a, raw) {
+          var x;
+          (sanitize(raw), a?.m(x = a.cached), el.innerHTML = x);
+        }
+        """);
+    test(
+        """
+        function f(a, raw) {
+          var x;
+          (x = sanitize(raw), a?.[x = a.cached], el.innerHTML = x);
+        }
+        """,
+        """
+        function f(a, raw) {
+          var x;
+          (sanitize(raw), a?.[x = a.cached], el.innerHTML = x);
         }
         """);
   }

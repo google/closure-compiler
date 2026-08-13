@@ -480,6 +480,28 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                 .build()));
   }
 
+  // TODO(b/538125082): Fix CrossChunkCodeMotion to not move classes if instanceof LHS has side
+  // effects
+  @Test
+  public void testClassMovement_instanceof_sideEffectsLhs() {
+    parentChunkCanSeeSymbolsDeclaredInChildren = true;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forStar()
+                .addChunk(
+                    "class SafeHtml {} var out = raw; (out = escapeHtml(raw)) instanceof"
+                        + " SafeHtml;")
+                .addChunk("new SafeHtml();")
+                .build()),
+        expected(
+            JSChunkGraphBuilder.forStar()
+                .addChunk(
+                    "var out = raw; \"function\" == typeof SafeHtml && (out = escapeHtml(raw))"
+                        + " instanceof SafeHtml;")
+                .addChunk("class SafeHtml {} new SafeHtml();")
+                .build()));
+  }
+
   @Test
   public void testClassMovement_instanceof_noRewriteRequired() {
     parentChunkCanSeeSymbolsDeclaredInChildren = true;

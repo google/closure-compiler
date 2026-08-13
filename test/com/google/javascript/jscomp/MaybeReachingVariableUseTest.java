@@ -186,6 +186,8 @@ public final class MaybeReachingVariableUseTest {
     assertMatch("D: var x = 0; x++; U:x");
   }
 
+  // TODO(b/538166697): Fix MaybeReachingVariableUse and MustBeReachingVariableDef to handle
+  // enhanced loop LHS conditionally
   @Test
   public void testForIn() {
     // Uses within FOR-IN header are hard to test. They are covered
@@ -199,6 +201,8 @@ public final class MaybeReachingVariableUseTest {
     assertMatch("D: var x = 1, foo; U: x; for (let [x] in foo) {}");
   }
 
+  // TODO(b/538166697): Fix MaybeReachingVariableUse and MustBeReachingVariableDef to handle
+  // enhanced loop LHS conditionally
   @Test
   public void testForOf() {
     assertNotMatch("D: var x = [], foo; U: for (x of foo) { }");
@@ -210,6 +214,8 @@ public final class MaybeReachingVariableUseTest {
     assertMatch("D: var x = 1, foo; U: x; for (let [x] of foo) {}");
   }
 
+  // TODO(b/538166697): Fix MaybeReachingVariableUse and MustBeReachingVariableDef to handle
+  // enhanced loop LHS conditionally
   @Test
   public void testForAwaitOf() {
     assertNotAsyncMatch("D: var x = [], foo; U: for await (x of foo) { }");

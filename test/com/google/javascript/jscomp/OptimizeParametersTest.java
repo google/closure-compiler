@@ -48,6 +48,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
+    disableMultistageCompilation();
     // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
     enableNormalizeExpectedOutput();
     enableGatherExternProperties();
@@ -196,6 +197,13 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   public void testRemovalRest3() {
     // Can't move a reference to a local.
     testSame("function f(...p1){} function _g(x) { f(x); f(x); }");
+  }
+
+  // TODO(b/538156674): Fix OptimizeParameters when rest parameter removal is rolled back
+  @Test
+  public void testRemovalRest_rollbackPreservesTrailingArgs() {
+    testSame("function f(...p) { use(p); } function g(x) { f(1, x, 2); f(1, x, 2); }");
+    testSame("function f(a, ...p) { use(a, p); } function g(x) { f(1, 2, x, 3); f(1, 2, x, 3); }");
   }
 
   @Test
@@ -691,6 +699,17 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(
         "var foo = function (a) {}; foo?.call(null, 1);",
         "var foo = function () {var a = 1;}; foo?.call(null);");
+
+    // TODO(b/538122484): Fix OptimizeParameters to not optimize .call() calls with spread arguments
+    test(
+        "var foo = function (a, b) {}; foo.call(...arr);",
+        "var foo = function () {var a; var b;}; foo.call(...arr);");
+    test(
+        "var foo = function (a, b, c) {}; foo.call(...arr, 1, 2);",
+        "var foo = function () {var a = 1; var b = 2; var c;}; foo.call(...arr);");
+    test(
+        "var foo = function (a, b) {}; foo?.call(...arr);",
+        "var foo = function () {var a; var b;}; foo?.call(...arr);");
   }
 
   @Test
@@ -1355,6 +1374,46 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         function foo(p2, p3) {var p1=[]}
         foo(y(), z()); foo(y(),3)
         """);
+
+    // TODO(b/538155255): Fix OptimizeParameters parameter inlining with side effects in other call
+    // sites
+    // Pure literal at the first call site and side-effectful call at the second call site.
+    test(
+        """
+        var x; var y; var z;
+        function foo(p1, p2, p3) { alert(p1); }
+        foo(x, y(), 3);
+        foo(x, y(), z());
+        """,
+        """
+        var x; var y; var z;
+        function foo(p3) {
+          var p1 = x;
+          var p2 = y();
+          alert(p1);
+        }
+        foo(3);
+        foo(z());
+        """);
+
+    // Mutable variable passed along with an argument that mutates it at the second call site.
+    test(
+        """
+        var out = [];
+        var policy = 'STRICT';
+        function mutateAndReturn() { policy = 'LENIENT'; return {}; }
+        function render(p, opts) { out.push(p); }
+        render(policy, {});
+        render(policy, mutateAndReturn());
+        """,
+        """
+        var out = [];
+        var policy = 'STRICT';
+        function mutateAndReturn() { policy = 'LENIENT'; return {}; }
+        function render(opts) { var p = policy; out.push(p); }
+        render({});
+        render(mutateAndReturn());
+        """);
   }
 
   @Test
@@ -1993,6 +2052,17 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoRewriteTagged_methodCall() {
+    testSame(
+        """
+        var obj = {
+          f: function(a, b, c) {}
+        };
+        obj.f`tagged`;
+        """);
+  }
+
+  @Test
   public void testSuperInvocation_preventsParamInlining_whenImplicit() {
     testSame(
         """
@@ -2157,5 +2227,40 @@ public final class OptimizeParametersTest extends CompilerTestCase {
                   .setMutatesGlobalState()
                   .valueOf());
     }
+  }
+
+  // TODO(b/538155990): Fix OptimizeParameters to not hoist new.target or import.meta
+  @Test
+  public void testNoHoistNewTarget() {
+    test(
+        """
+        function check(x) { if (x) throw 1; }
+        class C { constructor() { check(!new.target); } }
+        new C();
+        """,
+        """
+        function check() {
+          var x = !new.target;
+          if (x) {
+            throw 1;
+          }
+        }
+        class C {
+          constructor() {
+            check();
+          }
+        }
+        new C();
+        """);
+  }
+
+  @Test
+  public void testNoHoistImportMeta() {
+    testSame(
+        """
+        function check(x) { if (x) throw 1; }
+        function f() { check(import.meta); }
+        f();
+        """);
   }
 }

@@ -664,6 +664,33 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538135522): InlineProperties: for-of in ES6 constructor prevents inlining
+  @Test
+  public void testConstInstancePropInForOf_es6Class() {
+    test(
+        """
+        /** @unrestricted */
+        class C {
+          constructor() {
+            for (const x of [1, 2]) {
+              this.foo = 1;
+            }
+          }
+        }
+        new C().foo;
+        """,
+        """
+        class C {
+          constructor() {
+            for (const x of [1, 2]) {
+              this.foo = 1;
+            }
+          }
+        }
+        new C(), 1;
+        """);
+  }
+
   @Test
   public void testConstClassProps_es6Class() {
     // Inline constant class properties,
@@ -904,6 +931,45 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         }
         C['a']
         C['b']
+        """);
+  }
+
+  // TODO(b/538122482): InlineProperties: uninitialized subclass field does NOT prevent inlining
+  // superclass property
+  @Test
+  public void testUninitializedSubclassFieldPreventsInlining() {
+    test(
+        """
+        class Guard {
+          constructor() { this.escaped = true; }
+        }
+        class RawGuard extends Guard {
+          escaped;
+        }
+        (new RawGuard()).escaped;
+        """,
+        """
+        class Guard {
+          constructor() { this.escaped = true; }
+        }
+        class RawGuard extends Guard {
+          escaped;
+        }
+        new RawGuard(), true;
+        """);
+  }
+
+  @Test
+  public void testInitializedSubclassFieldPreventsInlining() {
+    testSame(
+        """
+        class Guard {
+          constructor() { this.escaped = true; }
+        }
+        class RawGuard extends Guard {
+          escaped = false;
+        }
+        (new RawGuard()).escaped;
         """);
   }
 }

@@ -1917,6 +1917,52 @@ a = temp$jscomp$2;
         """);
   }
 
+  // TODO(b/538155257): Fix ExpressionDecomposer to not double-evaluate GETELEM keys on compound
+  // assignments
+  // Dynamic receiver and key on LHS of assignment-op.
+  @Test
+  public void testExposePlusEquals6() {
+    helperExposeExpression(
+        "var obj = {}; var nextKey = function() {}; obj[nextKey()] += foo() + 1",
+        exprMatchesStr("foo()"),
+        """
+        var obj = {};
+        var nextKey = function() {};
+        var temp_const$jscomp$0 = obj;
+        var temp_const$jscomp$1 = temp_const$jscomp$0[nextKey()];
+        var temp_const$jscomp$2 = nextKey();
+        temp_const$jscomp$0[temp_const$jscomp$2] = temp_const$jscomp$1 + (foo() + 1);
+        """);
+
+    helperExposeExpression(
+        "var obj = {}; var nextKey = function() {}; y = (obj[nextKey()] += foo()) + obj[nextKey()]",
+        exprMatchesStr("foo()"),
+        """
+        var obj = {};
+        var nextKey = function() {};
+        var temp_const$jscomp$0 = obj;
+        var temp_const$jscomp$1 = temp_const$jscomp$0[nextKey()];
+        var temp_const$jscomp$2 = nextKey();
+        y = (temp_const$jscomp$0[temp_const$jscomp$2] = temp_const$jscomp$1 + foo()) + obj[nextKey()]
+        """);
+  }
+
+  // TODO(b/538155257): Fix ExpressionDecomposer to not double-evaluate GETELEM keys on compound
+  // assignments
+  @Test
+  public void testExposePlusEquals_getElemCallReceiverAndKey() {
+    helperExposeExpression(
+        "var x = {}; goo()[goo()] += foo() + 1",
+        exprMatchesStr("foo()"),
+        """
+        var x = {};
+        var temp_const$jscomp$0 = goo();
+        var temp_const$jscomp$1 = temp_const$jscomp$0[goo()];
+        var temp_const$jscomp$2 = goo();
+        temp_const$jscomp$0[temp_const$jscomp$2] = temp_const$jscomp$1 + (foo() + 1);
+        """);
+  }
+
   // Simple name on LHS of logical assignment-op.
   @Test
   public void testExposeLogicalAssignment1() {
@@ -2244,6 +2290,26 @@ a = temp$jscomp$2;
         "fn.call(foo());",
         exprMatchesStr("foo()"),
         "var result$jscomp$0 = foo(); fn.call(result$jscomp$0);");
+  }
+
+  // TODO(b/538123290): Fix NodeUtil.canBeSideEffected to include ES6+ side-effected tokens
+  @Test
+  public void testDecomposeEs6Features() {
+    knownConstants.add("tag");
+    knownConstants.add("sink");
+    // Tagged template literals
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE, "sink(tag`x`, foo())", exprMatchesStr("foo()"));
+
+    // Await expressions
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE,
+        "async function f() { sink(await 0, foo()); }",
+        exprMatchesStr("foo()"));
+
+    // Dynamic imports
+    helperCanExposeExpression(
+        DecompositionType.MOVABLE, "sink(import('m'), foo())", exprMatchesStr("foo()"));
   }
 
   private void helperCanExposeExpression(

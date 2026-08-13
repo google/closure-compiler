@@ -252,6 +252,11 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontFoldDirectAndIndirectEval() {
+    fold("if (a) { eval(x); } else { (0, eval)(x); }", "a ? eval(x) : (0, eval)(x);");
+  }
+
+  @Test
   public void testNotCond() {
     fold("function f(){if(!x)foo()}", "function f(){x||foo()}");
     fold("function f(){if(!x)b=1}", "function f(){x||(b=1)}");
@@ -610,6 +615,48 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold(
         "function f() { switch(a){ case 1: return a; default: g();} return a;}",
         "function f() { switch(a){ case 1: break; default: g();} return a; }");
+
+    // TODO(b/538167734): PeepholeSubstituteDirectStatement: don't substitute break for return
+    // inside try-finally when finally mutates value
+    fold(
+        """
+        function f(flag) {
+          var ok = false;
+          while (flag) {
+            try { return ok; } finally { ok = true; }
+          }
+          return ok;
+        }
+        """,
+        """
+        function f(flag) {
+          var ok = false;
+          for (; flag;) {
+            try { break; } finally { ok = true; }
+          }
+          return ok;
+        }
+        """);
+
+    fold(
+        """
+        function f(flag) {
+          var ok = false;
+          while (flag) {
+            try { return 1; } finally { ok = true; }
+          }
+          return 1;
+        }
+        """,
+        """
+        function f(flag) {
+          var ok = false;
+          while (flag) {
+            try { break; } finally { ok = true; }
+          }
+          return 1;
+        }
+        """);
   }
 
   @Test
@@ -711,6 +758,26 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold(
         "function f() { switch(a){ case 1: throw a; default: g();} throw a;}",
         "function f() { switch(a){ case 1: break; default: g();} throw a; }");
+
+    // TODO(b/538167734): PeepholeSubstituteDirectStatement: don't substitute break for throw inside
+    // try-finally when finally mutates value
+    fold(
+        """
+        function f(flag, e) {
+          while (flag) {
+            try { throw e; } finally { e = null; }
+          }
+          throw e;
+        }
+        """,
+        """
+        function f(flag, e) {
+          for (; flag;) {
+            try { break; } finally { e = null; }
+          }
+          throw e;
+        }
+        """);
   }
 
   @Test

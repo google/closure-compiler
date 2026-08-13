@@ -65,6 +65,9 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         function use() {}
         function externFunction() {}
         var externVar;
+        function validate() {}
+        var userInput;
+        function gen() {}
         var window;
         var console = {};
         console.log = function(var_args) {};
@@ -1087,6 +1090,16 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Test
   public void testUsedPropAssign2() {
     testSame("try { throw {}; } catch (e) { e.bar = 3; }");
+  }
+
+  @Test
+  public void testUsedPropInDestructuringCatch_objectPattern() {
+    testSame("this.p = 1; try {} catch ({p}) { alert(p); }");
+  }
+
+  @Test
+  public void testUsedPropInDestructuringCatch_arrayPattern() {
+    testSame("this.p = 1; try {} catch ([{p}]) { alert(p); }");
   }
 
   @Test
@@ -2241,6 +2254,16 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         "[] = [1]");
 
     testSame("var [a, b] = [1, 2]; alert(a); alert(b);");
+  }
+
+  // TODO(b/538150824): RemoveUnusedCode: preserve trailing empty slots in destructuring array
+  // patterns
+  @Test
+  public void testDestructuringArrayPatternImpureRhs() {
+    test("const [ok] = validate(userInput);", "const [] = validate(userInput);");
+    test("var [a, b, c] = gen(); use(a);", "var [a] = gen(); use(a);");
+    test("var a, b, c; [a, b, c] = gen(); use(a);", "var a; [a] = gen(); use(a);");
+    test("var [a, b, c] = [1, 2, 3]; use(a);", "var [a] = [1, 2, 3]; use(a);");
   }
 
   @Test

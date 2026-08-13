@@ -163,6 +163,7 @@ public final class MultiPassTest extends CompilerTestCase {
         """);
   }
 
+  // TODO(b/538171092): Emit iterator closing logic for array destructuring
   @Test
   public void testArrayDestructuringAssign() {
     setDestructuringArrowFunctionOptions();
@@ -189,6 +190,7 @@ public final class MultiPassTest extends CompilerTestCase {
             """));
   }
 
+  // TODO(b/538171092): Emit iterator closing logic for array destructuring
   @Test
   public void testDestructuringInsideArrowFunction() {
     setDestructuringArrowFunctionOptions();
@@ -218,6 +220,7 @@ public final class MultiPassTest extends CompilerTestCase {
             """));
   }
 
+  // TODO(b/538171092): Emit iterator closing logic for array destructuring
   @Test
   public void testDestructuringInsideVanillaFunction() {
     setDestructuringArrowFunctionOptions();
@@ -250,6 +253,7 @@ public final class MultiPassTest extends CompilerTestCase {
             """));
   }
 
+  // TODO(b/538171092): Emit iterator closing logic for array destructuring
   @Test
   public void testDestructuringInForLoopHeader() {
     setDestructuringArrowFunctionOptions();
@@ -276,6 +280,7 @@ public final class MultiPassTest extends CompilerTestCase {
             """));
   }
 
+  // TODO(b/538171092): Emit iterator closing logic for array destructuring
   @Test
   public void testDestructuringInForLoopHeaderUsedInBody() {
     setDestructuringArrowFunctionOptions();
@@ -304,6 +309,7 @@ public final class MultiPassTest extends CompilerTestCase {
             """));
   }
 
+  // TODO(b/538171092): Emit iterator closing logic for array destructuring
   @Test
   public void testDestructuringInForLoopHeaderWithInitializer() {
     setDestructuringArrowFunctionOptions();

@@ -511,6 +511,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConditionalPropertyDefinitionAnd() {
+    testSame("window.ns = window.ns || {}; cond && (ns.foo = 123); use(ns.foo);");
+  }
+
+  @Test
+  public void testConditionalObjectLiteralPropertyAnd() {
+    testSame("var ns = cond && { foo: 123 }; use(ns.foo);");
+  }
+
+  @Test
   public void testGlobalObjectNameInBooleanExpressionDepth1_1() {
     test(
         srcs("var a = {b: 0}; a.c = 1; if (a) x();"),
@@ -804,6 +814,73 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         srcs("var a = {}; a.b = {c: 0}; for (var p in a.b) { e(a.b[p]); }"),
         expected("var a$b = {c: 0}; for (var p in a$b) { e(a$b[p]); }"));
     testSame("var a = {}; a.b = {c: 0}; for (var p in a?.b) { e?.(a.b?.[p]); }");
+  }
+
+  // TODO(b/538141076): CollapseProperties: don't inline alias when used in for-in/for-of loop lhs
+  @Test
+  public void testForInLoopAliasNoCollapse() {
+    test(
+        srcs(
+            """
+            var ns = {};
+            ns.global = {x: 1};
+            var alias = ns.global;
+            for (alias in {a: 1}) {}
+            use(ns.global.x);
+            """),
+        expected(
+            """
+            var ns$global = {x: 1};
+            var alias = null;
+            for (ns$global in {a: 1}) {}
+            use(ns$global.x);
+            """));
+  }
+
+  // TODO(b/538141076): CollapseProperties: don't inline alias when used in for-in/for-of loop lhs
+  @Test
+  public void testForOfLoopAliasNoCollapse() {
+    test(
+        srcs(
+            """
+            var ns = {};
+            ns.global = {x: 1};
+            var alias = ns.global;
+            for (alias of [1, 2]) {}
+            use(ns.global.x);
+            """),
+        expected(
+            """
+            var ns$global = {x: 1};
+            var alias = null;
+            for (ns$global of [1, 2]) {}
+            use(ns$global.x);
+            """));
+  }
+
+  // TODO(b/538141076): CollapseProperties: don't inline alias when used in for-in/for-of loop lhs
+  @Test
+  public void testForAwaitOfLoopAliasNoCollapse() {
+    test(
+        srcs(
+            """
+            var ns = {};
+            ns.global = {x: 1};
+            var alias = ns.global;
+            async function f() {
+              for await (alias of [1, 2]) {}
+            }
+            use(ns.global.x);
+            """),
+        expected(
+            """
+            var ns$global = {x: 1};
+            var alias = null;
+            async function f() {
+              for await (ns$global of [1, 2]) {}
+            }
+            use(ns$global.x);
+            """));
   }
 
   @Test
@@ -2383,6 +2460,21 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     testSame("var a = {b: 3}; if (a.hasOwnProperty(foo)) { alert('ok'); }");
     testSame("var a = {b: 3}; if (a.hasOwnProperty(foo)) { alert('ok'); } a?.b;");
+
+    // TODO(b/538171090): propertyIsEnumerable and optional chain variations preventing collapsing
+    test(
+        "var a = {b: 3}; if (a.propertyIsEnumerable('b')) { alert('ok'); }",
+        "var a$b = 3; var a = {}; if (a.propertyIsEnumerable('b')) { alert('ok'); }");
+    test(
+        "var a = {b: 3}; if (a.hasOwnProperty?.('b')) { alert('ok'); }",
+        "var a$b = 3; var a = {}; if (a.hasOwnProperty?.('b')) { alert('ok'); }");
+    testSame("var a = {b: 3}; if (a?.hasOwnProperty('b')) { alert('ok'); }");
+    testSame("var a = {b: 3}; if (a?.hasOwnProperty?.('b')) { alert('ok'); }");
+    test(
+        "var a = {b: 3}; if (a.propertyIsEnumerable?.('b')) { alert('ok'); }",
+        "var a$b = 3; var a = {}; if (a.propertyIsEnumerable?.('b')) { alert('ok'); }");
+    testSame("var a = {b: 3}; if (a?.propertyIsEnumerable('b')) { alert('ok'); }");
+    testSame("var a = {b: 3}; if (a?.propertyIsEnumerable?.('b')) { alert('ok'); }");
   }
 
   @Test

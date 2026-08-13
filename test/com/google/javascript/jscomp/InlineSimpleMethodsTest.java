@@ -736,4 +736,78 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
         var y = (new Foo).bar();
         """);
   }
+
+  // TODO(b/538124105): Fix InlineSimpleMethods to not inline methods with non-simple parameters
+  @Test
+  public void testNoInlineOfMethodWithDefaultParameter() {
+    test(
+        """
+        class Foo {
+          getVal(x = audit()) { return this.val; }
+        }
+        var x = (new Foo).getVal();
+        """,
+        """
+        class Foo {
+          getVal(x = audit()) { return this.val; }
+        }
+        var x = (new Foo).val;
+        """);
+  }
+
+  // TODO(b/538124105): Fix InlineSimpleMethods to not inline methods with non-simple parameters
+  @Test
+  public void testNoInlineOfEmptyMethodWithDefaultParameter() {
+    test(
+        """
+        class Foo {
+          record(x = audit()) {}
+        }
+        var f = new Foo();
+        var x = f.record();
+        """,
+        """
+        class Foo {
+          record(x = audit()) {}
+        }
+        var f = new Foo();
+        var x = void 0;
+        """);
+  }
+
+  // TODO(b/538124105): Fix InlineSimpleMethods to not inline methods with non-simple parameters
+  @Test
+  public void testNoInlineOfMethodWithDestructuring() {
+    test(
+        """
+        class Foo {
+          getVal({x}) { return this.val; }
+        }
+        var x = (new Foo).getVal({});
+        """,
+        """
+        class Foo {
+          getVal({x}) { return this.val; }
+        }
+        var x = (new Foo).val;
+        """);
+  }
+
+  // TODO(b/538124105): Fix InlineSimpleMethods to not inline methods with non-simple parameters
+  @Test
+  public void testNoInlineOfMethodWithRestParameter() {
+    test(
+        """
+        class Foo {
+          getVal(...x) { return this.val; }
+        }
+        var x = (new Foo).getVal();
+        """,
+        """
+        class Foo {
+          getVal(...x) { return this.val; }
+        }
+        var x = (new Foo).val;
+        """);
+  }
 }

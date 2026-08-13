@@ -364,6 +364,57 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
             """));
   }
 
+  // TODO(b/538171098): Fix double-evaluation of side-effecting receiver in method calls with spread
+  // in Es6RewriteRestAndSpread
+  @Test
+  public void
+      testSpreadVariableIntoBracketAccessMethodParameterListOnAnonymousReceiverWithSideEffects() {
+    test(
+        externs(
+            EXTERNS_BASE
+                + """
+                /**
+                 * @constructor
+                 */
+                function TestClass() { }
+
+                /** @param {...string} args */
+                TestClass.prototype.testMethod = function(args) { }
+
+                /** @return {!TestClass} */
+                function testClassFactory() { }
+
+                /** @type {!Iterable<string>} */ var stringIterable;
+                """),
+        srcs("testClassFactory()['testMethod'](...stringIterable);"),
+        expected(
+            """
+            testClassFactory()["testMethod"].apply(
+                testClassFactory(), (0, $jscomp.arrayFromIterable)(stringIterable));
+            """));
+  }
+
+  // TODO(b/538171098): Fix double-evaluation of side-effecting receiver in method calls with spread
+  // in Es6RewriteRestAndSpread
+  @Test
+  public void
+      testSpreadVariableIntoDynamicBracketAccessMethodParameterListOnReceiverWithSideEffects() {
+    test(
+        externs(
+            EXTERNS_BASE
+                + """
+                /** @type {!Array<!Object>} */ var queue;
+                /** @type {string} */ var cmd;
+                /** @type {!Iterable<string>} */ var stringIterable;
+                """),
+        srcs("queue.shift()[cmd](...stringIterable);"),
+        expected(
+            """
+            queue.shift()[cmd].apply(
+                queue.shift(), (0, $jscomp.arrayFromIterable)(stringIterable));
+            """));
+  }
+
   @Test
   public void testSpreadVariableIntoMethodParameterListOnReceiverWithSideEffects_freeCall() {
     test(

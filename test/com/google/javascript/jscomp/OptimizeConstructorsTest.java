@@ -533,4 +533,29 @@ public final class OptimizeConstructorsTest extends CompilerTestCase {
   public void testNoOptimize_sideEffectObjectSuperCall() {
     testSame("class Top extends Object { constructor(a) { super(a++); }}");
   }
+
+  // TODO(b/538155998): Fix OptimizeConstructors to check for reassigned superclasses before
+  // removing constructors
+  @Test
+  public void testNoOptimize_reassignedSuperclass() {
+    test(
+        """
+        class Super {
+          constructor() {}
+        }
+        class A extends Super {
+          constructor() {
+            super();
+          }
+        }
+        Super = class {};
+        let a = new A();
+        """,
+        """
+        class Super {}
+        class A extends Super {}
+        Super = class {};
+        let a = new A();
+        """);
+  }
 }

@@ -1763,4 +1763,93 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         }
         """);
   }
+
+  // TODO(b/538131187): Fix ThisAndArgumentsReferenceUpdater to not rewrite this in class field
+  // initializers
+  @Test
+  public void testClassFieldInitializers() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {
+          class Foo {
+            field = this;
+            [this.fooKey] = 1;
+            [this.barKey] = this;
+            static staticField = this;
+            static [this.staticFooKey] = 1;
+            static [this.staticBarKey] = this;
+          }
+          yield 1;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          const THIS$1 = this;
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          return function*() {
+            ᵃᶜresume$0();
+            try {
+              class Foo {
+                field = THIS$1;
+                [THIS$1.fooKey] = 1;
+                [THIS$1.barKey] = THIS$1;
+                static staticField = THIS$1;
+                static [THIS$1.staticFooKey] = 1;
+                static [THIS$1.staticBarKey] = THIS$1;
+              }
+              ᵃᶜresume$0(yield ᵃᶜsuspend$0(1));
+            } finally {
+              ᵃᶜsuspend$0();
+            }
+          }();
+        }
+        """);
+  }
+
+  // TODO(b/538131187): Fix ThisAndArgumentsReferenceUpdater to not rewrite this in class field
+  // initializers
+  @Test
+  public void testClassFieldInitializersNoRewriting() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {
+          class Foo {
+            field = this;
+            static staticField = this;
+          }
+          yield 1;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          const THIS$1 = this;
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          return function*() {
+            ᵃᶜresume$0();
+            try {
+              class Foo {
+                field = THIS$1;
+                static staticField = THIS$1;
+              }
+              ᵃᶜresume$0(yield ᵃᶜsuspend$0(1));
+            } finally {
+              ᵃᶜsuspend$0();
+            }
+          }();
+        }
+        """);
+  }
 }
+
