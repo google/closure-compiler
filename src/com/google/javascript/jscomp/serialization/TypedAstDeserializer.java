@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -358,8 +359,16 @@ public final class TypedAstDeserializer {
       boolean parseInlineSourceMaps) {
     SourceFile sourceFile = deserializer.getSourceFile();
     String sourceMappingURL = deserializer.getSourceMappingURL(); // This is the encoded source map.
+    String sourceMapPath = deserializer.getSourceMapPath();
 
-    if (sourceMappingURL != null && sourceMappingURL.length() > 0 && resolveSourceMapAnnotations) {
+    if (!resolveSourceMapAnnotations) {
+      return;
+    }
+    if (!sourceMapPath.isEmpty()) {
+      SourceFile sourceMapSourceFile =
+          SourceFile.builder().withPath(sourceMapPath).withKind(SourceKind.NON_CODE).build();
+      compiler.addInputSourceMap(sourceFile.getName(), new SourceMapInput(sourceMapSourceFile));
+    } else if (sourceMappingURL != null && sourceMappingURL.length() > 0) {
       // base64EncodedSourceMap adds "data:application/json;base64," prefix to the sourceMappingURL
       String base64EncodedSourceMap =
           SourceMapResolver.addBase64PrefixToEncodedSourceMap(sourceMappingURL);

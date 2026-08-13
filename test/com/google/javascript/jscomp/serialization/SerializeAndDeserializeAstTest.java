@@ -26,6 +26,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.AstValidator;
 import com.google.javascript.jscomp.Compiler;
@@ -534,6 +535,28 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
 
     Result result = testAndReturnResult(srcs(code), expected(code));
     assertThat(result.compiler.getBase64SourceMapContents("testcode")).isNull();
+  }
+
+  @Test
+  public void testSourceMapsInSeparateMapFilesArePreserved() throws IOException {
+    Path directory = folder.newFolder("external-source-map").toPath();
+    Path sourceMap = directory.resolve("input.js.map");
+    Files.writeString(
+        sourceMap,
+        """
+        {"version":3,"file":"input.js","sources":["input.ts"],"names":[],"mappings":"AAAA"}
+        """,
+        UTF_8);
+    Path input = directory.resolve("input.js");
+    Files.writeString(input, "const x = 0;\n//# sourceMappingURL=input.js.map", UTF_8);
+    SourceFile inputFile = SourceFile.fromFile(input.toString(), UTF_8);
+
+    Result result =
+        testAndReturnResult(srcs(ImmutableList.of(inputFile)), expected(ImmutableList.of(inputFile)));
+
+    OriginalMapping mapping = result.compiler.getSourceMapping(input.toString(), 1, 0);
+    assertThat(mapping).isNotNull();
+    assertThat(mapping.getOriginalFile()).isEqualTo(directory.resolve("input.ts").toString());
   }
 
   @Test

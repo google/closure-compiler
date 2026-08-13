@@ -44,6 +44,9 @@ message LazyAst {
   // "eyJ2ZXJzaW9uI..." in this LazyAst's source_mapping_url field. We'll attach
   // the "data:application/json;base64," prefix during deserialization.
   string source_mapping_url = 3;
+  // Path to a separate source map file referenced by this script. Unlike an inline source map,
+  // store only the path so large source maps do not get copied into the TypedAST.
+  string source_map_path = 4;
 }
 
 // Keep this in sync with the TypedAst proto.
@@ -74,6 +77,8 @@ message NonLazyAst {
   // The encoded source map taken from the inline sourcemap comment
   // (base64-encoded "data url" stored in `//# sourceMappingURL=` comment).
   string source_mapping_url = 3;
+  // Path to a separate source map file referenced by this script.
+  string source_map_path = 4;
 }
 
 message StringPoolProto {

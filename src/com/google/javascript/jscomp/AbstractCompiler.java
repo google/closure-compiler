@@ -509,6 +509,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   public abstract String getBase64SourceMapContents(String sourceFileName);
 
+  /** Returns the path of a separate input source map, or null if none is registered. */
+  public abstract @Nullable String getSourceMapPath(String sourceFileName);
+
   abstract void addComments(String filename, List<Comment> comments);
 
   /**

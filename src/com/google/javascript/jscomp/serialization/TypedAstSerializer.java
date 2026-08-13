@@ -118,6 +118,7 @@ final class TypedAstSerializer {
     this.subtreeSourceFiles.clear();
 
     String encodedSourceMap = compiler.getBase64SourceMapContents(script.getSourceFileName());
+    String sourceMapPath = compiler.getSourceMapPath(script.getSourceFileName());
 
     LazyAst.Builder lazyAstBuilder =
         LazyAst.newBuilder().setScript(scriptProto.toByteString()).setSourceFile(sourceFile);
@@ -128,6 +129,9 @@ final class TypedAstSerializer {
       // E.g. We serialize "eyJ2ZXJzaW9uI..." from the "//# sourceMappingURL=
       // data:application/json;base64,eyJ2ZXJzaW9uI..." comment.
       lazyAstBuilder.setSourceMappingUrl(encodedSourceMap);
+    }
+    if (sourceMapPath != null) {
+      lazyAstBuilder.setSourceMapPath(sourceMapPath);
     }
 
     return lazyAstBuilder.build();
