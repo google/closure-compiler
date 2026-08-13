@@ -28,8 +28,15 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Removes local variable assignments that are useless based on information from {@link
@@ -42,6 +49,8 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
   private final AbstractCompiler compiler;
   private LiveVariablesAnalysis liveness;
   private final Deque<BailoutInformation> functionStack;
+  // Worker traversals collect changes locally because the compiler's ChangeTracker is mutable.
+  private final Set<Node> changedScopes = new LinkedHashSet<>();
 
   private static final class BailoutInformation {
     boolean containsFunction;
@@ -58,7 +67,81 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
     checkNotNull(externs);
     checkNotNull(root);
     checkState(compiler.getLifeCycleStage().isNormalized());
+    int parallelism = compiler.getOptions().getNumParallelThreads();
+    if (parallelism > 1 && root.isRoot() && root.hasMoreThanOneChild()) {
+      processScriptsConcurrently(root, parallelism);
+    } else {
+      traverse(root);
+    }
+    for (Node changedScope : changedScopes) {
+      compiler.reportChangeToChangeScope(changedScope);
+    }
+  }
+
+  private void traverse(Node root) {
     NodeTraversal.traverse(compiler, root, this);
+  }
+
+  private void traverseWithScope(Node root, AbstractScope<?, ?> scope) {
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(this)
+        .traverseWithScope(root, scope);
+  }
+
+  private void processScriptsConcurrently(Node root, int parallelism) {
+    ArrayList<Node> scripts = new ArrayList<>();
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+      if (!script.isScript()) {
+        traverse(root);
+        return;
+      }
+      scripts.add(script);
+    }
+    // Each function's liveness analysis and rewrites are independent. Use one read-only global
+    // scope for serial-equivalent name resolution while workers mutate disjoint script subtrees.
+    AbstractScope<?, ?> globalScope =
+        new SyntacticScopeCreator(compiler).createScope(root, null);
+
+    ExecutorService executor =
+        Executors.newFixedThreadPool(
+            Math.min(parallelism, scripts.size()),
+            runnable -> {
+              Thread thread = new Thread(runnable, "jscompiler-DeadAssignmentsElimination");
+              thread.setDaemon(true);
+              return thread;
+            });
+    ArrayList<Future<Set<Node>>> futures = new ArrayList<>(scripts.size());
+    boolean completed = false;
+    try {
+      for (Node script : scripts) {
+        futures.add(
+            executor.submit(
+                () -> {
+                  DeadAssignmentsElimination worker =
+                      new DeadAssignmentsElimination(compiler);
+                  worker.traverseWithScope(script, globalScope);
+                  return worker.changedScopes;
+                }));
+      }
+      executor.shutdown();
+      for (Future<Set<Node>> future : futures) {
+        try {
+          changedScopes.addAll(future.get());
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IllegalStateException("Interrupted while removing dead assignments", e);
+        } catch (ExecutionException e) {
+          throw new IllegalStateException(
+              "Cannot remove dead assignments concurrently", e.getCause());
+        }
+      }
+      completed = true;
+    } finally {
+      if (!completed) {
+        executor.shutdownNow();
+      }
+    }
   }
 
   @Override
@@ -261,7 +344,7 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
       if (rhs != null && rhs.isName() && rhs.getString().equals(var.getName()) && n.isAssign()) {
         rhs.detach();
         n.replaceWith(rhs);
-        compiler.reportChangeToEnclosingScope(rhs);
+        changedScopes.add(checkNotNull(ChangeTracker.getEnclosingChangeScopeRoot(rhs)));
         return;
       }
 
@@ -314,7 +397,7 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
         throw new IllegalStateException("Unknown statement");
       }
 
-      compiler.reportChangeToEnclosingScope(parent);
+      changedScopes.add(checkNotNull(ChangeTracker.getEnclosingChangeScopeRoot(parent)));
       return;
     } else {
       for (Node c = n.getFirstChild(); c != null;) {

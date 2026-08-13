@@ -25,6 +25,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
+  private int parallelism;
+
   public DeadAssignmentsEliminationTest() {
     super("var extern;");
   }
@@ -32,12 +34,27 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   @Before
   public void customSetUp() throws Exception {
     enableNormalize();
+    parallelism = 1;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setNumParallelThreads(parallelism);
+    return options;
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return (externs, js) ->
-        NodeTraversal.traverse(compiler, js, new DeadAssignmentsElimination(compiler));
+    return new DeadAssignmentsElimination(compiler);
+  }
+
+  @Test
+  public void testParallelScripts() {
+    parallelism = 2;
+    test(
+        srcs("function f(){var x;x=1}", "function g(){var y;y=2}"),
+        expected("function f(){var x;1}", "function g(){var y;2}"));
   }
 
   @Test
