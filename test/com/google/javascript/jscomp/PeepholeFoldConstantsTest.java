@@ -1759,11 +1759,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // Cannot fold
     test("x = [foo(), 0].length", "x = [foo(),0].length");
     testSame("x = y.length");
-    // TODO(b/538122453): Fix PeepholeFoldConstants to not fold array length for string or template
-    // spreads
-    test("x = [...'abc'].length", "x = 1");
-    test("x = [1, ...'ab', 3].length", "x = 3");
-    test("x = [...`abc`].length", "x = 1");
+    testSame("x = [...'abc'].length");
+    testSame("x = [1, ...'ab', 3].length");
+    testSame("x = [...`abc`].length");
   }
 
   @Test

@@ -1648,6 +1648,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             // Nope, can't fold this, without handling the side-effects.
             return n;
           }
+          for (Node child = left.getFirstChild(); child != null; child = child.getNext()) {
+            if (child.isSpread()) {
+              return n;
+            }
+          }
           knownLength = left.getChildCount();
         }
         case STRINGLIT -> knownLength = left.getString().length();
