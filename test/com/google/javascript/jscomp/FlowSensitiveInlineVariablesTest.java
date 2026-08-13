@@ -16,7 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.Node;
+import java.io.IOException;
+import java.io.StringWriter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -24,6 +28,8 @@ import org.junit.runners.JUnit4;
 /** Unit tests for {@link FlowSensitiveInlineVariables}. */
 @RunWith(JUnit4.class)
 public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
+
+  private OptimizationWorkReporter workReporter;
 
   public static final String EXTERN_FUNCTIONS =
       """
@@ -48,6 +54,15 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   }
 
   @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    if (workReporter != null) {
+      options.setOptimizationWorkReporter(workReporter);
+    }
+    return options;
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override
@@ -64,6 +79,17 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
     inline("var x; x = 1; x", "var x; 1");
     inline("var x; x = 1; var a = x", "var x; var a = 1");
     inline("var x; x = 1; x = x + 1", "var x; x = 1 + 1");
+  }
+
+  @Test
+  public void testOptimizationWorkReport() throws IOException {
+    workReporter = new OptimizationWorkReporter();
+    inline("var x; x = 1; print(x)", "var x; print(1)");
+
+    StringWriter writer = new StringWriter();
+    workReporter.write(writer);
+    assertThat(writer.toString()).contains("flowSensitiveInlineVariables");
+    assertThat(writer.toString()).contains("_func");
   }
 
   @Test

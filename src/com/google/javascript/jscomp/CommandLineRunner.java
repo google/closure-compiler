@@ -688,6 +688,13 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private String outputInputReductionReport = "";
 
     @Option(
+        name = "--output_optimization_work_report",
+        usage =
+            "Writes a tab-separated report attributing expensive optimization work to source "
+                + "functions. This diagnostic adds timing instrumentation to selected passes.")
+    private String outputOptimizationWorkReport = "";
+
+    @Option(
         name = "--output_remove_unused_code_report",
         usage =
             "Writes a directory of tab-separated RemoveUnusedCode logs. Each entry identifies an "
@@ -1103,6 +1110,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 ImmutableList.of(
                     "create_source_map",
                     "output_input_reduction_report",
+                    "output_optimization_work_report",
                     "output_remove_unused_code_report",
                     "output_manifest",
                     "output_chunk_dependencies",
@@ -1817,6 +1825,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setCharset(flags.charset)
           .setDependencyOptions(dependencyOptions)
           .setOutputInputReductionReport(flags.outputInputReductionReport)
+          .setOutputOptimizationWorkReport(flags.outputOptimizationWorkReport)
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
           .setOutputBundle(bundleFiles)
           .setSkipNormalOutputs(skipNormalOutputs)
@@ -1950,6 +1959,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     if (!flags.outputRemoveUnusedCodeReport.isEmpty()) {
       options.setDebugLogDirectory(Path.of(flags.outputRemoveUnusedCodeReport));
       options.setDebugLogFilter("removals.log");
+    }
+    if (!flags.outputOptimizationWorkReport.isEmpty()) {
+      options.setOptimizationWorkReporter(new OptimizationWorkReporter());
     }
     options.setGenerateExports(flags.generateExports);
     options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);

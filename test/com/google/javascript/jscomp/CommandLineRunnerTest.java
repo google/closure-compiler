@@ -2216,6 +2216,35 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testOutputOptimizationWorkReport() throws IOException {
+    File input = temporaryFolder.newFile("input.js");
+    File compiledOutput = temporaryFolder.newFile("compiled.js");
+    File workReport = temporaryFolder.newFile("optimization-work.tsv");
+    writeFile(
+        input,
+        "window.f = function(p) { var x; if (p) { x = 1; } else { x = 2; } return x; };");
+
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            new String[] {
+              "--compilation_level=ADVANCED",
+              "--js=" + input,
+              "--js_output_file=" + compiledOutput,
+              "--output_optimization_work_report=" + workReport,
+            },
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+
+    int exitCode = runner.doRun();
+    assertWithMessage(errReader.toString(UTF_8)).that(exitCode).isEqualTo(0);
+    String report = java.nio.file.Files.readString(workReport.toPath());
+    assertThat(report)
+        .startsWith(
+            "kind\truntime_us\tcalls\tvariables\tcfg_nodes\tcandidates\tchanges\tpass\t"
+                + "source\tline\tcolumn\tfunction\n");
+  }
+
+  @Test
   public void testOutputRemoveUnusedCodeReport() throws IOException {
     File input = temporaryFolder.newFile("input.js");
     File compiledOutput = temporaryFolder.newFile("compiled.js");

@@ -416,6 +416,9 @@ public class CompilerOptions {
   // TODO(bradfordcsmith): Investigate how can we use multi-threads as default.
   private int numParallelThreads = 1;
 
+  /** Optional sink for detailed per-function optimization diagnostics. */
+  private @Nullable OptimizationWorkReporter optimizationWorkReporter;
+
   /**
    * Sets the level of parallelism for compilation passes that can exploit multi-threading.
    *
@@ -431,6 +434,14 @@ public class CompilerOptions {
 
   int getNumParallelThreads() {
     return numParallelThreads;
+  }
+
+  void setOptimizationWorkReporter(OptimizationWorkReporter reporter) {
+    this.optimizationWorkReporter = reporter;
+  }
+
+  @Nullable OptimizationWorkReporter getOptimizationWorkReporter() {
+    return optimizationWorkReporter;
   }
 
   // --------------------------------

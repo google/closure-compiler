@@ -1624,6 +1624,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       outputInstrumentationMapping();
 
       outputInputReductionReport();
+      outputOptimizationWorkReport(options);
 
       if (isOutputInJson()) {
         outputJsonStream();
@@ -1682,6 +1683,19 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
             .append(inputName.replace('\t', ' ').replace('\n', ' '))
             .append('\n');
       }
+    }
+  }
+
+  private void outputOptimizationWorkReport(B options) throws IOException {
+    if (config.outputOptimizationWorkReport.isEmpty()) {
+      return;
+    }
+    OptimizationWorkReporter reporter =
+        checkNotNull(options.getOptimizationWorkReporter(), "optimization work reporter");
+    maybeCreateDirsForPath(config.outputOptimizationWorkReport);
+    try (Writer writer =
+        checkNotNull(fileNameToOutputWriter2(config.outputOptimizationWorkReport))) {
+      reporter.write(writer);
     }
   }
 
@@ -3037,10 +3051,19 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     private String outputInputReductionReport = "";
 
+    private String outputOptimizationWorkReport = "";
+
     /** Sets the path for a report comparing each input's initial and final AST size. */
     @CanIgnoreReturnValue
     public CommandLineConfig setOutputInputReductionReport(String outputInputReductionReport) {
       this.outputInputReductionReport = outputInputReductionReport;
+      return this;
+    }
+
+    /** Sets the path for a report attributing expensive optimizer work to source functions. */
+    @CanIgnoreReturnValue
+    public CommandLineConfig setOutputOptimizationWorkReport(String outputOptimizationWorkReport) {
+      this.outputOptimizationWorkReport = outputOptimizationWorkReport;
       return this;
     }
 

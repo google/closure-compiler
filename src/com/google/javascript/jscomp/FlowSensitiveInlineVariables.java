@@ -179,6 +179,10 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       return;
     }
 
+    @Nullable OptimizationWorkReporter workReporter =
+        compiler.getOptions().getOptimizationWorkReporter();
+    long workStartNanos = workReporter != null ? System.nanoTime() : 0;
+
     SyntacticScopeCreator scopeCreator = (SyntacticScopeCreator) t.getScopeCreator();
 
     // Compute the forward reaching definition.
@@ -204,6 +208,8 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     // Using the forward reaching definition search to find all the inline
     // candidates
     NodeTraversal.traverse(compiler, t.getScopeRoot(), new GatherCandidates());
+    int candidateCount = candidates.size();
+    int inlinedCount = 0;
 
     // Compute the backward reaching use. The CFG and per-function variable info can be reused.
     reachingUses = new MaybeReachingVariableUse(cfg, escaped, allVarsInFn);
@@ -213,6 +219,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       Var candidateVar = checkNotNull(allVarsInFn.get(c.varName));
       if (c.canInline(candidateVar.getScope())) {
         c.inlineVariable();
+        inlinedCount++;
         candidates.remove(c);
 
         // If candidate "c" has dependencies, then inlining it may have introduced new dependencies
@@ -233,6 +240,17 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       } else {
         candidates.remove(c);
       }
+    }
+
+    if (workReporter != null) {
+      workReporter.recordFunction(
+          PassNames.FLOW_SENSITIVE_INLINE_VARIABLES,
+          functionScopeRoot,
+          t.getScope().getVarCount(),
+          cfg.getNodes().size(),
+          candidateCount,
+          inlinedCount,
+          System.nanoTime() - workStartNanos);
     }
   }
 
