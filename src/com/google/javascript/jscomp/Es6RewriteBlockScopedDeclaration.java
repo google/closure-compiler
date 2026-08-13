@@ -596,7 +596,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     private void updateNames(Node node, Node paramName, String loopObjectName) {
 
       if (node.isName() && !node.getString().isEmpty() /* not an anonymous function name */) {
-        if (node.getString().contains(loopObjectName)) {
+        if (node.getString().equals(loopObjectName)) {
           node.setString(paramName.getString());
           return;
         }

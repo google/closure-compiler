@@ -2456,7 +2456,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
                                     LOOP$10 = {i10: LOOP$10.i10},
                                     LOOP$10.i10++) {
                                   arr.push((function(LOOP$1$PARAM$21, LOOP$10$PARAM$22) {
-                                    return function() { return LOOP$1$PARAM$21.i1 + LOOP$1$PARAM$21.i10; };
+                                    return function() { return LOOP$1$PARAM$21.i1 + LOOP$10$PARAM$22.i10; };
                                   })(LOOP$1, LOOP$10));
                                 }
                               }
