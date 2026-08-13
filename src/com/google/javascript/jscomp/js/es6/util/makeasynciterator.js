@@ -62,11 +62,23 @@ $jscomp.AsyncIteratorFromSyncWrapper = function(iterator) {
   };
 
   /**
+   * @param {!IIterableResult<T>} result
+   * @return {!Promise<!IIterableResult<T>>}
+   */
+  function asyncFromSyncIteratorContinuation(result) {
+    return Promise.resolve(result.value).then(function(value) {
+      return {value: value, done: !!result.done};
+    });
+  }
+
+  /**
    * @param {?=} param
    * @return {!Promise<!IIterableResult<T>>}
    */
   this.next = function(param) {
-    return Promise.resolve(iterator.next(param));
+    return new Promise(function(resolve) {
+      resolve(iterator.next(param));
+    }).then(asyncFromSyncIteratorContinuation);
   };
 
   /**
@@ -83,16 +95,18 @@ $jscomp.AsyncIteratorFromSyncWrapper = function(iterator) {
         if (close !== undefined) close.call(iterator);
         reject(new TypeError('no `throw` method'));
       }
-    });
+    }).then(asyncFromSyncIteratorContinuation);
   };
 
   if (iterator['return'] !== undefined) {
     /**
-     * @param {T} param
+     * @param {T=} param
      * @return {!Promise<!IIterableResult<T>>}
      */
     this['return'] = function(param) {
-      return Promise.resolve(iterator['return'](param));
+      return new Promise(function(resolve) {
+        resolve(iterator['return'](param));
+      }).then(asyncFromSyncIteratorContinuation);
     };
   }
 };
