@@ -33,6 +33,8 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -78,6 +80,8 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
   private Set<Candidate> candidates;
   private MustBeReachingVariableDef reachingDef;
   private MaybeReachingVariableUse reachingUses;
+  private Map<Node, Integer> candidateCountsByUseCfgNode;
+  private Map<Node, Map<String, Integer>> useCountsByCfgNode;
 
   private class SideEffectPredicate implements Predicate<Node> {
     // Check if there are side effects affecting the value of any of these names
@@ -214,11 +218,17 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     // Compute the backward reaching use. The CFG and per-function variable info can be reused.
     reachingUses = new MaybeReachingVariableUse(cfg, escaped, allVarsInFn);
     reachingUses.analyze();
+    candidateCountsByUseCfgNode = new IdentityHashMap<>();
+    for (Candidate candidate : candidates) {
+      candidateCountsByUseCfgNode.merge(candidate.useCfgNode, 1, Integer::sum);
+    }
+    useCountsByCfgNode = new IdentityHashMap<>();
     while (!candidates.isEmpty()) {
       Candidate c = candidates.iterator().next();
       Var candidateVar = checkNotNull(allVarsInFn.get(c.varName));
       if (c.canInline(candidateVar.getScope())) {
         c.inlineVariable();
+        useCountsByCfgNode.clear();
         inlinedCount++;
         candidates.remove(c);
 
@@ -421,7 +431,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       }
 
       getDefinition(getDefCfgNode());
-      getNumUseInUseCfgNode(useCfgNode);
+      numUsesWithinCfgNode = getNumUsesInCfgNode(useCfgNode);
 
       // Definition was not found.
       if (def == null) {
@@ -581,19 +591,22 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       NodeTraversal.traverse(compiler, n, gatherCb);
     }
 
-    /**
-     * Computes the number of uses of the variable varName and store it in
-     * numUseWithinUseCfgNode.
-     */
-    private void getNumUseInUseCfgNode(final Node cfgNode) {
-
-      numUsesWithinCfgNode = 0;
+    /** Counts name uses, sharing a single traversal when many candidates occupy one CFG node. */
+    private int getNumUsesInCfgNode(final Node cfgNode) {
+      if (candidateCountsByUseCfgNode.getOrDefault(cfgNode, 0) < 4) {
+        return countUsesInCfgNode(cfgNode, varName);
+      }
+      Map<String, Integer> cached = useCountsByCfgNode.get(cfgNode);
+      if (cached != null) {
+        return cached.getOrDefault(varName, 0);
+      }
+      Map<String, Integer> useCounts = new HashMap<>();
       AbstractCfgNodeTraversalCallback gatherCb =
           new AbstractCfgNodeTraversalCallback() {
 
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
-              if (n.isName() && n.getString().equals(varName)) {
+              if (n.isName()) {
                 // We make a special exception when the entire cfgNode is a chain
                 // of assignments, since in that case the assignment statements
                 // will happen after the inlining of the right hand side.
@@ -603,23 +616,44 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
                     && isAssignChain(parent, cfgNode)) {
                   // Don't count lhs of top-level assignment chain
                   return;
-                } else {
-                  numUsesWithinCfgNode++;
                 }
+                useCounts.merge(n.getString(), 1, Integer::sum);
               }
-            }
-
-            private boolean isAssignChain(Node child, Node ancestor) {
-              for (Node n = child; n != ancestor; n = n.getParent()) {
-                if (!n.isAssign()) {
-                  return false;
-                }
-              }
-              return true;
             }
           };
 
       NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+      useCountsByCfgNode.put(cfgNode, useCounts);
+      return useCounts.getOrDefault(varName, 0);
+    }
+
+    private int countUsesInCfgNode(final Node cfgNode, String name) {
+      numUsesWithinCfgNode = 0;
+      NodeTraversal.traverse(
+          compiler,
+          cfgNode,
+          new AbstractCfgNodeTraversalCallback() {
+            @Override
+            public void visit(NodeTraversal t, Node n, Node parent) {
+              if (n.isName()
+                  && n.getString().equals(name)
+                  && !(parent.isAssign()
+                      && parent.getFirstChild() == n
+                      && isAssignChain(parent, cfgNode))) {
+                numUsesWithinCfgNode++;
+              }
+            }
+          });
+      return numUsesWithinCfgNode;
+    }
+
+    private boolean isAssignChain(Node child, Node ancestor) {
+      for (Node n = child; n != ancestor; n = n.getParent()) {
+        if (!n.isAssign()) {
+          return false;
+        }
+      }
+      return true;
     }
 
     /**
