@@ -254,6 +254,7 @@ oss_java_library(
         ),
         deps = [
             "//src/com/google/debugging/sourcemap/proto:mapping_java_proto",
+            "//src/com/google/javascript/jscomp/compiler_state:compiler_state_java_proto",
             "//src/com/google/javascript/jscomp/conformance:conformance_java_proto",
             "//src/com/google/javascript/jscomp/instrumentation/reporter/proto:profile_java_proto",
             "//src/com/google/javascript/rhino/typed_ast:typed_ast_java_proto",
@@ -310,6 +311,7 @@ gen_java_tests(
         ":compiler_lib",
         ":compiler_tests_resources",
         "//src/com/google/debugging/sourcemap/proto:mapping_java_proto",
+        "//src/com/google/javascript/jscomp/compiler_state:compiler_state_java_proto",
         "//src/com/google/javascript/jscomp/conformance:conformance_java_proto",
         "//src/com/google/javascript/jscomp/instrumentation/reporter/proto:profile_java_proto",
         "//src/com/google/javascript/rhino/typed_ast:typed_ast_java_proto",

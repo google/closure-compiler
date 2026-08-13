@@ -2,7 +2,7 @@ edition = "2023";
 
 package jscomp;
 
-import "third_party/java_src/jscomp/java/com/google/javascript/jscomp/conformance.proto";
+import "src/com/google/javascript/jscomp/conformance/conformance.proto";
 
 option features.utf8_validation = VERIFY;
 option java_package = "com.google.javascript.jscomp";
