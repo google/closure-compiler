@@ -79,6 +79,12 @@ class ThisAndArgumentsReferenceUpdater implements NodeTraversal.Callback {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (n.isMemberFieldDef()) {
+      return false;
+    }
+    if (parent != null && parent.isComputedFieldDef() && n != parent.getFirstChild()) {
+      return false;
+    }
     return !n.isFunction() || n.isArrowFunction();
   }
 

@@ -1764,8 +1764,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538131187): Fix ThisAndArgumentsReferenceUpdater to not rewrite this in class field
-  // initializers
   @Test
   public void testClassFieldInitializers() {
     test(
@@ -1796,12 +1794,12 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             ᵃᶜresume$0();
             try {
               class Foo {
-                field = THIS$1;
+                field = this;
                 [THIS$1.fooKey] = 1;
-                [THIS$1.barKey] = THIS$1;
-                static staticField = THIS$1;
+                [THIS$1.barKey] = this;
+                static staticField = this;
                 static [THIS$1.staticFooKey] = 1;
-                static [THIS$1.staticBarKey] = THIS$1;
+                static [THIS$1.staticBarKey] = this;
               }
               ᵃᶜresume$0(yield ᵃᶜsuspend$0(1));
             } finally {
@@ -1812,8 +1810,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538131187): Fix ThisAndArgumentsReferenceUpdater to not rewrite this in class field
-  // initializers
   @Test
   public void testClassFieldInitializersNoRewriting() {
     test(
@@ -1832,7 +1828,6 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         const v = new AsyncContext.Variable();
         v.run(100, () => {});
         function f() {
-          const THIS$1 = this;
           var ᵃᶜfactory$0 = $jscomp.asyncContextStart(1);
           var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
           var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
@@ -1840,8 +1835,8 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             ᵃᶜresume$0();
             try {
               class Foo {
-                field = THIS$1;
-                static staticField = THIS$1;
+                field = this;
+                static staticField = this;
               }
               ᵃᶜresume$0(yield ᵃᶜsuspend$0(1));
             } finally {
