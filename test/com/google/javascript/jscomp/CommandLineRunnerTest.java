@@ -2216,6 +2216,64 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testTypedAstInputFile() throws IOException {
+    File input = temporaryFolder.newFile("input.js");
+    File typedAst = temporaryFolder.newFile("input.typedast.gz");
+    File directOutput = temporaryFolder.newFile("direct.js");
+    File restoredOutput = temporaryFolder.newFile("restored.js");
+    writeFile(
+        input,
+        "throw function(value) { const unused = 1; return value + 2; }(3);");
+
+    CommandLineRunner serializer =
+        new CommandLineRunner(
+            new String[] {
+              "--compilation_level=ADVANCED",
+              "--checks_only",
+              "--dependency_mode=NONE",
+              "--env=CUSTOM",
+              "--js=" + input,
+              "--typed_ast_output_file__INTENRNAL_USE_ONLY=" + typedAst,
+            },
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+    int serializerExitCode = serializer.doRun();
+    assertWithMessage(errReader.toString(UTF_8)).that(serializerExitCode).isEqualTo(0);
+
+    CommandLineRunner direct =
+        new CommandLineRunner(
+            new String[] {
+              "--compilation_level=ADVANCED",
+              "--dependency_mode=NONE",
+              "--env=CUSTOM",
+              "--js=" + input,
+              "--js_output_file=" + directOutput,
+            },
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+    int directExitCode = direct.doRun();
+    assertWithMessage(errReader.toString(UTF_8)).that(directExitCode).isEqualTo(0);
+
+    CommandLineRunner restored =
+        new CommandLineRunner(
+            new String[] {
+              "--compilation_level=ADVANCED",
+              "--dependency_mode=NONE",
+              "--env=CUSTOM",
+              "--js=" + input,
+              "--typed_ast_input_file__INTERNAL_USE_ONLY=" + typedAst,
+              "--js_output_file=" + restoredOutput,
+            },
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+    int restoredExitCode = restored.doRun();
+    assertWithMessage(errReader.toString(UTF_8)).that(restoredExitCode).isEqualTo(0);
+
+    assertThat(java.nio.file.Files.readString(restoredOutput.toPath()))
+        .isEqualTo(java.nio.file.Files.readString(directOutput.toPath()));
+  }
+
+  @Test
   public void testOutputOptimizationWorkReport() throws IOException {
     File input = temporaryFolder.newFile("input.js");
     File compiledOutput = temporaryFolder.newFile("compiled.js");

@@ -598,6 +598,12 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private @Nullable String typedAstOutputFile = null;
 
     @Option(
+        name = "--typed_ast_input_file__INTERNAL_USE_ONLY",
+        usage = "Reads an in-progress typedAST list produced by a checks-only compilation.",
+        hidden = true)
+    private @Nullable String typedAstInputFile = null;
+
+    @Option(
         name = "--generate_exports",
         handler = BooleanOptionHandler.class,
         usage = "Generates export code for those marked with @export")
@@ -1824,6 +1830,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setBrowserFeaturesetYear(flags.browserFeaturesetYear)
           .setCharset(flags.charset)
           .setDependencyOptions(dependencyOptions)
+          .setTypedAstListInputFilename(flags.typedAstInputFile)
           .setOutputInputReductionReport(flags.outputInputReductionReport)
           .setOutputOptimizationWorkReport(flags.outputOptimizationWorkReport)
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
