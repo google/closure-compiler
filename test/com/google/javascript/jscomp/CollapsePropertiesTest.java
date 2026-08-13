@@ -2460,19 +2460,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     testSame("var a = {b: 3}; if (a.hasOwnProperty(foo)) { alert('ok'); }");
     testSame("var a = {b: 3}; if (a.hasOwnProperty(foo)) { alert('ok'); } a?.b;");
-
-    // TODO(b/538171090): propertyIsEnumerable and optional chain variations preventing collapsing
-    test(
-        "var a = {b: 3}; if (a.propertyIsEnumerable('b')) { alert('ok'); }",
-        "var a$b = 3; var a = {}; if (a.propertyIsEnumerable('b')) { alert('ok'); }");
-    test(
-        "var a = {b: 3}; if (a.hasOwnProperty?.('b')) { alert('ok'); }",
-        "var a$b = 3; var a = {}; if (a.hasOwnProperty?.('b')) { alert('ok'); }");
+    // propertyIsEnumerable and optional chain variations preventing collapsing
+    testSame("var a = {b: 3}; if (a.propertyIsEnumerable('b')) { alert('ok'); }");
+    testSame("var a = {b: 3}; if (a.hasOwnProperty?.('b')) { alert('ok'); }");
     testSame("var a = {b: 3}; if (a?.hasOwnProperty('b')) { alert('ok'); }");
     testSame("var a = {b: 3}; if (a?.hasOwnProperty?.('b')) { alert('ok'); }");
-    test(
-        "var a = {b: 3}; if (a.propertyIsEnumerable?.('b')) { alert('ok'); }",
-        "var a$b = 3; var a = {}; if (a.propertyIsEnumerable?.('b')) { alert('ok'); }");
+    testSame("var a = {b: 3}; if (a.propertyIsEnumerable?.('b')) { alert('ok'); }");
     testSame("var a = {b: 3}; if (a?.propertyIsEnumerable('b')) { alert('ok'); }");
     testSame("var a = {b: 3}; if (a?.propertyIsEnumerable?.('b')) { alert('ok'); }");
   }

@@ -490,10 +490,10 @@ class GlobalNamespace
           }
           // else not a reference we should record
         }
-        case NAME, GETPROP -> {
-          // OPTCHAIN_GETPROP is intentionally not included in this case.
+        case NAME, GETPROP, OPTCHAIN_GETPROP -> {
           // "a.b?.c" is not a reference to the global name "a.b.c" for the
-          // purposes of GlobalNamespace.
+          // purposes of GlobalNamespace, but we include OPTCHAIN_GETPROP to
+          // detect optional chain hasOwnProperty guards.
           // TODO(b/127505242): CAST parents may indicate a set.
           // This may be a variable get or set.
           switch (parent.getToken()) {
@@ -553,6 +553,7 @@ class GlobalNamespace
             case OBJECT_SPREAD:
               break; // isSet = false, type = OTHER.
             case CALL:
+            case OPTCHAIN_CALL:
               if (n.isFirstChildOf(parent) && isObjectHasOwnPropertyCall(parent)) {
                 String qname = n.getFirstChild().getQualifiedName();
                 Name globalName = getOrCreateName(qname, curMetadata);
@@ -1048,16 +1049,18 @@ class GlobalNamespace
 
     /** Detect calls of the form a.b.hasOwnProperty(c); that prevent property collapsing on a.b */
     private boolean isObjectHasOwnPropertyCall(Node callNode) {
-      checkArgument(callNode.isCall(), callNode);
+      checkArgument(callNode.isCall() || callNode.isOptChainCall(), callNode);
       if (!callNode.hasTwoChildren()) {
         return false;
       }
       Node callee = callNode.getFirstChild();
-      if (!callee.isGetProp()) {
+      if (!callee.isGetProp() && !callee.isOptChainGetProp()) {
         return false;
       }
       Node receiver = callee.getFirstChild();
-      return "hasOwnProperty".equals(callee.getString()) && receiver.isQualifiedName();
+      String propName = callee.getString();
+      return ("hasOwnProperty".equals(propName) || "propertyIsEnumerable".equals(propName))
+          && receiver.isQualifiedName();
     }
 
     /**
