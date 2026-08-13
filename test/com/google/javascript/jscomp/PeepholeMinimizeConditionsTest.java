@@ -615,24 +615,12 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold(
         "function f() { switch(a){ case 1: return a; default: g();} return a;}",
         "function f() { switch(a){ case 1: break; default: g();} return a; }");
-
-    // TODO(b/538167734): PeepholeSubstituteDirectStatement: don't substitute break for return
-    // inside try-finally when finally mutates value
-    fold(
+    foldSame(
         """
         function f(flag) {
           var ok = false;
           while (flag) {
             try { return ok; } finally { ok = true; }
-          }
-          return ok;
-        }
-        """,
-        """
-        function f(flag) {
-          var ok = false;
-          for (; flag;) {
-            try { break; } finally { ok = true; }
           }
           return ok;
         }
@@ -758,22 +746,11 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold(
         "function f() { switch(a){ case 1: throw a; default: g();} throw a;}",
         "function f() { switch(a){ case 1: break; default: g();} throw a; }");
-
-    // TODO(b/538167734): PeepholeSubstituteDirectStatement: don't substitute break for throw inside
-    // try-finally when finally mutates value
-    fold(
+    foldSame(
         """
         function f(flag, e) {
           while (flag) {
             try { throw e; } finally { e = null; }
-          }
-          throw e;
-        }
-        """,
-        """
-        function f(flag, e) {
-          for (; flag;) {
-            try { break; } finally { e = null; }
           }
           throw e;
         }

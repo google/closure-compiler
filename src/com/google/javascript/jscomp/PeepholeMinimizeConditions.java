@@ -276,7 +276,8 @@ class PeepholeMinimizeConditions
     Node prefinallyFollows = follow;
     follow = skipFinallyNodes(follow);
 
-    if (prefinallyFollows != follow) {
+    Node innerFollow = ControlFlowAnalysis.computeFollowNode(n);
+    if (prefinallyFollows != follow || innerFollow != skipFinallyNodes(innerFollow)) {
       // There were finally clauses
       if (!isPure(result)) {
         // Can't defer the exit
