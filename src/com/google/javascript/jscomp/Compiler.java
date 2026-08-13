@@ -694,6 +694,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             () -> {
               Tracer tracer = newTracer("deserializeTypedAst");
               try {
+                if (!deserializeTypes && options.getNumParallelThreads() > 1) {
+                  return TypedAstDeserializer.deserializeFullAstConcurrently(
+                      this,
+                      SYNTHETIC_EXTERNS_FILE,
+                      requiredInputFiles,
+                      typedAstListStream,
+                      options.getResolveSourceMapAnnotations(),
+                      options.getParseInlineSourceMaps(),
+                      options.getNumParallelThreads());
+                }
                 return TypedAstDeserializer.deserializeFullAst(
                     this,
                     SYNTHETIC_EXTERNS_FILE,

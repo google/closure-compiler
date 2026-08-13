@@ -2350,6 +2350,7 @@ public final class CommandLineRunnerTest {
 
     ArrayList<String> restoredArguments = new ArrayList<>(List.of(commonArguments));
     restoredArguments.add("--typed_ast_input_file__INTERNAL_USE_ONLY=" + combinedTypedAst);
+    restoredArguments.add("--num_parallel_threads=2");
     restoredArguments.add("--js_output_file=" + restoredOutput);
     CommandLineRunner restored =
         new CommandLineRunner(

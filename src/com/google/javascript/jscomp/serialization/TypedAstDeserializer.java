@@ -44,8 +44,14 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
@@ -63,6 +69,7 @@ public final class TypedAstDeserializer {
       new ConcurrentHashMap<>();
   private final ImmutableSet.Builder<String> externProperties = ImmutableSet.builder();
   private final ImmutableSet.Builder<String> runtimeLibraries = ImmutableSet.builder();
+  private final LinkedHashMap<String, SourceMapInput> inputSourceMaps = new LinkedHashMap<>();
   private final ArrayList<ScriptNodeDeserializer> syntheticExternsDeserializers = new ArrayList<>();
 
   private TypedAstDeserializer(
@@ -124,6 +131,133 @@ public final class TypedAstDeserializer {
   }
 
   /**
+   * Deserializes independent TypedAst messages concurrently when type information is not needed.
+   * The messages are merged in stream order to preserve the sequential deserializer's duplicate
+   * file and synthetic-extern behavior.
+   */
+  public static DeserializedAst deserializeFullAstConcurrently(
+      AbstractCompiler compiler,
+      SourceFile syntheticExterns,
+      ImmutableSet<SourceFile> requiredInputFiles,
+      InputStream typedAstsStream,
+      boolean resolveSourceMapAnnotations,
+      boolean parseInlineSourceMaps,
+      int numParallelThreads) {
+    ImmutableMap<String, SourceFile> sourceFilesByName =
+        requiredInputFiles.stream()
+            .collect(toImmutableMap(SourceFile::getName, Function.identity()));
+
+    // Runtime-library deserialization must initialize compiler state exactly once.
+    compiler.initRuntimeLibraryTypedAsts(Optional.absent());
+
+    ExecutorService executor =
+        Executors.newFixedThreadPool(
+            numParallelThreads,
+            runnable -> {
+              Thread thread = new Thread(runnable, "jscompiler-TypedAstDeserialize");
+              thread.setDaemon(true);
+              return thread;
+            });
+    ArrayList<Future<DeserializedAst>> shards = new ArrayList<>();
+    boolean completed = false;
+    try {
+      forEachTypedAst(
+          typedAstsStream,
+          typedAst ->
+              shards.add(
+                  executor.submit(
+                      () ->
+                          deserializeFullAstMessage(
+                              compiler,
+                              syntheticExterns,
+                              requiredInputFiles,
+                              sourceFilesByName,
+                              typedAst,
+                              resolveSourceMapAnnotations,
+                              parseInlineSourceMaps))));
+      executor.shutdown();
+
+      ConcurrentMap<SourceFile, Supplier<Node>> filesystem = new ConcurrentHashMap<>();
+      ImmutableSet.Builder<String> externProperties = ImmutableSet.builder();
+      ImmutableSet.Builder<String> runtimeLibraries = ImmutableSet.builder();
+      LinkedHashMap<String, SourceMapInput> inputSourceMaps = new LinkedHashMap<>();
+      ArrayList<Supplier<Node>> syntheticExternSuppliers = new ArrayList<>();
+      for (Future<DeserializedAst> shardFuture : shards) {
+        DeserializedAst shard;
+        try {
+          shard = shardFuture.get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IllegalStateException("Interrupted while deserializing TypedAST", e);
+        } catch (ExecutionException e) {
+          throw new IllegalArgumentException("Cannot deserialize TypedAST input", e.getCause());
+        }
+        Supplier<Node> syntheticExternSupplier = shard.getFilesystem().get(syntheticExterns);
+        if (syntheticExternSupplier != null) {
+          syntheticExternSuppliers.add(syntheticExternSupplier);
+        }
+        for (Map.Entry<SourceFile, Supplier<Node>> entry : shard.getFilesystem().entrySet()) {
+          if (!identical(syntheticExterns, entry.getKey())) {
+            filesystem.putIfAbsent(entry.getKey(), entry.getValue());
+          }
+        }
+        externProperties.addAll(shard.getExternProperties());
+        runtimeLibraries.addAll(shard.getRuntimeLibraries());
+        inputSourceMaps.putAll(shard.getInputSourceMaps());
+      }
+      filesystem.put(
+          syntheticExterns,
+          () -> {
+            Node script = IR.script();
+            script.setStaticSourceFile(syntheticExterns);
+            for (Supplier<Node> supplier : syntheticExternSuppliers) {
+              script.addChildrenToBack(supplier.get().removeChildren());
+            }
+            return script;
+          });
+      completed = true;
+      inputSourceMaps.forEach(compiler::addInputSourceMap);
+      return DeserializedAst.create(
+          filesystem,
+          Optional.absent(),
+          externProperties.build(),
+          runtimeLibraries.build(),
+          ImmutableMap.copyOf(inputSourceMaps));
+    } finally {
+      if (!completed) {
+        executor.shutdownNow();
+      }
+    }
+  }
+
+  private static DeserializedAst deserializeFullAstMessage(
+      AbstractCompiler compiler,
+      SourceFile syntheticExterns,
+      ImmutableSet<SourceFile> requiredInputFiles,
+      ImmutableMap<String, SourceFile> sourceFilesByName,
+      TypedAst typedAst,
+      boolean resolveSourceMapAnnotations,
+      boolean parseInlineSourceMaps) {
+    TypedAstDeserializer deserializer =
+        new TypedAstDeserializer(
+            syntheticExterns,
+            Optional.absent(),
+            Optional.of(requiredInputFiles),
+            Mode.FULL_AST,
+            false);
+    deserializer.filePoolBuilder.put(syntheticExterns.getName(), syntheticExterns);
+    deserializer.filePoolBuilder.putAll(sourceFilesByName);
+    deserializer.deserializeTypedAst(
+        typedAst, compiler, resolveSourceMapAnnotations, parseInlineSourceMaps);
+    deserializer.typedAstFilesystem.put(
+        syntheticExterns,
+        new SyntheticExternsDeserializer(
+                syntheticExterns, deserializer.syntheticExternsDeserializers)
+            ::deserialize);
+    return deserializer.toDeserializedAst();
+  }
+
+  /**
    * Transforms the special runtime library TypedAst
    *
    * @param colorPool a ColorPool.Builder holding the colors on the full AST. We want to merge these
@@ -181,6 +315,7 @@ public final class TypedAstDeserializer {
 
     deserializeTypedAsts(
         typedAstStream, deserializer, compiler, resolveSourceMapAnnotations, parseInlineSourceMaps);
+    deserializer.inputSourceMaps.forEach(compiler::addInputSourceMap);
 
     deserializer.typedAstFilesystem.put(
         syntheticExterns,
@@ -231,7 +366,11 @@ public final class TypedAstDeserializer {
             ? Optional.absent()
             : Optional.of(colorPoolBuilder.get().build().getRegistry());
     return DeserializedAst.create(
-        typedAstFilesystem, registry, externProperties.build(), runtimeLibraries.build());
+        typedAstFilesystem,
+        registry,
+        externProperties.build(),
+        runtimeLibraries.build(),
+        ImmutableMap.copyOf(inputSourceMaps));
   }
 
   private void deserializeTypedAst(
@@ -297,7 +436,11 @@ public final class TypedAstDeserializer {
       SourceFile existingFile = filePoolBuilder.get(p.getFilename());
       if (existingFile != null) {
         // Merge the existing SourceFile with the information serialized in the TypedAST.
-        existingFile.restoreCachedStateFrom(p);
+        // Concurrent shard deserialization can encounter the same required input in more than one
+        // message. Those messages contain identical state, but SourceFile itself is mutable.
+        synchronized (existingFile) {
+          existingFile.restoreCachedStateFrom(p);
+        }
         fileShardBuilder.add(existingFile);
       } else {
         SourceFile protoFile = SourceFile.fromProto(p);
@@ -340,7 +483,7 @@ public final class TypedAstDeserializer {
       typedAstFilesystem.computeIfAbsent(file, (f) -> deserializer::deserializeNew);
     }
 
-    addInputSourceMap(deserializer, compiler, resolveSourceMapAnnotations, parseInlineSourceMaps);
+    addInputSourceMap(deserializer, resolveSourceMapAnnotations, parseInlineSourceMaps);
   }
 
   /**
@@ -352,9 +495,8 @@ public final class TypedAstDeserializer {
    * @param parseInlineSourceMaps Whether a given `//# sourceMappingURL` should be registered as a
    *     Base64 encoded source map.
    */
-  private static void addInputSourceMap(
+  private void addInputSourceMap(
       ScriptNodeDeserializer deserializer,
-      AbstractCompiler compiler,
       boolean resolveSourceMapAnnotations,
       boolean parseInlineSourceMaps) {
     SourceFile sourceFile = deserializer.getSourceFile();
@@ -367,7 +509,7 @@ public final class TypedAstDeserializer {
     if (!sourceMapPath.isEmpty()) {
       SourceFile sourceMapSourceFile =
           SourceFile.builder().withPath(sourceMapPath).withKind(SourceKind.NON_CODE).build();
-      compiler.addInputSourceMap(sourceFile.getName(), new SourceMapInput(sourceMapSourceFile));
+      inputSourceMaps.put(sourceFile.getName(), new SourceMapInput(sourceMapSourceFile));
     } else if (sourceMappingURL != null && sourceMappingURL.length() > 0) {
       // base64EncodedSourceMap adds "data:application/json;base64," prefix to the sourceMappingURL
       String base64EncodedSourceMap =
@@ -376,7 +518,7 @@ public final class TypedAstDeserializer {
           SourceMapResolver.extractSourceMap(
               sourceFile, base64EncodedSourceMap, parseInlineSourceMaps);
       if (sourceMapSourceFile != null) {
-        compiler.addInputSourceMap(sourceFile.getName(), new SourceMapInput(sourceMapSourceFile));
+        inputSourceMaps.put(sourceFile.getName(), new SourceMapInput(sourceMapSourceFile));
       }
     }
   }
@@ -401,6 +543,15 @@ public final class TypedAstDeserializer {
       AbstractCompiler compiler,
       boolean resolveSourceMapAnnotations,
       boolean parseInlineSourceMaps) {
+    forEachTypedAst(
+        typedAstsStream,
+        typedAst ->
+            deserializer.deserializeTypedAst(
+                typedAst, compiler, resolveSourceMapAnnotations, parseInlineSourceMaps));
+  }
+
+  private static void forEachTypedAst(
+      InputStream typedAstsStream, Consumer<TypedAst> consumer) {
     try {
       CodedInputStream codedInput = CodedInputStream.newInstance(typedAstsStream);
       // The typedAstsStream is an encoded 'TypedAst.List' message:
@@ -429,8 +580,7 @@ public final class TypedAstDeserializer {
         TypedAst typedAst = typedAstBuilder.build();
         typedAstBuilder.clear();
         codedInput.resetSizeCounter();
-        deserializer.deserializeTypedAst(
-            typedAst, compiler, resolveSourceMapAnnotations, parseInlineSourceMaps);
+        consumer.accept(typedAst);
       }
     } catch (IOException ex) {
       throw new IllegalArgumentException("Cannot read from TypedAST input stream", ex);
@@ -466,13 +616,16 @@ public final class TypedAstDeserializer {
 
     public abstract ImmutableSet<String> getRuntimeLibraries();
 
+    abstract ImmutableMap<String, SourceMapInput> getInputSourceMaps();
+
     private static DeserializedAst create(
         ConcurrentMap<SourceFile, Supplier<Node>> filesystem,
         Optional<ColorRegistry> colorRegistry,
         ImmutableSet<String> externProperties,
-        ImmutableSet<String> runtimeLibraries) {
+        ImmutableSet<String> runtimeLibraries,
+        ImmutableMap<String, SourceMapInput> inputSourceMaps) {
       return new AutoValue_TypedAstDeserializer_DeserializedAst(
-          filesystem, colorRegistry, externProperties, runtimeLibraries);
+          filesystem, colorRegistry, externProperties, runtimeLibraries, inputSourceMaps);
     }
   }
 }
