@@ -306,10 +306,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     String relativePath;
   }
 
-  /**
-   * There is exactly one cached resolvedSourceMap, which you can think of as a cache of size one.
-   */
-  private final ResolvedSourceMap resolvedSourceMap = new ResolvedSourceMap();
+  /** One cached source-map resolution per output thread. */
+  private final ThreadLocal<ResolvedSourceMap> resolvedSourceMap =
+      ThreadLocal.withInitial(ResolvedSourceMap::new);
 
   /** Creates a Compiler that reports errors and warnings to its logger. */
   public Compiler() {
@@ -2724,6 +2723,142 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         });
   }
 
+  /** Immutable input roots captured on the compiler thread for concurrent code generation. */
+  static final class PreparedChunkOutput {
+    final ImmutableList<Node> roots;
+
+    PreparedChunkOutput(ImmutableList<Node> roots) {
+      this.roots = roots;
+    }
+  }
+
+  /** Code, source mappings, and the license-relevant node order for one input. */
+  private static final class GeneratedInput {
+    final Node root;
+    final CodePrinter.SourceAndMappings sourceAndMappings;
+    final ImmutableList<Node> licenseNodes;
+
+    GeneratedInput(
+        Node root,
+        CodePrinter.SourceAndMappings sourceAndMappings,
+        ImmutableList<Node> licenseNodes) {
+      this.root = root;
+      this.sourceAndMappings = sourceAndMappings;
+      this.licenseNodes = licenseNodes;
+    }
+  }
+
+  /** Immutable result of generating one chunk's code without mutating compiler state. */
+  static final class GeneratedChunkOutput {
+    final ImmutableList<GeneratedInput> inputs;
+
+    GeneratedChunkOutput(ImmutableList<GeneratedInput> inputs) {
+      this.inputs = inputs;
+    }
+
+    boolean hasLicenseNodes() {
+      for (GeneratedInput input : inputs) {
+        if (!input.licenseNodes.isEmpty()) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
+  ImmutableSet<String> getLicensedSourceNamesForOutput() {
+    ImmutableSet.Builder<String> licensedSources = ImmutableSet.builder();
+    for (CompilerInput input : getInputsInOrder()) {
+      Node script = input.getAstRoot(this);
+      if (script == null) {
+        continue;
+      }
+      JSDocInfo info = script.getJSDocInfo();
+      if (info != null && info.getLicense() != null) {
+        licensedSources.add(checkNotNull(script.getSourceFileName()));
+      }
+    }
+    return licensedSources.build();
+  }
+
+  PreparedChunkOutput prepareChunkOutput(JSChunk chunk) {
+    ImmutableList.Builder<Node> roots = ImmutableList.builder();
+    for (CompilerInput input : chunk.getInputs()) {
+      Node scriptNode = input.getAstRoot(this);
+      if (scriptNode == null) {
+        throw new IllegalArgumentException("Bad chunk: " + chunk.getName());
+      }
+      roots.add(scriptNode);
+    }
+    return new PreparedChunkOutput(roots.build());
+  }
+
+  /**
+   * Prints a prepared chunk using only immutable AST and option state. This method may be called
+   * concurrently after all compiler passes have finished.
+   */
+  GeneratedChunkOutput generatePreparedChunkOutput(
+      PreparedChunkOutput prepared, ImmutableSet<String> licensedSources) {
+    ImmutableList.Builder<GeneratedInput> generated = ImmutableList.builder();
+    for (int i = 0; i < prepared.roots.size(); i++) {
+      RecordingLicenseTracker recordingTracker = new RecordingLicenseTracker(licensedSources);
+      generated.add(
+          new GeneratedInput(
+              prepared.roots.get(i),
+              toSourceAndMappings(prepared.roots.get(i), i == 0, recordingTracker),
+              recordingTracker.licenseNodes()));
+    }
+    return new GeneratedChunkOutput(generated.build());
+  }
+
+  /** Replays license decisions in chunk order and assembles code and mappings deterministically. */
+  String assembleGeneratedChunkOutput(
+      GeneratedChunkOutput generated, LicenseTracker licenseTracker, @Nullable SourceMap outputMap) {
+    CodeBuilder cb = new CodeBuilder();
+    for (int i = 0; i < generated.inputs.size(); i++) {
+      GeneratedInput input = generated.inputs.get(i);
+      appendInputDelimiter(cb, i, input.root);
+      for (Node node : input.licenseNodes) {
+        licenseTracker.trackLicensesForNode(node);
+      }
+      appendGeneratedSource(cb, licenseTracker, input.sourceAndMappings, outputMap);
+    }
+    return cb.toString();
+  }
+
+  private static final class RecordingLicenseTracker implements LicenseTracker {
+    private final ImmutableSet<String> licensedSources;
+    private final ImmutableList.Builder<Node> licenseNodes = ImmutableList.builder();
+    private @Nullable String lastSourceFile;
+
+    RecordingLicenseTracker(ImmutableSet<String> licensedSources) {
+      this.licensedSources = licensedSources;
+    }
+
+    @Override
+    public void trackLicensesForNode(Node node) {
+      if (node.isRoot() || node.isScript()) {
+        return;
+      }
+      String sourceFile = node.getSourceFileName();
+      if (sourceFile != null
+          && licensedSources.contains(sourceFile)
+          && !sourceFile.equals(lastSourceFile)) {
+        licenseNodes.add(node);
+        lastSourceFile = sourceFile;
+      }
+    }
+
+    @Override
+    public ImmutableSet<String> emitLicenses() {
+      return ImmutableSet.of();
+    }
+
+    ImmutableList<Node> licenseNodes() {
+      return licenseNodes.build();
+    }
+  }
+
   /**
    * Writes out JS code from a root node. If printing input delimiters, this method will attach a
    * comment to the start of the text indicating which input the output derived from. If there were
@@ -2741,75 +2876,71 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       final Node root) {
     runInCompilerThread(
         () -> {
-          if (options.shouldPrintInputDelimiter()) {
-            if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
-              cb.append("\n"); // Make sure that the label starts on a new line
-            }
-            checkState(root.isScript());
+          appendInputDelimiter(cb, inputSeqNum, root);
 
-            String delimiter = options.getInputDelimiter();
-
-            String inputName = root.getInputId().getIdName();
-            String sourceName = root.getSourceFileName();
-            checkState(sourceName != null);
-            checkState(!sourceName.isEmpty());
-
-            delimiter =
-                delimiter
-                    .replace("%name%", inputName)
-                    .replace("%num%", String.valueOf(inputSeqNum))
-                    .replace("%n%", "\n");
-
-            cb.append(delimiter).append("\n");
-          }
-
-          CodePrinter.SourceAndMappings sourceAndMappings =
-              toSourceAndMappings(root, inputSeqNum == 0, licenseTracker);
-          String code = sourceAndMappings.source;
-
-          // Check whether there is any license information that should be emitted.
-          for (String license : licenseTracker.emitLicenses()) {
-            cb.append("/*\n").append(license).append("*/\n");
-          }
-
-          // Check whether there's any actual code to emit.
-          // This is deliberately done after the license tracker is given an opportunity to emit
-          // licenses, as some trackers might want to emit license info from this Node's tree
-          // regardless of whether it emits visible code. One example of this would be the case
-          // where inlining has moved the contents from this file to another file, but the license
-          // tracker can't be sure if the license for this code will ever be emitted.
-          if (code.isEmpty()) {
-            // Nothing to do.
-            return null;
-          }
-
-          // If there is a valid source map, then indicate to it that the current
-          // root node's mappings are offset by the given string builder buffer.
-          // This offset is a result of licenses being added to the output buffer.
-          if (options.shouldGatherSourceMapInfo()) {
-            sourceMap.setStartingPosition(cb.getLineIndex(), cb.getColumnIndex());
-          }
-
-          cb.append(code);
-
-          // In order to avoid parse ambiguity when files are concatenated
-          // together, all files should end in a semi-colon. Do a quick
-          // heuristic check if there's an obvious semi-colon already there.
-          int length = code.length();
-          char lastChar = code.charAt(length - 1);
-          char secondLastChar = length >= 2 ? code.charAt(length - 2) : '\0';
-          boolean hasSemiColon = lastChar == ';' || (lastChar == '\n' && secondLastChar == ';');
-          if (!hasSemiColon) {
-            cb.append(";");
-          }
-
-          if (options.shouldGatherSourceMapInfo()) {
-            for (SourceMap.Mapping mapping : sourceAndMappings.mappings) {
-              sourceMap.addMapping(mapping);
-            }
-          }
+          appendGeneratedSource(
+              cb,
+              licenseTracker,
+              toSourceAndMappings(root, inputSeqNum == 0, licenseTracker),
+              sourceMap);
           return null;
         });
+  }
+
+  private void appendInputDelimiter(CodeBuilder cb, int inputSeqNum, Node root) {
+    if (!options.shouldPrintInputDelimiter()) {
+      return;
+    }
+    if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
+      cb.append("\n");
+    }
+    checkState(root.isScript());
+    String inputName = root.getInputId().getIdName();
+    String sourceName = root.getSourceFileName();
+    checkState(sourceName != null);
+    checkState(!sourceName.isEmpty());
+    cb.append(
+            options
+                .getInputDelimiter()
+                .replace("%name%", inputName)
+                .replace("%num%", String.valueOf(inputSeqNum))
+                .replace("%n%", "\n"))
+        .append("\n");
+  }
+
+  private static void appendGeneratedSource(
+      CodeBuilder cb,
+      LicenseTracker licenseTracker,
+      CodePrinter.SourceAndMappings sourceAndMappings,
+      @Nullable SourceMap outputMap) {
+    String code = sourceAndMappings.source;
+
+    // Emit licenses before checking for visible code: a tracker may retain a license for content
+    // that was moved to another input during optimization.
+    for (String license : licenseTracker.emitLicenses()) {
+      cb.append("/*\n").append(license).append("*/\n");
+    }
+    if (code.isEmpty()) {
+      return;
+    }
+
+    if (outputMap != null) {
+      outputMap.setStartingPosition(cb.getLineIndex(), cb.getColumnIndex());
+    }
+    cb.append(code);
+
+    int length = code.length();
+    char lastChar = code.charAt(length - 1);
+    char secondLastChar = length >= 2 ? code.charAt(length - 2) : '\0';
+    if (lastChar != ';' && (lastChar != '\n' || secondLastChar != ';')) {
+      cb.append(";");
+    }
+
+    if (outputMap != null) {
+      for (SourceMap.Mapping mapping : checkNotNull(sourceAndMappings.mappings)) {
+        outputMap.addMapping(mapping);
+      }
+    }
   }
 
   /** Generates JavaScript source code for an AST, doesn't generate source map info. */
@@ -3640,7 +3771,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (consumer == null) {
       return null;
     }
-    OriginalMapping result = consumer.getMappingForLine(lineNumber, columnNumber + 1);
+    // SourceMapConsumerV3 uses a mutable cursor while looking up mappings. Code generation for
+    // different chunks may query the same input source map concurrently, so serialize lookups per
+    // consumer. Different input source maps can still be queried in parallel.
+    final OriginalMapping result;
+    synchronized (consumer) {
+      result = consumer.getMappingForLine(lineNumber, columnNumber + 1);
+    }
     if (result == null) {
       return OriginalMapping.getDefaultInstance();
     }
@@ -3649,6 +3786,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     String sourceMapOriginalPath = sourceMap.getOriginalPath();
     String resultOriginalPath = result.getOriginalFile();
     final String relativePath;
+    ResolvedSourceMap resolvedSourceMap = this.resolvedSourceMap.get();
 
     // Resolving the paths to a source file is expensive, so check the cache first.
     if (sourceMapOriginalPath.equals(resolvedSourceMap.originalPath)

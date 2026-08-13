@@ -76,6 +76,7 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -1086,6 +1087,27 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       @Nullable Function<String, String> escaper,
       String filename)
       throws IOException {
+    writeOutput(
+        out,
+        compiler,
+        code,
+        wrapper,
+        codePlaceholder,
+        escaper,
+        filename,
+        compiler == null ? null : compiler.getSourceMap());
+  }
+
+  private void writeOutput(
+      Appendable out,
+      Compiler compiler,
+      String code,
+      String wrapper,
+      String codePlaceholder,
+      @Nullable Function<String, String> escaper,
+      String filename,
+      @Nullable SourceMap outputSourceMap)
+      throws IOException {
     int pos = wrapper.indexOf(codePlaceholder);
     if (pos != -1) {
       String prefix = "";
@@ -1108,8 +1130,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
       // If we have a source map, adjust its offsets to match
       // the code WITHIN the wrapper.
-      if (compiler != null && compiler.getSourceMap() != null) {
-        compiler.getSourceMap().setWrapperPrefix(prefix);
+      if (outputSourceMap != null) {
+        outputSourceMap.setWrapperPrefix(prefix);
       }
     } else {
       out.append(code);
@@ -1816,6 +1838,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
 
     ChunkGraphAwareLicenseTracker mlicenseTracker = new ChunkGraphAwareLicenseTracker(compiler);
+    if (!isOutputInJson() && options.getNumParallelThreads() > 1) {
+      return outputChunksConcurrently(
+          chunks, options, outputPhaseNanos, mlicenseTracker);
+    }
     // Code generation mutates shared compiler state, but completed source maps can be serialized
     // independently while the main thread generates the next chunk.
     boolean parallelSourceMaps =
@@ -1904,6 +1930,219 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
       }
     }
     return null;
+  }
+
+  private static final class PendingChunkOutput {
+    final JSChunk chunk;
+    final Future<ConcurrentChunkOutput> output;
+
+    PendingChunkOutput(JSChunk chunk, Future<ConcurrentChunkOutput> output) {
+      this.chunk = chunk;
+      this.output = output;
+    }
+  }
+
+  private static final class ConcurrentChunkOutput {
+    final Compiler.@Nullable GeneratedChunkOutput generated;
+    final @Nullable String preassembledCode;
+    final @Nullable SourceMap sourceMap;
+
+    ConcurrentChunkOutput(
+        Compiler.@Nullable GeneratedChunkOutput generated,
+        @Nullable String preassembledCode,
+        @Nullable SourceMap sourceMap) {
+      this.generated = generated;
+      this.preassembledCode = preassembledCode;
+      this.sourceMap = sourceMap;
+    }
+  }
+
+  private static final LicenseTracker NO_LICENSE_TRACKER =
+      new LicenseTracker() {
+        @Override
+        public void trackLicensesForNode(Node node) {}
+
+        @Override
+        public ImmutableSet<String> emitLicenses() {
+          return ImmutableSet.of();
+        }
+      };
+
+  /**
+   * Generates immutable chunk code/mapping results concurrently, then replays license decisions
+   * and assembles outputs in dependency order. Compiler passes have finished before this method is
+   * called, so worker threads only read AST and option state.
+   */
+  private @Nullable DiagnosticType outputChunksConcurrently(
+      Iterable<JSChunk> chunks,
+      B options,
+      long[] outputPhaseNanos,
+      ChunkGraphAwareLicenseTracker licenseTracker)
+      throws IOException {
+    int parallelism = options.getNumParallelThreads();
+    ExecutorService codeExecutor =
+        Executors.newFixedThreadPool(
+            parallelism,
+            runnable -> {
+              Thread thread = new Thread(runnable, "jscompiler-CodeOutput");
+              thread.setDaemon(true);
+              return thread;
+            });
+    ExecutorService sourceMapExecutor =
+        options.shouldGatherSourceMapInfo()
+            ? Executors.newFixedThreadPool(
+                parallelism,
+                runnable -> {
+                  Thread thread = new Thread(runnable, "jscompiler-SourceMapOutput");
+                  thread.setDaemon(true);
+                  return thread;
+                })
+            : null;
+    List<Future<Long>> sourceMapOutputs = new ArrayList<>();
+    ArrayDeque<PendingChunkOutput> pending = new ArrayDeque<>();
+    List<JSChunk> outputChunks = new ArrayList<>();
+    for (JSChunk chunk : chunks) {
+      if (!chunk.getName().equals(JSChunk.WEAK_CHUNK_NAME)) {
+        outputChunks.add(chunk);
+      }
+    }
+
+    @Nullable SourceMap sourceMapTemplate = null;
+    if (options.shouldGatherSourceMapInfo()) {
+      compiler.resetAndIntitializeSourceMap();
+      sourceMapTemplate = compiler.snapshotSourceMap();
+    }
+    ImmutableSet<String> licensedSources = compiler.getLicensedSourceNamesForOutput();
+
+    int nextChunk = 0;
+    while (nextChunk < min(parallelism, outputChunks.size())) {
+      JSChunk chunk = outputChunks.get(nextChunk++);
+      pending.addLast(
+          submitConcurrentChunkOutput(
+              codeExecutor, chunk, sourceMapTemplate, licensedSources));
+    }
+
+    boolean outputCompleted = false;
+    try {
+      while (!pending.isEmpty()) {
+        PendingChunkOutput next = pending.removeFirst();
+        if (nextChunk < outputChunks.size()) {
+          JSChunk chunk = outputChunks.get(nextChunk++);
+          pending.addLast(
+              submitConcurrentChunkOutput(
+                  codeExecutor, chunk, sourceMapTemplate, licensedSources));
+        }
+
+        ConcurrentChunkOutput generated;
+        try {
+          generated = next.output.get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IOException("Interrupted while generating chunk output", e);
+        } catch (ExecutionException e) {
+          Throwable cause = e.getCause();
+          if (cause instanceof RuntimeException runtimeException) {
+            throw runtimeException;
+          }
+          if (cause instanceof Error error) {
+            throw error;
+          }
+          throw new RuntimeException(cause);
+        }
+
+        JSChunk chunk = next.chunk;
+        String chunkFilename = getChunkOutputFileName(chunk);
+        maybeCreateDirsForPath(chunkFilename);
+        licenseTracker.setCurrentChunkContext(chunk);
+        SourceMap chunkSourceMap = generated.sourceMap;
+        String code = generated.preassembledCode;
+        if (code == null) {
+          code =
+              compiler.assembleGeneratedChunkOutput(
+                  checkNotNull(generated.generated), licenseTracker, chunkSourceMap);
+        }
+        String baseName = new File(chunkFilename).getName();
+        String wrapper =
+            parsedChunkWrappers.get(chunk.getName()).replace("%basename%", baseName);
+        try (Writer writer = fileNameToLegacyOutputWriter(chunkFilename)) {
+          writeOutput(
+              writer,
+              compiler,
+              code,
+              wrapper,
+              "%s",
+              null,
+              chunkFilename,
+              chunkSourceMap);
+        }
+
+        if (chunkSourceMap != null) {
+          String sourceMapFilename = expandSourceMapPath(options, chunk);
+          sourceMapOutputs.add(
+              checkNotNull(sourceMapExecutor)
+                  .submit(
+                      () -> {
+                        long sourceMapStartNanos = System.nanoTime();
+                        try (Writer mapFileOut = fileNameToOutputWriter2(sourceMapFilename)) {
+                          chunkSourceMap.appendTo(mapFileOut, chunkFilename);
+                        }
+                        return System.nanoTime() - sourceMapStartNanos;
+                      }));
+        }
+      }
+
+      codeExecutor.shutdown();
+      if (sourceMapExecutor != null) {
+        sourceMapExecutor.shutdown();
+      }
+      for (Future<Long> sourceMapOutput : sourceMapOutputs) {
+        try {
+          outputPhaseNanos[1] += sourceMapOutput.get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IOException("Interrupted while writing source maps", e);
+        } catch (ExecutionException e) {
+          Throwable cause = e.getCause();
+          if (cause instanceof IOException ioException) {
+            throw ioException;
+          }
+          throw new RuntimeException(cause);
+        }
+      }
+      outputPhaseNanos[2] = 1;
+      outputCompleted = true;
+      return null;
+    } finally {
+      if (!outputCompleted) {
+        codeExecutor.shutdownNow();
+        if (sourceMapExecutor != null) {
+          sourceMapExecutor.shutdownNow();
+        }
+      }
+    }
+  }
+
+  private PendingChunkOutput submitConcurrentChunkOutput(
+      ExecutorService codeExecutor,
+      JSChunk chunk,
+      @Nullable SourceMap sourceMapTemplate,
+      ImmutableSet<String> licensedSources) {
+    Compiler.PreparedChunkOutput prepared = compiler.prepareChunkOutput(chunk);
+    SourceMap sourceMap = sourceMapTemplate == null ? null : sourceMapTemplate.snapshot();
+    return new PendingChunkOutput(
+        chunk,
+        codeExecutor.submit(
+            () -> {
+              Compiler.GeneratedChunkOutput generated =
+                  compiler.generatePreparedChunkOutput(prepared, licensedSources);
+              String preassembledCode =
+                  generated.hasLicenseNodes()
+                      ? null
+                      : compiler.assembleGeneratedChunkOutput(
+                          generated, NO_LICENSE_TRACKER, sourceMap);
+              return new ConcurrentChunkOutput(
+                  preassembledCode == null ? generated : null, preassembledCode, sourceMap);
+            }));
   }
 
   /** Given an output chunk, convert it to a JSONFileSpec with associated sourcemap */

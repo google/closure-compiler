@@ -64,6 +64,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.jspecify.annotations.Nullable;
@@ -3559,12 +3560,14 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     args.add(outDir + "/");
     args.add("--chunk=a:1");
     args.add("--chunk=b:1");
+    args.add("--num_parallel_threads=2");
     args.add("--js");
     args.add(inputFile1.toString());
     args.add("--js");
     args.add(inputFile2.toString());
 
     List<Thread> codeGenerationThreads = new ArrayList<>();
+    CountDownLatch concurrentCodeGeneration = new CountDownLatch(2);
     CommandLineRunner runner =
         new CommandLineRunner(
             args.toArray(new String[] {}), new PrintStream(outReader), new PrintStream(errReader)) {
@@ -3572,9 +3575,19 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
           protected Compiler createCompiler() {
             return new Compiler(getErrorPrintStream()) {
               @Override
-              public String toSource(CodePrinter.LicenseTracker licenseTracker, JSChunk chunk) {
-                codeGenerationThreads.add(Thread.currentThread());
-                return super.toSource(licenseTracker, chunk);
+              Compiler.GeneratedChunkOutput generatePreparedChunkOutput(
+                  Compiler.PreparedChunkOutput prepared, ImmutableSet<String> licensedSources) {
+                synchronized (codeGenerationThreads) {
+                  codeGenerationThreads.add(Thread.currentThread());
+                }
+                concurrentCodeGeneration.countDown();
+                try {
+                  checkState(concurrentCodeGeneration.await(10, TimeUnit.SECONDS));
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  throw new RuntimeException(e);
+                }
+                return super.generatePreparedChunkOutput(prepared, licensedSources);
               }
             };
           }
@@ -3592,7 +3605,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     assertThat(Files.asCharSource(outputFile2, UTF_8).read()).isEqualTo(inputSource2);
     assertThat(weakFile.exists()).isFalse();
     assertThat(codeGenerationThreads).hasSize(2);
-    assertThat(codeGenerationThreads.stream().distinct().count()).isEqualTo(1);
+    assertThat(codeGenerationThreads.stream().distinct().count()).isEqualTo(2);
   }
 
   @Test
