@@ -59,6 +59,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.jspecify.annotations.Nullable;
@@ -2264,6 +2266,92 @@ public final class CommandLineRunnerTest {
               "--typed_ast_input_file__INTERNAL_USE_ONLY=" + typedAst,
               "--js_output_file=" + restoredOutput,
             },
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+    int restoredExitCode = restored.doRun();
+    assertWithMessage(errReader.toString(UTF_8)).that(restoredExitCode).isEqualTo(0);
+
+    assertThat(java.nio.file.Files.readString(restoredOutput.toPath()))
+        .isEqualTo(java.nio.file.Files.readString(directOutput.toPath()));
+  }
+
+  @Test
+  public void testTypedAstInputFileFromIndependentModuleShardsWithoutTypes() throws IOException {
+    File firstInput = temporaryFolder.newFile("first.js");
+    File secondInput = temporaryFolder.newFile("second.js");
+    File firstTypedAst = temporaryFolder.newFile("first.typedast.gz");
+    File secondTypedAst = temporaryFolder.newFile("second.typedast.gz");
+    File firstTypeSummary = temporaryFolder.newFile("first.i.js");
+    File combinedTypedAst = temporaryFolder.newFile("combined.typedast.gz");
+    File directOutput = temporaryFolder.newFile("direct.js");
+    File restoredOutput = temporaryFolder.newFile("restored.js");
+    writeFile(firstInput, "goog.module('lib.one'); exports.value = 2;");
+    writeFile(
+        secondInput,
+        "goog.module('lib.two'); const one = goog.require('lib.one'); globalThis.result = one.value;");
+    writeFile(firstTypeSummary, "/** @fileoverview @typeSummary */ goog.module('lib.one');");
+
+    for (File[] shard :
+        new File[][] {{firstInput, firstTypedAst}, {secondInput, secondTypedAst}}) {
+      ArrayList<String> serializerArguments =
+          new ArrayList<>(
+              List.of(
+                  "--compilation_level=ADVANCED",
+                  "--checks_only",
+                  "--dependency_mode=NONE",
+                  "--env=CUSTOM",
+                  "--jscomp_off=checkTypes",
+                  "--jscomp_off=checkVars",
+                  "--jscomp_off=missingSourcesWarnings",
+                  "--jscomp_off=strictModuleDepCheck"));
+      if (shard[0].equals(secondInput)) {
+        serializerArguments.add("--js=" + firstTypeSummary);
+      }
+      serializerArguments.add("--js=" + shard[0]);
+      serializerArguments.add("--typed_ast_output_file__INTENRNAL_USE_ONLY=" + shard[1]);
+      CommandLineRunner serializer =
+          new CommandLineRunner(
+              serializerArguments.toArray(String[]::new),
+              new PrintStream(outReader),
+              new PrintStream(errReader));
+      int serializerExitCode = serializer.doRun();
+      assertWithMessage(errReader.toString(UTF_8)).that(serializerExitCode).isEqualTo(0);
+    }
+    try (GZIPOutputStream combinedOutput =
+        new GZIPOutputStream(new FileOutputStream(combinedTypedAst))) {
+      for (File shard : new File[] {firstTypedAst, secondTypedAst}) {
+        try (GZIPInputStream shardInput =
+            new GZIPInputStream(java.nio.file.Files.newInputStream(shard.toPath()))) {
+          shardInput.transferTo(combinedOutput);
+        }
+      }
+    }
+
+    String[] commonArguments = {
+      "--compilation_level=ADVANCED",
+      "--dependency_mode=NONE",
+      "--env=CUSTOM",
+      "--jscomp_off=checkTypes",
+      "--jscomp_off=checkVars",
+      "--js=" + firstInput,
+      "--js=" + secondInput,
+    };
+    ArrayList<String> directArguments = new ArrayList<>(List.of(commonArguments));
+    directArguments.add("--js_output_file=" + directOutput);
+    CommandLineRunner direct =
+        new CommandLineRunner(
+            directArguments.toArray(String[]::new),
+            new PrintStream(outReader),
+            new PrintStream(errReader));
+    int directExitCode = direct.doRun();
+    assertWithMessage(errReader.toString(UTF_8)).that(directExitCode).isEqualTo(0);
+
+    ArrayList<String> restoredArguments = new ArrayList<>(List.of(commonArguments));
+    restoredArguments.add("--typed_ast_input_file__INTERNAL_USE_ONLY=" + combinedTypedAst);
+    restoredArguments.add("--js_output_file=" + restoredOutput);
+    CommandLineRunner restored =
+        new CommandLineRunner(
+            restoredArguments.toArray(String[]::new),
             new PrintStream(outReader),
             new PrintStream(errReader));
     int restoredExitCode = restored.doRun();
