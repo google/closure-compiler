@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -511,101 +512,128 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       }
     }
 
-    // stringVal must be a valid string.
-    String stringVal = null;
-    Double checkVal;
-    if (isNumericLiteral(firstArg)) {
-      checkVal = getSideEffectFreeNumberValue(firstArg);
-      if (!(radix == 0 || radix == 10) && isParseInt) {
-        // Convert a numeric first argument to a different base
-        stringVal = String.valueOf(checkVal.intValue());
-      } else {
-        // If parseFloat is called with a numeric argument,
-        // replace it with just the number.
-        // If parseInt is called with a numeric first argument and the radix
-        // is 10 or omitted, just replace it with the number
-        Node numericNode;
-        if (isParseInt) {
-          numericNode = NodeUtil.numberNode(checkVal.intValue(), n);
-        } else {
-          numericNode = NodeUtil.numberNode(checkVal, n);
-        }
+    if (!isParseInt) {
+      // parseFloat logic
+      String stringVal;
+      if (isNumericLiteral(firstArg)) {
+        Double checkVal = getSideEffectFreeNumberValue(firstArg);
+        Node numericNode = NodeUtil.numberNode(checkVal, n);
         n.replaceWith(numericNode);
         reportChangeToEnclosingScope(numericNode);
         return numericNode;
-      }
-    } else {
-      stringVal = getSideEffectFreeStringValue(firstArg);
-      if (stringVal == null) {
-        return n;
-      }
-
-      // Check that the string is in a format we can recognize
-      checkVal = NodeUtil.getStringNumberValue(stringVal);
-      if (checkVal == null) {
-        return n;
-      }
-
-      stringVal = NodeUtil.trimJsWhiteSpace(stringVal);
-      if (stringVal.isEmpty()) {
-        return n;
-      }
-    }
-
-    Node newNode;
-    if (stringVal.equals("0")) {
-      // Special case for parseInt("0") or parseFloat("0")
-      newNode = IR.number(0);
-    } else if (isParseInt) {
-      if (radix == 0 || radix == 16) {
-        if (stringVal.length() > 1 && Ascii.equalsIgnoreCase(stringVal.substring(0, 2), "0x")) {
-          radix = 16;
-          stringVal = stringVal.substring(2);
-        } else if (radix == 0) {
-          // if a radix is not specified or is 0 and the most
-          // significant digit is "0", the string will parse
-          // with a radix of 8 on some browsers, so leave
-          // this case alone. This check does not apply in
-          // script mode ECMA5 or greater
-          if (!isEcmaScript5OrGreater() && stringVal.substring(0, 1).equals("0")) {
+      } else {
+        stringVal = getSideEffectFreeStringValue(firstArg);
+        if (stringVal == null) {
+          return n;
+        }
+        Double checkVal = NodeUtil.getStringNumberValue(stringVal);
+        if (checkVal == null) {
+          return n;
+        }
+        stringVal = NodeUtil.trimJsWhiteSpace(stringVal);
+        if (stringVal.isEmpty()) {
+          return n;
+        }
+        if (stringVal.equals("0")) {
+          Node newNode = IR.number(0);
+          n.replaceWith(newNode);
+          reportChangeToEnclosingScope(newNode);
+          return newNode;
+        }
+        String normalizedNewVal = "0";
+        try {
+          double newVal = Double.parseDouble(stringVal);
+          Node newNode = NodeUtil.numberNode(newVal, n);
+          normalizedNewVal = normalizeNumericString(String.valueOf(newVal));
+          if (!normalizeNumericString(stringVal).equals(normalizedNewVal)) {
             return n;
           }
-
-          radix = 10;
+          n.replaceWith(newNode);
+          reportChangeToEnclosingScope(newNode);
+          return newNode;
+        } catch (NumberFormatException e) {
+          return n;
         }
-      }
-      int newVal = 0;
-      try {
-        newVal = Integer.parseInt(stringVal, radix);
-      } catch (NumberFormatException e) {
-        return n;
-      }
-      if (newVal == 0 && stringVal.startsWith("-")) {
-        newNode = NodeUtil.numberNode(-0D, n);
-      } else {
-        newNode = NodeUtil.numberNode(newVal, n);
-      }
-    } else {
-      String normalizedNewVal = "0";
-      try {
-        double newVal = Double.parseDouble(stringVal);
-        newNode = NodeUtil.numberNode(newVal, n);
-        normalizedNewVal = normalizeNumericString(String.valueOf(newVal));
-      } catch (NumberFormatException e) {
-        return n;
-      }
-      // Make sure that the parsed number matches the original string
-      // This prevents rounding differences between the Java implementation
-      // and native script.
-      if (!normalizeNumericString(stringVal).equals(normalizedNewVal)) {
-        return n;
       }
     }
 
+    // parseInt logic following ECMA-262 semantics
+    String stringVal = getSideEffectFreeStringValue(firstArg);
+    if (stringVal == null) {
+      return n;
+    }
+
+    stringVal = NodeUtil.trimJsWhiteSpace(stringVal);
+    if (stringVal.isEmpty()) {
+      return n;
+    }
+
+    boolean isNegative = false;
+    if (stringVal.startsWith("-")) {
+      isNegative = true;
+      stringVal = stringVal.substring(1);
+    } else if (stringVal.startsWith("+")) {
+      stringVal = stringVal.substring(1);
+    }
+
+    if (radix == 0 || radix == 16) {
+      if (stringVal.length() > 1 && Ascii.equalsIgnoreCase(stringVal.substring(0, 2), "0x")) {
+        radix = 16;
+        stringVal = stringVal.substring(2);
+      } else if (radix == 0) {
+        if (!isEcmaScript5OrGreater() && stringVal.startsWith("0")) {
+          return n;
+        }
+        radix = 10;
+      }
+    }
+
+    int endDigitIndex = 0;
+    while (endDigitIndex < stringVal.length()) {
+      char c = stringVal.charAt(endDigitIndex);
+      if (getRadixDigit(c, radix) < 0) {
+        break;
+      }
+      endDigitIndex++;
+    }
+
+    if (endDigitIndex == 0) {
+      return n;
+    }
+
+    String digits = stringVal.substring(0, endDigitIndex);
+    double newVal;
+    try {
+      BigInteger bi = new BigInteger(digits, radix);
+      newVal = bi.doubleValue();
+    } catch (NumberFormatException e) {
+      return n;
+    }
+
+    if (isNegative) {
+      newVal = -newVal;
+    }
+
+    Node newNode = NodeUtil.numberNode(newVal, n);
     n.replaceWith(newNode);
     reportChangeToEnclosingScope(newNode);
-
     return newNode;
+  }
+
+  private static int getRadixDigit(char c, int radix) {
+    if (c >= '0' && c <= '9') {
+      int d = c - '0';
+      return d < radix ? d : -1;
+    }
+    if (c >= 'a' && c <= 'z') {
+      int d = c - 'a' + 10;
+      return d < radix ? d : -1;
+    }
+    if (c >= 'A' && c <= 'Z') {
+      int d = c - 'A' + 10;
+      return d < radix ? d : -1;
+    }
+    return -1;
   }
 
   /**

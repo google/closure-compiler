@@ -688,25 +688,22 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = parseInt('12', 13)", "x = 15");
     fold("x = parseInt(15.99, 10)", "x = 15");
     fold("x = parseInt(-15.99, 10)", "x = -15");
-    // TODO(b/538155369): Fix integer truncation and precision loss in parseInt folding in
-    // PeepholeReplaceKnownMethods.
-    // Java's Integer.parseInt("-15.99", 10) throws an exception, because of the decimal point.
-    foldSame("x = parseInt('-15.99', 10)");
+    fold("x = parseInt('-15.99', 10)", "x = -15");
     fold("x = parseFloat('3.14')", "x = 3.14");
     fold("x = parseFloat(3.14)", "x = 3.14");
     fold("x = parseFloat(-3.14)", "x = -3.14");
     fold("x = parseFloat('-3.14')", "x = -3.14");
     fold("x = parseFloat('-0')", "x = -0");
 
-    // Valid calls - unable to fold
-    foldSame("x = parseInt('FXX123', 16)");
-    foldSame("x = parseInt('15*3', 10)");
-    foldSame("x = parseInt('15e2', 10)");
-    foldSame("x = parseInt('15px', 10)");
-    foldSame("x = parseInt('-0x08')");
-    foldSame("x = parseInt('0xa', 10)");
+    // Valid calls - trailing non-digits or hex prefixes
+    fold("x = parseInt('FXX123', 16)", "x = 15");
+    fold("x = parseInt('15*3', 10)", "x = 15");
+    fold("x = parseInt('15e2', 10)", "x = 15");
+    fold("x = parseInt('15px', 10)", "x = 15");
+    fold("x = parseInt('-0x08')", "x = -8");
+    fold("x = parseInt('0xa', 10)", "x = 0");
     fold("x = parseInt('+123')", "x = 123");
-    foldSame("x = parseInt('+0xA')");
+    fold("x = parseInt('+0xA')", "x = 10");
     foldSame("x = parseInt('1', -1)");
     foldSame("x = parseFloat('3.14more non-digit characters')");
     foldSame("x = parseFloat('314e-2')");
@@ -717,16 +714,15 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = parseInt('')");
 
     // Large numbers and precision tests (beyond 32-bit int)
-    foldSame("x = parseInt('2147483648')");
-    fold("x = parseInt(2147483648)", "x = 2147483647");
-    foldSame("x = parseInt('9007199254740991')");
-    fold("x = parseInt(9007199254740991)", "x = 2147483647");
-    foldSame("x = parseInt('0x80000000')");
-    foldSame("x = parseInt('0x80000000', 16)");
-    fold("x = parseInt(1234567890123.45)", "x = 2147483647");
-    fold("x = parseInt(1e21)", "x = 2147483647");
-    fold("x = parseInt(0.0000001)", "x = 0");
-
+    fold("x = parseInt('2147483648')", "x = 2147483648");
+    fold("x = parseInt(2147483648)", "x = 2147483648");
+    fold("x = parseInt('9007199254740991')", "x = 9007199254740991");
+    fold("x = parseInt(9007199254740991)", "x = 9007199254740991");
+    fold("x = parseInt('0x80000000')", "x = 2147483648");
+    fold("x = parseInt('0x80000000', 16)", "x = 2147483648");
+    fold("x = parseInt(1234567890123.45)", "x = 1234567890123");
+    fold("x = parseInt(1e21)", "x = 1");
+    fold("x = parseInt(0.0000001)", "x = 1");
     setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
     foldSame("x = parseInt('08')");
   }
