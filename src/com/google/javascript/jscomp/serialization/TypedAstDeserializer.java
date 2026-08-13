@@ -216,7 +216,7 @@ public final class TypedAstDeserializer {
             return script;
           });
       completed = true;
-      inputSourceMaps.forEach(compiler::addInputSourceMap);
+      compiler.addInputSourceMaps(inputSourceMaps);
       return DeserializedAst.create(
           filesystem,
           Optional.absent(),
@@ -315,7 +315,7 @@ public final class TypedAstDeserializer {
 
     deserializeTypedAsts(
         typedAstStream, deserializer, compiler, resolveSourceMapAnnotations, parseInlineSourceMaps);
-    deserializer.inputSourceMaps.forEach(compiler::addInputSourceMap);
+    compiler.addInputSourceMaps(deserializer.inputSourceMaps);
 
     deserializer.typedAstFilesystem.put(
         syntheticExterns,

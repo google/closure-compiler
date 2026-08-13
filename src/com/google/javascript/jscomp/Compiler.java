@@ -121,6 +121,10 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -3705,6 +3709,71 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  @Override
+  public void addInputSourceMaps(Map<String, SourceMapInput> sourceMaps) {
+    inputSourceMaps.putAll(sourceMaps);
+    if (!options.getSourceMapIncludeSourcesContent() || sourceMap == null) {
+      return;
+    }
+
+    ArrayList<SourceMapInput> inputs = new ArrayList<>(sourceMaps.values());
+    int parallelism = Math.min(options.getNumParallelThreads(), inputs.size());
+    if (parallelism <= 1) {
+      for (SourceMapInput input : inputs) {
+        addSourceMapSourceFiles(input);
+      }
+      return;
+    }
+
+    int batchCount = Math.min(inputs.size(), parallelism * 4);
+    ExecutorService executor =
+        Executors.newFixedThreadPool(
+            parallelism,
+            runnable -> {
+              Thread thread = new Thread(runnable, "jscompiler-InputSourceMaps");
+              thread.setDaemon(true);
+              return thread;
+            });
+    ArrayList<Future<ArrayList<SourceMapSourceContent>>> futures =
+        new ArrayList<>(batchCount);
+    boolean completed = false;
+    try {
+      for (int batchIndex = 0; batchIndex < batchCount; batchIndex++) {
+        int firstInput = inputs.size() * batchIndex / batchCount;
+        int afterLastInput = inputs.size() * (batchIndex + 1) / batchCount;
+        futures.add(
+            executor.submit(
+                () -> {
+                  ArrayList<SourceMapSourceContent> contents = new ArrayList<>();
+                  for (int i = firstInput; i < afterLastInput; i++) {
+                    contents.addAll(getSourceMapSourceFiles(inputs.get(i)));
+                  }
+                  return contents;
+                }));
+      }
+      executor.shutdown();
+      for (Future<ArrayList<SourceMapSourceContent>> future : futures) {
+        ArrayList<SourceMapSourceContent> contents;
+        try {
+          contents = future.get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IllegalStateException("Interrupted while reading input source maps", e);
+        } catch (ExecutionException e) {
+          throw new IllegalStateException("Cannot read input source maps", e.getCause());
+        }
+        for (SourceMapSourceContent content : contents) {
+          sourceMap.addSourceFile(content.name, content.code);
+        }
+      }
+      completed = true;
+    } finally {
+      if (!completed) {
+        executor.shutdownNow();
+      }
+    }
+  }
+
   /**
    * Returns the <encoded_source_map> from a `//#
    * sourceMappingURL=data:application/json;base64,<encoded_source_map>` comment. This
@@ -3738,16 +3807,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * populate sourcesContent array in the output source map even for sources embedded in the input
    * source map.
    */
-  private synchronized void addSourceMapSourceFiles(SourceMapInput inputSourceMap) {
-    // synchronized annotation guards concurrent access to sourceMap during parsing.
+  private void addSourceMapSourceFiles(SourceMapInput inputSourceMap) {
+    for (SourceMapSourceContent content : getSourceMapSourceFiles(inputSourceMap)) {
+      sourceMap.addSourceFile(content.name, content.code);
+    }
+  }
+
+  private ArrayList<SourceMapSourceContent> getSourceMapSourceFiles(
+      SourceMapInput inputSourceMap) {
     SourceMapConsumerV3 consumer = inputSourceMap.getSourceMap(errorManager);
     if (consumer == null) {
-      return;
+      return new ArrayList<>();
     }
     Collection<String> sourcesContent = consumer.getOriginalSourcesContent();
     if (sourcesContent == null) {
-      return;
+      return new ArrayList<>();
     }
+    ArrayList<SourceMapSourceContent> result = new ArrayList<>(sourcesContent.size());
     Iterator<String> content = sourcesContent.iterator();
     Iterator<String> sources = consumer.getOriginalSources().iterator();
     while (sources.hasNext() && content.hasNext()) {
@@ -3755,12 +3831,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       SourceFile source =
           SourceMapResolver.getRelativePath(inputSourceMap.getOriginalPath(), sources.next());
       if (source != null) {
-        sourceMap.addSourceFile(source.getName(), code);
+        result.add(new SourceMapSourceContent(source.getName(), code));
       }
     }
     if (sources.hasNext() || content.hasNext()) {
       throw new RuntimeException(
           "Source map's \"sources\" and \"sourcesContent\" lengths do not match.");
+    }
+    return result;
+  }
+
+  private static final class SourceMapSourceContent {
+    final String name;
+    final String code;
+
+    SourceMapSourceContent(String name, String code) {
+      this.name = name;
+      this.code = code;
     }
   }
 

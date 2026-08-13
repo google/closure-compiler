@@ -40,6 +40,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
@@ -506,6 +507,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    * reporting and source map combining.
    */
   public abstract void addInputSourceMap(String name, SourceMapInput sourceMap);
+
+  /** Adds multiple input source maps, allowing implementations to prepare them concurrently. */
+  public void addInputSourceMaps(Map<String, SourceMapInput> sourceMaps) {
+    sourceMaps.forEach(this::addInputSourceMap);
+  }
 
   public abstract String getBase64SourceMapContents(String sourceFileName);
 

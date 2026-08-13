@@ -65,6 +65,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -491,6 +492,54 @@ public final class CompilerTest {
     // Column 28 (0-based) is where the call site `a` appears in `alert(a());`.
     OriginalMapping callMapping = consumer.getMappingForLine(1, 29);
     assertThat(callMapping.getIdentifier()).isEqualTo("f");
+  }
+
+  @Test
+  public void testAddInputSourceMapsConcurrentlyPreservesSourcesContentOrder() throws Exception {
+    CompilerOptions options = new CompilerOptions();
+    options.setSourceMapOutputPath("output.js.map");
+    options.setApplyInputSourceMaps(true);
+    options.setSourceMapIncludeSourcesContent(true);
+    options.setNumParallelThreads(4);
+    Compiler compiler = new Compiler();
+    compiler.init(ImmutableList.of(), ImmutableList.of(), options);
+
+    LinkedHashMap<String, SourceMapInput> inputMaps = new LinkedHashMap<>();
+    for (int i = 0; i < 2; i++) {
+      SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
+      generator.addMapping(
+          "original" + i + ".ts",
+          null,
+          new FilePosition(0, 0),
+          new FilePosition(0, 0),
+          new FilePosition(0, 1));
+      generator.addSourcesContent("original" + i + ".ts", "content" + i);
+      StringWriter mapCode = new StringWriter();
+      generator.appendTo(mapCode, "generated" + i + ".js");
+      inputMaps.put(
+          "generated" + i + ".js",
+          new SourceMapInput(SourceFile.fromCode("generated" + i + ".js.map", mapCode.toString())));
+    }
+
+    compiler.addInputSourceMaps(inputMaps);
+    for (int i = 0; i < 2; i++) {
+      Node node = Node.newString(Token.NAME, "x");
+      node.setStaticSourceFile(SourceFile.fromCode("generated" + i + ".js", "x"));
+      node.setLinenoCharno(1, 0);
+      compiler
+          .getSourceMap()
+          .addMapping(node, new FilePosition(0, i), new FilePosition(0, i + 1));
+    }
+    StringWriter outputMapCode = new StringWriter();
+    compiler.getSourceMap().appendTo(outputMapCode, "output.js");
+    SourceMapConsumerV3 outputMap = new SourceMapConsumerV3();
+    outputMap.parse(outputMapCode.toString());
+    assertThat(outputMap.getOriginalSources())
+        .containsExactly("original0.ts", "original1.ts")
+        .inOrder();
+    assertThat(outputMap.getOriginalSourcesContent())
+        .containsExactly("content0", "content1")
+        .inOrder();
   }
 
   @Test
