@@ -1374,30 +1374,17 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         function foo(p2, p3) {var p1=[]}
         foo(y(), z()); foo(y(),3)
         """);
-
-    // TODO(b/538155255): Fix OptimizeParameters parameter inlining with side effects in other call
-    // sites
     // Pure literal at the first call site and side-effectful call at the second call site.
-    test(
+    testSame(
         """
         var x; var y; var z;
         function foo(p1, p2, p3) { alert(p1); }
         foo(x, y(), 3);
         foo(x, y(), z());
-        """,
-        """
-        var x; var y; var z;
-        function foo(p3) {
-          var p1 = x;
-          var p2 = y();
-          alert(p1);
-        }
-        foo(3);
-        foo(z());
         """);
 
     // Mutable variable passed along with an argument that mutates it at the second call site.
-    test(
+    testSame(
         """
         var out = [];
         var policy = 'STRICT';
@@ -1405,14 +1392,6 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         function render(p, opts) { out.push(p); }
         render(policy, {});
         render(policy, mutateAndReturn());
-        """,
-        """
-        var out = [];
-        var policy = 'STRICT';
-        function mutateAndReturn() { policy = 'LENIENT'; return {}; }
-        function render(opts) { var p = policy; out.push(p); }
-        render({});
-        render(mutateAndReturn());
         """);
   }
 

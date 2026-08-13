@@ -988,6 +988,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             anyMovable = true;
           }
         }
+        p.setHasSideEffects(p.hasSideEffects() || astAnalyzer.mayHaveSideEffects(cur));
+        p.setCanBeSideEffected(p.canBeSideEffected() || NodeUtil.canBeSideEffected(cur));
       }
       // Back off optimizing arguments following spread
       if (cur.isSpread()) {
