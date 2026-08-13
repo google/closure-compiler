@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.junit.Test;
@@ -62,8 +63,16 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
   @Test
   public void testParallelScripts() {
     parallelism = 2;
-    parallelOptimizationFactory = () -> List.of(new RemoveNodesNamedXUnderVarOptimization());
+    AtomicInteger optimizationInstancesCreated = new AtomicInteger();
+    parallelOptimizationFactory =
+        () -> {
+          optimizationInstancesCreated.incrementAndGet();
+          return List.of(new RemoveNodesNamedXUnderVarOptimization());
+        };
     test(srcs("var x, a;", "var x, b;"), expected("var a;", "var b;"));
+    // One instance is owned by the pass, then each of the two workers gets an isolated instance for
+    // both the initial script traversal and the changed-scope fixed-point traversal.
+    assertThat(optimizationInstancesCreated.get()).isEqualTo(5);
   }
 
   /**

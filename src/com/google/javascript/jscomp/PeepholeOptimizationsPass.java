@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -96,6 +97,8 @@ class PeepholeOptimizationsPass implements CompilerPass {
       } else if (changedScopeNodes == null) {
         // changedScopeNodes is null if this is the first run of peepholeOptimizationsPass.
         NodeTraversal.traverse(compiler, root, new PeepCallback(peepholeOptimizations));
+      } else if (canTraverseScopesConcurrently(changedScopeNodes)) {
+        traverseScopesConcurrently(changedScopeNodes);
       } else {
         NodeTraversal.traverseScopeRoots(
             compiler,
@@ -179,17 +182,7 @@ class PeepholeOptimizationsPass implements CompilerPass {
                 }));
       }
       executor.shutdown();
-      for (Future<?> future : futures) {
-        try {
-          future.get();
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          throw new IllegalStateException("Interrupted while running peephole optimizations", e);
-        } catch (ExecutionException e) {
-          throw new IllegalStateException(
-              "Cannot run peephole optimizations concurrently", e.getCause());
-        }
-      }
+      awaitParallelTraversals(futures);
       for (ChangeTracker.BufferedChanges changes : scriptChanges) {
         compiler.getChangeTracker().applyBufferedChanges(changes);
       }
@@ -197,6 +190,109 @@ class PeepholeOptimizationsPass implements CompilerPass {
     } finally {
       if (!completed) {
         executor.shutdownNow();
+      }
+    }
+  }
+
+  private boolean canTraverseScopesConcurrently(List<Node> changedScopeNodes) {
+    if (parallelOptimizationFactory == null
+        || compiler.getOptions().getNumParallelThreads() <= 1
+        || changedScopeNodes.size() <= 1) {
+      return false;
+    }
+    Node firstScript = NodeUtil.getEnclosingScript(changedScopeNodes.get(0));
+    if (firstScript == null) {
+      return false;
+    }
+    for (int i = 1; i < changedScopeNodes.size(); i++) {
+      Node script = NodeUtil.getEnclosingScript(changedScopeNodes.get(i));
+      if (script == null) {
+        return false;
+      }
+      if (script != firstScript) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void traverseScopesConcurrently(List<Node> changedScopeNodes) {
+    LinkedHashMap<Node, ArrayList<Node>> scopesByScript = new LinkedHashMap<>();
+    for (Node changedScope : changedScopeNodes) {
+      scopesByScript
+          .computeIfAbsent(NodeUtil.getEnclosingScript(changedScope), unused -> new ArrayList<>())
+          .add(changedScope);
+    }
+    ArrayList<List<Node>> scopeGroups = new ArrayList<>(scopesByScript.values());
+    int parallelism = Math.min(compiler.getOptions().getNumParallelThreads(), scopeGroups.size());
+    ChangeTracker.BufferedChanges[] groupChanges =
+        new ChangeTracker.BufferedChanges[scopeGroups.size()];
+    ExecutorService executor =
+        Executors.newFixedThreadPool(
+            parallelism,
+            runnable -> {
+              Thread thread = new Thread(runnable, "jscompiler-PeepholeChangedScopes");
+              thread.setDaemon(true);
+              return thread;
+            });
+    ArrayList<Future<?>> futures = new ArrayList<>(parallelism);
+    boolean completed = false;
+    try {
+      for (int workerIndex = 0; workerIndex < parallelism; workerIndex++) {
+        int firstGroup = workerIndex;
+        futures.add(
+            executor.submit(
+                () -> {
+                  AbstractPeepholeOptimization[] optimizations =
+                      parallelOptimizationFactory
+                          .get()
+                          .toArray(new AbstractPeepholeOptimization[0]);
+                  beginTraversal(optimizations);
+                  try {
+                    for (int groupIndex = firstGroup;
+                        groupIndex < scopeGroups.size();
+                        groupIndex += parallelism) {
+                      ChangeTracker.BufferedChanges changes =
+                          compiler.getChangeTracker().beginBufferingChanges();
+                      try {
+                        NodeTraversal.traverseScopeRoots(
+                            compiler,
+                            scopeGroups.get(groupIndex),
+                            new PeepCallback(optimizations),
+                            /* traverseNested= */ false);
+                      } finally {
+                        compiler.getChangeTracker().endBufferingChanges(changes);
+                      }
+                      groupChanges[groupIndex] = changes;
+                    }
+                  } finally {
+                    endTraversal(optimizations);
+                  }
+                }));
+      }
+      executor.shutdown();
+      awaitParallelTraversals(futures);
+      for (ChangeTracker.BufferedChanges changes : groupChanges) {
+        compiler.getChangeTracker().applyBufferedChanges(changes);
+      }
+      completed = true;
+    } finally {
+      if (!completed) {
+        executor.shutdownNow();
+      }
+    }
+  }
+
+  private static void awaitParallelTraversals(List<Future<?>> futures) {
+    for (Future<?> future : futures) {
+      try {
+        future.get();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new IllegalStateException("Interrupted while running peephole optimizations", e);
+      } catch (ExecutionException e) {
+        throw new IllegalStateException(
+            "Cannot run peephole optimizations concurrently", e.getCause());
       }
     }
   }
