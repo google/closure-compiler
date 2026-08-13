@@ -31,6 +31,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -120,13 +124,106 @@ class OptimizeCalls implements CompilerPass {
     }
 
     final ReferenceMap references = new ReferenceMap();
-    NodeTraversal.traverseRoots(
-        compiler, new ReferenceMapBuildingCallback(references), externs, root);
+    buildReferenceMap(externs, root, references);
     eliminateAccessorsFrom(references);
 
     for (CallGraphCompilerPass pass : passes) {
       pass.process(externs, root, references);
     }
+  }
+
+  private void buildReferenceMap(Node externs, Node root, ReferenceMap references) {
+    int parallelism = compiler.getOptions().getNumParallelThreads();
+    if (parallelism <= 1 || !root.isRoot() || !root.hasMoreThanOneChild()) {
+      NodeTraversal.traverseRoots(
+          compiler, new ReferenceMapBuildingCallback(references), externs, root);
+      return;
+    }
+
+    ArrayList<Node> scripts = new ArrayList<>();
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+      if (!script.isScript()) {
+        NodeTraversal.traverseRoots(
+            compiler, new ReferenceMapBuildingCallback(references), externs, root);
+        return;
+      }
+      scripts.add(script);
+    }
+
+    Node scopeRoot = checkNotNull(externs.getParent());
+    checkState(root.getParent() == scopeRoot);
+    Scope globalScope = new SyntacticScopeCreator(compiler).createScope(scopeRoot, null);
+    traverseReferenceMapRoot(
+        externs,
+        globalScope,
+        new ReferenceMapBuildingCallback(references),
+        new SyntacticScopeCreator(compiler));
+
+    int batchCount = Math.min(scripts.size(), parallelism * 4);
+    ReferenceMap[] batchResults = new ReferenceMap[batchCount];
+    ExecutorService executor =
+        Executors.newFixedThreadPool(
+            Math.min(parallelism, batchCount),
+            runnable -> {
+              Thread thread = new Thread(runnable, "jscompiler-OptimizeCalls");
+              thread.setDaemon(true);
+              return thread;
+            });
+    ArrayList<Future<?>> futures = new ArrayList<>(batchCount);
+    boolean completed = false;
+    try {
+      for (int batchIndex = 0; batchIndex < batchCount; batchIndex++) {
+        int index = batchIndex;
+        int firstScript = scripts.size() * index / batchCount;
+        int afterLastScript = scripts.size() * (index + 1) / batchCount;
+        futures.add(
+            executor.submit(
+                () -> {
+                  ReferenceMap batchReferences = new ReferenceMap();
+                  SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
+                  ReferenceMapBuildingCallback callback =
+                      new ReferenceMapBuildingCallback(batchReferences);
+                  for (int i = firstScript; i < afterLastScript; i++) {
+                    traverseReferenceMapRoot(
+                        scripts.get(i), globalScope, callback, scopeCreator);
+                  }
+                  batchResults[index] = batchReferences;
+                }));
+      }
+      executor.shutdown();
+      for (Future<?> future : futures) {
+        try {
+          future.get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IllegalStateException("Interrupted while collecting call references", e);
+        } catch (ExecutionException e) {
+          throw new IllegalStateException(
+              "Cannot collect call references concurrently", e.getCause());
+        }
+      }
+      for (ReferenceMap batchReferences : batchResults) {
+        references.mergeFrom(batchReferences);
+      }
+      references.globalScope = globalScope;
+      completed = true;
+    } finally {
+      if (!completed) {
+        executor.shutdownNow();
+      }
+    }
+  }
+
+  private void traverseReferenceMapRoot(
+      Node root,
+      Scope globalScope,
+      ReferenceMapBuildingCallback callback,
+      SyntacticScopeCreator scopeCreator) {
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback(callback)
+        .setScopeCreator(scopeCreator)
+        .traverseWithScope(root, globalScope);
   }
 
   /**
@@ -170,6 +267,21 @@ class OptimizeCalls implements CompilerPass {
 
     void addPropReference(String name, Node n) {
       addReference(props, name, n);
+    }
+
+    void mergeFrom(ReferenceMap other) {
+      mergeReferences(names, other.names);
+      mergeReferences(props, other.props);
+    }
+
+    private static void mergeReferences(
+        LinkedHashMap<String, ArrayList<Node>> destination,
+        LinkedHashMap<String, ArrayList<Node>> source) {
+      for (Map.Entry<String, ArrayList<Node>> entry : source.entrySet()) {
+        destination
+            .computeIfAbsent(entry.getKey(), unused -> new ArrayList<>())
+            .addAll(entry.getValue());
+      }
     }
 
     Scope getGlobalScope() {

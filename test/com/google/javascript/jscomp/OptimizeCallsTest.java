@@ -38,6 +38,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
 
   // Whether to consider externs during the next collection. Must be explicitly set.
   private @Nullable Boolean considerExterns = null;
+  private int numParallelThreads = 1;
 
   @Override
   @Before
@@ -46,15 +47,37 @@ public final class OptimizeCallsTest extends CompilerTestCase {
     enableNormalize(); // Required for `OptimizeCalls`.
     // Even if we're ignoring externs we need to know their names to do that.
     enableGatherExternProperties();
+    numParallelThreads = 1;
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
+    compiler.getOptions().setNumParallelThreads(numParallelThreads);
     return OptimizeCalls.builder()
         .setCompiler(compiler)
         .setConsiderExterns(considerExterns)
         .addPass((externs, root, references) -> this.references = references)
         .build();
+  }
+
+  @Test
+  public void testReferenceCollectionAcrossScriptsConcurrently() {
+    considerExterns = false;
+    numParallelThreads = 4;
+
+    testSame(
+        srcs(
+            "var first = {}; first.alpha;",
+            "var second = {}; first.beta; second.alpha;"));
+
+    assertThat(references.getNameReferences())
+        .comparingElementsUsing(KEY_EQUALITY)
+        .containsExactly("first", "second")
+        .inOrder();
+    assertThat(references.getPropReferences())
+        .comparingElementsUsing(KEY_EQUALITY)
+        .containsExactly("alpha", "beta")
+        .inOrder();
   }
 
   @Test
