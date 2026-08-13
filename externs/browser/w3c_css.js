@@ -2905,6 +2905,272 @@ CSSStyleProperties.prototype.strokeDashcorner;
  */
 CSSStyleProperties.prototype.strokeDashadjust;
 
+// New properties in TypeScript 6
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/all
+ */
+CSSStyleProperties.prototype.all;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/anchor-name
+ */
+CSSStyleProperties.prototype.anchorName;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/anchor-scope
+ */
+CSSStyleProperties.prototype.anchorScope;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/animation-range
+ */
+CSSStyleProperties.prototype.animationRange;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/animation-range-end
+ */
+CSSStyleProperties.prototype.animationRangeEnd;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/animation-range-start
+ */
+CSSStyleProperties.prototype.animationRangeStart;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/animation-timeline
+ */
+CSSStyleProperties.prototype.animationTimeline;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/aspect-ratio
+ */
+CSSStyleProperties.prototype.aspectRatio;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/background-position-x
+ */
+CSSStyleProperties.prototype.backgroundPositionX;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/background-position-y
+ */
+CSSStyleProperties.prototype.backgroundPositionY;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/block-size
+ */
+CSSStyleProperties.prototype.blockSize;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/container-name
+ */
+CSSStyleProperties.prototype.containerName;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/container-type
+ */
+CSSStyleProperties.prototype.containerType;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/cx
+ */
+CSSStyleProperties.prototype.cx;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/cy
+ */
+CSSStyleProperties.prototype.cy;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/d
+ */
+CSSStyleProperties.prototype.d;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/dynamic-range-limit
+ */
+CSSStyleProperties.prototype.dynamicRangeLimit;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/field-sizing
+ */
+CSSStyleProperties.prototype.fieldSizing;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/filter
+ */
+CSSStyleProperties.prototype.filter;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-language-override
+ */
+CSSStyleProperties.prototype.fontLanguageOverride;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-variant-emoji
+ */
+CSSStyleProperties.prototype.fontVariantEmoji;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/image-orientation
+ */
+CSSStyleProperties.prototype.imageOrientation;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/inline-size
+ */
+CSSStyleProperties.prototype.inlineSize;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/math-shift
+ */
+CSSStyleProperties.prototype.mathShift;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/offset
+ */
+CSSStyleProperties.prototype.offset;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/position-anchor
+ */
+CSSStyleProperties.prototype.positionAnchor;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/position-area
+ */
+CSSStyleProperties.prototype.positionArea;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/position-try
+ */
+CSSStyleProperties.prototype.positionTry;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/position-try-fallbacks
+ */
+CSSStyleProperties.prototype.positionTryFallbacks;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/position-try-order
+ */
+CSSStyleProperties.prototype.positionTryOrder;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/position-visibility
+ */
+CSSStyleProperties.prototype.positionVisibility;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/r
+ */
+CSSStyleProperties.prototype.r;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/rotate
+ */
+CSSStyleProperties.prototype.rotate;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/rx
+ */
+CSSStyleProperties.prototype.rx;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/ry
+ */
+CSSStyleProperties.prototype.ry;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scale
+ */
+CSSStyleProperties.prototype.scale;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding
+ */
+CSSStyleProperties.prototype.scrollPadding;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-block
+ */
+CSSStyleProperties.prototype.scrollPaddingBlock;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-block-end
+ */
+CSSStyleProperties.prototype.scrollPaddingBlockEnd;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-block-start
+ */
+CSSStyleProperties.prototype.scrollPaddingBlockStart;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-bottom
+ */
+CSSStyleProperties.prototype.scrollPaddingBottom;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-inline
+ */
+CSSStyleProperties.prototype.scrollPaddingInline;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-inline-end
+ */
+CSSStyleProperties.prototype.scrollPaddingInlineEnd;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-inline-start
+ */
+CSSStyleProperties.prototype.scrollPaddingInlineStart;
+
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
  * Externs for the CSSOM View Module.
