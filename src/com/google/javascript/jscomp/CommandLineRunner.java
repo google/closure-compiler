@@ -143,13 +143,13 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
   // I don't really care about unchecked warnings in this class.
   @SuppressWarnings("unchecked")
   private static class Flags {
-    // Some clients run a few copies of the compiler through CommandLineRunner
-    // on parallel threads (thankfully, with the same flags),
-    // so the access to these lists should be synchronized.
-    private static final List<FlagEntry<CheckLevel>> guardLevels =
-        Collections.synchronizedList(new ArrayList<FlagEntry<CheckLevel>>());
-    private static final List<FlagEntry<JsSourceType>> mixedJsSources =
-        Collections.synchronizedList(new ArrayList<FlagEntry<JsSourceType>>());
+    // Option handlers are constructed reflectively and therefore cannot receive their owning
+    // Flags instance. Keep their ordering state per compilation thread so independent command-line
+    // runners can parse different inputs concurrently.
+    private static final ThreadLocal<List<FlagEntry<CheckLevel>>> guardLevels =
+        ThreadLocal.withInitial(ArrayList::new);
+    private static final ThreadLocal<List<FlagEntry<JsSourceType>>> mixedJsSources =
+        ThreadLocal.withInitial(ArrayList::new);
 
     @Option(
         name = "--browser_featureset_year",
@@ -1308,7 +1308,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         throws CmdLineException, IOException {
       List<FlagEntry<JsSourceType>> mixedSources = new ArrayList<>();
       Set<String> excludes = new HashSet<>();
-      for (FlagEntry<JsSourceType> source : Flags.mixedJsSources) {
+      for (FlagEntry<JsSourceType> source : Flags.mixedJsSources.get()) {
         if (source.getValue().endsWith(".zip")) {
           mixedSources.add(source);
         } else if (source.getValue().startsWith("!")) {
@@ -1328,7 +1328,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       for (String filename : fromArguments) {
         mixedSources.add(new FlagEntry<>(JsSourceType.JS, filename));
       }
-      if (!Flags.mixedJsSources.isEmpty() && !arguments.isEmpty() && mixedSources.isEmpty()) {
+      if (!Flags.mixedJsSources.get().isEmpty()
+          && !arguments.isEmpty()
+          && mixedSources.isEmpty()) {
         throw new CmdLineException(parser, "No inputs matched");
       }
       return mixedSources;
@@ -1424,7 +1426,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       @Keep
       public WarningGuardErrorOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
-        super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.ERROR, guardLevels));
+        super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.ERROR, guardLevels.get()));
       }
     }
 
@@ -1433,7 +1435,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       @Keep
       public WarningGuardWarningOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
-        super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.WARNING, guardLevels));
+        super(
+            parser, option, new MultiFlagSetter<>(setter, CheckLevel.WARNING, guardLevels.get()));
       }
     }
 
@@ -1442,7 +1445,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       @Keep
       public WarningGuardOffOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
-        super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.OFF, guardLevels));
+        super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.OFF, guardLevels.get()));
       }
     }
 
@@ -1451,7 +1454,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       @Keep
       public JsOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
-        super(parser, option, new MultiFlagSetter<>(setter, JsSourceType.JS, mixedJsSources));
+        super(parser, option, new MultiFlagSetter<>(setter, JsSourceType.JS, mixedJsSources.get()));
       }
     }
 
@@ -1460,7 +1463,10 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       @Keep
       public JsZipOptionHandler(
           CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
-        super(parser, option, new MultiFlagSetter<>(setter, JsSourceType.JS_ZIP, mixedJsSources));
+        super(
+            parser,
+            option,
+            new MultiFlagSetter<>(setter, JsSourceType.JS_ZIP, mixedJsSources.get()));
       }
     }
 
@@ -1661,13 +1667,14 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     // Command-line warning levels should override flag file settings,
     // which means they should go last.
-    List<FlagEntry<CheckLevel>> previousGuardLevels = new ArrayList<>(Flags.guardLevels);
-    List<FlagEntry<JsSourceType>> previousMixedJsSources = new ArrayList<>(Flags.mixedJsSources);
-    Flags.guardLevels.clear();
-    Flags.mixedJsSources.clear();
+    List<FlagEntry<CheckLevel>> previousGuardLevels = new ArrayList<>(Flags.guardLevels.get());
+    List<FlagEntry<JsSourceType>> previousMixedJsSources =
+        new ArrayList<>(Flags.mixedJsSources.get());
+    Flags.guardLevels.get().clear();
+    Flags.mixedJsSources.get().clear();
     flags.parse(tokens);
-    Flags.guardLevels.addAll(previousGuardLevels);
-    Flags.mixedJsSources.addAll(previousMixedJsSources);
+    Flags.guardLevels.get().addAll(previousGuardLevels);
+    Flags.mixedJsSources.get().addAll(previousMixedJsSources);
 
     // Currently we are not supporting this (prevent direct/indirect loops)
     if (!flags.flagFiles.isEmpty()) {
@@ -1690,8 +1697,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     errorStream = err;
     List<String> processedArgs = processArgs(args);
 
-    Flags.guardLevels.clear();
-    Flags.mixedJsSources.clear();
+    Flags.guardLevels.get().clear();
+    Flags.mixedJsSources.get().clear();
 
     List<FlagEntry<JsSourceType>> mixedSources = null;
     List<LocationMapping> mappings = null;
@@ -1825,7 +1832,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setSourceMapInputFiles(sourceMapInputs)
           .setParseInlineSourceMaps(parseInlineSourceMaps)
           .setApplyInputSourceMaps(applyInputSourceMaps)
-          .setWarningGuards(Flags.guardLevels)
+          .setWarningGuards(Flags.guardLevels.get())
           .setDefine(flags.define)
           .setBrowserFeaturesetYear(flags.browserFeaturesetYear)
           .setCharset(flags.charset)
@@ -1871,6 +1878,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     errorStream = null;
+    Flags.guardLevels.remove();
+    Flags.mixedJsSources.remove();
   }
 
   @Override

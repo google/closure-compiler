@@ -60,6 +60,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.jspecify.annotations.Nullable;
@@ -3589,6 +3593,70 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     assertThat(weakFile.exists()).isFalse();
     assertThat(codeGenerationThreads).hasSize(2);
     assertThat(codeGenerationThreads.stream().distinct().count()).isEqualTo(1);
+  }
+
+  @Test
+  public void testConcurrentRunsKeepCommandLineInputsIsolated() throws Exception {
+    File inputDir = temporaryFolder.newFolder("concurrent-inputs");
+    File leftOutput = temporaryFolder.newFile("left-output.js");
+    File rightOutput = temporaryFolder.newFile("right-output.js");
+    List<String> leftArgs =
+        new ArrayList<>(
+            List.of(
+                "--compilation_level=WHITESPACE_ONLY",
+                "--js_output_file=" + leftOutput));
+    List<String> rightArgs =
+        new ArrayList<>(
+            List.of(
+                "--compilation_level=WHITESPACE_ONLY",
+                "--js_output_file=" + rightOutput));
+    for (int i = 0; i < 200; i++) {
+      File leftInput = new File(inputDir, "left-" + i + ".js");
+      File rightInput = new File(inputDir, "right-" + i + ".js");
+      Files.asCharSink(leftInput, UTF_8).write("var left" + i + ";\n");
+      Files.asCharSink(rightInput, UTF_8).write("var right" + i + ";\n");
+      leftArgs.add("--js=" + leftInput);
+      rightArgs.add("--js=" + rightInput);
+    }
+
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+    try {
+      Future<Integer> leftResult =
+          executor.submit(
+              () -> {
+                ready.countDown();
+                start.await();
+                return CommandLineRunner.runCompiler(
+                    leftArgs.toArray(String[]::new),
+                    new PrintStream(new ByteArrayOutputStream()),
+                    new PrintStream(new ByteArrayOutputStream()));
+              });
+      Future<Integer> rightResult =
+          executor.submit(
+              () -> {
+                ready.countDown();
+                start.await();
+                return CommandLineRunner.runCompiler(
+                    rightArgs.toArray(String[]::new),
+                    new PrintStream(new ByteArrayOutputStream()),
+                    new PrintStream(new ByteArrayOutputStream()));
+              });
+      ready.await();
+      start.countDown();
+      assertThat(leftResult.get()).isEqualTo(0);
+      assertThat(rightResult.get()).isEqualTo(0);
+    } finally {
+      executor.shutdownNow();
+    }
+
+    String leftCode = Files.asCharSource(leftOutput, UTF_8).read();
+    String rightCode = Files.asCharSource(rightOutput, UTF_8).read();
+    assertThat(leftCode).contains("left199");
+    assertThat(leftCode).doesNotContain("right");
+    assertThat(rightCode).contains("right199");
+    assertThat(rightCode).doesNotContain("left");
   }
 
   @Test
