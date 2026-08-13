@@ -1693,18 +1693,22 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("earlyPeepholeOptimizations")
           .setInternalFactory(
-              (compiler) -> {
-                boolean useTypesForOptimization =
-                    compiler.getOptions().shouldUseTypesForLocalOptimization();
-                List<AbstractPeepholeOptimization> peepholeOptimizations = new ArrayList<>();
-                peepholeOptimizations.add(new PeepholeRemoveDeadCode());
-                if (compiler.getOptions().getJ2clPass().shouldAddJ2clPasses()) {
-                  peepholeOptimizations.add(
-                      new J2clEqualitySameRewriterPass(useTypesForOptimization));
-                }
-                return new PeepholeOptimizationsPass(
-                    compiler, "earlyPeepholeOptimizations", peepholeOptimizations);
-              })
+              (compiler) ->
+                  new PeepholeOptimizationsPass(
+                      compiler,
+                      "earlyPeepholeOptimizations",
+                      () -> {
+                        boolean useTypesForOptimization =
+                            compiler.getOptions().shouldUseTypesForLocalOptimization();
+                        List<AbstractPeepholeOptimization> peepholeOptimizations =
+                            new ArrayList<>();
+                        peepholeOptimizations.add(new PeepholeRemoveDeadCode());
+                        if (compiler.getOptions().getJ2clPass().shouldAddJ2clPasses()) {
+                          peepholeOptimizations.add(
+                              new J2clEqualitySameRewriterPass(useTypesForOptimization));
+                        }
+                        return peepholeOptimizations;
+                      }))
           .build();
 
   private final PassFactory earlyInlineVariables =
@@ -1730,6 +1734,14 @@ public final class DefaultPassConfig extends PassConfig {
     checkArgument(
         expectAstIsNormalized == compiler.getLifeCycleStage().isNormalized(),
         compiler.getLifeCycleStage());
+    return new PeepholeOptimizationsPass(
+        compiler,
+        passName,
+        () -> createPeepholeOptimizations(compiler, expectAstIsNormalized));
+  }
+
+  private static List<AbstractPeepholeOptimization> createPeepholeOptimizations(
+      AbstractCompiler compiler, boolean expectAstIsNormalized) {
     final boolean late = false;
     final boolean useTypesForOptimization =
         compiler.getOptions().shouldUseTypesForLocalOptimization();
@@ -1749,7 +1761,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
     optimizations.add(new PeepholeFoldConstants(late, useTypesForOptimization));
     optimizations.add(new PeepholeCollectPropertyAssignments());
-    return new PeepholeOptimizationsPass(compiler, passName, optimizations);
+    return optimizations;
   }
 
   /** Various peephole optimizations. */
@@ -1798,12 +1810,14 @@ public final class DefaultPassConfig extends PassConfig {
                 return new PeepholeOptimizationsPass(
                     compiler,
                     "latePeepholeOptimizations",
-                    new StatementFusion(),
-                    new PeepholeRemoveDeadCode(),
-                    new PeepholeMinimizeConditions(late),
-                    new PeepholeSubstituteAlternateSyntax(late),
-                    new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
-                    new PeepholeFoldConstants(late, useTypesForOptimization));
+                    () ->
+                        List.of(
+                            new StatementFusion(),
+                            new PeepholeRemoveDeadCode(),
+                            new PeepholeMinimizeConditions(late),
+                            new PeepholeSubstituteAlternateSyntax(late),
+                            new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
+                            new PeepholeFoldConstants(late, useTypesForOptimization)));
               })
           .build();
 

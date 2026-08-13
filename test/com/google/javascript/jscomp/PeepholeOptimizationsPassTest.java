@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -37,11 +39,31 @@ import org.junit.runners.JUnit4;
 public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
 
   private ImmutableList<AbstractPeepholeOptimization> currentPeepholePasses;
+  private int parallelism = 1;
+  private @Nullable Supplier<List<AbstractPeepholeOptimization>> parallelOptimizationFactory;
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setNumParallelThreads(parallelism);
+    return options;
+  }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
+    if (parallelOptimizationFactory != null) {
+      return new PeepholeOptimizationsPass(
+          compiler, getName(), parallelOptimizationFactory);
+    }
     return new PeepholeOptimizationsPass(
         compiler, getName(), currentPeepholePasses.toArray(new AbstractPeepholeOptimization[0]));
+  }
+
+  @Test
+  public void testParallelScripts() {
+    parallelism = 2;
+    parallelOptimizationFactory = () -> List.of(new RemoveNodesNamedXUnderVarOptimization());
+    test(srcs("var x, a;", "var x, b;"), expected("var a;", "var b;"));
   }
 
   /**
