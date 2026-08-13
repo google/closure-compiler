@@ -141,6 +141,9 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       return;
     }
     shouldOptimizeScopeStack.push(true);
+    @Nullable OptimizationWorkReporter workReporter =
+        compiler.getOptions().getOptimizationWorkReporter();
+    long workStartNanos = workReporter != null ? System.nanoTime() : 0;
 
     Scope scope = t.getScope();
     checkState(scope.isFunctionScope(), scope);
@@ -178,6 +181,16 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
         new GreedyGraphColoring<>(interferenceGraph, coloringTieBreaker);
     coloring.color();
     colorings.push(coloring);
+    if (workReporter != null) {
+      workReporter.recordFunction(
+          PassNames.COALESCE_VARIABLE_NAMES,
+          scope.getRootNode(),
+          allVarsDeclaredInFunction.getAllVariablesInOrder().size(),
+          cfg.getNodes().size(),
+          interferenceGraph.getNodes().size(),
+          0,
+          System.nanoTime() - workStartNanos);
+    }
   }
 
   @Override

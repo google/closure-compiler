@@ -16,8 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
+import java.io.IOException;
+import java.io.StringWriter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,12 +34,23 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   // picking out which variable names are merged.
 
   private boolean usePseudoName = false;
+  private OptimizationWorkReporter workReporter;
 
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
     usePseudoName = false;
+    workReporter = null;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    if (workReporter != null) {
+      options.setOptimizationWorkReporter(workReporter);
+    }
+    return options;
   }
 
   @Override
@@ -80,6 +95,16 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("var y; var x=1; f(x = x + 1, y)");
 
     inFunction("var x; var y; y = y + 1, y, x = 1; x");
+  }
+
+  @Test
+  public void testOptimizationWorkReport() throws IOException {
+    workReporter = new OptimizationWorkReporter();
+    inFunction("var x = 1; var y = x + 1; return y", "var x = 1; x = x + 1; return x");
+
+    StringWriter writer = new StringWriter();
+    workReporter.write(writer);
+    assertThat(writer.toString()).contains("coalesceVariableNames");
   }
 
   @Test
