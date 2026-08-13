@@ -275,11 +275,16 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       return false;
     }
 
-    if (NodeUtil.isNameDeclaration(n) || isAssignmentToName(n)) {
-      // if it is a simple assignment
-      if (n.getFirstChild().isName()) {
-        return true;
+    if (NodeUtil.isNameDeclaration(n)) {
+      for (Node name = n.getFirstChild(); name != null; name = name.getNext()) {
+        if (name.isName() && name.hasChildren() && isInlineableRhsShape(name.getFirstChild())) {
+          return true;
+        }
       }
+    } else if (n.isAssign()
+        && n.getFirstChild().isName()
+        && isInlineableRhsShape(n.getLastChild())) {
+      return true;
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
@@ -290,12 +295,24 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     return false;
   }
 
-  private static boolean isAssignmentToName(Node n) {
-    if (NodeUtil.isAssignmentOp(n) || n.isDec() || n.isInc()) {
-      // if it is a simple assignment
-      return (n.getFirstChild().isName());
-    }
-    return false;
+  private static boolean isInlineableRhsShape(Node rhs) {
+    return !NodeUtil.has(
+        rhs,
+        (Node input) -> {
+          return switch (input.getToken()) {
+            case GETELEM,
+                GETPROP,
+                OPTCHAIN_GETPROP,
+                OPTCHAIN_GETELEM,
+                CLASS,
+                ARRAYLIT,
+                OBJECTLIT,
+                REGEXP,
+                NEW -> true;
+            default -> false;
+          };
+        },
+        (Node input) -> !input.isFunction());
   }
 
   @Override
@@ -671,28 +688,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       // Example:
       // var x = a.b.c; j.c = 1; print(x);
       // Inlining print(a.b.c) is not safe - consider if j were an alias to a.b.
-      if (NodeUtil.has(
-          def.getLastChild(),
-          (Node input) -> {
-            switch (input.getToken()) {
-              case GETELEM,
-                  GETPROP,
-                  OPTCHAIN_GETPROP,
-                  OPTCHAIN_GETELEM,
-                  CLASS,
-                  ARRAYLIT,
-                  OBJECTLIT,
-                  REGEXP,
-                  NEW -> {
-                return true;
-                // unsafe to inline.
-              }
-              default -> {}
-            }
-            return false;
-          },
-          // Recurse if the node is not a function.
-          (Node input) -> !input.isFunction())) {
+      if (!isInlineableRhsShape(def.getLastChild())) {
         return false;
       }
 

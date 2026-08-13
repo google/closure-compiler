@@ -93,6 +93,16 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSkipsAnalysisWhenAllDefinitionsHaveUnsafeRhsShapes() throws IOException {
+    workReporter = new OptimizationWorkReporter();
+    noInline("const x = this.value; print(x)");
+
+    StringWriter writer = new StringWriter();
+    workReporter.write(writer);
+    assertThat(writer.toString()).doesNotContain("flowSensitiveInlineVariables");
+  }
+
+  @Test
   public void testSimpleVar() {
     inline("var x = 1; print(x)", "var x; print(1)");
     inline("var x = 1; x", "var x; 1");
