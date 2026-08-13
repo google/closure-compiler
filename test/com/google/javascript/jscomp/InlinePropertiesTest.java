@@ -934,11 +934,9 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538122482): InlineProperties: uninitialized subclass field does NOT prevent inlining
-  // superclass property
   @Test
   public void testUninitializedSubclassFieldPreventsInlining() {
-    test(
+    testSame(
         """
         class Guard {
           constructor() { this.escaped = true; }
@@ -947,15 +945,6 @@ public final class InlinePropertiesTest extends CompilerTestCase {
           escaped;
         }
         (new RawGuard()).escaped;
-        """,
-        """
-        class Guard {
-          constructor() { this.escaped = true; }
-        }
-        class RawGuard extends Guard {
-          escaped;
-        }
-        new RawGuard(), true;
         """);
   }
 

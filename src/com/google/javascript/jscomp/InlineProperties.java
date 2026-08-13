@@ -133,7 +133,7 @@ final class InlineProperties implements CompilerPass {
           invalidatingPropRef = !maybeRecordCandidateClassFieldDefinition(n);
         } else {
           // class field with no initialization
-          invalidatingPropRef = false;
+          invalidatingPropRef = true;
         }
       } else {
         return;
