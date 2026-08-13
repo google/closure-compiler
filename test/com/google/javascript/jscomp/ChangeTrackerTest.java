@@ -148,4 +148,25 @@ public class ChangeTrackerTest {
     // 'FunctionInliner' request.
     assertThat(changeTracker.getChangedScopeNodesForPass("FunctionInliner")).isEmpty();
   }
+
+  @Test
+  public void testBufferedChangesAreInvisibleUntilApplied() {
+    ChangeTracker changeTracker = new ChangeTracker();
+    Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    Node function2 = IR.function(IR.name("bar"), IR.paramList(), IR.block());
+    IR.root(IR.script(function1, function2));
+
+    var unused = changeTracker.getChangedScopeNodesForPass("ParallelPass");
+    ChangeTracker.BufferedChanges changes = changeTracker.beginBufferingChanges();
+    changeTracker.reportChangeToChangeScope(function1);
+    changeTracker.reportChangeToChangeScope(function1);
+    changeTracker.reportChangeToChangeScope(function2);
+    changeTracker.reportFunctionDeleted(function2);
+    changeTracker.endBufferingChanges(changes);
+
+    assertThat(changeTracker.getChangedScopeNodesForPass("ParallelPass")).isEmpty();
+    changeTracker.applyBufferedChanges(changes);
+    assertThat(changeTracker.getChangedScopeNodesForPass("ParallelPass"))
+        .containsExactly(function1);
+  }
 }

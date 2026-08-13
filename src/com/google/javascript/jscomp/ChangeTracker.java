@@ -20,7 +20,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /** Tracks various kind of changes during a single compilation */
 public final class ChangeTracker {
@@ -32,6 +34,37 @@ public final class ChangeTracker {
   private final Timeline<Node> changeTimeline = new Timeline<>();
   private final RecentChange recentChange = new RecentChange();
   private final List<CodeChangeHandler> codeChangeHandlers = new ArrayList<>();
+  private final ThreadLocal<BufferedChanges> threadBufferedChanges = new ThreadLocal<>();
+
+  /** Changes recorded by one worker and later applied by the compiler thread. */
+  static final class BufferedChanges {
+    private final Set<Node> changedScopes = new LinkedHashSet<>();
+    private final Set<Node> deletedFunctions = new LinkedHashSet<>();
+  }
+
+  BufferedChanges beginBufferingChanges() {
+    checkState(threadBufferedChanges.get() == null, "Already buffering changes on this thread");
+    BufferedChanges changes = new BufferedChanges();
+    threadBufferedChanges.set(changes);
+    return changes;
+  }
+
+  void endBufferingChanges(BufferedChanges changes) {
+    checkState(threadBufferedChanges.get() == changes, "Ending the wrong buffered change set");
+    threadBufferedChanges.remove();
+  }
+
+  /** Applies worker changes in caller-selected deterministic order. */
+  void applyBufferedChanges(BufferedChanges changes) {
+    checkState(threadBufferedChanges.get() == null, "Cannot apply changes while buffering");
+    for (Node deletedFunction : changes.deletedFunctions) {
+      changeTimeline.remove(deletedFunction);
+    }
+    for (Node changedScope : changes.changedScopes) {
+      recordChange(changedScope);
+      notifyChangeHandlers();
+    }
+  }
 
   /** Registers a listener for code change events. */
   void addChangeHandler(CodeChangeHandler handler) {
@@ -52,13 +85,24 @@ public final class ChangeTracker {
    * #isChangeScopeRoot(Node)}
    */
   public void reportChangeToEnclosingScope(Node n) {
-    recordChange(getChangeScopeForNode(n));
+    Node changedScope = getChangeScopeForNode(n);
+    BufferedChanges bufferedChanges = threadBufferedChanges.get();
+    if (bufferedChanges != null) {
+      bufferedChanges.changedScopes.add(changedScope);
+      return;
+    }
+    recordChange(changedScope);
     notifyChangeHandlers();
   }
 
   /** Marks modifications to a function or script node */
   public void reportChangeToChangeScope(Node changeScopeRoot) {
     checkState(changeScopeRoot.isScript() || changeScopeRoot.isFunction());
+    BufferedChanges bufferedChanges = threadBufferedChanges.get();
+    if (bufferedChanges != null) {
+      bufferedChanges.changedScopes.add(changeScopeRoot);
+      return;
+    }
     recordChange(changeScopeRoot);
     notifyChangeHandlers();
   }
@@ -80,6 +124,11 @@ public final class ChangeTracker {
   public void reportFunctionDeleted(Node n) {
     checkState(n.isFunction());
     n.setDeleted(true);
+    BufferedChanges bufferedChanges = threadBufferedChanges.get();
+    if (bufferedChanges != null) {
+      bufferedChanges.deletedFunctions.add(n);
+      return;
+    }
     changeTimeline.remove(n);
   }
 
