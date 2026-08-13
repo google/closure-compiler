@@ -72,6 +72,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
@@ -1779,6 +1780,23 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
   }
 
   private @Nullable DiagnosticType outputChunkBinaryAndSourceMaps(
+      JSChunkGraph chunkGraph, B options, long[] outputPhaseNanos) throws IOException {
+    try {
+      return compiler.runInCompilerThread(
+          () -> {
+            try {
+              return outputChunkBinaryAndSourceMapsOnCompilerThread(
+                  chunkGraph, options, outputPhaseNanos);
+            } catch (IOException e) {
+              throw new UncheckedIOException(e);
+            }
+          });
+    } catch (UncheckedIOException e) {
+      throw e.getCause();
+    }
+  }
+
+  private @Nullable DiagnosticType outputChunkBinaryAndSourceMapsOnCompilerThread(
       JSChunkGraph chunkGraph, B options, long[] outputPhaseNanos) throws IOException {
     Iterable<JSChunk> chunks = chunkGraph.getAllChunks();
     parsedChunkWrappers = parseChunkWrappers(config.chunkWrapper, chunks);

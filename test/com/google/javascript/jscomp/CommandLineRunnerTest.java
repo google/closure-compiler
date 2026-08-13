@@ -3560,9 +3560,21 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     args.add("--js");
     args.add(inputFile2.toString());
 
+    List<Thread> codeGenerationThreads = new ArrayList<>();
     CommandLineRunner runner =
         new CommandLineRunner(
-            args.toArray(new String[] {}), new PrintStream(outReader), new PrintStream(errReader));
+            args.toArray(new String[] {}), new PrintStream(outReader), new PrintStream(errReader)) {
+          @Override
+          protected Compiler createCompiler() {
+            return new Compiler(getErrorPrintStream()) {
+              @Override
+              public String toSource(CodePrinter.LicenseTracker licenseTracker, JSChunk chunk) {
+                codeGenerationThreads.add(Thread.currentThread());
+                return super.toSource(licenseTracker, chunk);
+              }
+            };
+          }
+        };
 
     lastCompiler = runner.getCompiler();
     try {
@@ -3575,6 +3587,8 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     assertThat(Files.asCharSource(outputFile1, UTF_8).read()).isEqualTo(inputSource1);
     assertThat(Files.asCharSource(outputFile2, UTF_8).read()).isEqualTo(inputSource2);
     assertThat(weakFile.exists()).isFalse();
+    assertThat(codeGenerationThreads).hasSize(2);
+    assertThat(codeGenerationThreads.stream().distinct().count()).isEqualTo(1);
   }
 
   @Test
