@@ -39,6 +39,7 @@ import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
@@ -67,6 +68,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   private static final String STATIC_INIT_METHOD_NAME = "$jscomp$staticInit$";
   private static final String PRIVATE_MAP_VAR = "$jscomp$privateMap$";
   private static final String STATIC_PRIVATE_MAP_VAR = "$jscomp$staticPrivateMap$";
+  private static final String PRIVATE_PROTO_VAR = "$jscomp$priv$proto$";
   private static final String PRIVATE_VAR = "$jscomp$priv$";
 
   /**
@@ -86,6 +88,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
           .put("STATIC_INIT", STATIC_INIT_METHOD_NAME)
           .put("STATIC_PRIVATE_MAP", STATIC_PRIVATE_MAP_VAR)
           .put("PRIVATE_MAP", PRIVATE_MAP_VAR)
+          .put("PRIVATE_PROTO", PRIVATE_PROTO_VAR)
           .put("PRIVATE", PRIVATE_VAR)
           .buildOrThrow();
 
@@ -119,6 +122,12 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   private static String generateUniqueStaticPrivateMapVarName(
       AbstractCompiler compiler, NodeTraversal t) {
     return STATIC_PRIVATE_MAP_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+  }
+
+  /** Returns $jscomp$priv$proto$[FILE_ID]$[number] */
+  private static String generateUniquePrivateProtoVarName(
+      AbstractCompiler compiler, NodeTraversal t) {
+    return PRIVATE_PROTO_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
   }
 
   /** Returns $jscomp$priv$[FILE_ID]$[number] */
@@ -217,7 +226,14 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         if (n.isPrivateIdentifier()) {
           checkState(!classStack.isEmpty());
           classStack.peek().recordPrivateMember(n);
-          maybeReportPrivatePropertiesCannotConvertYet(n);
+          // TODO(b/236744850): Non-static private instance methods without `super` are transpiled
+          // via shared private prototype descriptor (PRIVATE_PROTO). Support static private
+          // methods, getters, setters, and methods with `super` in future CLs.
+          if (n.isStaticMember()
+              || !n.isMemberFunctionDef()
+              || NodeUtil.referencesSuper(NodeUtil.getFunctionBody(n.getFirstChild()))) {
+            maybeReportPrivatePropertiesCannotConvertYet(n);
+          }
         }
       }
       case BLOCK -> {
@@ -548,6 +564,44 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
                   astFactory.createNewNode(astFactory.createQNameWithUnknownType(jscompPrivateMap)))
               .srcrefTreeIfMissing(record.classNode);
       mapVar.insertBefore(classInsertionPoint);
+
+      if (record.hasInstancePrivateMethodsOrAccessors) {
+        // TODO(b/236744850): Non-static private instance methods without `super` are gathered into
+        // descriptor definitions for the shared private prototype descriptor (PRIVATE_PROTO).
+        // Support static private methods, getters, setters, and methods with `super` in future CLs.
+        Node descriptorsLit = astFactory.createObjectLit();
+        for (ClassRecord.PrivateMember pm : record.privateMembers) {
+          // TODO(b/236744850): Handle private methods with super references when supported.
+          if (pm.kind == ClassRecord.PrivateMemberKind.METHOD
+              && !pm.isStatic
+              && pm.methodNode != null
+              && pm.methodNode.hasChildren()
+              && !pm.hasSuper) {
+            Node fnNode = pm.methodNode.getFirstChild().detach();
+            Node valProp = astFactory.createStringKey("value", fnNode);
+            Node descriptorLit = astFactory.createObjectLit(valProp);
+            Node memberKey = astFactory.createStringKey(pm.propertyName(), descriptorLit);
+            descriptorsLit.addChildToBack(memberKey);
+          }
+        }
+
+        // Generates: const PRIVATE_PROTO$uid = Object.create(null, { method: { value: function(...)
+        // {} } });
+        Node createProp =
+            astFactory.createGetPropWithUnknownType(
+                astFactory.createNameWithUnknownType("Object"), "create");
+        Node protoCall =
+            astFactory.createCallWithUnknownType(
+                createProp, astFactory.createNull(), descriptorsLit);
+        Node protoVar =
+            astFactory
+                .createSingleConstNameDeclaration(
+                    record.getPrivateProtoVarName(compiler, t), protoCall)
+                .srcrefTreeIfMissing(record.classNode);
+        protoVar.insertBefore(classInsertionPoint);
+        compiler.reportChangeToEnclosingScope(protoVar);
+        t.reportCodeChange();
+      }
     }
     if (record.hasStaticPrivateMembers) {
       compiler.getRuntimeJsLibManager().injectLibForField("$jscomp.PrivateMap");
@@ -610,6 +664,15 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   /**
    * Rewrites private property accesses (e.g. {@code obj.#field}) to use {@code
    * PRIVATE_MAP.get(obj).field}.
+   *
+   * <p>For non-static private methods:
+   *
+   * <ul>
+   *   <li>Direct calls: {@code obj.#method(args)} are rewritten to {@code
+   *       PRIVATE_MAP.get(obj).method.call(obj, args)}.
+   *   <li>Method access (tear-off): {@code obj.#method} is rewritten to {@code
+   *       PRIVATE_MAP.get(obj).method}.
+   * </ul>
    */
   private void rewritePrivateGetProp(NodeTraversal t, Node getPropNode) {
     checkArgument(getPropNode.isGetProp() || getPropNode.isOptChainGetProp(), getPropNode);
@@ -626,12 +689,113 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
 
     ClassRecord record = resolved.classRecord();
-    boolean isStatic = resolved.privateMember().isStatic;
+    ClassRecord.PrivateMember pm = resolved.privateMember();
+
+    // TODO(b/236744850): Non-static private instance method accesses without `super` are rewritten
+    // to access the shared private prototype descriptor via PRIVATE_MAP.get(receiver).method.
+    // Support static private methods, method LValue assignments, and methods with `super` in future
+    // CLs.
+    if (pm.kind == ClassRecord.PrivateMemberKind.METHOD) {
+      rewritePrivateMethodAccess(t, getPropNode, record, pm);
+      return;
+    }
+
+    rewritePrivateFieldAccess(t, getPropNode, record, pm);
+  }
+
+  private void rewritePrivateMethodAccess(
+      NodeTraversal t, Node getPropNode, ClassRecord record, ClassRecord.PrivateMember pm) {
+    if (NodeUtil.isLValue(getPropNode) || pm.isStatic || pm.hasSuper) {
+      maybeReportPrivatePropertiesCannotConvertYet(getPropNode);
+      return;
+    }
+
+    Node parent = getPropNode.getParent();
+    boolean isDirectCall = parent.isCall() && Objects.equals(parent.getFirstChild(), getPropNode);
+
+    String mapVarName = record.getPrivateMapVarName(compiler, t);
+    Node receiver = getPropNode.getFirstChild().detach();
+
+    Node mapNameNode = astFactory.createNameWithUnknownType(mapVarName);
+    Node getCallee = astFactory.createGetPropWithUnknownType(mapNameNode, "get");
+
+    if (isDirectCall) {
+      if (receiverNeedsTempVar(receiver)) {
+        // Rewrite to: (temp = receiver, PRIVATE_MAP.get(temp).method.call(temp, ...args))
+        // For complex or side-effecting receiver expressions (e.g. getObj().#method()), storing
+        // the receiver in a temporary variable ensures that the receiver expression is evaluated
+        // EXACTLY ONCE, preventing duplicate side effects from evaluating getObj() twice (once
+        // for
+        // PRIVATE_MAP.get() and once for the .call() explicit `this` argument).
+        String tempName = "$jscomp$tmp$" + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+        Node insertionBlock = getDeclarationInsertionPoint(getPropNode, t);
+        Node decl = astFactory.createSingleLetNameDeclaration(tempName);
+        insertionBlock.addChildToFront(decl.srcrefTreeIfMissing(insertionBlock));
+        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
+
+        Node tempNameNode1 = astFactory.createNameWithUnknownType(tempName).srcref(getPropNode);
+        Node assign = astFactory.createAssign(tempNameNode1, receiver).srcref(getPropNode);
+
+        Node tempNameNode2 = astFactory.createNameWithUnknownType(tempName).srcref(getPropNode);
+        Node tempNameNode3 = astFactory.createNameWithUnknownType(tempName).srcref(getPropNode);
+
+        Node getCall =
+            astFactory.createCallWithUnknownType(getCallee, tempNameNode2).srcref(getPropNode);
+        Node methodGetProp =
+            astFactory.createGetPropWithUnknownType(getCall, pm.propertyName()).srcref(getPropNode);
+        Node callCallee =
+            astFactory.createGetPropWithUnknownType(methodGetProp, "call").srcref(getPropNode);
+
+        getPropNode.detach();
+        callCallee.srcrefTree(getPropNode);
+        tempNameNode3.srcrefTree(getPropNode);
+
+        parent.addChildToFront(callCallee);
+        tempNameNode3.insertAfter(callCallee);
+
+        Node placeholder = IR.empty();
+        parent.replaceWith(placeholder);
+        Node comma = astFactory.createComma(assign, parent).srcref(getPropNode);
+        placeholder.replaceWith(comma);
+
+        t.reportCodeChange();
+      } else {
+        // Rewrite to: PRIVATE_MAP.get(receiver).method.call(receiver, ...args)
+        // In ES2022, private members are class-scoped, so an instance `a` can call `#method` on
+        // another instance `b` of the same class (e.g., `other.#method()`). Accessing a private
+        // method on `receiver` retrieves the method from receiver's PrivateMap entry and
+        // invokes it via `.call(receiver, ...args)` to bind `this` correctly.
+        Node getCall = astFactory.createCallWithUnknownType(getCallee, receiver);
+        Node methodGetProp = astFactory.createGetPropWithUnknownType(getCall, pm.propertyName());
+        Node callCallee = astFactory.createGetPropWithUnknownType(methodGetProp, "call");
+
+        getPropNode.detach();
+        callCallee.srcrefTree(getPropNode);
+        Node receiverArg = receiver.cloneTree();
+        receiverArg.srcrefTree(getPropNode);
+
+        parent.addChildToFront(callCallee);
+        receiverArg.insertAfter(callCallee);
+        t.reportCodeChange();
+      }
+    } else {
+      // Rewrite to: PRIVATE_MAP.get(receiver).method
+      Node getCall = astFactory.createCallWithUnknownType(getCallee, receiver);
+      Node methodGetProp = astFactory.createGetPropWithUnknownType(getCall, pm.propertyName());
+
+      getPropNode.replaceWith(methodGetProp.srcrefTree(getPropNode));
+      t.reportCodeChange();
+    }
+  }
+
+  private void rewritePrivateFieldAccess(
+      NodeTraversal t, Node getPropNode, ClassRecord record, ClassRecord.PrivateMember pm) {
+    boolean isStatic = pm.isStatic;
     String mapVarName =
         isStatic
             ? record.getStaticPrivateMapVarName(compiler, t)
             : record.getPrivateMapVarName(compiler, t);
-    String propName = resolved.privateMember().propertyName();
+    String propName = pm.propertyName();
 
     Node receiver = getPropNode.getFirstChild().detach();
     Node mapNameNode = astFactory.createNameWithUnknownType(mapVarName);
@@ -739,10 +903,26 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       String mapName = record.getPrivateMapVarName(compiler, t);
       String privName = record.getPrivateVarName(compiler, t);
 
-      // Add `const PRIVATE$uid = {};` to the original code.
+      Node privInit;
+      if (record.hasInstancePrivateMethodsOrAccessors) {
+        // Initializer: Object.create(PRIVATE_PROTO$uid)
+        Node protoName =
+            astFactory.createNameWithUnknownType(record.getPrivateProtoVarName(compiler, t));
+        Node createProp =
+            astFactory.createGetPropWithUnknownType(
+                astFactory.createNameWithUnknownType("Object"), "create");
+        privInit = astFactory.createCallWithUnknownType(createProp, protoName);
+      } else {
+        // Initializer: Object.create(null)
+        Node createProp =
+            astFactory.createGetPropWithUnknownType(
+                astFactory.createNameWithUnknownType("Object"), "create");
+        privInit = astFactory.createCallWithUnknownType(createProp, astFactory.createNull());
+      }
+      // Add `const PRIVATE$uid = privInit;` to the original code.
       Node privDecl =
           astFactory
-              .createSingleConstNameDeclaration(privName, astFactory.createObjectLit())
+              .createSingleConstNameDeclaration(privName, privInit)
               .srcrefTreeIfMissing(record.classNode);
       privDecl.insertBefore(insertionPoint);
 
@@ -805,9 +985,16 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
 
     if (transpilePrivateClassFields) {
+      // Remove original non-static private member declaration nodes (fields and methods) from the
+      // class body AST now that their transpiled equivalents (e.g., constructor initializations,
+      // PRIVATE_PROTO descriptors) have been generated.
       for (ClassRecord.PrivateMember pm : record.privateMembers) {
-        if (!pm.isStatic && pm.memberNode.getParent() != null) {
-          NodeUtil.deleteNode(pm.memberNode, compiler);
+        if (!pm.isStatic) {
+          for (Node declNode : pm.declarationNodes) {
+            if (declNode.getParent() != null) {
+              NodeUtil.deleteNode(declNode, compiler);
+            }
+          }
         }
       }
     }
@@ -993,10 +1180,15 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       String staticMapName = record.getStaticPrivateMapVarName(compiler, t);
       String privName = record.getStaticPrivateVarName(compiler, t);
 
-      // Add `const PRIVATE$uid = {};` to the original code.
+      // Add `const PRIVATE$uid = Object.create(null);` to the original code.
+      Node createProp =
+          astFactory.createGetPropWithUnknownType(
+              astFactory.createNameWithUnknownType("Object"), "create");
+      Node staticPrivInit =
+          astFactory.createCallWithUnknownType(createProp, astFactory.createNull());
       Node privDecl =
           astFactory
-              .createSingleConstNameDeclaration(privName, astFactory.createObjectLit())
+              .createSingleConstNameDeclaration(privName, staticPrivInit)
               .srcrefTreeIfMissing(record.classNode);
       staticInitTempParent.addChildToBack(privDecl);
 
@@ -1069,9 +1261,16 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
 
     if (transpilePrivateClassFields) {
+      // Remove original static private member declaration nodes (fields and methods) from the class
+      // body AST now that their transpiled equivalents (e.g. static initialization statements) have
+      // been generated, preventing duplicate declarations in downstream compiler passes.
       for (ClassRecord.PrivateMember pm : record.privateMembers) {
-        if (pm.isStatic && pm.memberNode.getParent() != null) {
-          NodeUtil.deleteNode(pm.memberNode, compiler);
+        if (pm.isStatic) {
+          for (Node declNode : pm.declarationNodes) {
+            if (declNode.getParent() != null) {
+              NodeUtil.deleteNode(declNode, compiler);
+            }
+          }
         }
       }
     }
@@ -1258,16 +1457,33 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   }
 
   private static class ClassRecord {
+    static enum PrivateMemberKind {
+      FIELD,
+      METHOD,
+      ACCESSOR,
+    }
+
     /** Information about a private member declaration in the class. */
+    // TODO(b/236744850): Add getterNode, setterNode, and accessor fields in future CLs when private
+    // getter/setter transpilation is supported.
     static class PrivateMember {
       final String name;
-      final Node memberNode;
+      final PrivateMemberKind kind;
       final boolean isStatic;
+      boolean hasSuper = false;
 
-      PrivateMember(Node n) {
-        this.name = n.getString();
-        this.memberNode = n;
-        this.isStatic = n.isStaticMember();
+      @Nullable Node methodNode;
+
+      final List<Node> declarationNodes = new ArrayList<>();
+
+      PrivateMember(String name, PrivateMemberKind kind, boolean isStatic, Node initialNode) {
+        this.name = name;
+        this.kind = kind;
+        this.isStatic = isStatic;
+        this.declarationNodes.add(initialNode);
+        if (kind == PrivateMemberKind.METHOD) {
+          this.methodNode = initialNode;
+        }
       }
 
       String propertyName() {
@@ -1290,15 +1506,46 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     /** Whether the class has any instance private members. */
     boolean hasInstancePrivateMembers = false;
 
+    /** Whether the class has any instance private methods or accessors. */
+    boolean hasInstancePrivateMethodsOrAccessors = false;
+
     /** Whether the class has any static private members. */
     boolean hasStaticPrivateMembers = false;
 
     void recordPrivateMember(Node n) {
       checkArgument(n.isPrivateIdentifier());
-      PrivateMember pm = new PrivateMember(n);
-      privateMembers.add(pm);
-      privateMembersByName.put(pm.name, pm);
-      if (pm.isStatic) {
+      String name = n.getString();
+      boolean isStatic = n.isStaticMember();
+
+      PrivateMemberKind kind;
+      if (n.isMemberFieldDef() || n.isComputedFieldDef()) {
+        kind = PrivateMemberKind.FIELD;
+      } else if (n.isMemberFunctionDef()) {
+        kind = PrivateMemberKind.METHOD;
+      } else if (n.isGetterDef() || n.isSetterDef()) {
+        kind = PrivateMemberKind.ACCESSOR;
+      } else {
+        throw new IllegalStateException("Unexpected node for private member: " + n);
+      }
+
+      PrivateMember pm;
+      if (privateMembersByName.containsKey(name)) {
+        pm = privateMembersByName.get(name);
+        pm.declarationNodes.add(n);
+      } else {
+        pm = new PrivateMember(name, kind, isStatic, n);
+        privateMembers.add(pm);
+        privateMembersByName.put(name, pm);
+      }
+
+      if ((kind == PrivateMemberKind.METHOD || kind == PrivateMemberKind.ACCESSOR) && !isStatic) {
+        pm.hasSuper |= NodeUtil.referencesSuper(NodeUtil.getFunctionBody(n.getFirstChild()));
+        if (!pm.hasSuper) {
+          hasInstancePrivateMethodsOrAccessors = true;
+        }
+      }
+
+      if (isStatic) {
         hasStaticPrivateMembers = true;
       } else {
         hasInstancePrivateMembers = true;
@@ -1315,12 +1562,20 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
     private String privateVarName = null;
     private String staticPrivateVarName = null;
+    private String privateProtoVarName = null;
 
     String getPrivateMapVarName(AbstractCompiler compiler, NodeTraversal t) {
       if (privateMapVarName == null) {
         privateMapVarName = generateUniquePrivateMapVarName(compiler, t);
       }
       return privateMapVarName;
+    }
+
+    String getPrivateProtoVarName(AbstractCompiler compiler, NodeTraversal t) {
+      if (privateProtoVarName == null) {
+        privateProtoVarName = generateUniquePrivateProtoVarName(compiler, t);
+      }
+      return privateProtoVarName;
     }
 
     String getStaticPrivateMapVarName(AbstractCompiler compiler, NodeTraversal t) {
@@ -1524,5 +1779,26 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
     return new NormalizedNames(
         classNameNodeTemplate, superClass, shouldExtractClass, shouldExtractExtends);
+  }
+
+  /**
+   * Returns true if evaluating the receiver expression twice could introduce side effects or alter
+   * state. Side-effect-free receivers like {@code this} or simple variable names do not need a temp
+   * variable.
+   */
+  private boolean receiverNeedsTempVar(Node receiver) {
+    return !receiver.isThis() && !receiver.isName();
+  }
+
+  /**
+   * Finds the enclosing block or script where temporary variable declarations (e.g. {@code let
+   * $jscomp$tmp$...}) can be safely inserted.
+   */
+  private Node getDeclarationInsertionPoint(Node n, NodeTraversal t) {
+    Node enclosingStmt = NodeUtil.getEnclosingStatement(n);
+    if (enclosingStmt != null && enclosingStmt.getParent() != null) {
+      return enclosingStmt.getParent();
+    }
+    return t.getScopeRoot();
   }
 }
