@@ -154,10 +154,10 @@ class InlineObjectLiterals implements CompilerPass {
         // Ignore most indirect references, like x.y (but not x.y(),
         // since the function referenced by y might reference 'this').
         //
-        if (parent.isGetProp()) {
+        if (NodeUtil.isNormalOrOptChainGetProp(parent)) {
           checkState(parent.getFirstChild() == name);
           // A call target may be using the object as a 'this' value.
-          if (grandparent.isCall() && grandparent.getFirstChild() == parent) {
+          if (NodeUtil.isInvocationTarget(parent)) {
             return false;
           }
 
@@ -296,7 +296,7 @@ class InlineObjectLiterals implements CompilerPass {
           // This is the var. There is no value.
         } else {
           Node getprop = ref.getParent();
-          checkState(getprop.isGetProp(), getprop);
+          checkState(NodeUtil.isNormalOrOptChainGetProp(getprop), getprop);
 
           // The key being looked up in the original map.
           String varname = getprop.getString();
@@ -455,7 +455,7 @@ class InlineObjectLiterals implements CompilerPass {
         } else {
           // Make sure that the reference is a GETPROP as we expect it to be.
           Node getprop = ref.getParent();
-          checkState(getprop.isGetProp(), getprop);
+          checkState(NodeUtil.isNormalOrOptChainGetProp(getprop), getprop);
 
           // The key being looked up in the original map.
           String var = getprop.getString();
