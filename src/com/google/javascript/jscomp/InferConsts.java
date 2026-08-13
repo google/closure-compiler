@@ -44,7 +44,7 @@ class InferConsts implements CompilerPass {
     ReferenceCollector collector =
         new ReferenceCollector(
             compiler, ReferenceCollector.DO_NOTHING_BEHAVIOR, new SyntacticScopeCreator(compiler));
-    collector.process(js);
+    collector.processScriptsConcurrently(js);
 
     for (Var v : collector.getAllSymbols()) {
       considerVar(v, collector.getReferences(v));

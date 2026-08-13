@@ -33,6 +33,14 @@ public final class InferConstsTest extends CompilerTestCase {
   private FindConstants constFinder;
 
   private ImmutableList<String> names;
+  private int parallelism = 1;
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setNumParallelThreads(parallelism);
+    return options;
+  }
 
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
@@ -54,6 +62,20 @@ public final class InferConstsTest extends CompilerTestCase {
     assertConsts("var x = 3, y;", inferred("x"), notInferred("y"));
     assertConsts("var x = 3;  function f(){x;}", inferred("x"));
     assertConsts("var x = 3, y; y ||= 4;", inferred("x"), notInferred("y"));
+  }
+
+  @Test
+  public void testParallelScripts() {
+    parallelism = 2;
+    names = ImmutableList.of("x", "y", "a", "b");
+    testSame(
+        srcs(
+            "var x = 0; var y = 0; function first() { x; var a = 1; }",
+            "y = 1; function second() { x; var b = 2; }"));
+    assertWithMessage("inferred constant names")
+        .that(constFinder.inferredNodes)
+        .containsAtLeast("x", "a", "b");
+    assertWithMessage("inferred constant names").that(constFinder.inferredNodes).doesNotContain("y");
   }
 
   @Test

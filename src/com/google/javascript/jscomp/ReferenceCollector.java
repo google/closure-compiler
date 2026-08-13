@@ -25,9 +25,14 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSymbolTable;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -72,6 +77,8 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
 
   private @Nullable Scope narrowScope;
 
+  private @Nullable BasicBlock sharedGlobalBlock;
+
   /** Constructor initializes block stack. */
   public ReferenceCollector(AbstractCompiler compiler, Behavior behavior, ScopeCreator creator) {
     this(compiler, behavior, creator, Predicates.alwaysTrue());
@@ -105,6 +112,92 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
 
   public void process(Node root) {
     this.createTraversalBuilder().traverse(root);
+  }
+
+  /** Collects independent scripts concurrently, then merges references in source order. */
+  void processScriptsConcurrently(Node root) {
+    int parallelism = compiler.getOptions().getNumParallelThreads();
+    if (parallelism <= 1
+        || behavior != DO_NOTHING_BEHAVIOR
+        || !(scopeCreator instanceof SyntacticScopeCreator)
+        || !root.isRoot()
+        || !root.hasMoreThanOneChild()) {
+      process(root);
+      return;
+    }
+    ArrayList<Node> scripts = new ArrayList<>();
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+      if (!script.isScript()) {
+        process(root);
+        return;
+      }
+      scripts.add(script);
+    }
+
+    Scope globalScope = scopeCreator.createScope(root, null).untyped();
+    BasicBlock globalBlock = new BasicBlock(null, root);
+    int batchCount = Math.min(scripts.size(), parallelism * 4);
+    ReferenceCollector[] batchCollectors = new ReferenceCollector[batchCount];
+    ExecutorService executor =
+        Executors.newFixedThreadPool(
+            Math.min(parallelism, batchCount),
+            runnable -> {
+              Thread thread = new Thread(runnable, "jscompiler-ReferenceCollector");
+              thread.setDaemon(true);
+              return thread;
+            });
+    ArrayList<Future<?>> futures = new ArrayList<>(batchCount);
+    boolean completed = false;
+    try {
+      for (int batchIndex = 0; batchIndex < batchCount; batchIndex++) {
+        int index = batchIndex;
+        int firstScript = scripts.size() * index / batchCount;
+        int afterLastScript = scripts.size() * (index + 1) / batchCount;
+        futures.add(
+            executor.submit(
+                () -> {
+                  ReferenceCollector collector =
+                      new ReferenceCollector(
+                          compiler,
+                          DO_NOTHING_BEHAVIOR,
+                          new SyntacticScopeCreator(compiler),
+                          varFilter);
+                  collector.sharedGlobalBlock = globalBlock;
+                  for (int i = firstScript; i < afterLastScript; i++) {
+                    collector
+                        .createTraversalBuilder()
+                        .traverseWithScope(scripts.get(i), globalScope);
+                  }
+                  batchCollectors[index] = collector;
+                }));
+      }
+      executor.shutdown();
+      for (Future<?> future : futures) {
+        try {
+          future.get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IllegalStateException("Interrupted while collecting references", e);
+        } catch (ExecutionException e) {
+          throw new IllegalStateException("Cannot collect references concurrently", e.getCause());
+        }
+      }
+      for (ReferenceCollector collector : batchCollectors) {
+        for (Map.Entry<Var, ReferenceCollection> entry : collector.referenceMap.entrySet()) {
+          ReferenceCollection references = referenceMap.get(entry.getKey());
+          if (references == null) {
+            referenceMap.put(entry.getKey(), entry.getValue());
+          } else {
+            references.references.addAll(entry.getValue().references);
+          }
+        }
+      }
+      completed = true;
+    } finally {
+      if (!completed) {
+        executor.shutdownNow();
+      }
+    }
   }
 
   /**
@@ -231,7 +324,11 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
       // the ES5 scoping rules. Other nodes that ought to be considered the root of a BasicBlock
       // are added in shouldTraverse() or processScope() and removed in visit().
       if (t.isHoistScope()) {
-        pushNewBlock(t.getScopeRoot());
+        if (t.getScope().isGlobal() && sharedGlobalBlock != null) {
+          blockStack.addLast(sharedGlobalBlock);
+        } else {
+          pushNewBlock(t.getScopeRoot());
+        }
       }
     }
 
