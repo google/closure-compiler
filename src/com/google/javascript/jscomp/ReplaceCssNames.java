@@ -173,8 +173,8 @@ class ReplaceCssNames implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, new FindSetCssNameTraversal());
-    List<GetCssNameInstance> getCssNameInstances = gatherGetCssNameInstances(root);
-    for (GetCssNameInstance getCssNameInstance : getCssNameInstances) {
+    GatherCssNamesTraversal gatheredCssNames = gatherCssNames(root);
+    for (GetCssNameInstance getCssNameInstance : gatheredCssNames.listOfCssNameInstances) {
       String cssClassName = getCssNameInstance.getCssClassName();
       if (getCssNameInstance.isCssClosureFileClassesMember()) {
         cssNamesBySymbol.put(getCssNameInstance.getCssClosureClassesMemberName(), cssClassName);
@@ -184,7 +184,7 @@ class ReplaceCssNames implements CompilerPass {
       }
       getCssNameInstance.replaceWithExpression();
     }
-    NodeTraversal.traverse(compiler, root, new CountCssNamesBySymbol());
+    countCssNamesBySymbol(gatheredCssNames.classesObjectReferences);
   }
 
   /**
@@ -197,10 +197,10 @@ class ReplaceCssNames implements CompilerPass {
    *   goog.getCssName(goog.getCssName('me-first'), 'me-second')
    * </code></pre>
    */
-  private List<GetCssNameInstance> gatherGetCssNameInstances(Node root) {
+  private GatherCssNamesTraversal gatherCssNames(Node root) {
     GatherCssNamesTraversal gatherCssNamesTraversal = new GatherCssNamesTraversal();
     NodeTraversal.traverse(compiler, root, gatherCssNamesTraversal);
-    return gatherCssNamesTraversal.listOfCssNameInstances;
+    return gatherCssNamesTraversal;
   }
 
   // This is used only for qualified name comparison, so it's OK to build it with IR instead of
@@ -228,6 +228,7 @@ class ReplaceCssNames implements CompilerPass {
 
   private class GatherCssNamesTraversal implements NodeTraversal.Callback {
     final List<GetCssNameInstance> listOfCssNameInstances = new ArrayList<>();
+    final List<Node> classesObjectReferences = new ArrayList<>();
     final TraversalState traversalState = new TraversalState();
 
     @Override
@@ -242,6 +243,7 @@ class ReplaceCssNames implements CompilerPass {
       if (n.isScript()) {
         traversalState.inSassGeneratedCssTsScript =
             sassGeneratedCssTsExpert.hasSassGeneratedCssTsJsDoc;
+        traversalState.collectClassesObjectReferences = isNotInCssClosureFile(n);
         traversalState.cssClosureClassesQualifiedName = null;
       } else if (traversalState.inSassGeneratedCssTsScript
           && sassGeneratedCssTsExpert.isCssClosureClassesAssignment) {
@@ -253,6 +255,13 @@ class ReplaceCssNames implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      // A generated classes object always ends in `.classes`. Remember these few possible
+      // references now so that we don't need another traversal after discovering their symbols.
+      if (traversalState.collectClassesObjectReferences
+          && n.isGetProp()
+          && n.getString().equals("classes")) {
+        classesObjectReferences.add(n);
+      }
       if (isGetCssNameCall(n)) {
         GetCssNameInstance getCssNameInstance =
             createGetCssNameInstance(n, traversalState.cssClosureClassesQualifiedName);
@@ -312,6 +321,7 @@ class ReplaceCssNames implements CompilerPass {
 
     private static class TraversalState {
       boolean inSassGeneratedCssTsScript;
+      boolean collectClassesObjectReferences;
       String cssClosureClassesQualifiedName;
     }
   }
@@ -553,33 +563,22 @@ class ReplaceCssNames implements CompilerPass {
     }
   }
 
-  private class CountCssNamesBySymbol implements NodeTraversal.Callback {
-    @Override
-    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      if (n.isScript()) {
-        // Only descend into source files NOT named `*.css.closure.js`
-        return isNotInCssClosureFile(n);
-      } else {
-        return true; // descend into every other node
-      }
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
+  private void countCssNamesBySymbol(List<Node> classesObjectReferences) {
+    for (Node n : classesObjectReferences) {
       String classesObjectQualifiedName = n.getQualifiedName();
       if (classesObjectQualifiedName == null
           || !classesObjectsQualifiedNames.contains(classesObjectQualifiedName)) {
-        return;
+        continue;
       }
       Node classNameNode = n.getParent();
-      if (!n.isGetProp() || !classNameNode.isGetProp()) {
+      if (!classNameNode.isGetProp()) {
         compiler.report(JSError.make(n, INVALID_USE_OF_CLASSES_OBJECT_ERROR));
-        return;
+        continue;
       }
       String classQualifiedName = classNameNode.getQualifiedName();
       if (classQualifiedName == null || !cssNamesBySymbol.containsKey(classQualifiedName)) {
         compiler.report(JSError.make(n, UNKNOWN_SYMBOL_ERROR, classNameNode.getString()));
-        return;
+        continue;
       }
       String className = cssNamesBySymbol.get(classQualifiedName);
       cssNameCollector.add(className);
