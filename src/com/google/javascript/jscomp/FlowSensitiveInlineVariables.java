@@ -413,6 +413,13 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         return false;
       }
 
+      // Reject multiply-used definitions before doing the more expensive AST and path checks
+      // below. Large generated functions may have hundreds of uses that share the same reaching
+      // definition, none of which can be inlined without increasing code size.
+      if (!hasExactlyOne(reachingUses.getUses(varName, getDefCfgNode()))) {
+        return false;
+      }
+
       getDefinition(getDefCfgNode());
       getNumUseInUseCfgNode(useCfgNode);
 
@@ -468,10 +475,6 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
       // Make sure that the name is not within a loop
       if (NodeUtil.isWithinLoop(use)) {
-        return false;
-      }
-
-      if (!hasExactlyOne(reachingUses.getUses(varName, getDefCfgNode()))) {
         return false;
       }
 
