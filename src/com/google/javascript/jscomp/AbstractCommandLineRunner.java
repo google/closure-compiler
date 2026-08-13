@@ -2014,8 +2014,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     }
     ImmutableSet<String> licensedSources = compiler.getLicensedSourceNamesForOutput();
 
+    // Keep enough work queued to prevent a large early chunk from leaving the other workers idle
+    // while preserving a bound on completed code and source maps retained before they are written.
+    int pendingLimit = min(parallelism * 4, outputChunks.size());
     int nextChunk = 0;
-    while (nextChunk < min(parallelism, outputChunks.size())) {
+    while (nextChunk < pendingLimit) {
       JSChunk chunk = outputChunks.get(nextChunk++);
       pending.addLast(
           submitConcurrentChunkOutput(
