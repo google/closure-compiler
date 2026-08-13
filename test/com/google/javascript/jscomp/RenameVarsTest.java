@@ -51,6 +51,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   private boolean generatePseudoNames = false;
   private boolean preferStableNames = false;
   private boolean withNormalize = false;
+  private int numParallelThreads = 1;
 
   // NameGenerator to use, or null for a default.
   private @Nullable DefaultNameGenerator nameGenerator = null;
@@ -66,6 +67,7 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
+    compiler.getOptions().setNumParallelThreads(numParallelThreads);
     CompilerPass pass;
     if (withClosurePass) {
       pass = new ClosurePassAndRenameVars(compiler);
@@ -120,6 +122,19 @@ public final class RenameVarsTest extends CompilerTestCase {
     generatePseudoNames = false;
     preferStableNames = false;
     nameGenerator = null;
+    numParallelThreads = 1;
+  }
+
+  @Test
+  public void testRenameAcrossScriptsConcurrently() {
+    numParallelThreads = 4;
+    test(
+        srcs(
+            "var low; var high; high; function foo(alpha) { return alpha; }",
+            "high; var middle; middle; function bar(beta) { return beta; }"),
+        expected(
+            "var b; var c; c; function d(a) { return a; }",
+            "c; var e; e; function f(a) { return a; }"));
   }
 
   @Test

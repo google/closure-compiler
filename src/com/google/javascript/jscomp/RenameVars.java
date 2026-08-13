@@ -37,6 +37,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -85,12 +89,6 @@ final class RenameVars implements CompilerPass {
 
   /** Counter for each assignment */
   private int assignmentCount = 0;
-
-  // Logic for bleeding functions, where the name leaks into the outer
-  // scope on IE but not on other browsers.
-  private final Set<Var> localBleedingFunctions = new LinkedHashSet<>();
-  private final ListMultimap<Scope, Var> localBleedingFunctionsPerScope =
-      ArrayListMultimap.create();
 
   class Assignment {
     final boolean isLocal;
@@ -191,6 +189,19 @@ final class RenameVars implements CompilerPass {
    */
   class ProcessVars extends AbstractPostOrderCallback implements ScopedCallback {
 
+    final ArrayList<Node> globalNameNodes = new ArrayList<>();
+    final ArrayList<Node> localNameNodes = new ArrayList<>();
+    final Map<Node, String> originalNameByNode = new LinkedHashMap<>();
+    final @Nullable Map<Node, String> pseudoNameMap =
+        RenameVars.this.pseudoNameMap == null ? null : new LinkedHashMap<>();
+    final Set<String> reservedNames = new LinkedHashSet<>();
+    final Map<String, Integer> assignmentCounts = new LinkedHashMap<>();
+
+    // Logic for bleeding functions, where the name leaks into the outer scope on IE but not on
+    // other browsers. These scopes are private to one script traversal.
+    final Set<Var> localBleedingFunctions = new LinkedHashSet<>();
+    final ListMultimap<Scope, Var> localBleedingFunctionsPerScope = ArrayListMultimap.create();
+
     @Override
     public void enterScope(NodeTraversal t) {
       if (t.inGlobalHoistScope() || !shouldTemporarilyRenameLocalsInScope(t.getScope())) {
@@ -264,7 +275,7 @@ final class RenameVars implements CompilerPass {
       }
 
       if (pseudoNameMap != null) {
-        recordPseudoName(n);
+        pseudoNameMap.put(n, '$' + n.getString() + "$$");
       }
 
       if (local && shouldTemporarilyRenameLocalsInScope(var.getScope())) {
@@ -286,8 +297,31 @@ final class RenameVars implements CompilerPass {
 
     // Increment count of an assignment
     void incCount(String name) {
-      Assignment s = assignments.computeIfAbsent(name, Assignment::new);
-      s.count++;
+      assignmentCounts.merge(name, 1, Integer::sum);
+    }
+
+    private int getLocalVarIndex(Var v) {
+      int num = v.getIndex();
+      Scope s = v.getScope().getParent();
+      if (s == null) {
+        throw new IllegalArgumentException("Var is not local");
+      }
+
+      boolean isBleedingIntoScope = s.getParent() != null && localBleedingFunctions.contains(v);
+
+      while (s.getParent() != null) {
+        if (isBleedingIntoScope) {
+          num += localBleedingFunctionsPerScope.get(s).indexOf(v) + 1;
+          isBleedingIntoScope = false;
+        } else {
+          num += localBleedingFunctionsPerScope.get(s).size();
+        }
+        if (shouldTemporarilyRenameLocalsInScope(s)) {
+          num += s.getVarCount();
+        }
+        s = s.getParent();
+      }
+      return num;
     }
   }
 
@@ -314,8 +348,7 @@ final class RenameVars implements CompilerPass {
 
     originalNameByNode.clear();
 
-    // Do variable reference counting.
-    NodeTraversal.traverse(compiler, root, new ProcessVars());
+    collectVariableReferences(root);
 
     // Make sure that new names don't overlap with extern names.
     reservedNames.addAll(externNames);
@@ -340,6 +373,95 @@ final class RenameVars implements CompilerPass {
     // Rename the locals!
     for (Node n : localNameNodes) {
       setNameAndReport(n, getNewLocalName(n));
+    }
+  }
+
+  private void collectVariableReferences(Node root) {
+    int parallelism = compiler.getOptions().getNumParallelThreads();
+    if (parallelism <= 1 || !root.isRoot() || !root.hasMoreThanOneChild()) {
+      ProcessVars processVars = new ProcessVars();
+      NodeTraversal.traverse(compiler, root, processVars);
+      mergeProcessVars(processVars);
+      return;
+    }
+
+    ArrayList<Node> scripts = new ArrayList<>();
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+      if (!script.isScript()) {
+        ProcessVars processVars = new ProcessVars();
+        NodeTraversal.traverse(compiler, root, processVars);
+        mergeProcessVars(processVars);
+        return;
+      }
+      scripts.add(script);
+    }
+
+    Scope globalScope = new SyntacticScopeCreator(compiler).createScope(root, null);
+    int batchCount = Math.min(scripts.size(), parallelism * 4);
+    ProcessVars[] batchResults = new ProcessVars[batchCount];
+    ExecutorService executor =
+        Executors.newFixedThreadPool(
+            Math.min(parallelism, batchCount),
+            runnable -> {
+              Thread thread = new Thread(runnable, "jscompiler-RenameVars");
+              thread.setDaemon(true);
+              return thread;
+            });
+    ArrayList<Future<?>> futures = new ArrayList<>(batchCount);
+    boolean completed = false;
+    try {
+      for (int batchIndex = 0; batchIndex < batchCount; batchIndex++) {
+        int index = batchIndex;
+        int firstScript = scripts.size() * index / batchCount;
+        int afterLastScript = scripts.size() * (index + 1) / batchCount;
+        futures.add(
+            executor.submit(
+                () -> {
+                  ProcessVars processVars = new ProcessVars();
+                  SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
+                  for (int i = firstScript; i < afterLastScript; i++) {
+                    NodeTraversal.builder()
+                        .setCompiler(compiler)
+                        .setCallback(processVars)
+                        .setScopeCreator(scopeCreator)
+                        .traverseWithScope(scripts.get(i), globalScope);
+                  }
+                  batchResults[index] = processVars;
+                }));
+      }
+      executor.shutdown();
+      for (Future<?> future : futures) {
+        try {
+          future.get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IllegalStateException("Interrupted while collecting variables", e);
+        } catch (ExecutionException e) {
+          throw new IllegalStateException("Cannot collect variables concurrently", e.getCause());
+        }
+      }
+      for (ProcessVars processVars : batchResults) {
+        mergeProcessVars(processVars);
+      }
+      completed = true;
+    } finally {
+      if (!completed) {
+        executor.shutdownNow();
+      }
+    }
+  }
+
+  private void mergeProcessVars(ProcessVars processVars) {
+    globalNameNodes.addAll(processVars.globalNameNodes);
+    localNameNodes.addAll(processVars.localNameNodes);
+    originalNameByNode.putAll(processVars.originalNameByNode);
+    if (pseudoNameMap != null) {
+      pseudoNameMap.putAll(checkNotNull(processVars.pseudoNameMap));
+    }
+    reservedNames.addAll(processVars.reservedNames);
+    for (Map.Entry<String, Integer> entry : processVars.assignmentCounts.entrySet()) {
+      Assignment assignment = assignments.computeIfAbsent(entry.getKey(), Assignment::new);
+      assignment.count += entry.getValue();
     }
   }
 
@@ -385,12 +507,6 @@ final class RenameVars implements CompilerPass {
       return a.newName;
     }
     return null;
-  }
-
-  private void recordPseudoName(Node n) {
-    // Variable names should be in a different name space than
-    // property pseudo names.
-    pseudoNameMap.put(n, '$' + n.getString() + "$$");
   }
 
   /**
@@ -520,35 +636,6 @@ final class RenameVars implements CompilerPass {
    */
   private boolean okToRenameVar(String name, boolean isLocal) {
     return !compiler.getCodingConvention().isExported(name, /* local= */ isLocal);
-  }
-
-  /**
-   * Returns the index within the scope stack.
-   * e.g. function Foo(a) { var b; function c(d) { } }
-   * a = 0, b = 1, c = 2, d = 3
-   */
-  private int getLocalVarIndex(Var v) {
-    int num = v.getIndex();
-    Scope s = v.getScope().getParent();
-    if (s == null) {
-      throw new IllegalArgumentException("Var is not local");
-    }
-
-    boolean isBleedingIntoScope = s.getParent() != null && localBleedingFunctions.contains(v);
-
-    while (s.getParent() != null) {
-      if (isBleedingIntoScope) {
-        num += localBleedingFunctionsPerScope.get(s).indexOf(v) + 1;
-        isBleedingIntoScope = false;
-      } else {
-        num += localBleedingFunctionsPerScope.get(s).size();
-      }
-      if (shouldTemporarilyRenameLocalsInScope(s)) {
-        num += s.getVarCount();
-      }
-      s = s.getParent();
-    }
-    return num;
   }
 
   /**
