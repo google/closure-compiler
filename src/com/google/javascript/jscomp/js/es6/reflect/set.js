@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+'require es6/reflect/getownpropertydescriptor';
 'require es6/reflect/isextensible';
 'require es6/reflect/reflect';
 'require util/finddescriptor';
@@ -37,21 +38,49 @@ $jscomp.polyfill('Reflect.set', function(orig) {
    */
   var polyfill = function(target, propertyKey, value, opt_receiver) {
     var property = $jscomp.findDescriptor(target, propertyKey);
-    if (!property) {
-      if (Reflect.isExtensible(target)) {
-        target[propertyKey] = value;
-        return true;
+    var receiver = arguments.length > 3 ? opt_receiver : target;
+    if (property) {
+      if (property.get || property.set) {
+        if (property.set) {
+          property.set.call(receiver, value);
+          return true;
+        }
+        return false;
       }
+      if (!property.writable) {
+        return false;
+      }
+    }
+    if (receiver == null) {
       return false;
     }
-    if (property.set) {
-      property.set.call(arguments.length > 3 ? opt_receiver : target, value);
-      return true;
-    } else if (property.writable && !Object.isFrozen(target)) {
-      target[propertyKey] = value;
+    if (typeof receiver !== 'object' && typeof receiver !== 'function') {
+      return false;
+    }
+    // Per ECMA-262 26.1.13 / 9.1.9 (SetWithReceiver / CreateDataProperty):
+    // When target is not receiver or setting a data property on receiver,
+    // Object.defineProperty is used to define or update an own data property on
+    // receiver directly rather than `receiver[propertyKey] = value` (which would
+    // invoke prototype setters on receiver's prototype chain and fail to properly
+    // isolate data property definitions per specification).
+    var receiverDesc = Reflect.getOwnPropertyDescriptor(receiver, propertyKey);
+    if (receiverDesc) {
+      if (receiverDesc.get || receiverDesc.set || !receiverDesc.writable) {
+        return false;
+      }
+      Object.defineProperty(receiver, propertyKey, {value: value});
       return true;
     }
-    return false;
+    if (!Reflect.isExtensible(receiver)) {
+      return false;
+    }
+    Object.defineProperty(receiver, propertyKey, {
+      value: value,
+      writable: true,
+      enumerable: true,
+      configurable: true
+    });
+    return true;
   };
   return polyfill;
 }, 'es6', 'es5'); // ES5: findDescriptor requires getPrototypeOf
