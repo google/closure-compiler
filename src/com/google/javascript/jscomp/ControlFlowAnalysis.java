@@ -949,9 +949,12 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
   public static boolean mayThrowException(Node n) {
     switch (n.getToken()) {
       case CALL,
+          OPTCHAIN_CALL,
           TAGGED_TEMPLATELIT,
           GETPROP,
+          OPTCHAIN_GETPROP,
           GETELEM,
+          OPTCHAIN_GETELEM,
           THROW,
           NEW,
           ASSIGN,

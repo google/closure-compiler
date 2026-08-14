@@ -543,31 +543,28 @@ public final class ControlFlowAnalysisTest {
     assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
   }
 
-  // TODO(b/538135521): Fix ControlFlowAnalysis mayThrowException to include optional chaining and
-  // tagged templates
   @Test
   public void testOptChainCallThrowingException() throws IOException {
     String src = "function f() {try { obj?.a(); } catch (e) {e()}}";
     ControlFlowGraph<Node> cfg = createCfg(src);
-    assertNoEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+    assertCrossEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+    assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
   }
 
-  // TODO(b/538135521): Fix ControlFlowAnalysis mayThrowException to include optional chaining and
-  // tagged templates
   @Test
   public void testOptChainGetPropThrowingException() throws IOException {
     String src = "function f() {try { obj?.a; } catch (e) {e()}}";
     ControlFlowGraph<Node> cfg = createCfg(src);
-    assertNoEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+    assertCrossEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+    assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
   }
 
-  // TODO(b/538135521): Fix ControlFlowAnalysis mayThrowException to include optional chaining and
-  // tagged templates
   @Test
   public void testOptChainGetElemThrowingException() throws IOException {
     String src = "function f() {try { obj?.[a]; } catch (e) {e()}}";
     ControlFlowGraph<Node> cfg = createCfg(src);
-    assertNoEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+    assertCrossEdge(cfg, Token.EXPR_RESULT, Token.BLOCK, Branch.ON_EX);
+    assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
   }
 
   // TODO(b/538132401): Fix ControlFlowAnalysis to unconditionally create exception edges for
