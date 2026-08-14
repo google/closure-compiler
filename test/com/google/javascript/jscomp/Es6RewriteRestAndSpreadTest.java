@@ -364,8 +364,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
             """));
   }
 
-  // TODO(b/538171098): Fix double-evaluation of side-effecting receiver in method calls with spread
-  // in Es6RewriteRestAndSpread
+
   @Test
   public void
       testSpreadVariableIntoBracketAccessMethodParameterListOnAnonymousReceiverWithSideEffects() {
@@ -389,13 +388,12 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
         srcs("testClassFactory()['testMethod'](...stringIterable);"),
         expected(
             """
-            testClassFactory()["testMethod"].apply(
-                testClassFactory(), (0, $jscomp.arrayFromIterable)(stringIterable));
+            var SPREAD_ARGS$0;
+            (SPREAD_ARGS$0 = testClassFactory())["testMethod"].apply(
+                SPREAD_ARGS$0, (0, $jscomp.arrayFromIterable)(stringIterable));
             """));
   }
 
-  // TODO(b/538171098): Fix double-evaluation of side-effecting receiver in method calls with spread
-  // in Es6RewriteRestAndSpread
   @Test
   public void
       testSpreadVariableIntoDynamicBracketAccessMethodParameterListOnReceiverWithSideEffects() {
@@ -410,8 +408,9 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
         srcs("queue.shift()[cmd](...stringIterable);"),
         expected(
             """
-            queue.shift()[cmd].apply(
-                queue.shift(), (0, $jscomp.arrayFromIterable)(stringIterable));
+            var SPREAD_ARGS$0;
+            (SPREAD_ARGS$0 = queue.shift())[cmd].apply(
+                SPREAD_ARGS$0, (0, $jscomp.arrayFromIterable)(stringIterable));
             """));
   }
 

@@ -303,8 +303,8 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     boolean isFreeCall = spreadParent.getBooleanProp(Node.FREE_CALL);
 
     final Node callToApply;
-    if (calleeMayHaveSideEffects && callee.isGetProp() && !isFreeCall) {
-      // foo().method(...[a, b, c])
+    if (calleeMayHaveSideEffects && (callee.isGetProp() || callee.isGetElem()) && !isFreeCall) {
+      // foo().method(...[a, b, c]) or foo()['method'](...[a, b, c])
       //   must convert to
       // var freshVar;
       // (freshVar = foo()).method.apply(freshVar, [a, b, c])
