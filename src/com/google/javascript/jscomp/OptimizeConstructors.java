@@ -112,6 +112,7 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
     }
 
     Node candidateClassDefinition = null;
+    Node candidateConstructor = null;
 
     // Lazily init as most symbols aren't class, and most classes don't have subclasses
     ArrayList<Node> subclassConstructors = null;
@@ -144,7 +145,7 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
               Node fn = constructor.getLastChild();
               Node body = fn.getLastChild();
               if (!body.hasChildren() && hasRemovableParameterList(constructor)) {
-                removableConstructors.add(constructor);
+                candidateConstructor = constructor;
               }
             }
           } else {
@@ -181,6 +182,10 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
     // There is no known class definition
     if (candidateClassDefinition == null) {
       return;
+    }
+
+    if (candidateConstructor != null) {
+      removableConstructors.add(candidateConstructor);
     }
 
     // Nothing that invalidated the superclass definition was found, so now check if the
@@ -226,7 +231,9 @@ class OptimizeConstructors implements CompilerPass, OptimizeCalls.CallGraphCompi
           ASSIGN_DIV,
           ASSIGN_MOD,
           ASSIGN_EXPONENT ->
-          parent.getFirstChild() != n;
+          // If n is the target of the assignment (the first child/LHS of the assignment node),
+          // then it is an assigning reference.
+          parent.getFirstChild() == n;
       default -> false;
     };
   }

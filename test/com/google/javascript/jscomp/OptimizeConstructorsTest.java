@@ -534,11 +534,9 @@ public final class OptimizeConstructorsTest extends CompilerTestCase {
     testSame("class Top extends Object { constructor(a) { super(a++); }}");
   }
 
-  // TODO(b/538155998): Fix OptimizeConstructors to check for reassigned superclasses before
-  // removing constructors
   @Test
   public void testNoOptimize_reassignedSuperclass() {
-    test(
+    testSame(
         """
         class Super {
           constructor() {}
@@ -550,11 +548,17 @@ public final class OptimizeConstructorsTest extends CompilerTestCase {
         }
         Super = class {};
         let a = new A();
-        """,
+        """);
+  }
+
+  @Test
+  public void testNoOptimize_reassignedConstructor() {
+    testSame(
         """
-        class Super {}
-        class A extends Super {}
-        Super = class {};
+        class A {
+          constructor() {}
+        }
+        A = class {};
         let a = new A();
         """);
   }
