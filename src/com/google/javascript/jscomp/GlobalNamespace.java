@@ -528,6 +528,14 @@ class GlobalNamespace
               isSet = true;
               type = NameProp.OTHER_OBJECT;
               break;
+            case FOR_IN:
+            case FOR_OF:
+            case FOR_AWAIT_OF:
+              if (parent.getFirstChild() == n) {
+                isSet = true;
+                type = NameProp.OTHER_OBJECT;
+              }
+              break;
             case CLASS:
               // The first child is the class name, and the second child is the superclass name.
               if (parent.getFirstChild() == n) {

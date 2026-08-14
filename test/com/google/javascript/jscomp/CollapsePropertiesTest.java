@@ -816,7 +816,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     testSame("var a = {}; a.b = {c: 0}; for (var p in a?.b) { e?.(a.b?.[p]); }");
   }
 
-  // TODO(b/538141076): CollapseProperties: don't inline alias when used in for-in/for-of loop lhs
   @Test
   public void testForInLoopAliasNoCollapse() {
     test(
@@ -831,13 +830,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         expected(
             """
             var ns$global = {x: 1};
-            var alias = null;
-            for (ns$global in {a: 1}) {}
+            var alias = ns$global;
+            for (alias in {a: 1}) {}
             use(ns$global.x);
             """));
   }
 
-  // TODO(b/538141076): CollapseProperties: don't inline alias when used in for-in/for-of loop lhs
   @Test
   public void testForOfLoopAliasNoCollapse() {
     test(
@@ -852,13 +850,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         expected(
             """
             var ns$global = {x: 1};
-            var alias = null;
-            for (ns$global of [1, 2]) {}
+            var alias = ns$global;
+            for (alias of [1, 2]) {}
             use(ns$global.x);
             """));
   }
 
-  // TODO(b/538141076): CollapseProperties: don't inline alias when used in for-in/for-of loop lhs
   @Test
   public void testForAwaitOfLoopAliasNoCollapse() {
     test(
@@ -875,9 +872,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         expected(
             """
             var ns$global = {x: 1};
-            var alias = null;
+            var alias = ns$global;
             async function f() {
-              for await (ns$global of [1, 2]) {}
+              for await (alias of [1, 2]) {}
             }
             use(ns$global.x);
             """));
