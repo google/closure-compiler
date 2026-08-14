@@ -1917,8 +1917,6 @@ a = temp$jscomp$2;
         """);
   }
 
-  // TODO(b/538155257): Fix ExpressionDecomposer to not double-evaluate GETELEM keys on compound
-  // assignments
   // Dynamic receiver and key on LHS of assignment-op.
   @Test
   public void testExposePlusEquals6() {
@@ -1929,9 +1927,9 @@ a = temp$jscomp$2;
         var obj = {};
         var nextKey = function() {};
         var temp_const$jscomp$0 = obj;
-        var temp_const$jscomp$1 = temp_const$jscomp$0[nextKey()];
-        var temp_const$jscomp$2 = nextKey();
-        temp_const$jscomp$0[temp_const$jscomp$2] = temp_const$jscomp$1 + (foo() + 1);
+        var temp_const$jscomp$1 = nextKey();
+        var temp_const$jscomp$2 = temp_const$jscomp$0[temp_const$jscomp$1];
+        temp_const$jscomp$0[temp_const$jscomp$1] = temp_const$jscomp$2 + (foo() + 1);
         """);
 
     helperExposeExpression(
@@ -1941,14 +1939,12 @@ a = temp$jscomp$2;
         var obj = {};
         var nextKey = function() {};
         var temp_const$jscomp$0 = obj;
-        var temp_const$jscomp$1 = temp_const$jscomp$0[nextKey()];
-        var temp_const$jscomp$2 = nextKey();
-        y = (temp_const$jscomp$0[temp_const$jscomp$2] = temp_const$jscomp$1 + foo()) + obj[nextKey()]
+        var temp_const$jscomp$1 = nextKey();
+        var temp_const$jscomp$2 = temp_const$jscomp$0[temp_const$jscomp$1];
+        y = (temp_const$jscomp$0[temp_const$jscomp$1] = temp_const$jscomp$2 + foo()) + obj[nextKey()]
         """);
   }
 
-  // TODO(b/538155257): Fix ExpressionDecomposer to not double-evaluate GETELEM keys on compound
-  // assignments
   @Test
   public void testExposePlusEquals_getElemCallReceiverAndKey() {
     helperExposeExpression(
@@ -1957,9 +1953,9 @@ a = temp$jscomp$2;
         """
         var x = {};
         var temp_const$jscomp$0 = goo();
-        var temp_const$jscomp$1 = temp_const$jscomp$0[goo()];
-        var temp_const$jscomp$2 = goo();
-        temp_const$jscomp$0[temp_const$jscomp$2] = temp_const$jscomp$1 + (foo() + 1);
+        var temp_const$jscomp$1 = goo();
+        var temp_const$jscomp$2 = temp_const$jscomp$0[temp_const$jscomp$1];
+        temp_const$jscomp$0[temp_const$jscomp$1] = temp_const$jscomp$2 + (foo() + 1);
         """);
   }
 
