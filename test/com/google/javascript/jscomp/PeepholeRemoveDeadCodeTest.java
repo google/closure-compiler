@@ -476,9 +476,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("Math.random()", "");
     fold("Math?.random()", "");
     fold("Math.random(f() + g())", "f(),g();");
-    fold("Math?.random(f() + g())", "f(),g();");
+    foldSame("Math?.random(f() + g());");
     fold("Math.random(f(),g(),h())", "f(),g(),h();");
-    fold("Math?.random(f(),g(),h())", "f(),g(),h();");
+    foldSame("Math?.random(f(),g(),h());");
 
     // Calls to functions with unknown side-effects are preserved.
     foldSame("f();");
@@ -1459,14 +1459,13 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("a?.() ?? 1", "a?.()");
   }
 
-  // TODO(b/538125186): Do not remove optional chain side effects in PeepholeRemoveDeadCode
   @Test
   public void testNoRemoveOptionalChainSideEffects() {
-    fold("a?.[f()];", "f();");
-    fold("a?.[x++];", "x++;");
-    fold("a?.[delete cache[k]];", "delete cache[k];");
-    fold("a?.b[f()];", "f();");
-    fold("Math?.sin(mutate());", "mutate();");
+    foldSame("a?.[f()];");
+    foldSame("a?.[x++];");
+    foldSame("a?.[delete cache[k]];");
+    foldSame("a?.b[f()];");
+    foldSame("Math?.sin(mutate());");
   }
 
   @Test
@@ -1704,11 +1703,11 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   @Test
   public void testOptChainCall_containingSpread() {
     // We use a function with no side-effects, otherwise the entire invocation would be preserved.
-    fold("Math?.sin(...c)", "([...c])");
-    fold("Math?.sin(4, ...c, a)", "([...c])");
-    fold("Math?.sin(foo(), ...c, bar())", "(foo(), [...c], bar())");
-    fold("Math?.sin(...a, b, ...c)", "([...a], [...c])");
-    fold("Math?.sin(...b, ...c)", "([...b], [...c])");
+    foldSame("Math?.sin(...c);");
+    foldSame("Math?.sin(4, ...c, a);");
+    foldSame("Math?.sin(foo(), ...c, bar());");
+    foldSame("Math?.sin(...a, b, ...c);");
+    foldSame("Math?.sin(...b, ...c);");
   }
 
   @Test

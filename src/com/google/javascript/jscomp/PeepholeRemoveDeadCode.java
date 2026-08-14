@@ -340,6 +340,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   private boolean trySimplifyUnusedResultInternal(Node tree, ArrayDeque<Node> sideEffectRoots) {
     // Special cases for conditional expressions that may be using results.
     switch (tree.getToken()) {
+      case OPTCHAIN_GETELEM, OPTCHAIN_GETPROP, OPTCHAIN_CALL -> {
+        if (mayHaveSideEffects(tree)) {
+          sideEffectRoots.addLast(tree);
+          return hasFixedPointParent(tree);
+        } else {
+          return false;
+        }
+      }
       case HOOK -> {
         // Try to remove one or more of the conditional children and transform the HOOK to an
         // equivalent operation. Remember that if either value branch still exists, the result of
