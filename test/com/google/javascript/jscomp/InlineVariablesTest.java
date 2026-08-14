@@ -2626,4 +2626,93 @@ public final class InlineVariablesTest extends CompilerTestCase {
         }
         """);
   }
+
+  @Test
+  public void testClassDeclaration_notInlined() {
+    // When there's only one reference to a class name (e.g. in the rhs of an assignment), we
+    // should elide that class name.
+    testSame("class MyClass { foo() {} } ns.y = MyClass;");
+  }
+
+  @Test
+  public void testClassExpressionInlined() {
+    test("var C = class {}; use(C);", "use(class {});");
+  }
+
+  @Test
+  public void testClassExpressionWithExtendsInlined() {
+    test(
+        "var C = class extends Base { foo() {} }; use(C);",
+        "use(class extends Base { foo() {} });");
+  }
+
+  @Test
+  public void testClassWithSideEffectsNotMovedAcrossCalls() {
+    testSame(
+        """
+        var C = class { static { doSideEffects(); } };
+        doSomething();
+        use(C);
+        """);
+  }
+
+  @Test
+  public void testClassWithSideEffectingStaticField_notMovedAcrossCalls() {
+    testSame(
+        """
+        var C = class { static x = doSideEffects(); };
+        doSomething();
+        use(C);
+        """);
+  }
+
+  @Test
+  public void testClassWithPureStaticField_inlinedAcrossCalls() {
+    testSame(
+        """
+        var C = class { static x = 1; };
+        doSomething();
+        use(C);
+        """);
+  }
+
+  @Test
+  public void testClassWithImpureStaticField_notInlinedAcrossCalls() {
+    testSame(
+        """
+        var C = class { static x = compute(); };
+        doSomething();
+        use(C);
+        """);
+  }
+
+  @Test
+  public void testClassWithSideEffectingComputedProperty_notMovedAcrossCalls() {
+    testSame(
+        """
+        var C = class { [computeKey()]() {} };
+        doSomething();
+        use(C);
+        """);
+  }
+
+  @Test
+  public void testClassWithInstanceFieldSideEffects_canMoveBeforeInstantiation() {
+    testSame(
+        """
+        var C = class { x = compute(); };
+        doSomething();
+        use(C);
+        """);
+  }
+
+  @Test
+  public void testClassWithImpureExtendsNotMovedAcrossCalls() {
+    testSame(
+        """
+        var C = class extends getBase() {};
+        doSomething();
+        use(C);
+        """);
+  }
 }

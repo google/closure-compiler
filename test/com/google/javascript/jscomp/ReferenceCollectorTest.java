@@ -106,35 +106,57 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testClass_withPrototype() {
+  public void testClass_withInstantiation() {
     testBehavior(
         """
         class Foo {}
-        Foo.prototype.bar = 1;
+        new Foo();
         """,
         (NodeTraversal t, ReferenceMap rm) -> {
           if (t.getScope().isGlobal()) {
             ReferenceCollection x = rm.getReferences(t.getScope().getVar("Foo"));
 
             assertThat(x.isAssignedOnceInLifetime()).isTrue();
-            assertThat(x.isWellDefined()).isFalse(); // TODO(b/435019132): Should be true.
+            // TODO(lharker): we should consider this well-defined.
+            assertThat(x.isWellDefined()).isFalse();
+            assertThat(x)
+                .comparingElementsUsing(IS_DECLARATION)
+                .containsExactly(true, false)
+                .inOrder();
           }
         });
   }
 
   @Test
-  public void testClass_referencedAfterDeclaration() {
+  public void testClassExpression_assignedToConst_andInstantiated() {
     testBehavior(
         """
-        class Foo {}
-        const x = Foo;
+        const Foo = class {};
+        new Foo();
         """,
         (NodeTraversal t, ReferenceMap rm) -> {
           if (t.getScope().isGlobal()) {
             ReferenceCollection x = rm.getReferences(t.getScope().getVar("Foo"));
 
             assertThat(x.isAssignedOnceInLifetime()).isTrue();
-            assertThat(x.isWellDefined()).isFalse(); // TODO(b/435019132): Should be true.
+            assertThat(x.isWellDefined()).isTrue();
+          }
+        });
+  }
+
+  @Test
+  public void testNamedClassExpression_assignedToConst_andInstantiated() {
+    testBehavior(
+        """
+        const Foo = class Bar {};
+        new Foo();
+        """,
+        (NodeTraversal t, ReferenceMap rm) -> {
+          if (t.getScope().isGlobal()) {
+            ReferenceCollection x = rm.getReferences(t.getScope().getVar("Foo"));
+
+            assertThat(x.isAssignedOnceInLifetime()).isTrue();
+            assertThat(x.isWellDefined()).isTrue();
           }
         });
   }
