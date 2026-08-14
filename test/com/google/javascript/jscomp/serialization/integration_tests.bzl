@@ -10,7 +10,7 @@ def serialized_ast_file(name, ordered_srcs = []):
         compile = 1,
         defs = [
             "--language_out=NO_TRANSPILE",
-            "--typed_ast_output_file__experimental__DO_NOT_USE=%s" % jsast,
+            "--typed_ast_output_file=%s" % jsast,
         ],
         include_default_externs = "off",
         extra_outputs = [jsast],

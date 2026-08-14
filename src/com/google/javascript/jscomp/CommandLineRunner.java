@@ -559,7 +559,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean debug = false;
 
     @Option(
-        name = "--typed_ast_output_file__INTENRNAL_USE_ONLY",
+        name = "--typed_ast_output_file",
         usage = "Sets file to output in-progress typedAST format. DO NOT USE!",
         hidden = true)
     private @Nullable String typedAstOutputFile = null;

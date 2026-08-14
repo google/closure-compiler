@@ -43,7 +43,7 @@ def _typedast_impl(ctx):
         "--jscomp_error=checkTypes",
         "--jscomp_off=uselessCode",
     ])
-    args.add(typedast_gz_file, format = "--typed_ast_output_file__INTENRNAL_USE_ONLY=%s")
+    args.add(typedast_gz_file, format = "--typed_ast_output_file=%s")
     compiler_outputs.append(typedast_gz_file)
     args.add_all(ctx.files.srcs, format_each = "--js=%s")
     compiler_inputs.extend(ctx.files.srcs)
