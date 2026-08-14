@@ -567,22 +567,20 @@ public final class ControlFlowAnalysisTest {
     assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
   }
 
-  // TODO(b/538132401): Fix ControlFlowAnalysis to unconditionally create exception edges for
-  // enhanced for loops
   @Test
   public void testForOfThrowingException() throws IOException {
     String src = "function f() {try { for (var x of y) {} } catch (e) {e()}}";
     ControlFlowGraph<Node> cfg = createCfg(src);
-    assertNoEdge(cfg, Token.FOR_OF, Token.BLOCK, Branch.ON_EX);
+    assertCrossEdge(cfg, Token.FOR_OF, Token.BLOCK, Branch.ON_EX);
+    assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
   }
 
-  // TODO(b/538132401): Fix ControlFlowAnalysis to unconditionally create exception edges for
-  // enhanced for loops
   @Test
   public void testForAwaitOfThrowingException() throws IOException {
     String src = "async function f() {try { for await (var x of y) {} } catch (e) {e()}}";
     ControlFlowGraph<Node> cfg = createCfg(src);
-    assertNoEdge(cfg, Token.FOR_AWAIT_OF, Token.BLOCK, Branch.ON_EX);
+    assertCrossEdge(cfg, Token.FOR_AWAIT_OF, Token.BLOCK, Branch.ON_EX);
+    assertDownEdge(cfg, Token.BLOCK, Token.CATCH, Branch.UNCOND);
   }
 
   @Test

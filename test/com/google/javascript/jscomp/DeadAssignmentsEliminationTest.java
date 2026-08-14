@@ -188,13 +188,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x; try{throw 1} catch(e){x=2} finally{x}");
     inFunction(
         "var x; try{x=1;throw 1;x} finally{x=2}; x", "var x; try{1;throw 1;x} finally{x=2}; x");
-    // TODO(b/538155252): Do not remove assignment before for-of or for-await-of loop with try-catch
-    inFunction(
-        "var x; x = 1; try { for (var y of iter) {} } catch (e) { x; }",
-        "var x; 1; try { for (var y of iter) {} } catch (e) { x; }");
-    inAsyncFunction(
-        "var x; x = 1; try { for await (var y of iter) {} } catch (e) { x; }",
-        "var x; 1; try { for await (var y of iter) {} } catch (e) { x; }");
+    inFunction("var x; x = 1; try { for (var y of iter) {} } catch (e) { x; }");
+    inAsyncFunction("var x; x = 1; try { for await (var y of iter) {} } catch (e) { x; }");
     inFunction(
         "var x; x = 1; try { for (var y in iter) {} } catch (e) { x; }",
         "var x; 1; try { for (var y in iter) {} } catch (e) { x; }");

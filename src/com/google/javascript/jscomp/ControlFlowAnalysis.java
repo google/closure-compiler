@@ -453,7 +453,11 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
     createEdge(forNode, Branch.ON_TRUE, computeFallThrough(body));
     // The edge to end of the loop.
     createEdge(forNode, Branch.ON_FALSE, computeFollowNode(forNode, this));
-    connectToPossibleExceptionHandler(forNode, collection);
+    if (forNode.isForOf() || forNode.isForAwaitOf()) {
+      connectToPossibleExceptionHandlerUnconditionally(forNode);
+    } else {
+      connectToPossibleExceptionHandler(forNode, collection);
+    }
   }
 
   private void handleFor(Node forNode) {
@@ -861,42 +865,49 @@ public final class ControlFlowAnalysis implements NodeTraversal.Callback {
    * are FINALLY blocks reached before a CATCH, it will make the corresponding entry in finallyMap.
    */
   private void connectToPossibleExceptionHandler(Node cfgNode, Node target) {
-    if (mayThrowException(target) && !exceptionHandler.isEmpty()) {
-      Node lastJump = cfgNode;
-      for (Node handler : exceptionHandler) {
-        if (handler.isFunction()) {
-          return;
-        }
-        checkState(handler.isTry());
-        Node catchBlock = NodeUtil.getCatchBlock(handler);
+    if (mayThrowException(target)) {
+      connectToPossibleExceptionHandlerUnconditionally(cfgNode);
+    }
+  }
 
-        boolean lastJumpInCatchBlock = false;
-        for (Node ancestor : lastJump.getAncestors()) {
-          if (ancestor == handler) {
-            break;
-          } else if (ancestor == catchBlock) {
-            lastJumpInCatchBlock = true;
-            break;
-          }
-        }
-
-        // No catch but a FINALLY, or lastJump is inside the catch block.
-        if (!NodeUtil.hasCatchHandler(catchBlock) || lastJumpInCatchBlock) {
-          if (lastJump == cfgNode) {
-            createEdge(cfgNode, Branch.ON_EX, handler.getLastChild());
-          } else {
-            finallyMap.put(lastJump, handler.getLastChild());
-          }
-        } else { // Has a catch.
-          if (lastJump == cfgNode) {
-            createEdge(cfgNode, Branch.ON_EX, catchBlock);
-            return;
-          } else {
-            finallyMap.put(lastJump, catchBlock);
-          }
-        }
-        lastJump = handler;
+  private void connectToPossibleExceptionHandlerUnconditionally(Node cfgNode) {
+    if (exceptionHandler.isEmpty()) {
+      return;
+    }
+    Node lastJump = cfgNode;
+    for (Node handler : exceptionHandler) {
+      if (handler.isFunction()) {
+        return;
       }
+      checkState(handler.isTry());
+      Node catchBlock = NodeUtil.getCatchBlock(handler);
+
+      boolean lastJumpInCatchBlock = false;
+      for (Node ancestor : lastJump.getAncestors()) {
+        if (ancestor == handler) {
+          break;
+        } else if (ancestor == catchBlock) {
+          lastJumpInCatchBlock = true;
+          break;
+        }
+      }
+
+      // No catch but a FINALLY, or lastJump is inside the catch block.
+      if (!NodeUtil.hasCatchHandler(catchBlock) || lastJumpInCatchBlock) {
+        if (lastJump == cfgNode) {
+          createEdge(cfgNode, Branch.ON_EX, handler.getLastChild());
+        } else {
+          finallyMap.put(lastJump, handler.getLastChild());
+        }
+      } else { // Has a catch.
+        if (lastJump == cfgNode) {
+          createEdge(cfgNode, Branch.ON_EX, catchBlock);
+          return;
+        } else {
+          finallyMap.put(lastJump, catchBlock);
+        }
+      }
+      lastJump = handler;
     }
   }
 
