@@ -348,15 +348,19 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
     while (n != exprRoot) {
       VariableLiveness state = VariableLiveness.MAYBE_LIVE;
       switch (n.getParent().getToken()) {
-        case OR, AND, COALESCE -> {
-          // If the currently node is the first child of
-          // AND/OR, be conservative only consider the READs
-          // of the second operand.
-          if (n.getNext() != null) {
-            state = isVariableReadBeforeKill(n.getNext(), variable);
-            if (state == VariableLiveness.KILL) {
-              state = VariableLiveness.MAYBE_LIVE;
+        case OR, AND, COALESCE, OPTCHAIN_GETPROP, OPTCHAIN_GETELEM, OPTCHAIN_CALL -> {
+          // For short-circuiting and optional chaining operations, if the current node is the
+          // first child, subsequent siblings (the RHS or arguments) are only conditionally
+          // evaluated. Therefore, be conservative: a READ in subsequent siblings means the variable
+          // might be read, but a KILL cannot be guaranteed to occur.
+          for (Node sibling = n.getNext(); sibling != null; sibling = sibling.getNext()) {
+            state = isVariableReadBeforeKill(sibling, variable);
+            if (state != VariableLiveness.MAYBE_LIVE) {
+              break;
             }
+          }
+          if (n == n.getParent().getFirstChild() && state == VariableLiveness.KILL) {
+            state = VariableLiveness.MAYBE_LIVE;
           }
         }
         case HOOK -> {
@@ -424,7 +428,7 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
     }
 
     switch (n.getToken()) {
-      case OR, AND, COALESCE -> {
+      case OR, AND, COALESCE, OPTCHAIN_GETPROP, OPTCHAIN_GETELEM -> {
         // Conditionals
         VariableLiveness v1 = isVariableReadBeforeKill(n.getFirstChild(), variable);
         VariableLiveness v2 = isVariableReadBeforeKill(n.getLastChild(), variable);
@@ -437,6 +441,21 @@ class DeadAssignmentsElimination extends NodeTraversal.AbstractCfgCallback imple
         } else {
           return VariableLiveness.MAYBE_LIVE;
         }
+      }
+      case OPTCHAIN_CALL -> {
+        VariableLiveness v1 = isVariableReadBeforeKill(n.getFirstChild(), variable);
+        if (v1 != VariableLiveness.MAYBE_LIVE) {
+          return v1;
+        }
+        for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
+          VariableLiveness state = isVariableReadBeforeKill(c, variable);
+          if (state != VariableLiveness.MAYBE_LIVE) {
+            return state == VariableLiveness.READ
+                ? VariableLiveness.READ
+                : VariableLiveness.MAYBE_LIVE;
+          }
+        }
+        return VariableLiveness.MAYBE_LIVE;
       }
       case HOOK -> {
         VariableLiveness first = isVariableReadBeforeKill(n.getFirstChild(), variable);

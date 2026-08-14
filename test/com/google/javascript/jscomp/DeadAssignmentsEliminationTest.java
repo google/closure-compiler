@@ -1465,33 +1465,34 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538123282): Fix DeadAssignmentsElimination to not remove assignment in optional chaining
   @Test
   public void testOptionalChaining() {
-    test(
+    testSame(
         """
         function f(a, raw) {
           var x;
           (x = sanitize(raw), a?.m(x = a.cached), el.innerHTML = x);
         }
-        """,
-        """
-        function f(a, raw) {
-          var x;
-          (sanitize(raw), a?.m(x = a.cached), el.innerHTML = x);
-        }
         """);
-    test(
+    testSame(
         """
         function f(a, raw) {
           var x;
           (x = sanitize(raw), a?.[x = a.cached], el.innerHTML = x);
         }
-        """,
+        """);
+    testSame(
         """
         function f(a, raw) {
           var x;
-          (sanitize(raw), a?.[x = a.cached], el.innerHTML = x);
+          (x = sanitize(raw), a?.(x = a.cached), el.innerHTML = x);
+        }
+        """);
+    testSame(
+        """
+        function f(a, raw) {
+          var x;
+          (x = sanitize(raw), a?.(x = 1, x), el.innerHTML = x);
         }
         """);
   }
