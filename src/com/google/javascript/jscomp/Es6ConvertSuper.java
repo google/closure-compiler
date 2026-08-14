@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
+import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -78,6 +79,12 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
                   case MEMBER_FUNCTION_DEF, GETTER_DEF, SETTER_DEF, COMPUTED_PROP -> true;
                   default -> false;
                 });
+
+    if (enclosingMemberDef == null || enclosingMemberDef.getParent().isObjectLit()) {
+      compiler.report(
+          JSError.make(node, CANNOT_CONVERT, "super is not supported in object literal methods."));
+      return;
+    }
 
     if (parent.isCall()) {
       // super(...)
