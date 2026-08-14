@@ -1765,6 +1765,10 @@ public final class NodeUtil {
       if ((keyNode.isStringKey() || keyNode.isMemberFunctionDef())
           && keyNode.getString().equals(keyName)) {
         return keyNode.getFirstChild();
+      } else if (keyNode.isComputedProp()
+          && keyNode.getFirstChild().isStringLit()
+          && keyNode.getFirstChild().getString().equals(keyName)) {
+        return keyNode.getLastChild();
       }
     }
     return null;

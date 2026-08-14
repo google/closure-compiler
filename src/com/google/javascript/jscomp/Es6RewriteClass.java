@@ -268,11 +268,21 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     Node prop = NodeUtil.getFirstPropMatchingKey(obj, member.getString());
     if (prop == null) {
       prop = createPropertyDescriptor();
-      Node stringKey = astFactory.createStringKey(member.getString(), prop);
-      if (member.isQuotedStringKey()) {
-        stringKey.putBooleanProp(Node.QUOTED_PROP, true);
+      if (member.getString().equals("__proto__")) {
+        Node stringKey =
+            astFactory.createComputedProperty(astFactory.createString("__proto__"), prop);
+        obj.addChildToBack(stringKey);
+        Node scriptNode = NodeUtil.getEnclosingScript(member);
+        if (scriptNode != null) {
+          NodeUtil.addFeatureToScript(scriptNode, Feature.COMPUTED_PROPERTIES, compiler);
+        }
+      } else {
+        Node stringKey = astFactory.createStringKey(member.getString(), prop);
+        if (member.isQuotedStringKey()) {
+          stringKey.putBooleanProp(Node.QUOTED_PROP, true);
+        }
+        obj.addChildToBack(stringKey);
       }
-      obj.addChildToBack(stringKey);
     }
 
     Node function = member.getLastChild();

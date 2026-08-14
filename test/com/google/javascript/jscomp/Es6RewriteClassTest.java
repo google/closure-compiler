@@ -2370,7 +2370,6 @@ $jscomp.inherits(FooPromise, Promise);
         """);
   }
 
-  // TODO(b/538155997): Es6RewriteClass proto accessor lowering
   @Test
   public void testEs5GettersAndSettersClasses_protoAccessor() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -2387,7 +2386,7 @@ $jscomp.inherits(FooPromise, Promise);
         /** @constructor */
         let C = function() {};
         $jscomp.global.Object.defineProperties(C.prototype, {
-          __proto__: {
+          ['__proto__']: {
             configurable: true,
             enumerable: true,
             get: function() {
