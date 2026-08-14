@@ -432,6 +432,34 @@ $jscomp.AsyncGeneratorWrapper.prototype.runDelegateFrame_ = function() {
     } catch (err) {
       this.handleDelegateError_(err);
     }
+  } else if (
+      frame.method === $jscomp.AsyncGeneratorWrapper$GeneratorMethod.THROW) {
+    var delegate = this.delegate_;
+    this.delegate_ = null;
+    if ('return' in delegate) {
+      var self = this;
+      try {
+        Promise.resolve(delegate['return']())
+            .then(
+                function() {
+                  frame.param = new TypeError(
+                      "The iterator does not provide a 'throw' method");
+                  self.runFrame_();
+                },
+                function(err) {
+                  frame.param = err;
+                  self.runFrame_();
+                })
+            .catch(this.boundRejectAndClose_);
+      } catch (err) {
+        frame.param = err;
+        this.runFrame_();
+      }
+    } else {
+      frame.param = new TypeError(
+          "The iterator does not provide a 'throw' method");
+      this.runFrame_();
+    }
   } else {
     this.delegate_ = null;
     this.runFrame_();
