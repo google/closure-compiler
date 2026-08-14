@@ -1717,9 +1717,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     // We use a function with no side-effects, otherwise the entire invocation would be preserved.
     fold("new Date;", "");
     fold("1 + new Date;", "");
-    // TODO(b/538156671): Do not remove new of class with field initializers in
-    // PeepholeRemoveDeadCode
-    fold("new (class { x = foo(); })()", "foo();");
+    foldSame("new (class { x = foo(); })()");
     fold("new (class { x = 1; })()", "");
   }
 

@@ -757,33 +757,28 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
                 """));
   }
 
-  // TODO(b/538170230): PureFunctionIdentifier treats class field initializers with side effects as
-  // pure
+
   @Test
   public void testClassFieldSideEffects() {
-    assertPureCallsMarked(
+    assertNoPureCalls(
         """
         class C {
           x = externSef1();
         }
         new C();
-        """,
-        ImmutableList.of("C"));
+        """);
   }
 
-  // TODO(b/538170230): PureFunctionIdentifier treats class field initializers with side effects as
-  // pure
   @Test
   public void testClassComputedFieldInitializerSideEffects() {
     disableTypeCheck();
-    assertPureCallsMarked(
+    assertNoPureCalls(
         """
         class C {
           ['x'] = externSef1();
         }
         new C();
-        """,
-        ImmutableList.of("C"));
+        """);
   }
 
   @Test
@@ -794,6 +789,19 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         class C {
           x = 1;
           ['y'] = 2;
+        }
+        new C();
+        """,
+        ImmutableList.of("C"));
+  }
+
+  @Test
+  public void testClassStaticFieldSideEffectsDoNotAffectInstantiation() {
+    disableTypeCheck();
+    assertPureCallsMarked(
+        """
+        class C {
+          static x = externSef1();
         }
         new C();
         """,

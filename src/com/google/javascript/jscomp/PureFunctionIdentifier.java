@@ -257,9 +257,10 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * @see {@link #collectCallableLeavesInternal}
    * @return the disovered callables, or {@code null} if an unexpected possible value was found.
    */
-  private static @Nullable ImmutableList<Node> collectCallableLeaves(Node expr) {
+  private static @Nullable ImmutableList<Node> collectCallableLeaves(
+      Node expr, AstAnalyzer astAnalyzer) {
     ArrayList<Node> callables = new ArrayList<>();
-    boolean allLegal = collectCallableLeavesInternal(expr, callables);
+    boolean allLegal = collectCallableLeavesInternal(expr, callables, astAnalyzer);
     return allLegal ? ImmutableList.copyOf(callables) : null;
   }
 
@@ -288,7 +289,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * @param results The collection of qualified names and functions.
    * @return {@code true} iff only understood results were discovered.
    */
-  private static boolean collectCallableLeavesInternal(Node expr, ArrayList<Node> results) {
+  private static boolean collectCallableLeavesInternal(
+      Node expr, ArrayList<Node> results, AstAnalyzer astAnalyzer) {
     switch (expr.getToken()) {
       case FUNCTION:
       case GETPROP:
@@ -301,36 +303,58 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         {
           // Pretend that `super` is an alias for the superclass reference.
           Node clazz = checkNotNull(NodeUtil.getEnclosingClass(expr));
-          return collectCallableLeavesInternal(clazz.getSecondChild(), results);
+          return collectCallableLeavesInternal(clazz.getSecondChild(), results, astAnalyzer);
         }
 
       case CLASS:
         {
+          // Instance field initializers run when the constructor is invoked (during class
+          // instantiation), so any side-effectful instance field initializers make the constructor
+          // invocation impure. Static field initializers run when the class definition itself is
+          // evaluated, not upon constructor invocation.
+          Node members = expr.getLastChild();
+          if (members != null && members.isClassMembers()) {
+            for (Node member = members.getFirstChild(); member != null; member = member.getNext()) {
+              if (member.isStaticMember()) {
+                continue;
+              }
+              Node initializer = null;
+              if (member.isMemberFieldDef() && member.hasChildren()) {
+                initializer = member.getFirstChild();
+              } else if (member.isComputedFieldDef() && member.getSecondChild() != null) {
+                initializer = member.getSecondChild();
+              }
+              if (initializer != null && astAnalyzer.mayHaveSideEffects(initializer)) {
+                return false;
+              }
+            }
+          }
+
           // Collect the constructor function, or failing that, the superclass reference.
           @Nullable Node ctorDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(expr);
           if (ctorDef != null) {
-            return collectCallableLeavesInternal(ctorDef.getOnlyChild(), results);
+            return collectCallableLeavesInternal(ctorDef.getOnlyChild(), results, astAnalyzer);
           } else if (expr.getSecondChild().isEmpty()) {
             results.add(IMPLICIT_PURE_FN);
             return true; // A class an implicit ctor is pure when there is no superclass.
           } else {
-            return collectCallableLeavesInternal(expr.getSecondChild(), results);
+            return collectCallableLeavesInternal(expr.getSecondChild(), results, astAnalyzer);
           }
         }
 
       case AND:
       case OR:
       case COALESCE:
-        return collectCallableLeavesInternal(expr.getFirstChild(), results)
-            && collectCallableLeavesInternal(expr.getSecondChild(), results);
+        return collectCallableLeavesInternal(expr.getFirstChild(), results, astAnalyzer)
+            && collectCallableLeavesInternal(expr.getSecondChild(), results, astAnalyzer);
 
       case COMMA:
       case ASSIGN:
-        return collectCallableLeavesInternal(expr.getSecondChild(), results);
+        return collectCallableLeavesInternal(expr.getSecondChild(), results, astAnalyzer);
 
       case HOOK:
-        return collectCallableLeavesInternal(expr.getSecondChild(), results)
-            && collectCallableLeavesInternal(expr.getChildAtIndex(2), results);
+        return collectCallableLeavesInternal(expr.getSecondChild(), results, astAnalyzer)
+            && collectCallableLeavesInternal(expr.getChildAtIndex(2), results, astAnalyzer);
 
       case NEW_TARGET:
       case THIS:
@@ -403,9 +427,10 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     checkNotNull(cacheCall);
 
     ImmutableList.Builder<Node> builder =
-        ImmutableList.<Node>builder().addAll(collectCallableLeaves(cacheCall.valueFn));
+        ImmutableList.<Node>builder()
+            .addAll(collectCallableLeaves(cacheCall.valueFn, this.astAnalyzer));
     if (cacheCall.keyFn != null) {
-      builder.addAll(collectCallableLeaves(cacheCall.keyFn));
+      builder.addAll(collectCallableLeaves(cacheCall.keyFn, this.astAnalyzer));
     }
     return builder.build();
   }
@@ -421,7 +446,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     } else if (isInvocationViaCallOrApply(invocation)) {
       callees = ImmutableList.of(invocation.getFirstFirstChild());
     } else {
-      callees = collectCallableLeaves(invocation.getFirstChild());
+      callees = collectCallableLeaves(invocation.getFirstChild(), this.astAnalyzer);
     }
 
     if (callees == null) {
@@ -510,7 +535,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           // If the assigned R-value is an analyzable expression, collect all the possible
           // FUNCTIONs that could result from that expression. If the expression isn't analyzable,
           // represent that with `null` so we can skiplist `name`.
-          ImmutableList<Node> callables = collectCallableLeaves(rvalue);
+          ImmutableList<Node> callables = collectCallableLeaves(rvalue, this.astAnalyzer);
           if (callables == null) {
             invalid = true;
             break;
