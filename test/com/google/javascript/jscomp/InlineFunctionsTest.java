@@ -5239,7 +5239,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538171094): InlineFunctions: do not inline this alias into class field def value
   @Test
   public void testClassField_inlinedFunctionCalledWithReceiver_instanceField() {
     assumeStrictThis = true;
@@ -5258,14 +5257,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
         var JSCompiler_inline_result$jscomp$v0;
         {
           JSCompiler_inline_result$jscomp$v0 = class {
-            owner = x;
+            owner = this;
           };
         }
         const C = JSCompiler_inline_result$jscomp$v0;
         """);
   }
 
-  // TODO(b/538171094): InlineFunctions: do not inline this alias into class field def value
   @Test
   public void testClassField_inlinedFunctionCalledWithReceiver_computedField() {
     assumeStrictThis = true;
@@ -5284,14 +5282,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
         var JSCompiler_inline_result$jscomp$v0;
         {
           JSCompiler_inline_result$jscomp$v0 = class {
-            [x.key] = x;
+            [x.key] = this;
           };
         }
         const C = JSCompiler_inline_result$jscomp$v0;
         """);
   }
 
-  // TODO(b/538171094): InlineFunctions: do not inline this alias into class field def value
   @Test
   public void testClassField_inlinedFunctionCalledWithReceiver_staticFieldAndBlock() {
     assumeStrictThis = true;
@@ -5313,9 +5310,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
         var JSCompiler_inline_result$jscomp$v0;
         {
           JSCompiler_inline_result$jscomp$v0 = class {
-            static field = x;
+            static field = this;
             static {
-              alert(x);
+              alert(this);
             }
           };
         }
@@ -5323,7 +5320,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538171094): InlineFunctions: do not inline this alias into class field def value
   @Test
   public void testClassField_inlinedFunctionCalledWithReceiver_paramSubstitution() {
     assumeStrictThis = true;
@@ -5344,7 +5340,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         {
           JSCompiler_inline_result$jscomp$v0 = class {
             prop = 42;
-            owner = x;
+            owner = this;
           };
         }
         const C = JSCompiler_inline_result$jscomp$v0;

@@ -72,7 +72,6 @@ public final class FunctionArgumentInjectorTest {
     assertNode(result).isEqualTo(getFunctionBody(parseFunction("function f() { alert(null); }")));
   }
 
-  // TODO(b/538149733): fix this output - we should not replace 'this' with null.
   @Test
   public void testInject_thisRef_classField_instance() {
     Node result =
@@ -84,10 +83,9 @@ public final class FunctionArgumentInjectorTest {
 
     assertNode(result)
         .isEqualTo(
-            getFunctionBody(parseFunction("function f() { return class { field = null; }; }")));
+            getFunctionBody(parseFunction("function f() { return class { field = this; }; }")));
   }
 
-  // TODO(b/538149733): fix this output - we should not replace 'this' with null.
   @Test
   public void testInject_thisRef_classField_static() {
     Node result =
@@ -101,10 +99,9 @@ public final class FunctionArgumentInjectorTest {
     assertNode(result)
         .isEqualTo(
             getFunctionBody(
-                parseFunction("function f() { return class { static field = null; }; }")));
+                parseFunction("function f() { return class { static field = this; }; }")));
   }
 
-  // TODO(b/538149733): fix this output - we should not replace 'this' with x.
   @Test
   public void testInject_thisRef_classField_computed() {
     Node result =
@@ -116,10 +113,9 @@ public final class FunctionArgumentInjectorTest {
 
     assertNode(result)
         .isEqualTo(
-            getFunctionBody(parseFunction("function f() { return class { [x.k] = x.v; }; }")));
+            getFunctionBody(parseFunction("function f() { return class { [x.k] = this.v; }; }")));
   }
 
-  // TODO(b/538149733): fix this output - we should not replace 'this' with x.
   @Test
   public void testInject_thisRef_classField_staticComputed() {
     Node result =
@@ -133,10 +129,9 @@ public final class FunctionArgumentInjectorTest {
     assertNode(result)
         .isEqualTo(
             getFunctionBody(
-                parseFunction("function f() { return class { static [x.k] = x.v; }; }")));
+                parseFunction("function f() { return class { static [x.k] = this.v; }; }")));
   }
 
-  // TODO(b/538149733): fix this output - we should not replace 'this' with null.
   @Test
   public void testInject_thisRef_classStaticBlock() {
     Node result =
@@ -150,10 +145,9 @@ public final class FunctionArgumentInjectorTest {
     assertNode(result)
         .isEqualTo(
             getFunctionBody(
-                parseFunction("function f() { return class { static { alert(null); } }; }")));
+                parseFunction("function f() { return class { static { alert(this); } }; }")));
   }
 
-  // TODO(b/538149733): fix this output - we should not replace 'this' with null.
   @Test
   public void testInject_thisRef_classField_paramSubstitution() {
     Node result =
@@ -169,7 +163,7 @@ public final class FunctionArgumentInjectorTest {
     assertNode(result)
         .isEqualTo(
             getFunctionBody(
-                parseFunction("function f(val) { return class { field = 123; [123] = null; }; }")));
+                parseFunction("function f(val) { return class { field = 123; [123] = this; }; }")));
   }
 
   // TODO(johnlenz): Add more unit tests for "inject"

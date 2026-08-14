@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -59,10 +60,12 @@ class FunctionArgumentInjector {
    *     Nodes.
    * @return The root node or its replacement.
    */
+  @CanIgnoreReturnValue
   Node inject(AbstractCompiler compiler, Node node, Node parent, Map<String, Node> replacements) {
     return inject(compiler, node, parent, replacements, /* replaceThis= */ true);
   }
 
+  @CanIgnoreReturnValue
   private Node inject(
       AbstractCompiler compiler,
       Node node,
@@ -98,10 +101,24 @@ class FunctionArgumentInjector {
 
         return replacement;
       }
-    } else if (node.isFunction() && !node.isArrowFunction()) {
-      // Once we enter another non-arrow function the "this" value changes. Don't try
-      // to replace it within an inner scope.
+    } else if ((node.isFunction() && !node.isArrowFunction())
+        || node.isMemberFieldDef()
+        || NodeUtil.isClassStaticBlock(node)) {
+      // Once we enter another non-arrow function, class field initializer, or static block,
+      // the "this" value changes. Don't try to replace it within an inner scope.
       replaceThis = false;
+    }
+
+    if (node.isComputedFieldDef()) {
+      Node key = node.getFirstChild();
+      if (key != null) {
+        key = inject(compiler, key, node, replacements, replaceThis);
+        Node value = key.getNext();
+        if (value != null) {
+          value = inject(compiler, value, node, replacements, /* replaceThis= */ false);
+        }
+      }
+      return node;
     }
 
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
