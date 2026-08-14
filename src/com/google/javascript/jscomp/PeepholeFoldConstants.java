@@ -1319,6 +1319,39 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
     }
 
+    // Next, handle comparisons between BigInt and String.
+    // Per ECMA-262, comparing a BigInt with a String converts the String to a BigInt via
+    // StringToBigInt(string). If StringToBigInt returns undefined (invalid BigInt syntax like
+    // "foo", "1e2", "1.5"), all relational comparisons (<, >, <=, >=) return false.
+    if (leftValueType == ValueType.BIGINT && rightValueType == ValueType.STRING) {
+      String rvStr = peepholeOptimization.getSideEffectFreeStringValue(right);
+      if (rvStr != null) {
+        BigInteger rvBig = NodeUtil.getStringBigIntValue(rvStr);
+        if (rvBig == null) {
+          return Tri.forBoolean(willNegate);
+        }
+        BigInteger lvBig = peepholeOptimization.getSideEffectFreeBigIntValue(left);
+        if (lvBig != null) {
+          return Tri.forBoolean(lvBig.compareTo(rvBig) < 0);
+        }
+      }
+      return Tri.UNKNOWN;
+    }
+    if (leftValueType == ValueType.STRING && rightValueType == ValueType.BIGINT) {
+      String lvStr = peepholeOptimization.getSideEffectFreeStringValue(left);
+      if (lvStr != null) {
+        BigInteger lvBig = NodeUtil.getStringBigIntValue(lvStr);
+        if (lvBig == null) {
+          return Tri.forBoolean(willNegate);
+        }
+        BigInteger rvBig = peepholeOptimization.getSideEffectFreeBigIntValue(right);
+        if (rvBig != null) {
+          return Tri.forBoolean(lvBig.compareTo(rvBig) < 0);
+        }
+      }
+      return Tri.UNKNOWN;
+    }
+
     // Next, try to evaluate based on the value of the node. Try comparing as BigInts first.
     BigInteger lvBig = peepholeOptimization.getSideEffectFreeBigIntValue(left);
     BigInteger rvBig = peepholeOptimization.getSideEffectFreeBigIntValue(right);
@@ -1417,6 +1450,31 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             ? Tri.UNKNOWN
             : tryAbstractEqualityComparison(
                 peepholeOptimization, NodeUtil.numberNode(lv, left), right);
+      }
+
+      if (leftValueType == ValueType.BIGINT && rightValueType == ValueType.STRING) {
+        String rvStr = peepholeOptimization.getSideEffectFreeStringValue(right);
+        if (rvStr != null) {
+          BigInteger rvBig = NodeUtil.getStringBigIntValue(rvStr);
+          if (rvBig == null) {
+            return Tri.FALSE;
+          }
+          BigInteger lvBig = peepholeOptimization.getSideEffectFreeBigIntValue(left);
+          return lvBig != null ? Tri.forBoolean(lvBig.equals(rvBig)) : Tri.UNKNOWN;
+        }
+        return Tri.UNKNOWN;
+      }
+      if (leftValueType == ValueType.STRING && rightValueType == ValueType.BIGINT) {
+        String lvStr = peepholeOptimization.getSideEffectFreeStringValue(left);
+        if (lvStr != null) {
+          BigInteger lvBig = NodeUtil.getStringBigIntValue(lvStr);
+          if (lvBig == null) {
+            return Tri.FALSE;
+          }
+          BigInteger rvBig = peepholeOptimization.getSideEffectFreeBigIntValue(right);
+          return rvBig != null ? Tri.forBoolean(lvBig.equals(rvBig)) : Tri.UNKNOWN;
+        }
+        return Tri.UNKNOWN;
       }
 
       if (leftValueType == ValueType.BIGINT || rightValueType == ValueType.BIGINT) {

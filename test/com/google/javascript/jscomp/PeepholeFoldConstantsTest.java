@@ -482,22 +482,34 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("1n > null", "true");
   }
 
-  // TODO(b/538125197): Fix PeepholeFoldConstants BigInt with invalid string comparison
   @Test
   public void testBigIntStringComparison() {
     test("1n < '2'", "true");
-    test("1n > '2'", "false");
     test("1n <= '2'", "true");
+    test("1n > '2'", "false");
     test("1n >= '2'", "false");
+    test("1n < '1'", "false");
+    test("1n <= '1'", "true");
+    test("1n > '1'", "false");
+    test("1n >= '1'", "true");
+    test("1n == '1'", "true");
+    test("1n != '1'", "false");
     test("2n > '1'", "true");
     test("123n > '34'", "true");
-    test("1n == '1'", "true");
     test("1n == '2'", "false");
-    test("1n != '1'", "false");
     test("1n === '1'", "false");
     test("1n !== '1'", "true");
 
-    // Invalid BigInt strings in baseline evaluate according to string comparison
+    test("10n == '  10  '", "true");
+    test("10n < '  20  '", "true");
+    test("16n == '0x10'", "true");
+    test("2n == '0b10'", "true");
+    test("8n == '0o10'", "true");
+    test("-1n == '-1'", "true");
+    test("1n == '+1'", "true");
+
+    // Invalid BigInt strings (StringToBigInt returns undefined) evaluate to false for all
+    // relational comparisons
     test("1n < 'foo'", "false");
     test("1n > 'foo'", "false");
     test("1n <= 'foo'", "false");
@@ -505,42 +517,56 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("1n == 'foo'", "false");
     test("1n != 'foo'", "true");
 
-    test("1n < '1e2'", "true");
+    test("1n < '1e2'", "false");
     test("1n > '1e2'", "false");
-    test("1n <= '1e2'", "true");
+    test("1n <= '1e2'", "false");
     test("1n >= '1e2'", "false");
     test("1n == '1e2'", "false");
     test("1n != '1e2'", "true");
 
-    test("1n < '1.5'", "true");
+    test("1n < '1.5'", "false");
     test("1n > '1.5'", "false");
-    test("1n <= '1.5'", "true");
+    test("1n <= '1.5'", "false");
     test("1n >= '1.5'", "false");
     test("1n == '1.5'", "false");
     test("1n != '1.5'", "true");
 
-    test("1n < 'Infinity'", "true");
+    test("1n < 'Infinity'", "false");
     test("1n > 'Infinity'", "false");
-    test("1n <= 'Infinity'", "true");
+    test("1n <= 'Infinity'", "false");
     test("1n >= 'Infinity'", "false");
 
     test("1n < '-Infinity'", "false");
-    test("1n > '-Infinity'", "true");
+    test("1n > '-Infinity'", "false");
     test("1n <= '-Infinity'", "false");
-    test("1n >= '-Infinity'", "true");
+    test("1n >= '-Infinity'", "false");
   }
 
-  // TODO(b/538125197): Fix PeepholeFoldConstants BigInt with invalid string comparison
   @Test
   public void testStringBigIntComparison() {
-    test("'1' < 2n", "true");
+    test("'2' < 1n", "false");
+    test("'2' <= 1n", "false");
     test("'2' > 1n", "true");
-    test("'123' > 34n", "true");
+    test("'2' >= 1n", "true");
+    test("'1' < 1n", "false");
+    test("'1' <= 1n", "true");
+    test("'1' > 1n", "false");
+    test("'1' >= 1n", "true");
     test("'1' == 1n", "true");
-    test("'1' == 2n", "false");
     test("'1' != 1n", "false");
+    test("'1' < 2n", "true");
+    test("'123' > 34n", "true");
+    test("'1' == 2n", "false");
     test("'1' === 1n", "false");
     test("'1' !== 1n", "true");
+
+    test("'  10  ' == 10n", "true");
+    test("'  20  ' > 10n", "true");
+    test("'0x10' == 16n", "true");
+    test("'0b10' == 2n", "true");
+    test("'0o10' == 8n", "true");
+    test("'-1' == -1n", "true");
+    test("'+1' == 1n", "true");
 
     test("'foo' < 1n", "false");
     test("'foo' > 1n", "false");
@@ -550,14 +576,14 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("'foo' != 1n", "true");
 
     test("'1e2' < 1n", "false");
-    test("'1e2' > 1n", "true");
+    test("'1e2' > 1n", "false");
     test("'1e2' <= 1n", "false");
-    test("'1e2' >= 1n", "true");
+    test("'1e2' >= 1n", "false");
 
     test("'1.5' < 1n", "false");
-    test("'1.5' > 1n", "true");
+    test("'1.5' > 1n", "false");
     test("'1.5' <= 1n", "false");
-    test("'1.5' >= 1n", "true");
+    test("'1.5' >= 1n", "false");
   }
 
   @Test
