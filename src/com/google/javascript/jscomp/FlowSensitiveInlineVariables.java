@@ -113,7 +113,8 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       // TODO(user): We only care about calls to functions that
       // passes one of the dependent variable to a non-side-effect free
       // function.
-      if (n.isCall() && astAnalyzer.functionCallHasSideEffects(n)) {
+      if ((n.isCall() || n.isOptChainCall() || n.isTaggedTemplateLit())
+          && astAnalyzer.functionCallHasSideEffects(n)) {
         return true;
       }
 

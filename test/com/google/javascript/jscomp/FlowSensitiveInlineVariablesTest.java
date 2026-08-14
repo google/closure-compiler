@@ -1241,20 +1241,16 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
         "var x = 1; if (true) { x = 2; } var y    ; var z; z = x = x + 1;");
   }
 
-  // TODO(b/538150836): Support tagged template in FlowSensitiveInlineVariables
   @Test
   public void testPathCheckWithSideEffects() {
     // Control: call blocks inlining
     noInline("var x = 1; hasSFX(); var z = 1; print(x);");
 
-    // Tagged template blocks inlining in fixed compiler, inlined in baseline
-    inline(
-        "var x = 1; hasSFX`${1}`; var z = 1; print(x);",
-        "var x; hasSFX`${1}`; var z = 1; print(1);");
+    // Tagged template blocks inlining
+    noInline("var x = 1; hasSFX`${1}`; var z = 1; print(x);");
 
-    // Optional chain call blocks inlining in fixed compiler, inlined in baseline
-    inline(
-        "var x = 1; hasSFX?.(1); var z = 1; print(x);", "var x; hasSFX?.(1); var z = 1; print(1);");
+    // Optional chain call blocks inlining
+    noInline("var x = 1; hasSFX?.(1); var z = 1; print(x);");
   }
 
   @Test
