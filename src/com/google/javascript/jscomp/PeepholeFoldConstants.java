@@ -1483,6 +1483,23 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         if (lv != null && rv != null) {
           return Tri.forBoolean(lv.equals(rv));
         }
+        if (leftValueType == ValueType.NULL
+            || leftValueType == ValueType.VOID
+            || rightValueType == ValueType.NULL
+            || rightValueType == ValueType.VOID) {
+          return Tri.FALSE;
+        }
+        if (leftValueType == ValueType.STRING
+            && peepholeOptimization.getSideEffectFreeStringValue(left) != null
+            && lv == null) {
+          return Tri.FALSE;
+        }
+        if (rightValueType == ValueType.STRING
+            && peepholeOptimization.getSideEffectFreeStringValue(right) != null
+            && rv == null) {
+          return Tri.FALSE;
+        }
+        return Tri.UNKNOWN;
       }
 
       if ((leftValueType == ValueType.STRING || leftValueType == ValueType.NUMBER)

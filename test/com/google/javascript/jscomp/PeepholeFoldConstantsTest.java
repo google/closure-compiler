@@ -587,6 +587,18 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBigIntEqualityWithNullOrUndefined() {
+    test("null == 1n", "false");
+    test("undefined == 1n", "false");
+    test("1n == null", "false");
+    test("1n == undefined", "false");
+    test("null != 1n", "true");
+    test("undefined != 1n", "true");
+    test("1n != null", "true");
+    test("1n != undefined", "true");
+  }
+
+  @Test
   public void testBigIntEqualityWithVariables() {
     testSame("x == 1n");
     testSame("1n == y");
