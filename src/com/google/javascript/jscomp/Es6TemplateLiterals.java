@@ -173,7 +173,7 @@ class Es6TemplateLiterals {
       }
     }
     call.srcrefTreeIfMissing(templateLit);
-    call.putBooleanProp(Node.FREE_CALL, !call.getFirstChild().isGetProp());
+    call.putBooleanProp(Node.FREE_CALL, !NodeUtil.isNormalOrOptChainGet(call.getFirstChild()));
     n.replaceWith(call);
     t.reportCodeChange();
   }

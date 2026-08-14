@@ -364,9 +364,8 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             """
             /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
                 $jscomp.createTemplateTagFirstArg(['', ' world']);
-            (0, a[b])(TAGGED_TEMPLATE_TMP_VAR$0, hello);
+            a[b](TAGGED_TEMPLATE_TMP_VAR$0, hello);
             """));
-
     // https://github.com/google/closure-compiler/issues/1299
     test(
         "tag`<p class=\"foo\">${x}</p>`",

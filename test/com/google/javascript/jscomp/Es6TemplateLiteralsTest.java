@@ -86,8 +86,6 @@ public final class Es6TemplateLiteralsTest extends CompilerTestCase {
             """));
   }
 
-  // TODO(b/538150835): Do not mark property tagged template calls as FREE_CALL in
-  // Es6TemplateLiterals
   @Test
   public void testTaggedTemplateLiteral_getElemTag() {
     test(
@@ -97,7 +95,7 @@ public final class Es6TemplateLiteralsTest extends CompilerTestCase {
             """
             /** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =
                 $jscomp.createTemplateTagFirstArg(['hello']);
-            (0, obj[tag])(TAGGED_TEMPLATE_TMP_VAR$0);
+            obj[tag](TAGGED_TEMPLATE_TMP_VAR$0);
             """));
   }
 }
