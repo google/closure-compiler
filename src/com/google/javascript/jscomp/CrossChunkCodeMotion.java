@@ -786,6 +786,9 @@ class CrossChunkCodeMotion implements CompilerPass {
   private boolean isUnguardedInstanceofReference(Node reference) {
     Node instanceofNode = reference.getParent();
     if (isInstanceofFor(instanceofNode, reference)) {
+      if (compiler.getAstAnalyzer().mayHaveSideEffects(instanceofNode.getFirstChild())) {
+        return false;
+      }
       return !isGuardedInstanceofReference(reference);
     } else {
       return false;
