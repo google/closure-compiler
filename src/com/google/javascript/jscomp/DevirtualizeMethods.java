@@ -476,8 +476,27 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
 
   /** Replaces references to "this" with references to name. Do not traverse function boundaries. */
   private void replaceReferencesToThis(Node node, String name) {
-    if (node.isFunction() && !node.isArrowFunction()) {
-      // Functions (besides arrows) create a new binding for `this`.
+    if ((node.isFunction() && !node.isArrowFunction())
+        || node.isMemberFieldDef()
+        || NodeUtil.isClassStaticBlock(node)) {
+      // Functions (besides arrows), member field defs, and static blocks create a new binding for
+      // `this`.
+      return;
+    }
+
+    if (node.isComputedFieldDef()) {
+      // Computed field keys are evaluated in the enclosing scope, but field initializers create a
+      // new binding for `this`.
+      Node key = node.getFirstChild();
+      if (key != null) {
+        if (key.isThis()) {
+          Node newName = IR.name(name).srcref(key).copyTypeFrom(key);
+          key.replaceWith(newName);
+          compiler.reportChangeToEnclosingScope(newName);
+        } else {
+          replaceReferencesToThis(key, name);
+        }
+      }
       return;
     }
 

@@ -1397,8 +1397,6 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             """));
   }
 
-  // TODO(b/538170232): DevirtualizeMethods: rewrite this inside class fields / static blocks to
-  // parameter
   @Test
   public void testRewrite_nestedClass_instanceFieldInitializer() {
     test(
@@ -1418,7 +1416,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             """
             var JSCompiler_StaticMethods_bar = function(JSCompiler_StaticMethods_bar$self) {
               class Nested {
-                val = JSCompiler_StaticMethods_bar$self;
+                val = this;
               }
               return new Nested();
             };
@@ -1427,8 +1425,6 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             """));
   }
 
-  // TODO(b/538170232): DevirtualizeMethods: rewrite this inside class fields / static blocks to
-  // parameter
   @Test
   public void testRewrite_nestedClass_computedFieldInitializer() {
     test(
@@ -1448,7 +1444,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             """
             var JSCompiler_StaticMethods_bar = function(JSCompiler_StaticMethods_bar$self) {
               class Nested {
-                ['c'] = JSCompiler_StaticMethods_bar$self;
+                ['c'] = this;
               }
               return new Nested();
             };
@@ -1485,8 +1481,6 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             """));
   }
 
-  // TODO(b/538170232): DevirtualizeMethods: rewrite this inside class fields / static blocks to
-  // parameter
   @Test
   public void testRewrite_nestedClass_computedFieldKeyAndValue() {
     test(
@@ -1506,7 +1500,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             """
             var JSCompiler_StaticMethods_bar = function(JSCompiler_StaticMethods_bar$self) {
               class Nested {
-                [JSCompiler_StaticMethods_bar$self.key] = JSCompiler_StaticMethods_bar$self;
+                [JSCompiler_StaticMethods_bar$self.key] = this;
               }
               return new Nested();
             };
@@ -1515,8 +1509,6 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             """));
   }
 
-  // TODO(b/538170232): DevirtualizeMethods: rewrite this inside class fields / static blocks to
-  // parameter
   @Test
   public void testRewrite_nestedClass_staticFieldInitializer() {
     test(
@@ -1536,7 +1528,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             """
             var JSCompiler_StaticMethods_bar = function(JSCompiler_StaticMethods_bar$self) {
               class Nested {
-                static val = JSCompiler_StaticMethods_bar$self;
+                static val = this;
               }
               return Nested;
             };
@@ -1545,8 +1537,6 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             """));
   }
 
-  // TODO(b/538170232): DevirtualizeMethods: rewrite this inside class fields / static blocks to
-  // parameter
   @Test
   public void testRewrite_nestedClass_staticBlock() {
     test(
@@ -1569,7 +1559,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             var JSCompiler_StaticMethods_bar = function(JSCompiler_StaticMethods_bar$self) {
               class Nested {
                 static {
-                  JSCompiler_StaticMethods_bar$self.val = 1;
+                  this.val = 1;
                 }
               }
               return Nested;
