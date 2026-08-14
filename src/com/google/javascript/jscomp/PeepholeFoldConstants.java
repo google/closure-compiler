@@ -1813,14 +1813,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     checkState(spread.isSpread());
     Node parent = spread.getParent();
     Node child = spread.getOnlyChild();
-    if (child.isArrayLit()) {
-      for (Node n = child.getFirstChild(); n != null; n = n.getNext()) {
-        if (n.isEmpty()) {
-          // Do not fold if the array literal has any holes as it's a syntax error to have holes
-          // (empty arg) if the spread happens to be a call arg
-          return spread;
-        }
-      }
+    if (child.isArrayLit() && isSafeToFlattenArrayLitSpread(child)) {
       parent.addChildrenAfter(child.removeChildren(), spread);
       spread.detach();
       reportChangeToEnclosingScope(parent);
@@ -1853,6 +1846,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
 
       if (parentLit.isObjectLit() && !isSafeToFlattenObjectLitSpread(innerLit)) {
+        continue;
+      }
+
+      if (parentLit.isArrayLit() && !isSafeToFlattenArrayLitSpread(innerLit)) {
         continue;
       }
 
@@ -2068,6 +2065,15 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // any getters and omits any setters. See https://tc39.es/ecma262/#sec-copydataproperties.
       // For simplicity, we just back off and do not flatten spread in this case.
       if (NodeUtil.isGetOrSetKey(prop)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean isSafeToFlattenArrayLitSpread(Node innerLit) {
+    for (Node n = innerLit.getFirstChild(); n != null; n = n.getNext()) {
+      if (n.isEmpty()) {
         return false;
       }
     }

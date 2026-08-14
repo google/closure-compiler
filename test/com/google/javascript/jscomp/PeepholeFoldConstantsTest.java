@@ -1674,15 +1674,15 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = [...[...[0], 1], 2]", "x = [0, 1, 2]");
     testSame("[...[x]] = arr");
     test("foo([...[...[0], 1], 2])", "foo([0, 1, 2])");
-    // TODO(b/538171096): Do not fold sparse array spread in PeepholeFoldConstants
-    test("x = [1, ...[,], 2];", "x = [1, , 2];");
-    test("x = [0, ...[,,], 3];", "x = [0, , , 3];");
-    test("x = [...[,]];", "x = [,];");
+    testSame("x = [1, ...[,], 2];");
+    testSame("x = [0, ...[,,], 3];");
+    testSame("x = [...[,]];");
   }
 
   @Test
   public void testFoldArrayLitSpreadInArg() {
     test("foo(...[0], 1)", "foo(0, 1)");
+    testSame("foo(...[,]);");
     testSame("foo(...[,,,,\"foo\"], 1)");
     testSame("foo(...(false ? [0] : [1]))"); // other opts need to fold the ternery first
   }
