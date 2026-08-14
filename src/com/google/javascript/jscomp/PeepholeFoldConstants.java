@@ -988,6 +988,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // Merge the last left child string node with the first right child node.
     Node lastLeft = left.getLastChild();
     Node firstRight = right.getFirstChild();
+    if (endsWithUnescapedDollar(lastLeft.getRawString())
+        && firstRight.getRawString().startsWith("{")) {
+      return oldNode;
+    }
     Node mergeNode =
         IR.templateLiteralString(
             lastLeft.getCookedString() + firstRight.getCookedString(),
@@ -1035,6 +1039,22 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return backslashCount % 2 != 0;
   }
 
+  /** returns true if the raw string ends with an unescaped dollar sign */
+  private boolean endsWithUnescapedDollar(String raw) {
+    if (!raw.endsWith("$")) {
+      return false;
+    }
+    int backslashCount = 0;
+    for (int i = raw.length() - 2; i >= 0; i--) {
+      if (raw.charAt(i) == '\\') {
+        backslashCount++;
+      } else {
+        break;
+      }
+    }
+    return backslashCount % 2 == 0;
+  }
+
   private Node tryFoldTemplateLiteralSubstitutions(Node n) {
     if (n.getParent() != null && n.getParent().isTaggedTemplateLit()) {
       return n;
@@ -1064,7 +1084,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
               String nextNextCooked = nextNext.getCookedString();
 
               // Avoid creating a new `${` sequence when folding.
-              if (strValue.isEmpty() && curCooked.endsWith("$") && nextNextCooked.startsWith("{")) {
+              if (strValue.isEmpty()
+                  && endsWithUnescapedDollar(cur.getRawString())
+                  && nextNext.getRawString().startsWith("{")) {
                 cur = next;
                 continue;
               }

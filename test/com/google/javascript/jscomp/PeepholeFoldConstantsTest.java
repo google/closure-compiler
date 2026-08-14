@@ -2631,11 +2631,11 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
         """
         const a = foo`${b}` + bar`${b}`;
         """);
-
-    // TODO(b/538140050): Fix PeepholeFoldConstants template literal concatenation on adjacent
-    // boundary
-    disableCompareAsTree();
-    test("`${x}$` + `{y}${z}`", "`${x}${y}${z}`");
+    // don't fold when raw strings meet at unescaped $ and {
+    testSame("`${x}$` + `{y}${z}`");
+    testSame("`${x}$` + `{y}`");
+    test("`${x}\\$` + `{y}`", "`${x}\\${y}`");
+    testSame("`${x}\\\\$` + `{y}`");
   }
 
   @Test
@@ -2663,6 +2663,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("`a${'\\\\r'}c`");
     testSame("`${x} ${'$'}${'{'}`"); // specifically tests that $ and { are not folded together
     test("`$${''}{${''}`", "`$${''}{`");
+    testSame("`$${''}{foo}`");
+    test("`\\$${''}{foo}`", "`\\${foo}`");
     // These should not fold because \0 followed by a digit is a syntax error in untagged templates.
     testSame("`\\0${'77'}`");
     testSame("`\\0${77}`");
