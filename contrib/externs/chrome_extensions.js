@@ -2805,6 +2805,18 @@ chrome.enterprise.reportingPrivate.reportDataMaskingEvent = function(
     event, callback) {};
 
 /**
+ * Reports that a Force Save to Cloud download operation has been handled by the
+ * enterprise extension.
+ * Since Chrome 154.
+ * @param {!chrome.enterprise.reportingPrivate.ForceSaveToCloudEvent} event The
+ *     event to report.
+ * @param {(function(): void)=} callback Called back when this operation is
+ *     finished.
+ */
+chrome.enterprise.reportingPrivate.reportForceSaveToCloudEventHandled =
+    function(event, callback) {};
+
+/**
  * @since Chrome 139.
  * Calls a callback when a data masking rule is triggered.
  * @param {function(!Array<!chrome.enterprise.reportingPrivate.DataMaskingRules>):
@@ -2855,6 +2867,25 @@ chrome.enterprise.reportingPrivate.TriggeredRuleInfo;
  * }}
  */
 chrome.enterprise.reportingPrivate.DetectorInfo;
+
+/**
+ * Event outcome status reported by the extension after handling Force Save to
+ * Cloud event.
+ * @enum {string}
+ */
+chrome.enterprise.reportingPrivate.ForceSaveToCloudEventType = {
+  SAVED_TO_CLOUD: '',
+};
+
+/**
+ * Event representing that a Force Save to Cloud operation was handled by an
+ * enterprise companion extension.
+ * @typedef {?{
+ *   downloadId: string,
+ *   event: chrome.enterprise.reportingPrivate.ForceSaveToCloudEventType,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.ForceSaveToCloudEvent;
 
 /**
  * Returns the anti-virus signals.
