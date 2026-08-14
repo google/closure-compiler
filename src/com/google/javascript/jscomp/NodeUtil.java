@@ -4986,15 +4986,15 @@ public final class NodeUtil {
     do {
       Node parent = n.getParent();
       switch (parent.getToken()) {
-        case IF, HOOK, AND, OR, COALESCE -> {
+        case IF, HOOK, AND, OR, COALESCE, ASSIGN_OR, ASSIGN_AND, ASSIGN_COALESCE -> {
           if (parent.getFirstChild() != n) {
             return false;
           }
           // other ancestors may be conditional
           continue inspect;
         }
-        case FOR, FOR_IN -> {
-          if (parent.isForIn()) {
+        case FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF -> {
+          if (NodeUtil.isEnhancedFor(parent)) {
             if (parent.getSecondChild() != n) {
               return false;
             }

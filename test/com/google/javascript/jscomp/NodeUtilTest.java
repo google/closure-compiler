@@ -2650,13 +2650,11 @@ public final class NodeUtilTest {
       assertThat(executedOnceTestCase("1 && (x || 1);")).isFalse();
 
       assertThat(executedOnceTestCase("x ||= 1;")).isTrue();
-      // TODO(b/538155254): Fix NodeUtil.isExecutedExactlyOnce for logical assignment RHS
-      assertThat(executedOnceTestCase("y ||= x;")).isTrue();
+      assertThat(executedOnceTestCase("y ||= x;")).isFalse();
       assertThat(executedOnceTestCase("x &&= 1;")).isTrue();
-      assertThat(executedOnceTestCase("y &&= x;")).isTrue();
+      assertThat(executedOnceTestCase("y &&= x;")).isFalse();
       assertThat(executedOnceTestCase("x ??= 1;")).isTrue();
-      assertThat(executedOnceTestCase("y ??= x;")).isTrue();
-
+      assertThat(executedOnceTestCase("y ??= x;")).isFalse();
       assertThat(executedOnceTestCase("x ? 1 : 2;")).isTrue();
       assertThat(executedOnceTestCase("1 ? 1 : x;")).isFalse();
       assertThat(executedOnceTestCase("1 ? x : 2;")).isFalse();
@@ -2682,23 +2680,18 @@ public final class NodeUtilTest {
 
       assertThat(executedOnceTestCase("if (1) { for(x in {}){} }")).isFalse();
 
-      // TODO(b/538125187): NodeUtil.isExecutedExactlyOnce accounts for for-of and for-await-of loop
-      // lhs
-      assertThat(executedOnceTestCase("for(x of {}){}")).isTrue();
+      assertThat(executedOnceTestCase("for(x of {}){}")).isFalse();
       assertThat(executedOnceTestCase("for({}.a of x){}")).isTrue();
-      assertThat(executedOnceTestCase("for({}.a of {}){x}")).isTrue();
+      assertThat(executedOnceTestCase("for({}.a of {}){x}")).isFalse();
 
       assertThat(executedOnceTestCase("if (1) { for(x of {}){} }")).isFalse();
 
-      // TODO(b/538125187): NodeUtil.isExecutedExactlyOnce accounts for for-of and for-await-of loop
-      // lhs
-      assertThat(executedOnceTestCase("async function f() { for await(x of {}){} }")).isTrue();
+      assertThat(executedOnceTestCase("async function f() { for await(x of {}){} }")).isFalse();
       assertThat(executedOnceTestCase("async function f() { for await({}.a of x){} }")).isTrue();
-      assertThat(executedOnceTestCase("async function f() { for await({}.a of {}){x} }")).isTrue();
+      assertThat(executedOnceTestCase("async function f() { for await({}.a of {}){x} }")).isFalse();
 
       assertThat(executedOnceTestCase("async function f() { if (1) { for await(x of {}){} } }"))
           .isFalse();
-
       assertThat(executedOnceTestCase("switch (x) {}")).isTrue();
       assertThat(executedOnceTestCase("switch (1) {case x:}")).isFalse();
       assertThat(executedOnceTestCase("switch (1) {case 1: x}")).isFalse();

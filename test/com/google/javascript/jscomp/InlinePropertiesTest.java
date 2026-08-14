@@ -664,10 +664,9 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538135522): InlineProperties: for-of in ES6 constructor prevents inlining
   @Test
   public void testConstInstancePropInForOf_es6Class() {
-    test(
+    testSame(
         """
         /** @unrestricted */
         class C {
@@ -678,16 +677,6 @@ public final class InlinePropertiesTest extends CompilerTestCase {
           }
         }
         new C().foo;
-        """,
-        """
-        class C {
-          constructor() {
-            for (const x of [1, 2]) {
-              this.foo = 1;
-            }
-          }
-        }
-        new C(), 1;
         """);
   }
 
