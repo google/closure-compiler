@@ -247,6 +247,11 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       int lowestSpread = Integer.MAX_VALUE;
       for (Node n : refs) {
         if (ReferenceMap.isNormalOrOptChainCallOrNewTarget(n)) {
+          if (hasSpreadInFirstCallParam(n)) {
+            // Bail: with spread in the first argument of .call, we know nothing about any of the
+            // parameters, so bail out now.
+            return;
+          }
           Node param = ReferenceMap.getFirstArgumentForCallOrNewOrDotCall(n);
           int paramIndex = 0;
           while (param != null) {
@@ -761,6 +766,11 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
     for (Node n : refs) {
       if (ReferenceMap.isNormalOrOptChainCallOrNewTarget(n)) {
+        if (hasSpreadInFirstCallParam(n)) {
+          // Bail: with spread we must assume all parameters are used, don't waste
+          // any more time.
+          return;
+        }
         int numArgs = 0;
         Node firstArg = ReferenceMap.getFirstArgumentForCallOrNewOrDotCall(n);
         for (Node c = firstArg; c != null; c = c.getNext()) {
@@ -838,11 +848,9 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     boolean continueLooking = false;
     for (Node n : refs) {
       if (ReferenceMap.isNormalOrOptChainCallOrNewTarget(n)) {
-        Node call = n.getParent();
-        Node firstDotCallParam = call.getFirstChild();
         // Normally, we ignore the first parameter to a .call expression (the 'this' value)
         // but if it is a spread, we know nothing about any of the parameters, so bail out now.
-        if (firstDotCallParam.isSpread()) {
+        if (hasSpreadInFirstCallParam(n)) {
           continueLooking = false;
           break;
         }
@@ -863,6 +871,27 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     }
 
     return continueLooking ? parameters : null;
+  }
+
+  /**
+   * Returns whether the target call is a {@code .call} expression whose first argument (the {@code
+   * this} argument) is a spread element (e.g., {@code foo.call(...arr)}).
+   *
+   * <p>{@link ReferenceMap#getFirstArgumentForCallOrNewOrDotCall} skips the first argument to
+   * {@code .call} (treating it as the {@code this} value) and callers inspect all subsequent
+   * arguments, which correctly handles spread arguments in normal calls like {@code foo(p1,
+   * ...args)} and {@code .call} invocations with an explicit this argument like {@code
+   * foo.call(thisArg, p1, ...args)}. However, if the first argument to {@code .call} itself is a
+   * spread (e.g., {@code foo.call(...arr)}), it spreads across both the {@code this} value and
+   * subsequent formal parameter positions, so we cannot safely optimize any parameters.
+   */
+  private static boolean hasSpreadInFirstCallParam(Node n) {
+    Node call = ReferenceMap.getCallOrNewNodeForTarget(n);
+    if (NodeUtil.isFunctionObjectCall(call)) {
+      Node firstDotCallParam = call.getSecondChild();
+      return firstDotCallParam != null && firstDotCallParam.isSpread();
+    }
+    return false;
   }
 
   /**

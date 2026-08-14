@@ -135,6 +135,9 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         "function f(p2) {var p1 = 1;} f?.(...x); f?.(2);");
 
     testSame("function f(p1, p2) {} f(1, ...x); f(2, ...y);");
+    testSame("function f(p1, p2) {} f(p1, ...args);");
+    testSame("function f(p1, p2) {} f.call(thisArg, p1, ...args);");
+    testSame("function f(p1, p2) {} f?.call(thisArg, p1, ...args);");
     // Test spread argument with side effects
     testSame(
         """
@@ -699,17 +702,12 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     test(
         "var foo = function (a) {}; foo?.call(null, 1);",
         "var foo = function () {var a = 1;}; foo?.call(null);");
-
-    // TODO(b/538122484): Fix OptimizeParameters to not optimize .call() calls with spread arguments
-    test(
-        "var foo = function (a, b) {}; foo.call(...arr);",
-        "var foo = function () {var a; var b;}; foo.call(...arr);");
-    test(
-        "var foo = function (a, b, c) {}; foo.call(...arr, 1, 2);",
-        "var foo = function () {var a = 1; var b = 2; var c;}; foo.call(...arr);");
-    test(
-        "var foo = function (a, b) {}; foo?.call(...arr);",
-        "var foo = function () {var a; var b;}; foo?.call(...arr);");
+    testSame("var foo = function (a, b) {}; foo.call(...arr);");
+    testSame("var foo = function (a, b, c) {}; foo.call(...arr, 1, 2);");
+    testSame("var foo = function (a, b) {}; foo?.call(...arr);");
+    testSame("var foo = function (p1, p2) {}; foo(p1, ...args);");
+    testSame("var foo = function (p1, p2) {}; foo.call(this, p1, ...args);");
+    testSame("var foo = function (p1, p2) {}; foo?.call(this, p1, ...args);");
   }
 
   @Test
