@@ -384,9 +384,10 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
           }
           yield true;
         }
-        case THROW, FOR, FOR_IN, SWITCH -> {
-          // TODO(kevinoconnor): Switch/for statements need special consideration since they may
-          // execute out of order.
+        case THROW, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, ITER_SPREAD, ARRAY_PATTERN, SWITCH -> {
+          // Loops and switch statements may execute out of order, and implicit iteration operations
+          // (for-of, for-await-of, spread, array destructuring) invoke arbitrary JS iterator
+          // methods which can read properties.
           markAllPropsRead();
           yield false;
         }
