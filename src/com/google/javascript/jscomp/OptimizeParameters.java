@@ -963,7 +963,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             allRestValueRemovable = false;
             // revisit the trailing params and remark them now that we know they are unremovable.
             for (int j = i + 1; j < parameters.size(); j++) {
-              Parameter p = parameters.get(0);
+              Parameter p = parameters.get(j);
               p.shouldRemove = false;
               if (p.canBeSideEffected) {
                 seenUnmoveableSideEffected = true;

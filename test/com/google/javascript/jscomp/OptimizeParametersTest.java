@@ -202,11 +202,12 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     testSame("function f(...p1){} function _g(x) { f(x); f(x); }");
   }
 
-  // TODO(b/538156674): Fix OptimizeParameters when rest parameter removal is rolled back
   @Test
   public void testRemovalRest_rollbackPreservesTrailingArgs() {
     testSame("function f(...p) { use(p); } function g(x) { f(1, x, 2); f(1, x, 2); }");
-    testSame("function f(a, ...p) { use(a, p); } function g(x) { f(1, 2, x, 3); f(1, 2, x, 3); }");
+    test(
+        "function f(a, ...p) { use(a, p); } function g(x) { f(1, 2, x, 3); f(1, 2, x, 3); }",
+        "function f(...p) { var a = 1; use(a, p); } function g(x) { f(2, x, 3); f(2, x, 3); }");
   }
 
   @Test
