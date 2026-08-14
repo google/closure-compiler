@@ -1647,26 +1647,15 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538168027): Fix DataFlowAnalysis.computeEscaped to mark variables captured by instance
-  // class fields as escaped
   @Test
   public void testInstanceFieldInitializerCaptureIsNotClobbered() {
-    test(
+    testSame(
         """
         function render(input) {
           let s = sanitize(input);
           class Box { html = s; }
           let t = input;
           log(t, input);
-          return new Box();
-        }
-        """,
-        """
-        function render(input) {
-          var s = sanitize(input);
-          class Box { html = s; }
-          s = input;
-          log(s, input);
           return new Box();
         }
         """);
@@ -1688,26 +1677,15 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538168027): Fix DataFlowAnalysis.computeEscaped to mark variables captured by instance
-  // class fields as escaped
   @Test
   public void testComputedFieldInitializerCaptureIsNotClobbered() {
-    test(
+    testSame(
         """
         function render(input) {
           let s = sanitize(input);
           class Box { ["html"] = s; }
           let t = input;
           log(t, input);
-          return new Box();
-        }
-        """,
-        """
-        function render(input) {
-          var s = sanitize(input);
-          class Box { ["html"] = s; }
-          s = input;
-          log(s, input);
           return new Box();
         }
         """);

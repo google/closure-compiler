@@ -705,8 +705,6 @@ public final class DataFlowAnalysisTest {
         .isEmpty();
   }
 
-  // TODO(b/538168027): Fix DataFlowAnalysis.computeEscaped to mark variables captured by instance
-  // class fields as escaped
   @Test
   public void testEscapedInstanceClassField() {
     assertThat(
@@ -720,11 +718,9 @@ public final class DataFlowAnalysisTest {
                   return new Box();
                 }
                 """))
-        .isEmpty();
+        .hasSize(1);
   }
 
-  // TODO(b/538168027): Fix DataFlowAnalysis.computeEscaped to mark variables captured by instance
-  // class fields as escaped
   @Test
   public void testEscapedComputedInstanceClassField() {
     assertThat(
@@ -738,7 +734,7 @@ public final class DataFlowAnalysisTest {
                   return new Box();
                 }
                 """))
-        .isEmpty();
+        .hasSize(1);
   }
 
   @Test

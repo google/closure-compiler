@@ -444,8 +444,12 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
             Scope referenceCfgScope = t.getScope().getClosestCfgRootScope();
 
-            // Variable is referenced outside of decleration scope it is 'escaped'.
-            if (referenceCfgScope != variableCfgScope) {
+            // Variable is referenced outside of declaration scope it is 'escaped'.
+            // Non-static class field initializers are evaluated at instance creation time
+            // (like closures), so variables referenced in non-static class fields must also be
+            // marked as escaped.
+            if (referenceCfgScope != variableCfgScope
+                || isReferencedInNonStaticClassField(t.getScope(), variableCfgScope)) {
               escaped.add(var);
             }
           }
@@ -465,6 +469,16 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
         escaped.add(var);
       }
     }
+  }
+
+  private static boolean isReferencedInNonStaticClassField(Scope refScope, Scope targetScope) {
+    for (Scope s = refScope; s != null && s != targetScope; s = s.getParent()) {
+      Node root = s.getRootNode();
+      if ((root.isMemberFieldDef() || root.isComputedFieldDef()) && !root.isStaticMember()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static final class UniqueQueue<T> {

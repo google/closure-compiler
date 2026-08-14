@@ -1327,7 +1327,6 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538135521): Fix DeadAssignmentsElimination to not remove x = 0 initializer
   @Test
   public void testClassField_instance_doesNotClobberAssignment() {
     inFunction(
@@ -1337,18 +1336,9 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
           field = (x = 1);
         }
         use(x);
-        """,
-        """
-        let x;
-        0;
-        class C {
-          field = (x = 1);
-        }
-        use(x);
         """);
   }
 
-  // TODO(b/538135521): Fix DeadAssignmentsElimination to not remove x = 0 initializer
   @Test
   public void testClassField_instance_doesNotClobberAssignment_computed() {
     inFunction(
@@ -1358,18 +1348,9 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
           ["field"] = (x = 1);
         }
         use(x);
-        """,
-        """
-        let x;
-        0;
-        class C {
-          ["field"] = (x = 1);
-        }
-        use(x);
         """);
   }
 
-  // TODO(b/538135521): Fix DeadAssignmentsElimination to not remove x = 1 assignment
   @Test
   public void testClassField_instanceRead_preserved() {
     inFunction(
@@ -1380,15 +1361,6 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         }
         use(new C().field); // reads x
         x = 1;
-        use(new C().field); // reads x
-        """,
-        """
-        let x = 0;
-        class C {
-          field = x;
-        }
-        use(new C().field); // reads x
-        1;
         use(new C().field); // reads x
         """);
   }
