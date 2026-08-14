@@ -439,6 +439,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (areNodesEqualForInlining(left, right.getFirstChild())) {
       newRight = right.getLastChild();
     } else if (NodeUtil.isCommutative(operator)
+        && !mayHaveSideEffects(right.getFirstChild())
         && areNodesEqualForInlining(left, right.getLastChild())) {
       newRight = right.getFirstChild();
     } else if (NodeUtil.isAssociative(operator)

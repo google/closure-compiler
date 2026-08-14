@@ -1904,14 +1904,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("x=x&&y&&z");
     test("x=x*y", "x*=y");
     test("x=y*x", "x*=y");
-    // TODO(b/538122485): Fix PeepholeFoldConstants to prevent invalid variable assignments from
-    // commutative op folding
-    test("x=foo()*x", "x*=foo()");
-    test("x=(x=5)*x", "x*=(x=5)");
-    test("x=(y++)*x", "x*=(y++)");
-    test("x=foo()|x", "x|=foo()");
-    test("x=foo()&x", "x&=foo()");
-    test("x=foo()^x", "x^=foo()");
+    testSame("x=foo()*x");
+    testSame("x=(x=5)*x");
+    testSame("x=(y++)*x");
+    testSame("x=foo()|x");
+    testSame("x=foo()&x");
+    testSame("x=foo()^x");
+    test("x=x*foo()", "x*=foo()");
+    test("x=x|foo()", "x|=foo()");
+    test("x=x&foo()", "x&=foo()");
+    test("x=x^foo()", "x^=foo()");
+    test("x=x+foo()", "x+=foo()");
     test("x=x**y", "x**=y");
     testSame("x=y**x");
     test("x.y=x.y+z", "x.y+=z");
