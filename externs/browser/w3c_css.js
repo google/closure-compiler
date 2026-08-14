@@ -3424,6 +3424,271 @@ CSSStyleProperties.prototype.webkitBoxSizing;
 CSSStyleProperties.prototype.webkitFilter;
 
 /**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitFlex;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitFlexBasis;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitFlexDirection;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitFlexFlow;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitFlexGrow;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitFlexShrink;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitFlexWrap;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitJustifyContent;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitLineClamp;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMask;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskBoxImage;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskBoxImageOutset;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskBoxImageRepeat;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskBoxImageSlice;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskBoxImageSource;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskBoxImageWidth;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskClip;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskComposite;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskImage;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskOrigin;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskPosition;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskRepeat;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitMaskSize;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitOrder;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitPerspective;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitPerspectiveOrigin;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTextFillColor;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTextSizeAdjust;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTextStroke;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTextStrokeColor;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTextStrokeWidth;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTransform;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTransformOrigin;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTransformStyle;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTransition;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTransitionDelay;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTransitionDuration;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTransitionProperty;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitTransitionTimingFunction;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Webkit_extensions
+ */
+CSSStyleProperties.prototype.webkitUserSelect;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/writing-mode
+ */
+CSSStyleProperties.prototype.writingMode;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/x
+ */
+CSSStyleProperties.prototype.x;
+
+/**
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/y
+ */
+CSSStyleProperties.prototype.y;
+
+/**
+ * @type {string|number}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/zoom
+ * Number is included for legacy compatibility.
+ */
+CSSStyleProperties.prototype.zoom;
+
+/**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
  * Externs for the CSSOM View Module.
  * @see http://www.w3.org/TR/cssom-view/
