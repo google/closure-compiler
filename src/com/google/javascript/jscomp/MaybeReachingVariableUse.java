@@ -288,9 +288,7 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
             lhs = lhs.getFirstChild(); // for (let [x] of obj) {...}
           }
         }
-        if (lhs.isName() && !conditional) {
-          removeFromUseIfLocal(lhs.getString(), output);
-        } else if (lhs.isDestructuringPattern()) {
+        if (lhs.isDestructuringPattern()) {
           computeMayUse(lhs, cfgNode, output, true);
         }
         computeMayUse(rhs, cfgNode, output, conditional);

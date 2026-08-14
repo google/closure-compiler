@@ -193,7 +193,7 @@ public final class MaybeReachingVariableUseTest {
     // Uses within FOR-IN header are hard to test. They are covered
     // by the tests in the flow sensitive inliner.
     assertNotMatch("D: var x = [], foo; U: for (x in foo) { }");
-    assertNotMatch("D: var x = [], foo; for (x in foo) { U:x }");
+    assertMatch("D: var x = [], foo; for (x in foo) { U:x }");
     assertMatch("var x = [], foo; D: for (x in foo) { U:x }");
     assertMatch("var foo; D: for (let x in foo) { U:x }");
     assertMatch("var foo; D: for (const x in foo) { U:x }");
@@ -206,7 +206,7 @@ public final class MaybeReachingVariableUseTest {
   @Test
   public void testForOf() {
     assertNotMatch("D: var x = [], foo; U: for (x of foo) { }");
-    assertNotMatch("D: var x = [], foo; for (x of foo) { U:x }");
+    assertMatch("D: var x = [], foo; for (x of foo) { U:x }");
     assertMatch("var x = [], foo; D: for (x of foo) { U:x }");
     assertMatch("var foo; D: for (let x of foo) { U:x }");
     assertMatch("var foo; D: for (const x of foo) { U:x }");
@@ -219,7 +219,7 @@ public final class MaybeReachingVariableUseTest {
   @Test
   public void testForAwaitOf() {
     assertNotAsyncMatch("D: var x = [], foo; U: for await (x of foo) { }");
-    assertNotAsyncMatch("D: var x = [], foo; for await (x of foo) { U:x }");
+    assertAsyncMatch("D: var x = [], foo; for await (x of foo) { U:x }");
     assertAsyncMatch("var x = [], foo; D: for await (x of foo) { U:x }");
     assertAsyncMatch("var foo; D: for await (let x of foo) { U:x }");
     assertAsyncMatch("var foo; D: for await (const x of foo) { U:x }");

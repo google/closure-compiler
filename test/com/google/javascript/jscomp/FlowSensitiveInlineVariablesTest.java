@@ -1327,54 +1327,43 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538125187): Fix FlowSensitiveInlineVariables inlines into/across loop headers
   @Test
   public void testNoInlineEnhancedForLoopsLhs() {
     // For-in variant
-    test(
-        externs(EXTERN_FUNCTIONS),
-        srcs(
-            """
-            function f(input, obj, sink) {
-              var x; x = input;
-              x = '';
-              print(x);
-              for (x in obj) {}
-              sink(x);
-            }
-            """),
-        expected(
-            """
-            function f(input, obj, sink) {
-              var x; x = input;
-              print('');
-              for (x in obj) {}
-              sink(x);
-            }
-            """));
+    testSame(
+        """
+        function f(input, obj, sink) {
+          var x; x = input;
+          x = '';
+          print(x);
+          for (x in obj) {}
+          sink(x);
+        }
+        """);
 
     // For-of variant
-    test(
-        externs(EXTERN_FUNCTIONS),
-        srcs(
-            """
-            function f(input, arr, sink) {
-              var x; x = input;
-              x = '';
-              print(x);
-              for (x of arr) {}
-              sink(x);
-            }
-            """),
-        expected(
-            """
-            function f(input, arr, sink) {
-              var x; x = input;
-              print('');
-              for (x of arr) {}
-              sink(x);
-            }
-            """));
+    testSame(
+        """
+        function f(input, arr, sink) {
+          var x; x = input;
+          x = '';
+          print(x);
+          for (x of arr) {}
+          sink(x);
+        }
+        """);
+
+    // For-await-of variant
+    testSame(
+        """
+        async function f(input, arr, sink) {
+          var x; x = input;
+          x = '';
+          print(x);
+          for await (x of arr) {}
+          sink(x);
+        }
+        """);
   }
 
   private void noInline(String input) {

@@ -227,8 +227,10 @@ final class MustBeReachingVariableDef
           lhs = lhs.getLastChild(); // for(var x in y) {...}
         }
         if (lhs.isName()) {
-          // TODO(lharker): This doesn't seem right - given for (x in y), the value set to x isn't y
-          addToDefIfLocal(lhs.getString(), cfgNode, rhs, output);
+          // We pass null for the def node because an enhanced for-loop conditionally assigns
+          // elements from the collection at runtime (or doesn't execute if empty), so there is no
+          // unconditional reaching definition from the loop header.
+          addToDefIfLocal(lhs.getString(), null, rhs, output);
         } else if (lhs.isDestructuringLhs()) {
           lhs = lhs.getFirstChild();
         }
