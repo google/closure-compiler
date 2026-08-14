@@ -1166,7 +1166,7 @@ public final class NodeUtil {
   // scope with InferConsts.
   static boolean canBeSideEffected(Node n, Set<String> knownConstants, @Nullable Scope scope) {
     switch (n.getToken()) {
-      case YIELD, CALL, OPTCHAIN_CALL, NEW -> {
+      case YIELD, CALL, OPTCHAIN_CALL, NEW, TAGGED_TEMPLATELIT, AWAIT, DYNAMIC_IMPORT -> {
         // Function calls or constructor can reference changed values.
         // TODO(johnlenz): Add some mechanism for determining that functions
         // are unaffected by side effects.

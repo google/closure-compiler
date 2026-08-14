@@ -5153,8 +5153,7 @@ public final class NodeUtilTest {
             {AWAIT, "(async () => { await p; })", true},
 
             // DYNAMIC_IMPORT
-            // TODO(b/538171095): Dynamic import canBeSideEffected returns true
-            {Token.DYNAMIC_IMPORT, "import('m')", false},
+            {Token.DYNAMIC_IMPORT, "import('m')", true},
           });
     }
 

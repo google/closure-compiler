@@ -2292,24 +2292,23 @@ a = temp$jscomp$2;
         "var result$jscomp$0 = foo(); fn.call(result$jscomp$0);");
   }
 
-  // TODO(b/538123290): Fix NodeUtil.canBeSideEffected to include ES6+ side-effected tokens
   @Test
   public void testDecomposeEs6Features() {
     knownConstants.add("tag");
     knownConstants.add("sink");
     // Tagged template literals
     helperCanExposeExpression(
-        DecompositionType.MOVABLE, "sink(tag`x`, foo())", exprMatchesStr("foo()"));
+        DecompositionType.DECOMPOSABLE, "sink(tag`x`, foo())", exprMatchesStr("foo()"));
 
     // Await expressions
     helperCanExposeExpression(
-        DecompositionType.MOVABLE,
+        DecompositionType.DECOMPOSABLE,
         "async function f() { sink(await 0, foo()); }",
         exprMatchesStr("foo()"));
 
     // Dynamic imports
     helperCanExposeExpression(
-        DecompositionType.MOVABLE, "sink(import('m'), foo())", exprMatchesStr("foo()"));
+        DecompositionType.DECOMPOSABLE, "sink(import('m'), foo())", exprMatchesStr("foo()"));
   }
 
   private void helperCanExposeExpression(
