@@ -2005,62 +2005,10 @@ public class CodeGenerator {
         case '\'' -> sb.append(singlequoteEscape);
         case '$' -> sb.append(dollarEscape);
         case '`' -> sb.append(backtickEscape);
-        case '=' -> {
-          // '=' is a syntactically significant regexp character.
-          if (trustedStrings || isRegexp) {
-            sb.append(c);
-          } else {
-            sb.append("\\x3d");
-          }
-        }
-        case '&' -> {
-          if (trustedStrings || isRegexp) {
-            sb.append(c);
-          } else {
-            sb.append("\\x26");
-          }
-        }
-        case '>' -> {
-          if (!trustedStrings && !isRegexp) {
-            sb.append(GT_ESCAPED);
-            break;
-          }
-
-          // Break --> into --\> or ]]> into ]]\>
-          //
-          // This is just to prevent developers from shooting themselves in the
-          // foot, and does not provide the level of security that you get
-          // with trustedString == false.
-          if (i >= 2
-              && ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-')
-                  || (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
-            sb.append(GT_ESCAPED);
-          } else {
-            sb.append(c);
-          }
-        }
-        case '<' -> {
-          if (!trustedStrings && !isRegexp) {
-            sb.append(LT_ESCAPED);
-            break;
-          }
-
-          // Break </script into <\/script
-          // As above, this is just to prevent developers from doing this
-          // accidentally.
-          final String endScript = "/script";
-
-          // Break <!-- into <\!--
-          final String startComment = "!--";
-
-          if (s.regionMatches(true, i + 1, endScript, 0, endScript.length())) {
-            sb.append(LT_ESCAPED);
-          } else if (s.regionMatches(false, i + 1, startComment, 0, startComment.length())) {
-            sb.append(LT_ESCAPED);
-          } else {
-            sb.append(c);
-          }
-        }
+        case '=' -> appendEscapedEq(sb, isRegexp);
+        case '&' -> appendEscapedAmp(sb, isRegexp);
+        case '>' -> appendEscapedGt(sb, s, i, isRegexp);
+        case '<' -> appendEscapedLt(sb, s, i, isRegexp);
         default -> {
           if (isRegexp
               || !outputFeatureSet.contains(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP)) {
@@ -2096,6 +2044,66 @@ public class CodeGenerator {
     return sb.toString();
   }
 
+  private void appendEscapedEq(StringBuilder sb, boolean isRegexp) {
+    // '=' is a syntactically significant regexp character.
+    if (trustedStrings || isRegexp) {
+      sb.append('=');
+    } else {
+      sb.append("\\x3d");
+    }
+  }
+
+  private void appendEscapedAmp(StringBuilder sb, boolean isRegexp) {
+    if (trustedStrings || isRegexp) {
+      sb.append('&');
+    } else {
+      sb.append("\\x26");
+    }
+  }
+
+  private void appendEscapedGt(StringBuilder sb, String s, int index, boolean isRegexp) {
+    if (!trustedStrings && !isRegexp) {
+      sb.append(GT_ESCAPED);
+      return;
+    }
+
+    // Break --> into --\> or ]]> into ]]\>
+    //
+    // This is just to prevent developers from shooting themselves in the
+    // foot, and does not provide the level of security that you get
+    // with trustedString == false.
+    if (index >= 2
+        && ((s.charAt(index - 1) == '-' && s.charAt(index - 2) == '-')
+            || (s.charAt(index - 1) == ']' && s.charAt(index - 2) == ']'))) {
+      sb.append(GT_ESCAPED);
+    } else {
+      sb.append('>');
+    }
+  }
+
+  private void appendEscapedLt(StringBuilder sb, String s, int index, boolean isRegexp) {
+    if (!trustedStrings && !isRegexp) {
+      sb.append(LT_ESCAPED);
+      return;
+    }
+
+    // Break </script into <\/script and </style into <\/style
+    // As above, this is just to prevent developers from doing this accidentally.
+    final String endScript = "/script";
+    final String endStyle = "/style";
+
+    // Break <!-- into <\!--
+    final String startComment = "!--";
+
+    if (s.regionMatches(true, index + 1, endScript, 0, endScript.length())
+        || s.regionMatches(true, index + 1, endStyle, 0, endStyle.length())
+        || s.regionMatches(false, index + 1, startComment, 0, startComment.length())) {
+      sb.append(LT_ESCAPED);
+    } else {
+      sb.append('<');
+    }
+  }
+
   /**
    * Helper to escape the characters that might be misinterpreted
    *
@@ -2111,6 +2119,10 @@ public class CodeGenerator {
         case '\b', '\f', '\n', '\r', '\t', '\\', '\"', '\'', '$', '`', '\u2028', '\u2029' ->
             // From the SingleEscapeCharacter grammar production.
             sb.append(c);
+        case '=' -> appendEscapedEq(sb, /* isRegexp= */ false);
+        case '&' -> appendEscapedAmp(sb, /* isRegexp= */ false);
+        case '>' -> appendEscapedGt(sb, s, i, /* isRegexp= */ false);
+        case '<' -> appendEscapedLt(sb, s, i, /* isRegexp= */ false);
         default -> {
           if ((outputCharsetEncoder != null && outputCharsetEncoder.canEncode(c))
               || (c > 0x1f && c < 0x7f)) {

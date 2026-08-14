@@ -845,34 +845,32 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("/(?=x)/", "/(?=x)/");
   }
 
-  // TODO(b/538150822): CodePrinter: break script tags / comments in template literals
   @Test
   public void testBreakTemplateLiterals() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
 
     // Break scripts in template literals
-    assertPrint("`</script>`", "`</script>`");
-    assertPrint("`</SCRIPT>`", "`</SCRIPT>`");
-    assertPrint("`</style>`", "`</style>`");
-    assertPrint("`</STYLE>`", "`</STYLE>`");
+    assertPrint("`</script>`", "`\\x3c/script>`");
+    assertPrint("`</SCRIPT>`", "`\\x3c/SCRIPT>`");
+    assertPrint("`</style>`", "`\\x3c/style>`");
+    assertPrint("`</STYLE>`", "`\\x3c/STYLE>`");
 
     // Break comments in template literals
-    assertPrint("`-->`", "`-->`");
-    assertPrint("`]]>`", "`]]>`");
-    assertPrint("` --></script>`", "` --></script>`");
-    assertPrint("`<!-- I am a string -->`", "`<!-- I am a string -->`");
+    assertPrint("`-->`", "`--\\x3e`");
+    assertPrint("`]]>`", "`]]\\x3e`");
+    assertPrint("` --></script>`", "` --\\x3e\\x3c/script>`");
+    assertPrint("`<!-- I am a string -->`", "`\\x3c!-- I am a string --\\x3e`");
   }
 
-  // TODO(b/538150822): CodePrinter: break script tags / comments in template literals
   @Test
   public void testBreakUntrustedTemplateLiterals() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     trustedStrings = false;
 
     // Break scripts in template literals
-    assertPrint("`</script>`", "`</script>`");
-    assertPrint("`<!-- I am a string -->`", "`<!-- I am a string -->`");
-    assertPrint("`<=&>`", "`<=&>`");
+    assertPrint("`</script>`", "`\\x3c/script\\x3e`");
+    assertPrint("`<!-- I am a string -->`", "`\\x3c!-- I am a string --\\x3e`");
+    assertPrint("`<=&>`", "`\\x3c\\x3d\\x26\\x3e`");
   }
 
   @Test
