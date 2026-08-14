@@ -282,10 +282,8 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     assertNode(methodCallNode).isCall().hasColorThat().isEqualTo(StandardColors.UNKNOWN);
   }
 
-  // TODO(b/538135765): Fix RewriteAsyncFunctions to bind this for super tagged templates
   @Test
   public void testInnerSuperTaggedTemplateLiteral() {
-    disableCompareAsTree();
     test(
         externs(new TestExternsBuilder().addPromise().addJSCompLibraries().build()),
         srcs(
@@ -302,10 +300,25 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             }
             """),
         expected(
-            "class A{m(strings,...values){return Promise.resolve(this)}}class X extends A{m(){const"
-                + " ASYNC_SUPER_GET$5$m=()=>{return"
-                + " super.m};return(0,$jscomp.asyncExecutePromiseGeneratorFunction)(function*(){return"
-                + " ASYNC_SUPER_GET$5$m()`<p>hello</p>`})}}"));
+            """
+            class A {
+              m(strings, ...values) {
+                return Promise.resolve(this);
+              }
+            }
+            class X extends A {
+              m() {
+                const ASYNC_THIS$3 = this;
+                const ASYNC_SUPER_GET$5$m = () => {
+                  return super.m;
+                };
+                return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(
+                    function* () {
+                      return ASYNC_SUPER_GET$5$m().bind(ASYNC_THIS$3)`<p>hello</p>`;
+                    });
+              }
+            }
+            """));
   }
 
   @Test

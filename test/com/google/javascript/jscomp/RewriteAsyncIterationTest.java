@@ -580,10 +580,8 @@ function baz() {
         """);
   }
 
-  // TODO(b/538150835): RewriteAsyncIteration: bind this in super tagged template in async generator
   @Test
   public void testInnerSuperTaggedTemplateLiteralInAsyncGenerator() {
-    disableCompareAsTree();
     test(
         """
         class A {
@@ -597,10 +595,27 @@ function baz() {
           }
         }
         """,
-        "class A{m(strings,...values){return this}}class X extends A{m(){const"
-            + " $jscomp$asyncIter$super$get$m=()=>{return super.m};return new"
-            + " $jscomp.AsyncGeneratorWrapper(function*(){return new"
-            + " $jscomp.AsyncGeneratorWrapper$ActionRecord($jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,$jscomp$asyncIter$super$get$m()`<p>hello</p>`)}())}}");
+        """
+        class A {
+          m(strings, ...values) {
+            return this;
+          }
+        }
+        class X extends A {
+          m() {
+            const $jscomp$asyncIter$this$m1146332801$1 = this;
+            const $jscomp$asyncIter$super$get$m = () => {
+                 return super.m;
+            };
+            return new $jscomp.AsyncGeneratorWrapper(
+                function* () {
+                  return new $jscomp.AsyncGeneratorWrapper$ActionRecord(
+                      $jscomp.AsyncGeneratorWrapper$ActionEnum.YIELD_VALUE,
+                      $jscomp$asyncIter$super$get$m().bind($jscomp$asyncIter$this$m1146332801$1)`<p>hello</p>`);
+                }());
+          }
+        }
+        """);
   }
 
   @Test

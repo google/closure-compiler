@@ -426,8 +426,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
               Node getPropReplacement = superPropertyWrapperInfo.createWrapperFunctionCallNode();
               Node grandparent = superDotProperty.getParent();
               if (grandparent.isCall() && grandparent.getFirstChild() == superDotProperty) {
-                // $jscomp$super$get$x(...)   =>   $jscomp$super$get$x().call($jscomp$async$this,
-                // ...)
+                // $jscomp$super$get$x(args) => $jscomp$super$get$x().call($jscomp$async$this, args)
                 getPropReplacement =
                     astFactory.createGetPropWithUnknownType(getPropReplacement, "call");
                 Node thisAlias =
@@ -439,6 +438,23 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
                         .srcref(superDotProperty);
                 thisAlias.insertAfter(superDotProperty);
                 asyncThisAndArgumentsContext.recordAsyncThisReplacementWasDone(type(thisAlias));
+              } else if (grandparent.isTaggedTemplateLit()
+                  && grandparent.getFirstChild() == superDotProperty) {
+                // $jscomp$super$get$x`template` =>
+                // $jscomp$super$get$x().bind($jscomp$async$this)`template`
+                Node thisAlias =
+                    astFactory
+                        .createThisAliasReferenceForEs6Class(
+                            ASYNC_THIS + asyncThisAndArgumentsContext.uniqueId,
+                            NodeUtil.getEnclosingClass(
+                                asyncThisAndArgumentsContext.getContextRootNode()))
+                        .srcref(superDotProperty);
+                asyncThisAndArgumentsContext.recordAsyncThisReplacementWasDone(type(thisAlias));
+                getPropReplacement =
+                    astFactory.createCallWithUnknownType(
+                        astFactory.createGetPropWithUnknownType(getPropReplacement, "bind"),
+                        thisAlias);
+                grandparent.putBooleanProp(Node.FREE_CALL, true);
               }
               getPropReplacement.srcrefTree(superDotProperty);
               superDotProperty.replaceWith(getPropReplacement);

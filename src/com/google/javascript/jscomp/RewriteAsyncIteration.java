@@ -879,7 +879,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
             type(parent));
     Node grandparent = parent.getParent();
     if (grandparent.isCall() && grandparent.getFirstChild() == parent) {
-      // super.x(...)   =>   super.x.call($this, ...)
+      // super.x(args) => super.x.call($this, args)
       getPropReplacement = astFactory.createGetPropWithUnknownType(getPropReplacement, "call");
       ctx.thisSuperArgsContext.thisNodeToAdd =
           astFactory.createThisForEs6ClassMember(ctx.contextRoot.getParent());
@@ -889,6 +889,20 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
               type(ctx.thisSuperArgsContext.thisNodeToAdd))
           .srcref(parent)
           .insertAfter(parent);
+    } else if (grandparent.isTaggedTemplateLit() && grandparent.getFirstChild() == parent) {
+      // super.x`template` => super.x().bind($this)`template`
+      ctx.thisSuperArgsContext.thisNodeToAdd =
+          astFactory.createThisForEs6ClassMember(ctx.contextRoot.getParent());
+      Node thisAlias =
+          astFactory
+              .createName(
+                  THIS_VAR_NAME + ctx.thisSuperArgsContext.uniqueId,
+                  type(ctx.thisSuperArgsContext.thisNodeToAdd))
+              .srcref(parent);
+      getPropReplacement =
+          astFactory.createCallWithUnknownType(
+              astFactory.createGetPropWithUnknownType(getPropReplacement, "bind"), thisAlias);
+      grandparent.putBooleanProp(Node.FREE_CALL, true);
     }
     getPropReplacement.srcrefTree(parent);
     parent.replaceWith(getPropReplacement);
