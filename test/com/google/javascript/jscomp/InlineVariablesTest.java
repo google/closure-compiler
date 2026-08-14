@@ -2552,7 +2552,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538170229): InlineVariables: treat OPTCHAIN_GETPROP as canBeSideEffected
   @Test
   public void testNoInlinePastOptionalChainGetProp() {
     test(
@@ -2565,8 +2564,26 @@ public final class InlineVariablesTest extends CompilerTestCase {
         """,
         """
         function f() {
-          var ready = this?.ready;
-          return this.consume() + ready;
+          var t = this.consume();
+          return t + this?.ready;
+        }
+        """);
+  }
+
+  @Test
+  public void testNoInlinePastOptionalChainGetElem() {
+    test(
+        """
+        function f() {
+          var t = this.consume();
+          var ready = this?.['ready'];
+          return t + ready;
+        }
+        """,
+        """
+        function f() {
+          var t = this.consume();
+          return t + this?.['ready'];
         }
         """);
   }

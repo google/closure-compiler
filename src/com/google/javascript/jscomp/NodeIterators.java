@@ -244,17 +244,20 @@ class NodeIterators {
         // Reject anything that might read state
         boolean readsState = false;
 
-        if (// Any read of a different variable.
-            (nextNode.isName() && !varName.equals(nextNode.getString()))
+        if ( // Any read of a different variable.
+        (nextNode.isName() && !varName.equals(nextNode.getString()))
             // Any read of a property.
-            || (nextNode.isGetProp() || nextNode.isGetElem())) {
+            || (nextNode.isGetProp()
+                || nextNode.isGetElem()
+                || nextNode.isOptChainGetProp()
+                || nextNode.isOptChainGetElem())) {
 
           // If this is a simple assign, we'll be ok.
           if (nextParent == null || !NodeUtil.isNameDeclOrSimpleAssignLhs(nextNode, nextParent)) {
             readsState = true;
           }
 
-        } else if (nextNode.isCall() || nextNode.isNew()) {
+        } else if (nextNode.isCall() || nextNode.isNew() || nextNode.isOptChainCall()) {
           // This isn't really an important case. In most cases when we use
           // CALL or NEW, we're invoking it on a NAME or a GETPROP. And in the
           // few cases where we're not, it's because we have an anonymous
