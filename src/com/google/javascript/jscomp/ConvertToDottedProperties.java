@@ -47,11 +47,13 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback implements Com
         Node leftElem = n.getFirstChild();
         Node rightElem = leftElem.getNext();
 
-        // not convert property named constructor.
+        // not convert property named constructor or __proto__ in object literals.
         // ['constructor']() and constructor() are different.
+        // {['__proto__']: v} defines an own property; {__proto__: v} sets prototype.
         if (leftElem.isStringLit()
             && NodeUtil.isValidPropertyName(FeatureSet.ES3, leftElem.getString())
-            && !leftElem.getString().equals("constructor")) {
+            && !leftElem.getString().equals("constructor")
+            && !(parent.isObjectLit() && leftElem.getString().equals("__proto__"))) {
           leftElem.detach();
           rightElem.detach();
           Node temp;

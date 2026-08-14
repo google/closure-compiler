@@ -192,9 +192,10 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     testSame("const test1 = {[0]:87};");
     testSame("const test1 = {['default']:87};");
     testSame("class C { ['constructor']() {} }");
-    // TODO(b/538136623): Do not convert {['__proto__']: v} to {__proto__: v} in
-    // ConvertToDottedProperties.
-    test("const o = {['__proto__']: v};", "const o = {__proto__: v};");
+    testSame("class C { ['constructor'] = 0 }");
+    testSame("const o = {['__proto__']: v};");
+    test("class C { ['__proto__']() {} }", "class C { __proto__() {} }");
+    test("class C { ['__proto__'] = 0; }", "class C { __proto__ = 0; }");
   }
 
   @Test
