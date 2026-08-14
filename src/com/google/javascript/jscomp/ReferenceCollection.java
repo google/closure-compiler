@@ -89,6 +89,28 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
   }
 
   /**
+   * Whether `this` is rebound in any reference's scope before reaching the declaration's hoist
+   * scope.
+   */
+  boolean isThisRebound() {
+    Scope hoistScope = null;
+    for (Reference ref : references) {
+      Scope refHoistScope = ref.getScope().getClosestHoistScope();
+      if (hoistScope == null) {
+        hoistScope = refHoistScope;
+      } else if (hoistScope != refHoistScope) {
+        return true;
+      }
+      for (Scope s = ref.getScope(); s != hoistScope && s != null; s = s.getParent()) {
+        if (AbstractScope.ImplicitVar.THIS.isMadeByScope(s)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
    * @param index The index into the references array to look for an assigning declaration.
    *     <p>This is either the declaration if a value is assigned (such as "var a = 2", "function
    *     a()...", "... catch (a)...").

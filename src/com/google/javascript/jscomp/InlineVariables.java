@@ -503,7 +503,7 @@ class InlineVariables implements CompilerPass {
           }
           if (isWellDefined()
               && (initialValueAnalysis.isImmutableValue()
-                  || (initValue.isThis() && !referenceInfo.isEscaped()))) {
+                  || (initValue.isThis() && !referenceInfo.isThisRebound()))) {
             // if the variable is referenced more than once, we can only
             // inline it if it's immutable and never defined before referenced.
             return createInlineWellDefinedVarAnalysis(initValue);

@@ -1820,10 +1820,10 @@ public final class InlineVariablesTest extends CompilerTestCase {
     testSame("function f() { var a = this; var g = function() { a.y(); }; a.z(); }");
   }
 
-  // TODO(b/538171094): Don't inline this alias into class field def value
+
   @Test
   public void testThisAlias_classMemberFieldDef() {
-    test(
+    testSame(
         """
         function f() {
           var self = this;
@@ -1832,21 +1832,12 @@ public final class InlineVariablesTest extends CompilerTestCase {
             owner = self;
           }
         }
-        """,
-        """
-        function f() {
-          use(this);
-          class H {
-            owner = this;
-          }
-        }
         """);
   }
 
-  // TODO(b/538171094): Don't inline this alias into class field def value
   @Test
   public void testThisAlias_classStaticMemberFieldDef() {
-    test(
+    testSame(
         """
         function f() {
           var self = this;
@@ -1855,35 +1846,18 @@ public final class InlineVariablesTest extends CompilerTestCase {
             static owner = self;
           }
         }
-        """,
-        """
-        function f() {
-          use(this);
-          class H {
-            static owner = this;
-          }
-        }
         """);
   }
 
-  // TODO(b/538171094): Don't inline this alias into class field def value
   @Test
   public void testThisAlias_classComputedFieldDefValue() {
-    test(
+    testSame(
         """
         function f() {
           var self = this;
           use(self);
           class H {
             ['owner'] = self;
-          }
-        }
-        """,
-        """
-        function f() {
-          use(this);
-          class H {
-            ['owner'] = this;
           }
         }
         """);
@@ -1927,21 +1901,14 @@ public final class InlineVariablesTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538171094): Don't inline this alias into class field def value
   @Test
   public void testThisAlias_globalClassMemberFieldDef() {
-    test(
+    testSame(
         """
         var self = this;
         use(self);
         class H {
           owner = self;
-        }
-        """,
-        """
-        use(this);
-        class H {
-          owner = this;
         }
         """);
   }
