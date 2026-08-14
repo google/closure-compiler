@@ -357,6 +357,128 @@ function GPUOutOfMemoryError(message) {}
  */
 function GPUValidationError(message) {}
 
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuextent3ddict
+ */
+function GPUExtent3DDict() {}
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUExtent3DDict.prototype.depthOrArrayLayers;
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUExtent3DDict.prototype.height;
+/** @type {!GPUIntegerCoordinate} */
+GPUExtent3DDict.prototype.width;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuorigin2ddict
+ */
+function GPUOrigin2DDict() {}
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUOrigin2DDict.prototype.x;
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUOrigin2DDict.prototype.y;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuorigin3ddict
+ */
+function GPUOrigin3DDict() {}
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUOrigin3DDict.prototype.x;
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUOrigin3DDict.prototype.y;
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUOrigin3DDict.prototype.z;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpucolordict
+ */
+function GPUColorDict() {}
+/** @type {number} */
+GPUColorDict.prototype.a;
+/** @type {number} */
+GPUColorDict.prototype.b;
+/** @type {number} */
+GPUColorDict.prototype.g;
+/** @type {number} */
+GPUColorDict.prototype.r;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#gpucopyexternalimagesourceinfo
+ */
+function GPUCopyExternalImageSourceInfo() {}
+/** @type {boolean|undefined} */
+GPUCopyExternalImageSourceInfo.prototype.flipY;
+/** @type {!GPUOrigin2D|undefined} */
+GPUCopyExternalImageSourceInfo.prototype.origin;
+/** @type {!GPUCopyExternalImageSource} */
+GPUCopyExternalImageSourceInfo.prototype.source;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#gputexelcopybufferlayout
+ */
+function GPUTexelCopyBufferLayout() {}
+/** @type {!GPUSize32|undefined} */
+GPUTexelCopyBufferLayout.prototype.bytesPerRow;
+/** @type {!GPUSize64|undefined} */
+GPUTexelCopyBufferLayout.prototype.offset;
+/** @type {!GPUSize32|undefined} */
+GPUTexelCopyBufferLayout.prototype.rowsPerImage;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpubufferbindinglayout
+ */
+function GPUBufferBindingLayout() {}
+/** @type {boolean|undefined} */
+GPUBufferBindingLayout.prototype.hasDynamicOffset;
+/** @type {!GPUSize64|undefined} */
+GPUBufferBindingLayout.prototype.minBindingSize;
+/** @type {!GPUBufferBindingType|undefined} */
+GPUBufferBindingLayout.prototype.type;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpusamplerbindinglayout
+ */
+function GPUSamplerBindingLayout() {}
+/** @type {!GPUSamplerBindingType|undefined} */
+GPUSamplerBindingLayout.prototype.type;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gputexturebindinglayout
+ */
+function GPUTextureBindingLayout() {}
+/** @type {boolean|undefined} */
+GPUTextureBindingLayout.prototype.multisampled;
+/** @type {!GPUTextureSampleType|undefined} */
+GPUTextureBindingLayout.prototype.sampleType;
+/** @type {!GPUTextureViewDimension|undefined} */
+GPUTextureBindingLayout.prototype.viewDimension;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpustoragetexturebindinglayout
+ */
+function GPUStorageTextureBindingLayout() {}
+/** @type {!GPUStorageTextureAccess|undefined} */
+GPUStorageTextureBindingLayout.prototype.access;
+/** @type {!GPUTextureFormat} */
+GPUStorageTextureBindingLayout.prototype.format;
+/** @type {!GPUTextureViewDimension|undefined} */
+GPUStorageTextureBindingLayout.prototype.viewDimension;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuexternaltexturebindinglayout
+ */
+function GPUExternalTextureBindingLayout() {}
+
 /** @typedef {number} */
 var GPUBufferDynamicOffset;
 
@@ -666,3 +788,15 @@ var GPUVertexFormat;
  * Valid values: "instance", "vertex"
  */
 var GPUVertexStepMode;
+
+/** @typedef {!Array<number>|!GPUColorDict} */
+var GPUColor;
+
+/** @typedef {!Array<!GPUIntegerCoordinate>|!GPUExtent3DDict} */
+var GPUExtent3D;
+
+/** @typedef {!Array<!GPUIntegerCoordinate>|!GPUOrigin2DDict} */
+var GPUOrigin2D;
+
+/** @typedef {!Array<!GPUIntegerCoordinate>|!GPUOrigin3DDict} */
+var GPUOrigin3D;
