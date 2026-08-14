@@ -5763,52 +5763,33 @@ JSCompiler_temp_const$jscomp$v0.bug = JSCompiler_inline_result$jscomp$v1;
         """);
   }
 
-  // TODO(b/538122488): InlineFunctions: do not inline functions reassigned in destructuring
   @Test
   public void testNoInlineArrayDestructuringReassignment() {
-    test(
+    testSame(
         """
         function sanitize(x) { return x; }
         [sanitize] = getStrictSanitizers();
         el.innerHTML = sanitize(untrusted);
-        """,
-        """
-        function sanitize(x) { return x; }
-        [sanitize] = getStrictSanitizers();
-        el.innerHTML = untrusted;
         """);
   }
 
-  // TODO(b/538122488): InlineFunctions: do not inline functions reassigned in destructuring
   @Test
   public void testNoInlineObjectDestructuringReassignment() {
-    test(
+    testSame(
         """
         function sanitize(x) { return x; }
         ({sanitize} = getStrictSanitizers());
         el.innerHTML = sanitize(untrusted);
-        """,
-        """
-        function sanitize(x) { return x; }
-        ({sanitize} = getStrictSanitizers());
-        el.innerHTML = untrusted;
         """);
   }
 
-  // TODO(b/538122488): InlineFunctions: do not inline functions reassigned in for-of loop
   @Test
   public void testNoInlineForOfLoopReassignment() {
-    test(
+    testSame(
         """
         function sanitize(x) { return x; }
         for (sanitize of getStrictSanitizers()) {
           el.innerHTML = sanitize(untrusted);
-        }
-        """,
-        """
-        function sanitize(x) { return x; }
-        for (sanitize of getStrictSanitizers()) {
-          el.innerHTML = untrusted;
         }
         """);
   }

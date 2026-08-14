@@ -609,11 +609,10 @@ class InlineFunctions implements CompilerPass {
         return;
       }
 
-      // If the name is being assigned to it can not be inlined.
-      if (parent.isAssign() && parent.getFirstChild() == n) {
-        // e.g. bar = something; <== we can't inline "bar"
-        // so mark the function as uninlinable.
-        // TODO(johnlenz): Should we just remove it from fns here?
+      // If the name is being assigned to or modified as an L-value (e.g. `bar = something;`,
+      // destructuring `[bar] = ...`, or `for (bar of ...)`), it cannot be inlined.
+      if (NodeUtil.isLValue(n)) {
+        // Mark the function as uninlinable.
         functionState.disallowInlining(compiler, DisallowInliningReason.REASSIGNED);
       } else if ((parent.isAssign()
               && parent.getJSDocInfo() != null
