@@ -47,6 +47,9 @@ $jscomp.polyfill('String.prototype.matchAll', function(orig) {
     }
     var /** !RegExp */ regexCopy =
         new RegExp(regexp, regexp instanceof RegExp ? undefined : 'g');
+    if (regexp instanceof RegExp) {
+      regexCopy.lastIndex = regexp.lastIndex;
+    }
     var matchString = this;
     var /** boolean */ finished = false;
     var matchAllIterator = {
