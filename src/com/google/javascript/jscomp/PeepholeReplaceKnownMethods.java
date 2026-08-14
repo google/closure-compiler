@@ -698,7 +698,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (right != null && right.isStringLit() && ",".equals(right.getString())) {
+    if (right != null
+        && (NodeUtil.isUndefined(right)
+            || (right.isStringLit() && ",".equals(right.getString())))) {
       // "," is the default, it doesn't need to be explicit
       right.detach();
       reportChangeToEnclosingScope(n);
@@ -706,7 +708,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     // logic above ensures that `right` is immutable, so no need to check for
     // side effects with getSideEffectFreeStringValue(right)
-    String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
+    String joinString =
+        (right == null || NodeUtil.isUndefined(right)) ? "," : NodeUtil.getStringValue(right);
     List<Node> arrayFoldedChildren = new ArrayList<>();
     StringBuilder sb = null;
     int foldedSize = 0;

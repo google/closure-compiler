@@ -161,10 +161,8 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
         "x = '1abcdef2abcdef3'");
 
     fold("x = [1,2].join()", "x = '1,2'");
-    // TODO(b/538138151): Fix Array.prototype.join folding when separator is undefined or void 0.
-    foldSame("[1, 2].join(undefined)");
-    fold("[1, 2].join(void 0)", "'1undefined2'");
-    fold("[1, 2].join()", "'1,2'");
+    fold("x = [1, 2].join(undefined)", "x = '1,2'");
+    fold("x = [1, 2].join(void 0)", "x = '1,2'");
     fold("x = [null,undefined,''].join(',')", "x = ',,'");
     fold("x = [null,undefined,0].join(',')", "x = ',,0'");
     // This can be folded but we don't currently.
