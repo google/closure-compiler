@@ -2244,13 +2244,18 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("var x = {a: 1, a() { 2; }}.a;", "var x = function() { 2; };");
     test("var x = {a() {}, a: 1}.a;", "var x = 1;");
     testSame("var x = {a() {}}.b");
-
-    // TODO(b/538141094): Fix PeepholeFoldConstants to not fold computed setters
-    test(
-        "var x = ({ set ['a'](v) { sideEffect(); } }).a;",
-        "var x = function(v) { sideEffect(); }();");
+    // Don't fold non-computed setters.
+    testSame("var x = ({ set a(v) { sideEffect() } }).a;");
+    // Don't fold computed setters.
+    testSame("var x = ({ set ['a'](v) { sideEffect() } }).a;");
     // Fold computed getters.
     test("var x = ({ get ['a']() { return 1; } }).a;", "var x = function() { return 1; }();");
+    test(
+        "var x = ({ get ['a']() { return 1; }, set ['a'](v) {} }).a;",
+        "var x = function() { return 1; }();");
+    test(
+        "var x = ({ set ['a'](v) {}, get ['a']() { return 1; } }).a;",
+        "var x = function() { return 1; }();");
   }
 
   @Test

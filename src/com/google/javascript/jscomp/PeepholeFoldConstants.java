@@ -1976,7 +1976,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           if (!prop.isStringLit()) {
             return n;
           }
-          if (prop.getString().equals(name)) {
+          if (prop.getString().equals(name) && !c.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
             key = c;
             value = c.getSecondChild();
           }
