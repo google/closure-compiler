@@ -453,6 +453,46 @@ public final class CompilerTest {
   }
 
   @Test
+  public void testSourceMapNamesCollapsedAnonymousFunctionAfterRenaming() throws Exception {
+    // `f` starts out as the name of a variable holding an anonymous function expression.
+    // CollapseAnonymousFunctions rewrites `var f = function() {...}` into `function f() {...}`
+    // before variable renaming replaces `f` with a minified name. The source map should still
+    // attach the original name "f" to the minified identifier, not to the `function` keyword.
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setSourceMapOutputPath("dummy");
+    options.setCollapseAnonymousFunctions(true);
+    options.setVariableRenaming(VariableRenamingPolicy.ALL);
+
+    ImmutableList<SourceFile> externs =
+        ImmutableList.of(SourceFile.fromCode("externs", "function alert(x) {}"));
+    String js = "var f = function() { return 1; };\nalert(f());\n";
+    ImmutableList<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode("testcode.js", js));
+    Compiler compiler = new Compiler();
+    Result result = compiler.compile(externs, inputs, options);
+
+    assertThat(result.success).isTrue();
+    // `f` was collapsed into a function declaration and then renamed to `a`.
+    String source = compiler.toSource();
+    assertThat(source).isEqualTo("function a(){return 1}alert(a());");
+
+    SourceMap sourceMap = result.sourceMap;
+    StringWriter out = new StringWriter();
+    sourceMap.appendTo(out, "testcode-compiled.js");
+    SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
+    consumer.parse(out.toString());
+
+    // Column 9 (0-based) is where the minified function name `a` appears in
+    // "function a(){return 1}alert(a());".
+    OriginalMapping declMapping = consumer.getMappingForLine(1, 10);
+    assertThat(declMapping.getIdentifier()).isEqualTo("f");
+
+    // Column 28 (0-based) is where the call site `a` appears in `alert(a());`.
+    OriginalMapping callMapping = consumer.getMappingForLine(1, 29);
+    assertThat(callMapping.getIdentifier()).isEqualTo("f");
+  }
+
+  @Test
   public void testNoSourceMapIsGeneratedWithoutPath() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
