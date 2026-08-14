@@ -1040,7 +1040,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     // are "this", "arguments", local names, and functions that capture local
     // values.
     switch (n.getToken()) {
-      case AWAIT, YIELD, THIS, SUPER, ITER_SPREAD, OBJECT_SPREAD -> {
+      case AWAIT, YIELD, THIS, SUPER, ITER_SPREAD, OBJECT_SPREAD, NEW_TARGET, IMPORT_META -> {
         return false;
       }
       case FUNCTION -> {

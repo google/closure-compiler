@@ -2208,33 +2208,24 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     }
   }
 
-  // TODO(b/538155990): Fix OptimizeParameters to not hoist new.target or import.meta
   @Test
   public void testNoHoistNewTarget() {
-    test(
+    testSame(
         """
         function check(x) { if (x) throw 1; }
         class C { constructor() { check(!new.target); } }
-        new C();
-        """,
-        """
-        function check() {
-          var x = !new.target;
-          if (x) {
-            throw 1;
-          }
-        }
-        class C {
-          constructor() {
-            check();
-          }
-        }
         new C();
         """);
   }
 
   @Test
   public void testNoHoistImportMeta() {
+    testSame(
+        """
+        function check(x) { if (x) throw 1; }
+        function f() { check(import.meta.url); }
+        f();
+        """);
     testSame(
         """
         function check(x) { if (x) throw 1; }
