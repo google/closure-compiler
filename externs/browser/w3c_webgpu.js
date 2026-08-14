@@ -21,6 +21,342 @@
  * @externs
  */
 
+/**
+ * @constructor
+ * @see https://gpuweb.github.io/gpuweb/#gpuobjectbase
+ */
+function GPUObjectBase() {}
+/** @type {string} */
+GPUObjectBase.prototype.label;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuobjectdescriptorbase
+ */
+function GPUObjectDescriptorBase() {}
+/** @type {string|undefined} */
+GPUObjectDescriptorBase.prototype.label;
+
+/**
+ * @constructor
+ * @implements {ReadonlySet<string>}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUSupportedFeatures
+ */
+function GPUSupportedFeatures() {}
+/**
+ * @override
+ * @param {function(string, string, !GPUSupportedFeatures): undefined}
+ *     callbackfn
+ * @param {*=} opt_thisArg
+ * @return {undefined}
+ */
+GPUSupportedFeatures.prototype.forEach = function(callbackfn, opt_thisArg) {};
+/**
+ * @override
+ * @param {string} value
+ * @return {boolean}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.has = function(value) {};
+/**
+ * @override
+ * @type {number}
+ */
+GPUSupportedFeatures.prototype.size;
+/** @override */
+GPUSupportedFeatures.prototype[Symbol.iterator] = function() {};
+/**
+ * @override
+ * @return {!IteratorIterable<!Array<string>>}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.entries = function() {};
+/**
+ * @override
+ * @return {!IteratorIterable<string>}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.keys = function() {};
+/**
+ * @override
+ * @return {!IteratorIterable<string>}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.values = function() {};
+/**
+ * @override
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<OTHER_VALUE|string>}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.union = function(other) {};
+/**
+ * @override
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<string>}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.intersection = function(other) {};
+/**
+ * @override
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<string>}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.difference = function(other) {};
+/**
+ * @override
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<OTHER_VALUE|string>}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.symmetricDifference = function(other) {};
+/**
+ * @override
+ * @param {!ReadonlySetLike<*>} other
+ * @return {boolean}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.isSubsetOf = function(other) {};
+/**
+ * @override
+ * @param {!ReadonlySetLike<*>} other
+ * @return {boolean}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.isSupersetOf = function(other) {};
+/**
+ * @override
+ * @param {!ReadonlySetLike<*>} other
+ * @return {boolean}
+ * @nosideeffects
+ */
+GPUSupportedFeatures.prototype.isDisjointFrom = function(other) {};
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/GPUSupportedLimits
+ */
+function GPUSupportedLimits() {}
+/** @type {number} */
+GPUSupportedLimits.prototype.maxBindGroups;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxBindGroupsPlusVertexBuffers;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxBindingsPerBindGroup;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxBufferSize;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxColorAttachmentBytesPerSample;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxColorAttachments;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxComputeInvocationsPerWorkgroup;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxComputeWorkgroupSizeX;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxComputeWorkgroupSizeY;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxComputeWorkgroupSizeZ;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxComputeWorkgroupStorageSize;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxComputeWorkgroupsPerDimension;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxDynamicStorageBuffersPerPipelineLayout;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxDynamicUniformBuffersPerPipelineLayout;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxInterStageShaderVariables;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxSampledTexturesPerShaderStage;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxSamplersPerShaderStage;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxStorageBufferBindingSize;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxStorageBuffersPerShaderStage;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxStorageTexturesPerShaderStage;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxTextureArrayLayers;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxTextureDimension1D;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxTextureDimension2D;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxTextureDimension3D;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxUniformBufferBindingSize;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxUniformBuffersPerShaderStage;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxVertexAttributes;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxVertexBufferArrayStride;
+/** @type {number} */
+GPUSupportedLimits.prototype.maxVertexBuffers;
+/** @type {number} */
+GPUSupportedLimits.prototype.minStorageBufferOffsetAlignment;
+/** @type {number} */
+GPUSupportedLimits.prototype.minUniformBufferOffsetAlignment;
+
+/**
+ * @constructor
+ * @implements {ReadonlySet<string>}
+ * @see https://developer.mozilla.org/docs/Web/API/WGSLLanguageFeatures
+ */
+function WGSLLanguageFeatures() {}
+/**
+ * @override
+ * @param {function(string, string, !WGSLLanguageFeatures): undefined}
+ *     callbackfn
+ * @param {*=} opt_thisArg
+ * @return {undefined}
+ */
+WGSLLanguageFeatures.prototype.forEach = function(callbackfn, opt_thisArg) {};
+/**
+ * @override
+ * @param {string} value
+ * @return {boolean}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.has = function(value) {};
+/**
+ * @override
+ * @type {number}
+ */
+WGSLLanguageFeatures.prototype.size;
+/** @override */
+WGSLLanguageFeatures.prototype[Symbol.iterator] = function() {};
+/**
+ * @override
+ * @return {!IteratorIterable<!Array<string>>}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.entries = function() {};
+/**
+ * @override
+ * @return {!IteratorIterable<string>}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.keys = function() {};
+/**
+ * @override
+ * @return {!IteratorIterable<string>}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.values = function() {};
+/**
+ * @override
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<OTHER_VALUE|string>}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.union = function(other) {};
+/**
+ * @override
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<string>}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.intersection = function(other) {};
+/**
+ * @override
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<string>}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.difference = function(other) {};
+/**
+ * @override
+ * @template OTHER_VALUE
+ * @param {!ReadonlySetLike<OTHER_VALUE>} other
+ * @return {!Set<OTHER_VALUE|string>}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.symmetricDifference = function(other) {};
+/**
+ * @override
+ * @param {!ReadonlySetLike<*>} other
+ * @return {boolean}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.isSubsetOf = function(other) {};
+/**
+ * @override
+ * @param {!ReadonlySetLike<*>} other
+ * @return {boolean}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.isSupersetOf = function(other) {};
+/**
+ * @override
+ * @param {!ReadonlySetLike<*>} other
+ * @return {boolean}
+ * @nosideeffects
+ */
+WGSLLanguageFeatures.prototype.isDisjointFrom = function(other) {};
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/GPUAdapterInfo
+ */
+function GPUAdapterInfo() {}
+/** @type {string} */
+GPUAdapterInfo.prototype.architecture;
+/** @type {string} */
+GPUAdapterInfo.prototype.description;
+/** @type {string} */
+GPUAdapterInfo.prototype.device;
+/** @type {boolean} */
+GPUAdapterInfo.prototype.isFallbackAdapter;
+/** @type {number} */
+GPUAdapterInfo.prototype.subgroupMaxSize;
+/** @type {number} */
+GPUAdapterInfo.prototype.subgroupMinSize;
+/** @type {string} */
+GPUAdapterInfo.prototype.vendor;
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/GPUError
+ */
+function GPUError() {}
+/** @type {string} */
+GPUError.prototype.message;
+
+/**
+ * @constructor
+ * @extends {GPUError}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUInternalError
+ * @param {string} message
+ */
+function GPUInternalError(message) {}
+
+/**
+ * @constructor
+ * @extends {GPUError}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUOutOfMemoryError
+ * @param {string} message
+ */
+function GPUOutOfMemoryError(message) {}
+
+/**
+ * @constructor
+ * @extends {GPUError}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUValidationError
+ * @param {string} message
+ */
+function GPUValidationError(message) {}
+
 /** @typedef {number} */
 var GPUBufferDynamicOffset;
 
