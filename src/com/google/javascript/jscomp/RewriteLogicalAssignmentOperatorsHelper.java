@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 /* Helper class for RewriteLogicalAssignmentOperators */
@@ -39,6 +40,14 @@ class RewriteLogicalAssignmentOperatorsHelper {
   }
 
   public void visitLogicalAssignmentOperator(NodeTraversal t, Node logicalAssignment) {
+    Node enclosingFunction = NodeUtil.getEnclosingFunction(logicalAssignment);
+    if (enclosingFunction != null && !NodeUtil.getFunctionBody(enclosingFunction).isBlock()) {
+      Node returnValue = NodeUtil.getFunctionBody(enclosingFunction);
+      Node body = IR.block(IR.returnNode(returnValue.detach())).srcrefTreeIfMissing(returnValue);
+      enclosingFunction.addChildToBack(body);
+      compiler.reportChangeToEnclosingScope(body);
+    }
+
     Node enclosingStatement = NodeUtil.getEnclosingStatement(logicalAssignment);
 
     Node left = logicalAssignment.removeFirstChild();

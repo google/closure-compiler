@@ -286,11 +286,6 @@ final class Normalize implements CompilerPass {
           empty.cloneNode().insertAfter(expr);
           reportCodeChange("WHILE node", n);
         }
-        case FUNCTION -> {
-          if (visitFunction(n)) {
-            reportCodeChange("Function declaration", n);
-          }
-        }
         case ARRAYLIT, CALL, PARAM_LIST, NEW, OBJECTLIT, OPTCHAIN_CALL -> n.setTrailingComma(false);
         case NAME -> {
           annotateConstantsByConvention(n);
@@ -384,16 +379,15 @@ final class Normalize implements CompilerPass {
      *
      * <p>This simplifies optimizations as they can now assume all functions have a BLOCK.
      */
-    boolean visitFunction(Node n) {
+    private void normalizeBlocklessFunction(Node n) {
       checkState(n.isFunction(), n);
-      if (n.isFunction() && !NodeUtil.getFunctionBody(n).isBlock()) {
+      if (!NodeUtil.getFunctionBody(n).isBlock()) {
         Node returnValue = NodeUtil.getFunctionBody(n);
         Node body = IR.block(IR.returnNode(returnValue.detach()));
         body.srcrefTreeIfMissing(returnValue);
         n.addChildToBack(body);
         reportCodeChange("blockless arrow function", body);
       }
-      return false;
     }
 
     /** Do normalizations that introduce new siblings or parents. */
@@ -416,6 +410,7 @@ final class Normalize implements CompilerPass {
       }
 
       if (n.isFunction()) {
+        normalizeBlocklessFunction(n);
         moveNamedFunctions(n.getLastChild());
       }
 
