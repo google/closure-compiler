@@ -1798,11 +1798,9 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538125183): Fix DeadPropertyAssignmentElimination to treat destructuring property access
-  // as potential read/getter
   @Test
   public void testDestructuring() {
-    test(
+    testSame(
         """
         function f(a, alias) {
           a.token = 1;
@@ -1810,17 +1808,9 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
           a.token = 2;
           return t;
         }
-        """,
-        """
-        function f(a, alias) {
-          1;
-          const {token: t = 9} = alias;
-          a.token = 2;
-          return t;
-        }
         """);
 
-    test(
+    testSame(
         """
         function f(a, alias, k) {
           a.token = 1;
@@ -1828,28 +1818,12 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
           a.token = 2;
           return t;
         }
-        """,
-        """
-        function f(a, alias, k) {
-          1;
-          const {[k]: t} = alias;
-          a.token = 2;
-          return t;
-        }
         """);
 
-    test(
+    testSame(
         """
         function f(a, alias) {
           a.token = 1;
-          const {...r} = alias;
-          a.token = 2;
-          return r.token;
-        }
-        """,
-        """
-        function f(a, alias) {
-          1;
           const {...r} = alias;
           a.token = 2;
           return r.token;

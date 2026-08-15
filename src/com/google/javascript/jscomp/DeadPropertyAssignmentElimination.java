@@ -391,6 +391,22 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
           markAllPropsRead();
           yield false;
         }
+        case OBJECT_PATTERN -> {
+          for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+            if (child.isStringKey()) {
+              String propName = child.getString();
+              Property property = propertyMap.get(propName);
+              if (property != null) {
+                property.markLastWriteRead();
+                property.markChildrenRead();
+              }
+            } else {
+              markAllPropsRead();
+              break;
+            }
+          }
+          yield true;
+        }
         case BLOCK -> {
           visitBlock(n);
           yield true;
