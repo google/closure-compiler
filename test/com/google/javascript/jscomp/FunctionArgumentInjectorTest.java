@@ -286,15 +286,12 @@ public final class FunctionArgumentInjectorTest {
         .containsExactly("a");
   }
 
-  // Note: This is technically incorrect. The parameter a is shadowed, not modified. However, this
-  // will just cause the function inliner to do a little bit of unnecessary work; it will not
-  // result in incorrect output.
   @Test
   public void testFindModifiedParameters15() {
     assertThat(
             functionArgumentInjector.findModifiedParameters(
                 parseFunction("function f(a){ for (const a in []) {} }")))
-        .containsExactly("a");
+        .isEmpty();
   }
 
   @Test
@@ -321,24 +318,20 @@ public final class FunctionArgumentInjectorTest {
         .containsExactly("a");
   }
 
-  // TODO(b/538122445): Fix FunctionArgumentInjector to detect parameter reassignments in let/const
-  // initializers
   @Test
   public void testFindModifiedParameters19() {
     assertThat(
             functionArgumentInjector.findModifiedParameters(
                 parseFunction("function f(p){ const stash = (p = 42); }")))
-        .isEmpty();
+        .containsExactly("p");
   }
 
-  // TODO(b/538122445): Fix FunctionArgumentInjector to detect parameter reassignments in let/const
-  // initializers
   @Test
   public void testFindModifiedParameters20() {
     assertThat(
             functionArgumentInjector.findModifiedParameters(
                 parseFunction("function f(p){ let stash = (p = 42); }")))
-        .isEmpty();
+        .containsExactly("p");
   }
 
   @Test

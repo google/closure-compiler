@@ -1475,7 +1475,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test("function f(a){return a[2]=2}f(o)", "o[2]=2");
   }
 
-  // TODO(b/538149733): InlineFunctions: handle parameter modification in sub-expressions
   @Test
   public void testInlineIfParametersModified10() {
     test(
@@ -1492,8 +1491,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
         var x = 7;
         var y;
         {
-          const stash$jscomp$inline_1 = (x = 42);
-          y = x + stash$jscomp$inline_1;
+          var p$jscomp$inline_0 = x;
+          const stash$jscomp$inline_1 = (p$jscomp$inline_0 = 42);
+          y = p$jscomp$inline_0 + stash$jscomp$inline_1;
         }
         use(x);
         """);

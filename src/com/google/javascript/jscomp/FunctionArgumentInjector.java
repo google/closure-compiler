@@ -267,9 +267,14 @@ class FunctionArgumentInjector {
    * @param n The NAME node in question.
    */
   private static boolean canNameValueChange(Node n) {
-    return NodeUtil.isLValue(n)
-        && !NodeUtil.getEnclosingStatement(n).isConst()
-        && !NodeUtil.getEnclosingStatement(n).isLet();
+    if (!NodeUtil.isLValue(n)) {
+      return false;
+    }
+    if (NodeUtil.isDeclarationLValue(n)) {
+      Node declaring = NodeUtil.getDeclaringParent(n);
+      return !declaring.isConst() && !declaring.isLet();
+    }
+    return true;
   }
 
   /**
