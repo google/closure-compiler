@@ -138,27 +138,32 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       default -> {}
     }
 
-    // If the value is a constant but known not to be a number we could still constant fold many of
-    // the methods below but it doesn't seem worth it.
     // Get the only number arg as a double as long as it is the only argument
     Double onlyArg = null;
     Node valueNode = callTarget.getNext();
-    if (valueNode == null
-        || valueNode.getNext() != null
-        || (onlyArg = getSideEffectFreeNumberValueNoConversion(valueNode)) == null) {
+    if (valueNode == null || valueNode.getNext() != null) {
       return subtree;
     }
+    onlyArg = getSideEffectFreeNumberValueNoConversion(valueNode);
     Node replacement = null;
-    switch (methodName) {
-      case "isFinite" -> replacement = NodeUtil.booleanNode(Double.isFinite(onlyArg));
-      case "isNaN" -> replacement = NodeUtil.booleanNode(Double.isNaN(onlyArg));
-      case "isSafeInteger" ->
-          replacement =
-              NodeUtil.booleanNode(
-                  onlyArg < Math.pow(2, 53)
-                      && onlyArg >= (-1 * (Math.pow(2, 53) - 1))
-                      && onlyArg.longValue() == onlyArg.doubleValue());
-      default -> {}
+    if (onlyArg != null) {
+      switch (methodName) {
+        case "isFinite" -> replacement = NodeUtil.booleanNode(Double.isFinite(onlyArg));
+        case "isNaN" -> replacement = NodeUtil.booleanNode(Double.isNaN(onlyArg));
+        case "isSafeInteger" ->
+            replacement =
+                NodeUtil.booleanNode(
+                    onlyArg < Math.pow(2, 53)
+                        && onlyArg >= (-1 * (Math.pow(2, 53) - 1))
+                        && onlyArg.longValue() == onlyArg.doubleValue());
+        default -> {}
+      }
+    } else if (!mayHaveSideEffects(valueNode)
+        && (NodeUtil.isImmutableValue(valueNode) || NodeUtil.isLiteralValue(valueNode, false))) {
+      switch (methodName) {
+        case "isFinite", "isNaN", "isSafeInteger" -> replacement = NodeUtil.booleanNode(false);
+        default -> {}
+      }
     }
     if (replacement != null) {
       subtree.replaceWith(replacement);

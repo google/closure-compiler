@@ -622,6 +622,8 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Number.isSafeInteger(9007199254740992)", "false");
     fold("Number.isSafeInteger(-9007199254740991)", "true");
     fold("Number.isSafeInteger(-9007199254740992)", "false");
+    fold("Number.isSafeInteger(undefined)", "false");
+    fold("Number.isSafeInteger('str')", "false");
   }
 
   @Test
@@ -631,7 +633,9 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Number.isFinite(NaN)", "false");
     fold("Number.isFinite(Infinity)", "false");
     fold("Number.isFinite(-Infinity)", "false");
-    foldSame("Number.isFinite('a')");
+    fold("Number.isFinite(undefined)", "false");
+    fold("Number.isFinite(null)", "false");
+    fold("Number.isFinite('str')", "false");
   }
 
   @Test
@@ -639,12 +643,10 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Number.isNaN(1)", "false");
     fold("Number.isNaN(1.5)", "false");
     fold("Number.isNaN(NaN)", "true");
-    // TODO(b/538206186): Fix Number.isNaN folding for non-Number constants.
-    foldSame("Number.isNaN('a')");
-    foldSame("Number.isNaN(undefined)");
-    foldSame("Number.isNaN(void 0)");
-    foldSame("Number.isNaN(null)");
-    foldSame("Number.isNaN('str')");
+    fold("Number.isNaN(undefined)", "false");
+    fold("Number.isNaN(void 0)", "false");
+    fold("Number.isNaN(null)", "false");
+    fold("Number.isNaN('str')", "false");
     fold("Number.isNaN(0)", "false");
     // unknown function may have side effects
     foldSame("Number.isNaN(+(void unknown()))");
@@ -927,8 +929,8 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("Number.isFinite(Infinity)", "false");
     fold("Number.isNaN(NaN)", "true");
     fold("Number.isNaN(100)", "false");
-    foldSame("Number.isNaN('hello')");
-    foldSame("Number.isFinite('100')");
+    fold("Number.isNaN('hello')", "false");
+    fold("Number.isFinite('100')", "false");
     foldSame("Number.isFinite(x)");
     foldSame("Math.abs(x)");
     foldSame("Math.sign(x)");
