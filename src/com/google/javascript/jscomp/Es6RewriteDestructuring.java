@@ -499,7 +499,14 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
         } else {
           newLHS = value.removeFirstChild();
           Node defaultValue = value.removeFirstChild();
-          newRHS = defaultValueHook(getprop, defaultValue);
+          String intermediateTempVarName = getTempVariableName();
+          Node intermediateDecl =
+              IR.var(createTempVarNameNode(intermediateTempVarName, type(getprop)), getprop);
+          intermediateDecl.srcrefTreeIfMissing(child);
+          intermediateDecl.insertBefore(nodeToDetach);
+          newRHS =
+              defaultValueHook(
+                  createTempVarNameNode(intermediateTempVarName, type(getprop)), defaultValue);
         }
         if (propsToDeleteForRest != null) {
           propsToDeleteForRest.add(child);

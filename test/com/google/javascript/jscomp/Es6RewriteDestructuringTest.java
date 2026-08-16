@@ -215,9 +215,10 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         """
         var b;
         var $jscomp$destructuring$var0 = foo();
-        b = ($jscomp$destructuring$var0.a === void 0) ?
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.a;
+        b = ($jscomp$destructuring$var1 === void 0) ?
             'default' :
-            $jscomp$destructuring$var0.a
+            $jscomp$destructuring$var1
         """);
 
     test(
@@ -225,9 +226,37 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         """
         var a;
         var $jscomp$destructuring$var0 = foo();
-        a = ($jscomp$destructuring$var0.a === void 0) ?
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.a;
+        a = ($jscomp$destructuring$var1 === void 0) ?
             'default' :
-            $jscomp$destructuring$var0.a
+            $jscomp$destructuring$var1
+        """);
+
+    test(
+        "var {'quoted key': b = 'default'} = foo();",
+        """
+        var b;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0['quoted key'];
+        b = ($jscomp$destructuring$var1 === void 0) ?
+            'default' :
+            $jscomp$destructuring$var1
+        """);
+
+    test(
+        "var {a = 1, b = 2} = foo();",
+        """
+        var a;
+        var b;
+        var $jscomp$destructuring$var0 = foo();
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.a;
+        a = ($jscomp$destructuring$var1 === void 0) ?
+            1 :
+            $jscomp$destructuring$var1;
+        var $jscomp$destructuring$var2 = $jscomp$destructuring$var0.b;
+        b = ($jscomp$destructuring$var2 === void 0) ?
+            2 :
+            $jscomp$destructuring$var2
         """);
   }
 
@@ -246,13 +275,14 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         var b;
         var $jscomp$destructuring$var0 = foo();
         var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.x;
-        b = $jscomp$destructuring$var1.a === void 0 ?
-            'default' : $jscomp$destructuring$var1.a;
+        var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.a;
+        b = $jscomp$destructuring$var2 === void 0 ?
+            'default' : $jscomp$destructuring$var2;
 
         var x = 0;
         var c;
-        var $jscomp$destructuring$var2 = bar();
-        c = $jscomp$destructuring$var2.c;
+        var $jscomp$destructuring$var3 = bar();
+        c = $jscomp$destructuring$var3.c;
         A: B: for (; true; c++) {}
         """);
   }
@@ -272,12 +302,13 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
           const z = 1;
           /** @const */ var $jscomp$destructuring$var0 = foo();
           /** @const */ var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.x;
-          const b = $jscomp$destructuring$var1.a === void 0 ?
-              'default' : $jscomp$destructuring$var1.a;
+          var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.a;
+          const b = $jscomp$destructuring$var2 === void 0 ?
+              'default' : $jscomp$destructuring$var2;
           {
             const x = 0;
-            /** @const */ var $jscomp$destructuring$var2 = bar();
-            const c = $jscomp$destructuring$var2.c;
+            /** @const */ var $jscomp$destructuring$var3 = bar();
+            const c = $jscomp$destructuring$var3.c;
             A: B: for (; true; c++) {}
           }
         }
@@ -299,16 +330,17 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
                    $jscomp$destructuring$var0$unused = ($jscomp$destructuring$var1 => {
                      var $jscomp$destructuring$var2 = $jscomp$destructuring$var1;
                      var $jscomp$destructuring$var3 = $jscomp$destructuring$var2.x;
-                     b = $jscomp$destructuring$var3.a === void 0 ?
+                     var $jscomp$destructuring$var4 = $jscomp$destructuring$var3.a;
+                     b = $jscomp$destructuring$var4 === void 0 ?
                          'default' :
-                         $jscomp$destructuring$var3.a;
+                         $jscomp$destructuring$var4;
                      return $jscomp$destructuring$var1;
                    })(foo()),
                    x = 0, c,
-                   $jscomp$destructuring$var4$unused = ($jscomp$destructuring$var5 => {
-                     var $jscomp$destructuring$var6 = $jscomp$destructuring$var5;
-                     c = $jscomp$destructuring$var6.c;
-                     return $jscomp$destructuring$var5;
+                   $jscomp$destructuring$var5$unused = ($jscomp$destructuring$var6 => {
+                     var $jscomp$destructuring$var7 = $jscomp$destructuring$var6;
+                     c = $jscomp$destructuring$var7.c;
+                     return $jscomp$destructuring$var6;
                    })(bar());
                    true; c++) {}
         """);
@@ -454,8 +486,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         function f($jscomp$destructuring$var0) {
           var x;
           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0
-          x = $jscomp$destructuring$var1.key === void 0 ?
-              5 : $jscomp$destructuring$var1.key
+          var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.key
+          x = $jscomp$destructuring$var2 === void 0 ?
+              5 : $jscomp$destructuring$var2
         }
         """);
 
@@ -477,8 +510,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         function f($jscomp$destructuring$var0) {
           var x;
           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0
-          x = $jscomp$destructuring$var1.x === void 0 ?
-              5 : $jscomp$destructuring$var1.x
+          var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.x
+          x = $jscomp$destructuring$var2 === void 0 ?
+              5 : $jscomp$destructuring$var2
         }
         """);
   }
@@ -915,8 +949,9 @@ function f(first, ...$jscomp$destructuring$var0) {
         function f($jscomp$destructuring$var0, y) {
           var x;
         var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-        x = $jscomp$destructuring$var1.x === void 0
-               ? a() : $jscomp$destructuring$var1.x;
+        var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.x;
+        x = $jscomp$destructuring$var2 === void 0
+               ? a() : $jscomp$destructuring$var2;
         y = y === void 0 ? b() : y
         }
         """);
@@ -1901,14 +1936,15 @@ function f(first, ...$jscomp$destructuring$var0) {
         var b; var d; var e; var rest;
         var $jscomp$destructuring$var0 = foo();
         var $jscomp$destructuring$var1 = Object.assign({},$jscomp$destructuring$var0);
-        b = $jscomp$destructuring$var0.a=== void 0 ? 3 : $jscomp$destructuring$var0.a;
-        var $jscomp$destructuring$var2 = bar();
-        d = $jscomp$destructuring$var0[$jscomp$destructuring$var2];
-        var $jscomp$destructuring$var3 = baz();
-        e = $jscomp$destructuring$var0[$jscomp$destructuring$var3];
+        var $jscomp$destructuring$var2 = $jscomp$destructuring$var0.a;
+        b = $jscomp$destructuring$var2=== void 0 ? 3 : $jscomp$destructuring$var2;
+        var $jscomp$destructuring$var3 = bar();
+        d = $jscomp$destructuring$var0[$jscomp$destructuring$var3];
+        var $jscomp$destructuring$var4 = baz();
+        e = $jscomp$destructuring$var0[$jscomp$destructuring$var4];
         rest = (delete $jscomp$destructuring$var1.a,
-                    delete $jscomp$destructuring$var1[$jscomp$destructuring$var2],
                     delete $jscomp$destructuring$var1[$jscomp$destructuring$var3],
+                    delete $jscomp$destructuring$var1[$jscomp$destructuring$var4],
                     $jscomp$destructuring$var1);
         """);
   }
@@ -1921,7 +1957,8 @@ function f(first, ...$jscomp$destructuring$var0) {
         var a; var rest;
         var $jscomp$destructuring$var0 = foo();
         var $jscomp$destructuring$var1 = Object.assign({}, $jscomp$destructuring$var0);
-        a = $jscomp$destructuring$var0.a=== void 0 ? 3 : $jscomp$destructuring$var0.a;
+        var $jscomp$destructuring$var2 = $jscomp$destructuring$var0.a;
+        a = $jscomp$destructuring$var2=== void 0 ? 3 : $jscomp$destructuring$var2;
         rest = (delete $jscomp$destructuring$var1.a,
                     $jscomp$destructuring$var1);
         """);
@@ -1936,8 +1973,9 @@ function f(first, ...$jscomp$destructuring$var0) {
         var $jscomp$destructuring$var3 =
             $jscomp$destructuring$var0[$jscomp$destructuring$var2];
         a = $jscomp$destructuring$var3=== void 0 ? 3 : $jscomp$destructuring$var3;
-        b = $jscomp$destructuring$var0["b c"]=== void 0
-            ? 12 : $jscomp$destructuring$var0["b c"];
+        var $jscomp$destructuring$var4 = $jscomp$destructuring$var0["b c"];
+        b = $jscomp$destructuring$var4=== void 0
+            ? 12 : $jscomp$destructuring$var4;
         rest=(delete $jscomp$destructuring$var1[$jscomp$destructuring$var2],
                   delete $jscomp$destructuring$var1["b c"],
                   $jscomp$destructuring$var1);
@@ -1990,8 +2028,9 @@ function f(first, ...$jscomp$destructuring$var0) {
           var x; var rest;
           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
           var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
-          x = $jscomp$destructuring$var1.x === void 0
-              ? a() : $jscomp$destructuring$var1.x;
+          var $jscomp$destructuring$var3 = $jscomp$destructuring$var1.x;
+          x = $jscomp$destructuring$var3 === void 0
+              ? a() : $jscomp$destructuring$var3;
           rest= (delete $jscomp$destructuring$var2.x,
                      $jscomp$destructuring$var2);
           y = y=== void 0 ? b() : y;
@@ -2007,8 +2046,9 @@ function f(first, ...$jscomp$destructuring$var0) {
           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0=== void 0
               ? {} : $jscomp$destructuring$var0;
           var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
-          x = $jscomp$destructuring$var1.x=== void 0
-              ? a() : $jscomp$destructuring$var1.x;
+          var $jscomp$destructuring$var3 = $jscomp$destructuring$var1.x;
+          x = $jscomp$destructuring$var3=== void 0
+              ? a() : $jscomp$destructuring$var3;
           rest= (delete $jscomp$destructuring$var2.x,
                      $jscomp$destructuring$var2);
           y = y=== void 0 ? b() : y;
@@ -2026,8 +2066,9 @@ function f(first, ...$jscomp$destructuring$var0) {
           var x; var rest;
           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
           var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
-          x = $jscomp$destructuring$var1.x=== void 0
-              ? a() : $jscomp$destructuring$var1.x;
+          var $jscomp$destructuring$var3 = $jscomp$destructuring$var1.x;
+          x = $jscomp$destructuring$var3=== void 0
+              ? a() : $jscomp$destructuring$var3;
           rest = (delete $jscomp$destructuring$var2.x,
                       $jscomp$destructuring$var2);
           y = y=== void 0 ? b() : y;
@@ -2043,8 +2084,9 @@ function f(first, ...$jscomp$destructuring$var0) {
           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0=== void 0
               ? {} : $jscomp$destructuring$var0;
           var $jscomp$destructuring$var2 = Object.assign({},$jscomp$destructuring$var1);
-          x = $jscomp$destructuring$var1.x=== void 0
-              ? a() : $jscomp$destructuring$var1.x;
+          var $jscomp$destructuring$var3 = $jscomp$destructuring$var1.x;
+          x = $jscomp$destructuring$var3=== void 0
+              ? a() : $jscomp$destructuring$var3;
           rest= (delete $jscomp$destructuring$var2.x,
                      $jscomp$destructuring$var2);
           y = y=== void 0 ? b() : y;
@@ -2272,8 +2314,9 @@ function f(first, ...$jscomp$destructuring$var0) {
         """
         const obj = {a: 3, b: 'string', c: null};
         /** @const */ var $jscomp$destructuring$var0=obj;
-        const a = $jscomp$destructuring$var0.a === void 0
-            ? 4: $jscomp$destructuring$var0.a;
+        var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.a;
+        const a = $jscomp$destructuring$var1 === void 0
+            ? 4: $jscomp$destructuring$var1;
         """);
 
     Node jsRoot = getLastCompiler().getJsRoot();
