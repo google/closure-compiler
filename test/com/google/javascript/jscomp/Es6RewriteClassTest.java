@@ -2820,7 +2820,13 @@ $jscomp.inherits(FooPromise, Promise);
                 return true;
               },
             });
+            $jscomp.global.Object.defineProperties(C.prototype, {
+              a: {configurable: true, enumerable: true, get: function() {}},
+            });
             C.prototype[COMP_FIELD$1] = function() {};
+            $jscomp.global.Object.defineProperties(C.prototype, {
+              b: {configurable: true, enumerable: true, get: function() {}},
+            });
             C.prototype.c = function() {};
             $jscomp.global.Object.defineProperty(C.prototype, COMP_FIELD$2, {
               configurable: true,
@@ -2829,14 +2835,9 @@ $jscomp.inherits(FooPromise, Promise);
                 return true;
               },
             });
-            $jscomp.global.Object.defineProperties(C.prototype, {
-              a: {configurable: true, enumerable: true, get: function() {}},
-              b: {configurable: true, enumerable: true, get: function() {}},
-            });
             """));
   }
 
-  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
   @Test
   public void testGetterFollowedByMethodWithSameName() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -2851,7 +2852,6 @@ $jscomp.inherits(FooPromise, Promise);
         """
         /** @constructor */
         let C = function() {};
-        C.prototype.clean = function(x) { return 2; };
         $jscomp.global.Object.defineProperties(C.prototype, {
           clean: {
             configurable: true,
@@ -2859,10 +2859,10 @@ $jscomp.inherits(FooPromise, Promise);
             get: function() { return 1; }
           }
         });
+        C.prototype.clean = function(x) { return 2; };
         """);
   }
 
-  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
   @Test
   public void testGetterFollowedByComputedGetterWithSameName() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -2877,17 +2877,17 @@ $jscomp.inherits(FooPromise, Promise);
         """
         /** @constructor */
         let C = function() {};
-        $jscomp.global.Object.defineProperty(C.prototype, "clean", {
-          configurable: true,
-          enumerable: true,
-          get: function() { return 2; }
-        });
         $jscomp.global.Object.defineProperties(C.prototype, {
           clean: {
             configurable: true,
             enumerable: true,
             get: function() { return 1; }
           }
+        });
+        $jscomp.global.Object.defineProperty(C.prototype, "clean", {
+          configurable: true,
+          enumerable: true,
+          get: function() { return 2; }
         });
         """);
   }
@@ -2917,7 +2917,6 @@ $jscomp.inherits(FooPromise, Promise);
         """);
   }
 
-  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
   @Test
   public void testDuplicateGettersWithSameName() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -2936,14 +2935,19 @@ $jscomp.inherits(FooPromise, Promise);
           clean: {
             configurable: true,
             enumerable: true,
-            get: function() { return 1; },
+            get: function() { return 1; }
+          }
+        });
+        $jscomp.global.Object.defineProperties(C.prototype, {
+          clean: {
+            configurable: true,
+            enumerable: true,
             get: function() { return 2; }
           }
         });
         """);
   }
 
-  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
   @Test
   public void testStaticGetterFollowedByStaticMethodWithSameName() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -2960,7 +2964,6 @@ $jscomp.inherits(FooPromise, Promise);
         let C = function() {};
         /** @nocollapse */
         C.clean;
-        C.clean = function(x) { return 2; };
         $jscomp.global.Object.defineProperties(C, {
           clean: {
             configurable: true,
@@ -2968,10 +2971,10 @@ $jscomp.inherits(FooPromise, Promise);
             get: function() { return 1; }
           }
         });
+        C.clean = function(x) { return 2; };
         """);
   }
 
-  // TODO(b/538171096): Fix defineProperties emit order for classes with getters/setters
   @Test
   public void testStaticGetterFollowedByStaticComputedGetterWithSameName() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -2988,17 +2991,17 @@ $jscomp.inherits(FooPromise, Promise);
         let C = function() {};
         /** @nocollapse */
         C.clean;
-        $jscomp.global.Object.defineProperty(C, "clean", {
-          configurable: true,
-          enumerable: true,
-          get: function() { return 2; }
-        });
         $jscomp.global.Object.defineProperties(C, {
           clean: {
             configurable: true,
             enumerable: true,
             get: function() { return 1; }
           }
+        });
+        $jscomp.global.Object.defineProperty(C, "clean", {
+          configurable: true,
+          enumerable: true,
+          get: function() { return 2; }
         });
         """);
   }

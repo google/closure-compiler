@@ -168,29 +168,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
         constructor,
         "Es6RewriteClasses expects all classes to have (possibly synthetic) constructors");
 
-    if (metadata.definePropertiesObjForPrototype().hasChildren()) {
-      Node definePropsCall =
-          IR.exprResult(
-              astFactory.createCall(
-                  createObjectDotDefineProperties(),
-                  type(metadata.classPrototypeNode()),
-                  metadata.classPrototypeNode().cloneTree(),
-                  metadata.definePropertiesObjForPrototype()));
-      definePropsCall.srcrefTreeIfMissing(classNode);
-      metadata.insertNodeAndAdvance(definePropsCall);
-    }
-
-    if (metadata.definePropertiesObjForClass().hasChildren()) {
-      Node definePropsCall =
-          IR.exprResult(
-              astFactory.createCall(
-                  createObjectDotDefineProperties(),
-                  type(metadata.fullClassNameNode()),
-                  metadata.fullClassNameNode().cloneTree(),
-                  metadata.definePropertiesObjForClass()));
-      definePropsCall.srcrefTreeIfMissing(classNode);
-      metadata.insertNodeAndAdvance(definePropsCall);
-    }
+    flushDefinePropertiesForPrototype(metadata, classNode);
+    flushDefinePropertiesForClass(metadata, classNode);
 
     JSDocInfo classJSDoc = NodeUtil.getBestJSDocInfo(classNode);
     JSDocInfo.Builder newInfo = JSDocInfo.Builder.maybeCopyFrom(classJSDoc);
@@ -256,6 +235,46 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
         this.transpilationNamespace, "Object.defineProperty");
   }
 
+  private void flushDefinePropertiesForPrototype(
+      ClassDeclarationMetadata metadata, Node srcrefNode) {
+    if (metadata.definePropertiesObjForPrototype().hasChildren()) {
+      Node definePropsCall =
+          IR.exprResult(
+              astFactory.createCall(
+                  createObjectDotDefineProperties(),
+                  type(metadata.classPrototypeNode()),
+                  metadata.classPrototypeNode().cloneTree(),
+                  metadata.definePropertiesObjForPrototype()));
+      definePropsCall.srcrefTreeIfMissing(srcrefNode);
+      metadata.insertNodeAndAdvance(definePropsCall);
+      metadata.resetDefinePropertiesObjForPrototype(astFactory);
+    }
+  }
+
+  private void flushDefinePropertiesForClass(ClassDeclarationMetadata metadata, Node srcrefNode) {
+    if (metadata.definePropertiesObjForClass().hasChildren()) {
+      Node definePropsCall =
+          IR.exprResult(
+              astFactory.createCall(
+                  createObjectDotDefineProperties(),
+                  type(metadata.fullClassNameNode()),
+                  metadata.fullClassNameNode().cloneTree(),
+                  metadata.definePropertiesObjForClass()));
+      definePropsCall.srcrefTreeIfMissing(srcrefNode);
+      metadata.insertNodeAndAdvance(definePropsCall);
+      metadata.resetDefinePropertiesObjForClass(astFactory);
+    }
+  }
+
+  private void flushPendingDefineProperties(
+      ClassDeclarationMetadata metadata, boolean isStatic, Node srcrefNode) {
+    if (isStatic) {
+      flushDefinePropertiesForClass(metadata, srcrefNode);
+    } else {
+      flushDefinePropertiesForPrototype(metadata, srcrefNode);
+    }
+  }
+
   /**
    * @param member A getter or setter
    */
@@ -266,6 +285,15 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
             ? metadata.definePropertiesObjForClass()
             : metadata.definePropertiesObjForPrototype();
     Node prop = NodeUtil.getFirstPropMatchingKey(obj, member.getString());
+    String accessorKind = member.isGetterDef() ? "get" : "set";
+    if (prop != null && NodeUtil.getFirstPropMatchingKey(prop, accessorKind) != null) {
+      flushPendingDefineProperties(metadata, member.isStaticMember(), member);
+      obj =
+          member.isStaticMember()
+              ? metadata.definePropertiesObjForClass()
+              : metadata.definePropertiesObjForPrototype();
+      prop = null;
+    }
     if (prop == null) {
       prop = createPropertyDescriptor();
       if (member.getString().equals("__proto__")) {
@@ -288,8 +316,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     Node function = member.getLastChild();
     JSDocInfo info = NodeUtil.getBestJSDocInfo(function);
 
-    Node stringKey =
-        astFactory.createStringKey(member.isGetterDef() ? "get" : "set", function.detach());
+    Node stringKey = astFactory.createStringKey(accessorKind, function.detach());
     stringKey.setJSDocInfo(info);
     prop.addChildToBack(stringKey);
     prop.srcrefTreeIfMissing(member);
@@ -297,6 +324,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
 
   /** Appends an Object.defineProperty call defining the given computed getter or setter */
   private void extractComputedProperty(Node computedMember, ClassDeclarationMetadata metadata) {
+    flushPendingDefineProperties(metadata, computedMember.isStaticMember(), computedMember);
+
     Node owner =
         computedMember.isStaticMember()
             ? metadata.fullClassNameNode()
@@ -370,6 +399,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
    * constructor are not handled here.
    */
   private void visitMethod(Node member, ClassDeclarationMetadata metadata) {
+    flushPendingDefineProperties(metadata, member.isStaticMember(), member);
+
     Node qualifiedMemberAccess = getQualifiedMemberAccess(member, metadata);
     Node method = member.getLastChild().detach();
 
@@ -569,25 +600,83 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
    *     cloneable node with type information as needed.
    * @param anonymous Whether the constructor function in the output should be anonymous.
    */
-  record ClassDeclarationMetadata(
-      InsertionPoint insertionPoint,
-      Node definePropertiesObjForPrototype,
-      Node definePropertiesObjForClass,
-      Map<String, ClassProperty> classMembersToDeclare,
-      Node fullClassNameNode,
-      Node classPrototypeNode,
-      boolean anonymous,
-      Node classNameNode,
-      Node superClassNameNode) {
-    ClassDeclarationMetadata {
-      requireNonNull(insertionPoint, "insertionPoint");
-      requireNonNull(definePropertiesObjForPrototype, "definePropertiesObjForPrototype");
-      requireNonNull(definePropertiesObjForClass, "definePropertiesObjForClass");
-      requireNonNull(classMembersToDeclare, "classMembersToDeclare");
-      requireNonNull(fullClassNameNode, "fullClassNameNode");
-      requireNonNull(classPrototypeNode, "classPrototypeNode");
-      requireNonNull(classNameNode, "classNameNode");
-      requireNonNull(superClassNameNode, "superClassNameNode");
+  static final class ClassDeclarationMetadata {
+    private final InsertionPoint insertionPoint;
+    private Node definePropertiesObjForPrototype;
+    private Node definePropertiesObjForClass;
+    private final Map<String, ClassProperty> classMembersToDeclare;
+    private final Node fullClassNameNode;
+    private final Node classPrototypeNode;
+    private final boolean anonymous;
+    private final Node classNameNode;
+    private final Node superClassNameNode;
+
+    ClassDeclarationMetadata(
+        InsertionPoint insertionPoint,
+        Node definePropertiesObjForPrototype,
+        Node definePropertiesObjForClass,
+        Map<String, ClassProperty> classMembersToDeclare,
+        Node fullClassNameNode,
+        Node classPrototypeNode,
+        boolean anonymous,
+        Node classNameNode,
+        Node superClassNameNode) {
+      this.insertionPoint = requireNonNull(insertionPoint, "insertionPoint");
+      this.definePropertiesObjForPrototype =
+          requireNonNull(definePropertiesObjForPrototype, "definePropertiesObjForPrototype");
+      this.definePropertiesObjForClass =
+          requireNonNull(definePropertiesObjForClass, "definePropertiesObjForClass");
+      this.classMembersToDeclare = requireNonNull(classMembersToDeclare, "classMembersToDeclare");
+      this.fullClassNameNode = requireNonNull(fullClassNameNode, "fullClassNameNode");
+      this.classPrototypeNode = requireNonNull(classPrototypeNode, "classPrototypeNode");
+      this.classNameNode = requireNonNull(classNameNode, "classNameNode");
+      this.superClassNameNode = requireNonNull(superClassNameNode, "superClassNameNode");
+      this.anonymous = anonymous;
+    }
+
+    InsertionPoint insertionPoint() {
+      return insertionPoint;
+    }
+
+    Node definePropertiesObjForPrototype() {
+      return definePropertiesObjForPrototype;
+    }
+
+    void resetDefinePropertiesObjForPrototype(AstFactory astFactory) {
+      this.definePropertiesObjForPrototype =
+          astFactory.createObjectLit(type(this.fullClassNameNode));
+    }
+
+    Node definePropertiesObjForClass() {
+      return definePropertiesObjForClass;
+    }
+
+    void resetDefinePropertiesObjForClass(AstFactory astFactory) {
+      this.definePropertiesObjForClass = astFactory.createObjectLit(type(this.fullClassNameNode));
+    }
+
+    Map<String, ClassProperty> classMembersToDeclare() {
+      return classMembersToDeclare;
+    }
+
+    Node fullClassNameNode() {
+      return fullClassNameNode;
+    }
+
+    Node classPrototypeNode() {
+      return classPrototypeNode;
+    }
+
+    boolean anonymous() {
+      return anonymous;
+    }
+
+    Node classNameNode() {
+      return classNameNode;
+    }
+
+    Node superClassNameNode() {
+      return superClassNameNode;
     }
 
     @AutoBuilder
