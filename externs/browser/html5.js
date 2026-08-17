@@ -864,7 +864,6 @@ BaseRenderingContext2D.prototype.drawImage = function(
  * @param {number} sw
  * @param {number} sh
  * @return {!ImageData}
- * @throws {Error}
  * @nosideeffects
  */
 BaseRenderingContext2D.prototype.createImageData = function(sw, sh) {};
