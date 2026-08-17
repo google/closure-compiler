@@ -426,7 +426,11 @@ $jscomp.AsyncGeneratorWrapper.prototype.runDelegateFrame_ = function() {
   var frame = this.executionQueue_.first();
   if (frame.method in this.delegate_) {
     try {
-      this.delegate_[frame.method](frame.param)
+      var param = frame.param;
+      if (param instanceof $jscomp.AsyncGeneratorWrapper$ActionRecord) {
+        param = param.value;
+      }
+      this.delegate_[frame.method](param)
           .then(this.boundHandleDelegateResult_, this.boundHandleDelegateError_)
           .catch(this.boundRejectAndClose_);
     } catch (err) {
@@ -479,8 +483,10 @@ $jscomp.AsyncGeneratorWrapper.prototype.handleDelegateResult_ = function(
     // expression. We must continue the async generator as if next() were called
     // with that value here.
     this.delegate_ = null;
-    frame.method = $jscomp.AsyncGeneratorWrapper$GeneratorMethod.NEXT;
-    frame.param = record.value;
+    if (frame.method !== $jscomp.AsyncGeneratorWrapper$GeneratorMethod.RETURN) {
+      frame.method = $jscomp.AsyncGeneratorWrapper$GeneratorMethod.NEXT;
+      frame.param = record.value;
+    }
     this.runFrame_();
   } else {
     frame.resolve({value: record.value, done: false});
