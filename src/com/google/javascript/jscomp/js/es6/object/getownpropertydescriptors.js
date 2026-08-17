@@ -32,7 +32,19 @@ $jscomp.polyfill('Object.getOwnPropertyDescriptors', function(orig) {
     var result = {};
     var keys = Reflect.ownKeys(obj);
     for (var i = 0; i < keys.length; i++) {
-      result[keys[i]] = Object.getOwnPropertyDescriptor(obj, keys[i]);
+      var key = keys[i];
+      var descriptor = Object.getOwnPropertyDescriptor(obj, key);
+      if (descriptor !== undefined) {
+        // Use Object.defineProperty to implement CreateDataPropertyOrThrow per
+        // ECMA-262 20.1.2.9 (Object.getOwnPropertyDescriptors), defining own
+        // properties on result rather than invoking prototype setters (e.g. for __proto__).
+        Object.defineProperty(result, /** @type {string|symbol} */ (key), {
+          value: descriptor,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
+      }
     }
     return result;
   };
