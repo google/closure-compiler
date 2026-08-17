@@ -2712,9 +2712,12 @@ class IRFactory {
         return leftChild;
       }
 
+      // Private element get prop not valid on super receiver.
+      IdentifierType identifierType =
+          leftChild.isSuper() ? IdentifierType.STANDARD : IdentifierType.CAN_BE_PRIVATE;
       Node getProp =
           maybeAddNonJsDocComment(
-              newStringNodeFromIdentifier(Token.GETPROP, IdentifierType.CAN_BE_PRIVATE, propName),
+              newStringNodeFromIdentifier(Token.GETPROP, identifierType, propName),
               getNode.memberName.getStart());
       getProp.addChildToBack(leftChild);
       setSourceInfo(getProp, propName);
@@ -2731,10 +2734,12 @@ class IRFactory {
         return leftChild;
       }
 
+      // Private element get prop not valid on super receiver.
+      IdentifierType identifierType =
+          leftChild.isSuper() ? IdentifierType.STANDARD : IdentifierType.CAN_BE_PRIVATE;
       Node getProp =
           maybeAddNonJsDocComment(
-              newStringNodeFromIdentifier(
-                  Token.OPTCHAIN_GETPROP, IdentifierType.CAN_BE_PRIVATE, propName),
+              newStringNodeFromIdentifier(Token.OPTCHAIN_GETPROP, identifierType, propName),
               getNode.memberName.getStart());
       getProp.addChildToBack(leftChild);
       getProp.setIsOptionalChainStart(getNode.isStartOfOptionalChain);

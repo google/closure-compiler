@@ -6571,6 +6571,52 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testPrivateProperty_invalid_referencePrivateOnSuper() {
+    // Private field read and write on super
+    parseError("class C { #f = 1; m() { return super.#f; } }", INVALID_PRIVATE_ID);
+    parseError("class C { #f = 1; m(v) { super.#f = v; } }", INVALID_PRIVATE_ID);
+    parseError("class C { #f = 1; m() { super.#f += 1; } }", INVALID_PRIVATE_ID);
+    parseError("class C { #f = 1; m() { super.#f++; } }", INVALID_PRIVATE_ID);
+    parseError("class C { #f = 1; m() { ++super.#f; } }", INVALID_PRIVATE_ID);
+
+    // Private method call on super
+    parseError("class C { #m() {} test() { super.#m(); } }", INVALID_PRIVATE_ID);
+
+    // Private getter/setter on super
+    parseError("class C { get #g() {} m() { return super.#g; } }", INVALID_PRIVATE_ID);
+    parseError("class C { set #s(v) {} m(v) { super.#s = v; } }", INVALID_PRIVATE_ID);
+
+    // Optional chaining with super private property
+    parseError(
+        "class C { #f = 1; m() { super?.#f; } }", "Optional chaining is forbidden in super?.");
+
+    // Destructuring assignment to super private property
+    parseError("class C { #f = 1; m() { [super.#f] = [1]; } }", INVALID_PRIVATE_ID);
+    parseError("class C { #f = 1; m() { ({ x: super.#f } = { x: 1 }); } }", INVALID_PRIVATE_ID);
+
+    // Nested class referencing outer class private method/field on super
+    parseError(
+        """
+        class Base {
+          #priv() {}
+          #field = 1;
+          static {
+            class Sub extends Base {
+              m() {
+                return super.#priv();
+              }
+              getF() {
+                return super.#field;
+              }
+            }
+          }
+        }
+        """,
+        INVALID_PRIVATE_ID,
+        INVALID_PRIVATE_ID);
+  }
+
+  @Test
   public void testPrivateProperty_invalid_destructuredAssignment() {
     parseError("const { #px } = x;", INVALID_PRIVATE_ID);
     parseError("const { x: #px } = x;", INVALID_PRIVATE_ID);
