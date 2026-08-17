@@ -1731,7 +1731,6 @@ $jscomp.inherits(FooPromise, Promise);
         """);
   }
 
-  // TODO(b/538125081): Fix Es6RewriteClass drops side effects in super(foo()) when extending Object
   @Test
   public void testExtendObject_withSideEffectfulSuperArgs() {
     test(
@@ -1747,13 +1746,12 @@ $jscomp.inherits(FooPromise, Promise);
          * @constructor
          */
         let Foo = function() {
-          this;
+          foo(), this;
         };
         $jscomp.inherits(Foo, Object);
         """);
   }
 
-  // TODO(b/538125081): Fix Es6RewriteClass drops side effects in super(foo()) when extending Object
   @Test
   public void testExtendObject_withMultipleSideEffectfulSuperArgs() {
     ignoreWarnings(TypeCheck.WRONG_ARGUMENT_COUNT);
@@ -1770,13 +1768,12 @@ $jscomp.inherits(FooPromise, Promise);
          * @constructor
          */
         let Foo = function() {
-          this;
+          foo(), bar(), this;
         };
         $jscomp.inherits(Foo, Object);
         """);
   }
 
-  // TODO(b/538125081): Fix Es6RewriteClass drops side effects in super(foo()) when extending Object
   @Test
   public void testExtendObject_withSpreadSideEffectfulSuperArgs() {
     test(
@@ -1792,7 +1789,7 @@ $jscomp.inherits(FooPromise, Promise);
          * @constructor
          */
         let Foo = function() {
-          this;
+          foo(), this;
         };
         $jscomp.inherits(Foo, Object);
         """);

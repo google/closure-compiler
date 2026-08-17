@@ -153,8 +153,6 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
     if (isNativeObjectClass(t, superClassQName)) {
       // There's no need to call Object as a super constructor, so just replace the call with
       // `this`, which is its correct return value.
-      // TODO(bradfordcsmith): Although unlikely, super() could have argument expressions with
-      //     side-effects.
       replaceSuperCallsWithThis(superCalls, thisType);
     } else if (isKnownNativeClass(t, superClassQName)) {
       // Although we're transpiling down to ES5, it's quite possible that the code will end up
@@ -177,9 +175,30 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
 
   private void replaceSuperCallsWithThis(List<Node> superCalls, AstFactory.Type thisType) {
     for (Node superCall : superCalls) {
-      Node thisNode = astFactory.createThis(thisType).srcref(superCall);
-      superCall.replaceWith(thisNode);
-      compiler.reportChangeToEnclosingScope(thisNode);
+      List<Node> sideEffectArgs = new ArrayList<>();
+      Node callee = superCall.removeFirstChild();
+      checkState(callee.isSuper(), callee);
+      while (superCall.hasChildren()) {
+        Node arg = superCall.removeFirstChild();
+        if (arg.isSpread()) {
+          arg = arg.removeFirstChild();
+        }
+        if (compiler.getAstAnalyzer().mayHaveSideEffects(arg)) {
+          sideEffectArgs.add(arg);
+        }
+      }
+
+      Node replacement = astFactory.createThis(thisType).srcref(superCall);
+      if (!sideEffectArgs.isEmpty()) {
+        Node exprs = sideEffectArgs.get(0);
+        for (int i = 1; i < sideEffectArgs.size(); i++) {
+          exprs =
+              astFactory.createComma(exprs, sideEffectArgs.get(i)).srcrefTreeIfMissing(superCall);
+        }
+        replacement = astFactory.createComma(exprs, replacement).srcrefTreeIfMissing(superCall);
+      }
+      superCall.replaceWith(replacement);
+      compiler.reportChangeToEnclosingScope(replacement);
     }
   }
 
