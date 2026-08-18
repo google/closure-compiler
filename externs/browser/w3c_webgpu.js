@@ -827,6 +827,257 @@ GPUPipelineLayoutDescriptor.prototype.bindGroupLayouts;
  */
 function GPUPipelineLayout() {}
 
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpublendcomponent
+ */
+function GPUBlendComponent() {}
+/** @type {!GPUBlendFactor|undefined} */
+GPUBlendComponent.prototype.dstFactor;
+/** @type {!GPUBlendOperation|undefined} */
+GPUBlendComponent.prototype.operation;
+/** @type {!GPUBlendFactor|undefined} */
+GPUBlendComponent.prototype.srcFactor;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpublendstate
+ */
+function GPUBlendState() {}
+/** @type {!GPUBlendComponent} */
+GPUBlendState.prototype.alpha;
+/** @type {!GPUBlendComponent} */
+GPUBlendState.prototype.color;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpucolortargetstate
+ */
+function GPUColorTargetState() {}
+/** @type {!GPUBlendState|undefined} */
+GPUColorTargetState.prototype.blend;
+/** @type {!GPUTextureFormat} */
+GPUColorTargetState.prototype.format;
+/** @type {!GPUColorWriteFlags|undefined} */
+GPUColorTargetState.prototype.writeMask;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpustencilfacestate
+ */
+function GPUStencilFaceState() {}
+/** @type {!GPUCompareFunction|undefined} */
+GPUStencilFaceState.prototype.compare;
+/** @type {!GPUStencilOperation|undefined} */
+GPUStencilFaceState.prototype.depthFailOp;
+/** @type {!GPUStencilOperation|undefined} */
+GPUStencilFaceState.prototype.failOp;
+/** @type {!GPUStencilOperation|undefined} */
+GPUStencilFaceState.prototype.passOp;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpudepthstencilstate
+ */
+function GPUDepthStencilState() {}
+/** @type {!GPUDepthBias|undefined} */
+GPUDepthStencilState.prototype.depthBias;
+/** @type {number|undefined} */
+GPUDepthStencilState.prototype.depthBiasClamp;
+/** @type {number|undefined} */
+GPUDepthStencilState.prototype.depthBiasSlopeScale;
+/** @type {!GPUCompareFunction|undefined} */
+GPUDepthStencilState.prototype.depthCompare;
+/** @type {boolean|undefined} */
+GPUDepthStencilState.prototype.depthWriteEnabled;
+/** @type {!GPUTextureFormat} */
+GPUDepthStencilState.prototype.format;
+/** @type {!GPUStencilFaceState|undefined} */
+GPUDepthStencilState.prototype.stencilBack;
+/** @type {!GPUStencilFaceState|undefined} */
+GPUDepthStencilState.prototype.stencilFront;
+/** @type {!GPUStencilValue|undefined} */
+GPUDepthStencilState.prototype.stencilReadMask;
+/** @type {!GPUStencilValue|undefined} */
+GPUDepthStencilState.prototype.stencilWriteMask;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpumultisamplestate
+ */
+function GPUMultisampleState() {}
+/** @type {boolean|undefined} */
+GPUMultisampleState.prototype.alphaToCoverageEnabled;
+/** @type {!GPUSize32|undefined} */
+GPUMultisampleState.prototype.count;
+/** @type {!GPUSampleMask|undefined} */
+GPUMultisampleState.prototype.mask;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuprimitivestate
+ */
+function GPUPrimitiveState() {}
+/** @type {!GPUCullMode|undefined} */
+GPUPrimitiveState.prototype.cullMode;
+/** @type {!GPUFrontFace|undefined} */
+GPUPrimitiveState.prototype.frontFace;
+/** @type {!GPUIndexFormat|undefined} */
+GPUPrimitiveState.prototype.stripIndexFormat;
+/** @type {!GPUPrimitiveTopology|undefined} */
+GPUPrimitiveState.prototype.topology;
+/** @type {boolean|undefined} */
+GPUPrimitiveState.prototype.unclippedDepth;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#gpuprogrammablestage
+ */
+function GPUProgrammableStage() {}
+/** @type {!Object<string, !GPUPipelineConstantValue>|undefined} */
+GPUProgrammableStage.prototype.constants;
+/** @type {string|undefined} */
+GPUProgrammableStage.prototype.entryPoint;
+/** @type {!GPUShaderModule} */
+GPUProgrammableStage.prototype.module;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#gpupipelinebase
+ */
+function GPUPipelineBase() {}
+/**
+ * @param {number} index
+ * @return {!GPUBindGroupLayout}
+ */
+GPUPipelineBase.prototype.getBindGroupLayout = function(index) {};
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpupipelinedescriptorbase
+ */
+function GPUPipelineDescriptorBase() {}
+/** @type {!GPUPipelineLayout|!GPUAutoLayoutMode} */
+GPUPipelineDescriptorBase.prototype.layout;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpupipelineerrorinit
+ */
+function GPUPipelineErrorInit() {}
+/** @type {!GPUPipelineErrorReason} */
+GPUPipelineErrorInit.prototype.reason;
+
+/**
+ * @constructor
+ * @extends {DOMException}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUPipelineError
+ * @param {string} message
+ * @param {!GPUPipelineErrorInit} options
+ */
+function GPUPipelineError(message, options) {}
+/** @type {!GPUPipelineErrorReason} */
+GPUPipelineError.prototype.reason;
+
+/**
+ * @record
+ * @extends {GPUPipelineDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpucomputepipelinedescriptor
+ */
+function GPUComputePipelineDescriptor() {}
+/** @type {!GPUProgrammableStage} */
+GPUComputePipelineDescriptor.prototype.compute;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @implements {GPUPipelineBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUComputePipeline
+ */
+function GPUComputePipeline() {}
+// From GPUPipelineBase
+/**
+ * @override
+ * @param {number} index
+ * @return {!GPUBindGroupLayout}
+ */
+GPUComputePipeline.prototype.getBindGroupLayout = function(index) {};
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuvertexattribute
+ */
+function GPUVertexAttribute() {}
+/** @type {!GPUVertexFormat} */
+GPUVertexAttribute.prototype.format;
+/** @type {!GPUSize64} */
+GPUVertexAttribute.prototype.offset;
+/** @type {!GPUIndex32} */
+GPUVertexAttribute.prototype.shaderLocation;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuvertexbufferlayout
+ */
+function GPUVertexBufferLayout() {}
+/** @type {!GPUSize64} */
+GPUVertexBufferLayout.prototype.arrayStride;
+/** @type {!Array<!GPUVertexAttribute>} */
+GPUVertexBufferLayout.prototype.attributes;
+/** @type {!GPUVertexStepMode|undefined} */
+GPUVertexBufferLayout.prototype.stepMode;
+
+/**
+ * @record
+ * @extends {GPUProgrammableStage}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuvertexstate
+ */
+function GPUVertexState() {}
+/** @type {!Array<!GPUVertexBufferLayout|null>|undefined} */
+GPUVertexState.prototype.buffers;
+
+/**
+ * @record
+ * @extends {GPUProgrammableStage}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpufragmentstate
+ */
+function GPUFragmentState() {}
+/** @type {!Array<!GPUColorTargetState|null>} */
+GPUFragmentState.prototype.targets;
+
+/**
+ * @record
+ * @extends {GPUPipelineDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpurenderpipelinedescriptor
+ */
+function GPURenderPipelineDescriptor() {}
+/** @type {!GPUDepthStencilState|undefined} */
+GPURenderPipelineDescriptor.prototype.depthStencil;
+/** @type {!GPUFragmentState|undefined} */
+GPURenderPipelineDescriptor.prototype.fragment;
+/** @type {!GPUMultisampleState|undefined} */
+GPURenderPipelineDescriptor.prototype.multisample;
+/** @type {!GPUPrimitiveState|undefined} */
+GPURenderPipelineDescriptor.prototype.primitive;
+/** @type {!GPUVertexState} */
+GPURenderPipelineDescriptor.prototype.vertex;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @implements {GPUPipelineBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPURenderPipeline
+ */
+function GPURenderPipeline() {}
+// From GPUPipelineBase
+/**
+ * @override
+ * @param {number} index
+ * @return {!GPUBindGroupLayout}
+ */
+GPURenderPipeline.prototype.getBindGroupLayout = function(index) {};
+
 /** @typedef {number} */
 var GPUBufferDynamicOffset;
 
