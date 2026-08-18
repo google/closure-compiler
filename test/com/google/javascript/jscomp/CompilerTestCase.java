@@ -1900,21 +1900,22 @@ public abstract class CompilerTestCase {
     List<Diagnostic> diagnostics = new ArrayList<>();
     List<Postcondition> postconditions = new ArrayList<>();
     for (TestPart part : parts) {
-      if (part instanceof Externs ext) {
-        checkState(externs == null);
-        externs = ext;
-      } else if (part instanceof Sources sources) {
-        checkState(srcs == null);
-        srcs = sources;
-      } else if (part instanceof Expected exp) {
-        checkState(expected == null);
-        expected = exp;
-      } else if (part instanceof Diagnostic diagnostic) {
-        diagnostics.add(diagnostic);
-      } else if (part instanceof Postcondition postcondition) {
-        postconditions.add(postcondition);
-      } else {
-        throw new IllegalStateException("unexpected " + part.getClass().getName());
+      switch (part) {
+        case Externs ext -> {
+          checkState(externs == null);
+          externs = ext;
+        }
+        case Sources sources -> {
+          checkState(srcs == null);
+          srcs = sources;
+        }
+        case Expected exp -> {
+          checkState(expected == null);
+          expected = exp;
+        }
+        case Diagnostic diagnostic -> diagnostics.add(diagnostic);
+        case Postcondition postcondition -> postconditions.add(postcondition);
+        default -> throw new IllegalStateException("unexpected " + part.getClass().getName());
       }
     }
     if (EXPECTED_SAME.equals(expected)) {
