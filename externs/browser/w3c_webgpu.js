@@ -1078,6 +1078,231 @@ function GPURenderPipeline() {}
  */
 GPURenderPipeline.prototype.getBindGroupLayout = function(index) {};
 
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#gpubindingcommandsmixin
+ */
+function GPUBindingCommandsMixin() {}
+/**
+ * @param {!GPUIndex32} index
+ * @param {!GPUBindGroup|null} bindGroup
+ * @param {(!Array<!GPUBufferDynamicOffset>|!Uint32Array|!Iterable<!GPUBufferDynamicOffset>)=}
+ *     opt_dynamicOffsetsOrDynamicOffsetsData
+ * @param {!GPUSize64=} opt_dynamicOffsetsDataStart
+ * @param {!GPUSize32=} opt_dynamicOffsetsDataLength
+ * @return {undefined}
+ */
+GPUBindingCommandsMixin.prototype.setBindGroup = function(
+    index, bindGroup, opt_dynamicOffsetsOrDynamicOffsetsData,
+    opt_dynamicOffsetsDataStart, opt_dynamicOffsetsDataLength) {};
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#gpudebugcommandsmixin
+ */
+function GPUDebugCommandsMixin() {}
+/**
+ * @param {string} markerLabel
+ * @return {undefined}
+ */
+GPUDebugCommandsMixin.prototype.insertDebugMarker = function(markerLabel) {};
+/**
+ * @return {undefined}
+ */
+GPUDebugCommandsMixin.prototype.popDebugGroup = function() {};
+/**
+ * @param {string} groupLabel
+ * @return {undefined}
+ */
+GPUDebugCommandsMixin.prototype.pushDebugGroup = function(groupLabel) {};
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#gpurendercommandsmixin
+ */
+function GPURenderCommandsMixin() {}
+/**
+ * @param {!GPUSize32} vertexCount
+ * @param {!GPUSize32=} opt_instanceCount
+ * @param {!GPUSize32=} opt_firstVertex
+ * @param {!GPUSize32=} opt_firstInstance
+ * @return {undefined}
+ */
+GPURenderCommandsMixin.prototype.draw = function(
+    vertexCount, opt_instanceCount, opt_firstVertex, opt_firstInstance) {};
+/**
+ * @param {!GPUSize32} indexCount
+ * @param {!GPUSize32=} opt_instanceCount
+ * @param {!GPUSize32=} opt_firstIndex
+ * @param {!GPUSignedOffset32=} opt_baseVertex
+ * @param {!GPUSize32=} opt_firstInstance
+ * @return {undefined}
+ */
+GPURenderCommandsMixin.prototype.drawIndexed = function(
+    indexCount, opt_instanceCount, opt_firstIndex, opt_baseVertex,
+    opt_firstInstance) {};
+/**
+ * @param {!GPUBuffer} indirectBuffer
+ * @param {!GPUSize64} indirectOffset
+ * @return {undefined}
+ */
+GPURenderCommandsMixin.prototype.drawIndexedIndirect = function(
+    indirectBuffer, indirectOffset) {};
+/**
+ * @param {!GPUBuffer} indirectBuffer
+ * @param {!GPUSize64} indirectOffset
+ * @return {undefined}
+ */
+GPURenderCommandsMixin.prototype.drawIndirect = function(
+    indirectBuffer, indirectOffset) {};
+/**
+ * @param {!GPUBuffer} buffer
+ * @param {!GPUIndexFormat} indexFormat
+ * @param {!GPUSize64=} opt_offset
+ * @param {!GPUSize64=} opt_size
+ * @return {undefined}
+ */
+GPURenderCommandsMixin.prototype.setIndexBuffer = function(
+    buffer, indexFormat, opt_offset, opt_size) {};
+/**
+ * @param {!GPURenderPipeline} pipeline
+ * @return {undefined}
+ */
+GPURenderCommandsMixin.prototype.setPipeline = function(pipeline) {};
+/**
+ * @param {!GPUIndex32} slot
+ * @param {!GPUBuffer|null} buffer
+ * @param {!GPUSize64=} opt_offset
+ * @param {!GPUSize64=} opt_size
+ * @return {undefined}
+ */
+GPURenderCommandsMixin.prototype.setVertexBuffer = function(
+    slot, buffer, opt_offset, opt_size) {};
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuquerysetdescriptor
+ */
+function GPUQuerySetDescriptor() {}
+/** @type {!GPUSize32} */
+GPUQuerySetDescriptor.prototype.count;
+/** @type {!GPUQueryType} */
+GPUQuerySetDescriptor.prototype.type;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUQuerySet
+ */
+function GPUQuerySet() {}
+/** @type {!GPUSize32Out} */
+GPUQuerySet.prototype.count;
+/** @type {!GPUQueryType} */
+GPUQuerySet.prototype.type;
+/** @return {undefined} */
+GPUQuerySet.prototype.destroy = function() {};
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpucomputepasstimestampwrites
+ */
+function GPUComputePassTimestampWrites() {}
+/** @type {!GPUSize32|undefined} */
+GPUComputePassTimestampWrites.prototype.beginningOfPassWriteIndex;
+/** @type {!GPUSize32|undefined} */
+GPUComputePassTimestampWrites.prototype.endOfPassWriteIndex;
+/** @type {!GPUQuerySet} */
+GPUComputePassTimestampWrites.prototype.querySet;
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpucomputepassdescriptor
+ */
+function GPUComputePassDescriptor() {}
+/** @type {!GPUComputePassTimestampWrites|undefined} */
+GPUComputePassDescriptor.prototype.timestampWrites;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @implements {GPUBindingCommandsMixin}
+ * @implements {GPUDebugCommandsMixin}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUComputePassEncoder
+ */
+function GPUComputePassEncoder() {}
+/**
+ * @param {!GPUSize32} workgroupCountX
+ * @param {!GPUSize32=} opt_workgroupCountY
+ * @param {!GPUSize32=} opt_workgroupCountZ
+ * @return {undefined}
+ */
+GPUComputePassEncoder.prototype.dispatchWorkgroups = function(
+    workgroupCountX, opt_workgroupCountY, opt_workgroupCountZ) {};
+/**
+ * @param {!GPUBuffer} indirectBuffer
+ * @param {!GPUSize64} indirectOffset
+ * @return {undefined}
+ */
+GPUComputePassEncoder.prototype.dispatchWorkgroupsIndirect = function(
+    indirectBuffer, indirectOffset) {};
+/**
+ * @return {undefined}
+ */
+GPUComputePassEncoder.prototype.end = function() {};
+/**
+ * @param {!GPUComputePipeline} pipeline
+ * @return {undefined}
+ */
+GPUComputePassEncoder.prototype.setPipeline = function(pipeline) {};
+// From GPUBindingCommandsMixin
+/**
+ * @override
+ * @param {!GPUIndex32} index
+ * @param {!GPUBindGroup|null} bindGroup
+ * @param {(!Array<!GPUBufferDynamicOffset>|!Uint32Array|!Iterable<!GPUBufferDynamicOffset>)=}
+ *     opt_dynamicOffsetsOrDynamicOffsetsData
+ * @param {!GPUSize64=} opt_dynamicOffsetsDataStart
+ * @param {!GPUSize32=} opt_dynamicOffsetsDataLength
+ * @return {undefined}
+ */
+GPUComputePassEncoder.prototype.setBindGroup = function(
+    index, bindGroup, opt_dynamicOffsetsOrDynamicOffsetsData,
+    opt_dynamicOffsetsDataStart, opt_dynamicOffsetsDataLength) {};
+// From GPUDebugCommandsMixin
+/**
+ * @override
+ * @param {string} markerLabel
+ * @return {undefined}
+ */
+GPUComputePassEncoder.prototype.insertDebugMarker = function(markerLabel) {};
+/**
+ * @override
+ * @return {undefined}
+ */
+GPUComputePassEncoder.prototype.popDebugGroup = function() {};
+/**
+ * @override
+ * @param {string} groupLabel
+ * @return {undefined}
+ */
+GPUComputePassEncoder.prototype.pushDebugGroup = function(groupLabel) {};
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpucommandbufferdescriptor
+ */
+function GPUCommandBufferDescriptor() {}
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUCommandBuffer
+ */
+function GPUCommandBuffer() {}
+
 /** @typedef {number} */
 var GPUBufferDynamicOffset;
 
