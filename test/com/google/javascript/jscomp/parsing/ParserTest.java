@@ -6234,6 +6234,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testPrivateProperty_duplicateIdentifierOnInstanceAndStatic() {
+    expectFeatures(Feature.PRIVATE_ELEMENTS);
+
+    parseError("class C { #x; static #x; }", "Identifier '#x' has already been declared");
+    parseError("class C { #x; static [#x]; }", INVALID_PRIVATE_ID);
+  }
+
+  @Test
   public void testPrivateProperty_definition_linenocharno() {
     Node n =
         parse(
@@ -6316,6 +6324,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse(/**/ "class C { set #p(x) {} get #p() {} }"); // OK
 
     parseError("class C { #p; static #p; }", expectedError); // Cross-static duplicate field
+    parseError("class C { #p() {} static #p() {} }", expectedError);
+    parseError("class C { get #p() {} static get #p() {} }", expectedError);
+    parseError("class C { set #p(x) {} static set #p(x) {} }", expectedError);
   }
 
   @Test

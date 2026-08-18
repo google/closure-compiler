@@ -530,7 +530,6 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         class MyClass {
           constructor() {
             var $jscomp$priv$98447280$1 = Object.create(null);
-            $jscomp$priv$98447280$1.$self = this;
             $jscomp$privateMap$98447280$0.set(this, $jscomp$priv$98447280$1);
             $jscomp$priv$98447280$1.x = 1;
           }
@@ -557,6 +556,351 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
     test(options, src, expected);
 
     // Transpile ES2022 private class fields to ES2021-compatible JavaScript ($jscomp.PrivateMap).
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    test(options, src, expected);
+  }
+
+  @Test
+  public void privateClassMembers_fullIntegrationTest() {
+    CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra("/** @const */ var $jscomp = {};")
+                .buildExternsFile("externs"));
+
+    String src =
+        """
+        class C {
+          x = 1;
+          get #foo() {
+            return this.x;
+          }
+          set #foo(x) {
+            this.x = x;
+          }
+          #y = this.x + this.#foo;
+          #z;
+          #method(p) {
+            return this.#foo + this.#y + p;
+          }
+          callAll() {
+            return (
+                this.#method(1) +
+                ++this.#foo +
+                C.#sMethod()
+            );
+          }
+          static brandChecks(x) {
+            if (#y in x) return 'C instance';
+            if (#s2 in x) return 'C';
+            return false;
+          }
+          canRewrite() {
+            try {
+              this.#foo = 1;
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }
+          static s1 = 1;
+          static #s2 = this.s1;
+          static #sMethod() {
+            return this.s1 + this.#s2;
+          }
+        }
+        """;
+
+    String expected =
+        """
+        const $jscomp$privateMap$98447280$0 = new $jscomp.PrivateMap();
+        const $jscomp$priv$proto$98447280$2 = Object.create(null, {
+          foo: {
+            get: function() {
+              return this.$self.x;
+            },
+            set: function(x) {
+              this.$self.x = x;
+            }
+          },
+          method: {
+            value: function(p) {
+              return $jscomp$privateMap$98447280$0.get(this).foo + $jscomp$privateMap$98447280$0.get(this).y + p;
+            }
+          }
+        });
+        const $jscomp$staticPrivateMap$98447280$1 = new $jscomp.PrivateMap();
+        class C {
+          constructor() {
+            var $jscomp$priv$98447280$3 = Object.create($jscomp$priv$proto$98447280$2);
+            $jscomp$priv$98447280$3.$self = this;
+            $jscomp$privateMap$98447280$0.set(this, $jscomp$priv$98447280$3);
+            this.x = 1;
+            $jscomp$priv$98447280$3.y = this.x + $jscomp$privateMap$98447280$0.get(this).foo;
+            $jscomp$priv$98447280$3.z = void 0;
+          }
+          callAll() {
+            return $jscomp$privateMap$98447280$0.get(this).method.call(this, 1)
+                + ++$jscomp$privateMap$98447280$0.get(this).foo
+                + $jscomp$staticPrivateMap$98447280$1.get(C).sMethod.call(C);
+          }
+          static brandChecks(x) {
+            if ($jscomp$privateMap$98447280$0.has(x)) return 'C instance';
+            if ($jscomp$staticPrivateMap$98447280$1.has(x)) return 'C';
+            return false;
+          }
+          canRewrite() {
+            try {
+              $jscomp$privateMap$98447280$0.get(this).foo = 1;
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }
+          static $jscomp$staticInit$98447280$5() {
+            var $jscomp$priv$98447280$4 = Object.create(null);
+            $jscomp$staticPrivateMap$98447280$1.set(C, $jscomp$priv$98447280$4);
+            $jscomp$priv$98447280$4.sMethod = function() {
+              return this.s1 + $jscomp$staticPrivateMap$98447280$1.get(this).s2;
+            };
+            C.s1 = 1;
+            $jscomp$priv$98447280$4.s2 = C.s1;
+          }
+        }
+        C.$jscomp$staticInit$98447280$5();
+        """;
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    test(options, src, expected);
+  }
+
+  @Test
+  public void privateClassMembers_subclassAndCrossInstanceAccess() {
+    CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra("/** @const */ var $jscomp = {};")
+                .buildExternsFile("externs"));
+
+    String src =
+        """
+        class Base {
+          #secret = 42;
+          #getSecret() { return this.#secret; }
+          compareSecret(other) {
+            return this.#getSecret() === other.#getSecret();
+          }
+        }
+        class Derived extends Base {
+          #childSecret = 100;
+          getChildSecret() {
+            return this.#childSecret;
+          }
+        }
+        """;
+
+    String expected =
+        """
+        const $jscomp$privateMap$98447280$0 = new $jscomp.PrivateMap();
+        const $jscomp$priv$proto$98447280$1 = Object.create(null, {
+          getSecret: {
+            value: function() {
+              return $jscomp$privateMap$98447280$0.get(this).secret;
+            }
+          }
+        });
+        class Base {
+          constructor() {
+            var $jscomp$priv$98447280$2 = Object.create($jscomp$priv$proto$98447280$1);
+            $jscomp$privateMap$98447280$0.set(this, $jscomp$priv$98447280$2);
+            $jscomp$priv$98447280$2.secret = 42;
+          }
+          compareSecret(other) {
+            return $jscomp$privateMap$98447280$0.get(this).getSecret.call(this)
+                === $jscomp$privateMap$98447280$0.get(other).getSecret.call(other);
+          }
+        }
+        const $jscomp$privateMap$98447280$3 = new $jscomp.PrivateMap();
+        class Derived extends Base {
+          constructor() {
+            super(...arguments);
+            var $jscomp$priv$98447280$4 = Object.create(null);
+            $jscomp$privateMap$98447280$3.set(this, $jscomp$priv$98447280$4);
+            $jscomp$priv$98447280$4.childSecret = 100;
+          }
+          getChildSecret() {
+            return $jscomp$privateMap$98447280$3.get(this).childSecret;
+          }
+        }
+        """;
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    test(options, src, expected);
+  }
+
+  @Test
+  public void privateClassMembers_sideEffectingReceivers() {
+    CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra("/** @const */ var $jscomp = {};")
+                .buildExternsFile("externs"));
+
+    String src =
+        """
+        class Target {
+          #data = 0;
+          #update(val) {
+            this.#data = val;
+            return this.#data;
+          }
+          run(factory) {
+            return factory().#update(10);
+          }
+        }
+        """;
+
+    String expected =
+        """
+        const $jscomp$privateMap$98447280$0 = new $jscomp.PrivateMap();
+        const $jscomp$priv$proto$98447280$2 = Object.create(null, {
+          update: {
+            value: function(val) {
+              $jscomp$privateMap$98447280$0.get(this).data = val;
+              return $jscomp$privateMap$98447280$0.get(this).data;
+            }
+          }
+        });
+        class Target {
+          constructor() {
+            var $jscomp$priv$98447280$3 = Object.create($jscomp$priv$proto$98447280$2);
+            $jscomp$privateMap$98447280$0.set(this, $jscomp$priv$98447280$3);
+            $jscomp$priv$98447280$3.data = 0;
+          }
+          run(factory) {
+            var $jscomp$tmp$98447280$1;
+            return ($jscomp$tmp$98447280$1 = factory(),
+                    $jscomp$privateMap$98447280$0.get($jscomp$tmp$98447280$1).update.call($jscomp$tmp$98447280$1, 10));
+          }
+        }
+        """;
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    test(options, src, expected);
+  }
+
+  @Test
+  public void privateClassMembers_accessorCompoundAssignAndIncDec() {
+    CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra("/** @const */ var $jscomp = {};")
+                .buildExternsFile("externs"));
+
+    String src =
+        """
+        class Counter {
+          #count = 0;
+          get #val() { return this.#count; }
+          set #val(v) { this.#count = v; }
+          step() {
+            this.#val += 5;
+            ++this.#val;
+            return this.#val++;
+          }
+        }
+        """;
+
+    String expected =
+        """
+        const $jscomp$privateMap$98447280$0 = new $jscomp.PrivateMap();
+        const $jscomp$priv$proto$98447280$1 = Object.create(null, {
+          val: {
+            get: function() {
+              return $jscomp$privateMap$98447280$0.get(this.$self).count;
+            },
+            set: function(v) {
+              $jscomp$privateMap$98447280$0.get(this.$self).count = v;
+            }
+          }
+        });
+        class Counter {
+          constructor() {
+            var $jscomp$priv$98447280$2 = Object.create($jscomp$priv$proto$98447280$1);
+            $jscomp$priv$98447280$2.$self = this;
+            $jscomp$privateMap$98447280$0.set(this, $jscomp$priv$98447280$2);
+            $jscomp$priv$98447280$2.count = 0;
+          }
+          step() {
+            $jscomp$privateMap$98447280$0.get(this).val += 5;
+            ++$jscomp$privateMap$98447280$0.get(this).val;
+            return $jscomp$privateMap$98447280$0.get(this).val++;
+          }
+        }
+        """;
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    test(options, src, expected);
+  }
+
+  @Test
+  public void privateClassMembers_staticMethodAndFieldOrder() {
+    CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra("/** @const */ var $jscomp = {};")
+                .buildExternsFile("externs"));
+
+    String src =
+        """
+        class C {
+          static #a = 1;
+          static #b() { return this.#a + 1; }
+          static #c = this.#b() + 1;
+          static getC() { return this.#c; }
+        }
+        """;
+
+    String expected =
+        """
+        const $jscomp$staticPrivateMap$98447280$0 = new $jscomp.PrivateMap();
+        class C {
+          static getC() {
+            return $jscomp$staticPrivateMap$98447280$0.get(this).c;
+          }
+          static $jscomp$staticInit$98447280$2() {
+            var $jscomp$priv$98447280$1 = Object.create(null);
+            $jscomp$staticPrivateMap$98447280$0.set(C, $jscomp$priv$98447280$1);
+            $jscomp$priv$98447280$1.b = function() {
+              return $jscomp$staticPrivateMap$98447280$0.get(this).a + 1;
+            };
+            $jscomp$priv$98447280$1.a = 1;
+            $jscomp$priv$98447280$1.c = $jscomp$staticPrivateMap$98447280$0.get(C).b.call(C) + 1;
+          }
+        }
+        C.$jscomp$staticInit$98447280$2();
+        """;
+
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
     test(options, src, expected);
   }

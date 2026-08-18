@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.AstFactory.type;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.js.RuntimeJsLibManager;
@@ -70,6 +71,12 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   private static final String STATIC_PRIVATE_MAP_VAR = "$jscomp$staticPrivateMap$";
   private static final String PRIVATE_PROTO_VAR = "$jscomp$priv$proto$";
   private static final String PRIVATE_VAR = "$jscomp$priv$";
+  private static final String TMP_VAR = "$jscomp$tmp$";
+
+  public static final DiagnosticType ILLEGAL_PRIVATE_MEMBER_ASSIGNMENT =
+      DiagnosticType.error(
+          "JSC_ILLEGAL_PRIVATE_MEMBER_ASSIGNMENT",
+          "Invalid assignment to private method ''#{0}''. Private methods cannot be reassigned.");
 
   /**
    * Mapping from generic placeholder names used in unit tests to the variable name prefixes
@@ -90,7 +97,13 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
           .put("PRIVATE_MAP", PRIVATE_MAP_VAR)
           .put("PRIVATE_PROTO", PRIVATE_PROTO_VAR)
           .put("PRIVATE", PRIVATE_VAR)
+          .put("TMP", TMP_VAR)
           .buildOrThrow();
+
+  /** Returns $jscomp$tmp$[FILE_ID]$[number] */
+  private String generateUniqueTmpVarName(NodeTraversal t) {
+    return TMP_VAR + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+  }
 
   /** Returns $jscomp$classDecl$[FILE_ID]$[number] */
   private String generateUniqueClassDeclVarName(NodeTraversal t) {
@@ -179,6 +192,10 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       transpiledFeatures = transpiledFeatures.with(Feature.PRIVATE_ELEMENTS);
     }
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, transpiledFeatures);
+    // Update the compiler's summary of getter and setter property names in the AST since class
+    // getter/setter definitions may have been detached or rewritten into normal
+    // methods/descriptors.
+    GatherGetterAndSetterProperties.update(compiler, externs, root);
   }
 
   private final Deque<ClassRecord> classStack = new ArrayDeque<>();
@@ -205,8 +222,23 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         // NodeTraversal to skip traversing other parts of the AST.)
         NormalizedNames normalized = generateNormalizedClassNames(t, n);
 
-        // Create the ClassRecord which will be referenced when we visit the class later.
-        classStack.addFirst(new ClassRecord(normalized, bindingIdentifier, /* classNode= */ n));
+        ClassRecord record = new ClassRecord(normalized, bindingIdentifier, /* classNode= */ n);
+        Node classMembers = n.getLastChild();
+        if (classMembers.isClassMembers()) {
+          // Pre-scan all class members (fields, methods, accessors) upon entering the CLASS node
+          // to record all private identifiers (#member) declared within the class body.
+          // Pre-registering private declarations up front ensures that forward brand checks
+          // (e.g., `#field in this` inside a method defined above `#field`) and cross-member
+          // references can resolve the private member record regardless of AST traversal order.
+          for (Node member = classMembers.getFirstChild();
+              member != null;
+              member = member.getNext()) {
+            if (isPrivateMember(member)) {
+              record.recordPrivateMember(member);
+            }
+          }
+        }
+        classStack.addFirst(record);
       }
       case COMPUTED_FIELD_DEF -> {
         checkState(!classStack.isEmpty());
@@ -226,14 +258,6 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         if (n.isPrivateIdentifier()) {
           checkState(!classStack.isEmpty());
           classStack.peek().recordPrivateMember(n);
-          // TODO(b/236744850): Non-static private instance methods without `super` are transpiled
-          // via shared private prototype descriptor (PRIVATE_PROTO). Support static private
-          // methods, getters, setters, and methods with `super` in future CLs.
-          if (n.isStaticMember()
-              || !n.isMemberFunctionDef()
-              || NodeUtil.referencesSuper(NodeUtil.getFunctionBody(n.getFirstChild()))) {
-            maybeReportPrivatePropertiesCannotConvertYet(n);
-          }
         }
       }
       case BLOCK -> {
@@ -555,6 +579,8 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   private void insertPrivateDeclarations(
       NodeTraversal t, ClassRecord record, Node classInsertionPoint) {
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
+    // Create const PRIVATE_MAP$uid = new $jscomp.PrivateMap() declaration for instance private
+    // members.
     if (record.hasInstancePrivateMembers) {
       compiler.getRuntimeJsLibManager().injectLibForField("$jscomp.PrivateMap");
       Node mapVar =
@@ -565,23 +591,52 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
               .srcrefTreeIfMissing(record.classNode);
       mapVar.insertBefore(classInsertionPoint);
 
+      // Create const PRIVATE_PROTO$uid = Object.create(null, ...) declaration for instance private
+      // methods and accessors.
       if (record.hasInstancePrivateMethodsOrAccessors) {
-        // TODO(b/236744850): Non-static private instance methods without `super` are gathered into
-        // descriptor definitions for the shared private prototype descriptor (PRIVATE_PROTO).
-        // Support static private methods, getters, setters, and methods with `super` in future CLs.
+        // Non-static private instance methods and accessors are gathered into descriptor
+        // definitions for the shared private prototype descriptor (PRIVATE_PROTO).
         Node descriptorsLit = astFactory.createObjectLit();
         for (ClassRecord.PrivateMember pm : record.privateMembers) {
-          // TODO(b/236744850): Handle private methods with super references when supported.
-          if (pm.kind == ClassRecord.PrivateMemberKind.METHOD
-              && !pm.isStatic
-              && pm.methodNode != null
-              && pm.methodNode.hasChildren()
-              && !pm.hasSuper) {
-            Node fnNode = pm.methodNode.getFirstChild().detach();
-            Node valProp = astFactory.createStringKey("value", fnNode);
-            Node descriptorLit = astFactory.createObjectLit(valProp);
-            Node memberKey = astFactory.createStringKey(pm.propertyName(), descriptorLit);
-            descriptorsLit.addChildToBack(memberKey);
+          // Process instance (non-static) private members.
+          if (!pm.isStatic) {
+            // Process private instance methods.
+            if (pm.kind == ClassRecord.PrivateMemberKind.METHOD
+                && pm.methodNode != null
+                && pm.methodNode.hasChildren()) {
+              rewriteSuperReferencesInPrivateMember(pm.methodNode, record);
+              Node fnNode = pm.methodNode.getFirstChild().detach();
+              pm.methodNode.detach();
+              Node valProp = astFactory.createStringKey("value", fnNode);
+              Node descriptorLit = astFactory.createObjectLit(valProp);
+              Node memberKey = astFactory.createStringKey(pm.propertyName(), descriptorLit);
+              descriptorsLit.addChildToBack(memberKey);
+            } else if (pm.kind == ClassRecord.PrivateMemberKind.ACCESSOR) {
+              // Process private instance accessors (getters/setters).
+              Node descriptorLit = astFactory.createObjectLit();
+              if (pm.getterNode != null && pm.getterNode.hasChildren()) {
+                rewriteSuperReferencesInPrivateMember(pm.getterNode, record);
+                Node getFn = pm.getterNode.getFirstChild().detach();
+                pm.getterNode.detach();
+                if (rewriteThisToThisDotSelf(getFn)) {
+                  record.needsInstanceSelf = true;
+                }
+                Node getProp = astFactory.createStringKey("get", getFn);
+                descriptorLit.addChildToBack(getProp);
+              }
+              if (pm.setterNode != null && pm.setterNode.hasChildren()) {
+                rewriteSuperReferencesInPrivateMember(pm.setterNode, record);
+                Node setFn = pm.setterNode.getFirstChild().detach();
+                pm.setterNode.detach();
+                if (rewriteThisToThisDotSelf(setFn)) {
+                  record.needsInstanceSelf = true;
+                }
+                Node setProp = astFactory.createStringKey("set", setFn);
+                descriptorLit.addChildToBack(setProp);
+              }
+              Node memberKey = astFactory.createStringKey(pm.propertyName(), descriptorLit);
+              descriptorsLit.addChildToBack(memberKey);
+            }
           }
         }
 
@@ -603,6 +658,8 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         t.reportCodeChange();
       }
     }
+    // Create const STATIC_PRIVATE_MAP$uid = new $jscomp.PrivateMap() declaration for static private
+    // members.
     if (record.hasStaticPrivateMembers) {
       compiler.getRuntimeJsLibManager().injectLibForField("$jscomp.PrivateMap");
       Node staticMapVar =
@@ -673,6 +730,10 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    *   <li>Method access (tear-off): {@code obj.#method} is rewritten to {@code
    *       PRIVATE_MAP.get(obj).method}.
    * </ul>
+   *
+   * <p>TODO(b/236744850): Consider memoizing PRIVATE_MAP.get(obj) into a local temporary variable
+   * when multiple private accesses occur on the same receiver within a single statement or method
+   * scope to reduce WeakMap lookup overhead.
    */
   private void rewritePrivateGetProp(NodeTraversal t, Node getPropNode) {
     checkArgument(getPropNode.isGetProp() || getPropNode.isOptChainGetProp(), getPropNode);
@@ -691,29 +752,48 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     ClassRecord record = resolved.classRecord();
     ClassRecord.PrivateMember pm = resolved.privateMember();
 
-    // TODO(b/236744850): Non-static private instance method accesses without `super` are rewritten
-    // to access the shared private prototype descriptor via PRIVATE_MAP.get(receiver).method.
-    // Support static private methods, method LValue assignments, and methods with `super` in future
-    // CLs.
+    // Private methods are read-only and cannot be reassigned (e.g., `this.#method = fn`).
+    // Report an error if a private method is used as an L-value.
+    if (NodeUtil.isLValue(getPropNode) && pm.kind == ClassRecord.PrivateMemberKind.METHOD) {
+      compiler.report(
+          JSError.make(getPropNode, ILLEGAL_PRIVATE_MEMBER_ASSIGNMENT, pm.propertyName()));
+      return;
+    }
+
     if (pm.kind == ClassRecord.PrivateMemberKind.METHOD) {
       rewritePrivateMethodAccess(t, getPropNode, record, pm);
       return;
     }
 
-    rewritePrivateFieldAccess(t, getPropNode, record, pm);
+    rewritePrivateFieldOrAccessorAccess(t, getPropNode, record, pm);
   }
 
+  /**
+   * Rewrites access to a private method.
+   *
+   * <p>Direct call (e.g., {@code obj.#method(a, b)}):
+   *
+   * <ul>
+   *   <li>If {@code obj} is side-effect-free (e.g., {@code this} or a simple variable name):
+   *       Rewritten to {@code PRIVATE_MAP.get(obj).method.call(obj, a, b)}.
+   *   <li>If {@code obj} may have side-effects (e.g., {@code getObj().#method(a, b)}): Rewritten
+   *       using a temporary variable to evaluate the receiver only once: {@code (TMP = getObj(),
+   *       PRIVATE_MAP.get(TMP).method.call(TMP, a, b))}.
+   * </ul>
+   *
+   * <p>Indirect read / method tear-off (e.g., {@code const fn = obj.#method}): Rewritten to {@code
+   * PRIVATE_MAP.get(obj).method}.
+   */
   private void rewritePrivateMethodAccess(
       NodeTraversal t, Node getPropNode, ClassRecord record, ClassRecord.PrivateMember pm) {
-    if (NodeUtil.isLValue(getPropNode) || pm.isStatic || pm.hasSuper) {
-      maybeReportPrivatePropertiesCannotConvertYet(getPropNode);
-      return;
-    }
-
     Node parent = getPropNode.getParent();
     boolean isDirectCall = parent.isCall() && Objects.equals(parent.getFirstChild(), getPropNode);
+    String memberPropName = pm.propertyName();
 
-    String mapVarName = record.getPrivateMapVarName(compiler, t);
+    String mapVarName =
+        pm.isStatic
+            ? record.getStaticPrivateMapVarName(compiler, t)
+            : record.getPrivateMapVarName(compiler, t);
     Node receiver = getPropNode.getFirstChild().detach();
 
     Node mapNameNode = astFactory.createNameWithUnknownType(mapVarName);
@@ -721,13 +801,11 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
     if (isDirectCall) {
       if (receiverNeedsTempVar(receiver)) {
-        // Rewrite to: (temp = receiver, PRIVATE_MAP.get(temp).method.call(temp, ...args))
-        // For complex or side-effecting receiver expressions (e.g. getObj().#method()), storing
-        // the receiver in a temporary variable ensures that the receiver expression is evaluated
-        // EXACTLY ONCE, preventing duplicate side effects from evaluating getObj() twice (once
-        // for
-        // PRIVATE_MAP.get() and once for the .call() explicit `this` argument).
-        String tempName = "$jscomp$tmp$" + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+        // If evaluating receiver twice could introduce side effects or alter execution state,
+        // declare a temporary variable (e.g. `let TMP;`) and evaluate the call using a comma
+        // expression:
+        // `(TMP = receiver, PRIVATE_MAP.get(TMP).method.call(TMP, ...args))`
+        String tempName = generateUniqueTmpVarName(t);
         Node insertionBlock = getDeclarationInsertionPoint(getPropNode, t);
         Node decl = astFactory.createSingleLetNameDeclaration(tempName);
         insertionBlock.addChildToFront(decl.srcrefTreeIfMissing(insertionBlock));
@@ -742,14 +820,14 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         Node getCall =
             astFactory.createCallWithUnknownType(getCallee, tempNameNode2).srcref(getPropNode);
         Node methodGetProp =
-            astFactory.createGetPropWithUnknownType(getCall, pm.propertyName()).srcref(getPropNode);
+            astFactory.createGetPropWithUnknownType(getCall, memberPropName).srcref(getPropNode);
         Node callCallee =
             astFactory.createGetPropWithUnknownType(methodGetProp, "call").srcref(getPropNode);
 
-        getPropNode.detach();
         callCallee.srcrefTree(getPropNode);
         tempNameNode3.srcrefTree(getPropNode);
 
+        getPropNode.detach();
         parent.addChildToFront(callCallee);
         tempNameNode3.insertAfter(callCallee);
 
@@ -760,35 +838,34 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
         t.reportCodeChange();
       } else {
-        // Rewrite to: PRIVATE_MAP.get(receiver).method.call(receiver, ...args)
-        // In ES2022, private members are class-scoped, so an instance `a` can call `#method` on
-        // another instance `b` of the same class (e.g., `other.#method()`). Accessing a private
-        // method on `receiver` retrieves the method from receiver's PrivateMap entry and
-        // invokes it via `.call(receiver, ...args)` to bind `this` correctly.
+        // Direct private method call with a side-effect-free receiver (e.g. `this` or a simple
+        // variable):
+        // Rewritten to `PRIVATE_MAP.get(receiver).method.call(receiver, ...args)`.
         Node getCall = astFactory.createCallWithUnknownType(getCallee, receiver);
-        Node methodGetProp = astFactory.createGetPropWithUnknownType(getCall, pm.propertyName());
+        Node methodGetProp = astFactory.createGetPropWithUnknownType(getCall, memberPropName);
         Node callCallee = astFactory.createGetPropWithUnknownType(methodGetProp, "call");
 
-        getPropNode.detach();
         callCallee.srcrefTree(getPropNode);
         Node receiverArg = receiver.cloneTree();
         receiverArg.srcrefTree(getPropNode);
 
+        getPropNode.detach();
         parent.addChildToFront(callCallee);
         receiverArg.insertAfter(callCallee);
         t.reportCodeChange();
       }
     } else {
-      // Rewrite to: PRIVATE_MAP.get(receiver).method
+      // Indirect read / method tear-off (e.g., `const fn = this.#method`):
+      // Rewritten to `PRIVATE_MAP.get(receiver).propertyName`.
       Node getCall = astFactory.createCallWithUnknownType(getCallee, receiver);
-      Node methodGetProp = astFactory.createGetPropWithUnknownType(getCall, pm.propertyName());
+      Node methodGetProp = astFactory.createGetPropWithUnknownType(getCall, memberPropName);
 
       getPropNode.replaceWith(methodGetProp.srcrefTree(getPropNode));
       t.reportCodeChange();
     }
   }
 
-  private void rewritePrivateFieldAccess(
+  private void rewritePrivateFieldOrAccessorAccess(
       NodeTraversal t, Node getPropNode, ClassRecord record, ClassRecord.PrivateMember pm) {
     boolean isStatic = pm.isStatic;
     String mapVarName =
@@ -806,6 +883,169 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
     getPropNode.replaceWith(propGet.srcrefTree(getPropNode));
     t.reportCodeChange();
+  }
+
+  /**
+   * Rewrites top-level {@code this} references inside a private accessor body to {@code
+   * this.$self}.
+   *
+   * @return true if any {@code this} reference was rewritten.
+   */
+  @CanIgnoreReturnValue
+  private boolean rewriteThisToThisDotSelf(Node fn) {
+    Node fnBody = NodeUtil.getFunctionBody(fn);
+    if (fnBody == null) {
+      return false;
+    }
+    boolean[] hasThis = new boolean[1];
+    NodeUtil.visitPostOrder(
+        fnBody,
+        (n) -> {
+          if (n.isThis()) {
+            hasThis[0] = true;
+            Node target =
+                astFactory
+                    .createGetPropWithUnknownType(
+                        astFactory.createThis(type(StandardColors.UNKNOWN)), "$self")
+                    .srcref(n);
+            n.replaceWith(target);
+            compiler.reportChangeToEnclosingScope(target);
+          }
+        },
+        (n) -> !n.isClass() && (!n.isFunction() || n.isArrowFunction()));
+    return hasThis[0];
+  }
+
+  private boolean hasThisReference(Node fn) {
+    Node fnBody = NodeUtil.getFunctionBody(fn);
+    if (fnBody == null) {
+      return false;
+    }
+    boolean[] hasThis = new boolean[1];
+    NodeUtil.visitPostOrder(
+        fnBody,
+        (n) -> {
+          if (n.isThis()) {
+            hasThis[0] = true;
+          }
+        },
+        (n) -> !n.isClass() && (!n.isFunction() || n.isArrowFunction()));
+    return hasThis[0];
+  }
+
+  /**
+   * Rewrites {@code super} references inside private methods or accessors into explicit target
+   * calls or Reflect calls.
+   *
+   * <ul>
+   *   <li>{@code super.method()} &rarr; {@code Base.method.call(this)}
+   *   <li>{@code super.prop} &rarr; {@code Reflect.get(Base, JSCompiler_renameProperty('prop',
+   *       Base), this)}
+   *   <li>{@code super.prop = val} &rarr; {@code Reflect.set(Base,
+   *       JSCompiler_renameProperty('prop', Base), val, this)}
+   * </ul>
+   */
+  private void rewriteSuperReferencesInPrivateMember(Node memberNode, ClassRecord record) {
+    if (record.normalizedNames.superClassNode().isEmpty()) {
+      return;
+    }
+    Node fn = memberNode.getFirstChild();
+    Node fnBody = NodeUtil.getFunctionBody(fn);
+    if (fnBody == null || !NodeUtil.referencesSuper(fnBody)) {
+      return;
+    }
+
+    boolean isStatic = memberNode.isStaticMember();
+    NodeUtil.visitPostOrder(
+        fnBody,
+        (n) -> {
+          if (n.isSuper()) {
+            Node parent = n.getParent();
+            if (parent.isGetProp() || parent.isGetElem()) {
+              Node target;
+              if (isStatic) {
+                target = record.createNewSuperclassReferenceNode().srcrefTree(n);
+              } else {
+                // TODO(b/236744850): Consider emitting dynamic prototype chain lookups
+                // (`Object.getPrototypeOf(Child.prototype).method`) rather than static prototype
+                // accesses (`Base.prototype.method`) if dynamic prototype mutation must be
+                // supported.
+                target =
+                    astFactory
+                        .createPrototypeAccess(record.createNewSuperclassReferenceNode())
+                        .srcrefTree(n);
+              }
+
+              Node grandParent = parent.getParent();
+              if (grandParent != null
+                  && grandParent.isCall()
+                  && Objects.equals(grandParent.getFirstChild(), parent)) {
+                // Method call: super.method(...)
+                n.replaceWith(target);
+                // Note: For instance super calls (`!isStatic`) or when static inheritance is
+                // enabled
+                // (`!getAssumeStaticInheritanceIsNotUsed()`), we invoke the method via
+                // `.call(this)`
+                // so the `this` receiver is preserved across the class hierarchy.
+                if (!isStatic || !compiler.getOptions().getAssumeStaticInheritanceIsNotUsed()) {
+                  Node callCallee =
+                      astFactory.createGetPropWithUnknownType(parent.detach(), "call");
+                  grandParent.addChildToFront(callCallee);
+                  Node thisArg = astFactory.createThis(type(StandardColors.UNKNOWN)).srcref(n);
+                  thisArg.insertAfter(callCallee);
+                }
+              } else if (grandParent != null
+                  && grandParent.isAssign()
+                  && Objects.equals(grandParent.getFirstChild(), parent)) {
+                // Setter write: super.prop = value
+                Node rhs = grandParent.getSecondChild().detach();
+                Node propKey =
+                    parent.isGetProp()
+                        ? astFactory.createCall(
+                            astFactory.createName(
+                                NodeUtil.JSC_PROPERTY_NAME_FN, type(StandardColors.UNKNOWN)),
+                            type(StandardColors.STRING),
+                            astFactory.createString(parent.getString()),
+                            record.createNewSuperclassReferenceNode().srcrefTree(n))
+                        : parent.getSecondChild().detach();
+
+                Node reflectSet =
+                    astFactory.createCall(
+                        astFactory.createGetPropWithUnknownType(
+                            astFactory.createName("Reflect", type(StandardColors.UNKNOWN)), "set"),
+                        type(StandardColors.UNKNOWN),
+                        target,
+                        propKey,
+                        rhs,
+                        astFactory.createThis(type(StandardColors.UNKNOWN)).srcref(n));
+                grandParent.replaceWith(reflectSet.srcrefTree(grandParent));
+              } else {
+                // Getter read: super.prop
+                Node propKey =
+                    parent.isGetProp()
+                        ? astFactory.createCall(
+                            astFactory.createName(
+                                NodeUtil.JSC_PROPERTY_NAME_FN, type(StandardColors.UNKNOWN)),
+                            type(StandardColors.STRING),
+                            astFactory.createString(parent.getString()),
+                            record.createNewSuperclassReferenceNode().srcrefTree(n))
+                        : parent.getSecondChild().detach();
+
+                Node reflectGet =
+                    astFactory.createCall(
+                        astFactory.createGetPropWithUnknownType(
+                            astFactory.createName("Reflect", type(StandardColors.UNKNOWN)), "get"),
+                        type(StandardColors.UNKNOWN),
+                        target,
+                        propKey,
+                        astFactory.createThis(type(StandardColors.UNKNOWN)).srcref(n));
+                parent.replaceWith(reflectGet.srcrefTree(parent));
+              }
+              compiler.reportChangeToEnclosingScope(fnBody);
+            }
+          }
+        },
+        (n) -> !n.isClass());
   }
 
   /** Rewrites and moves all side effected computed field keys to the top */
@@ -926,15 +1166,17 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
               .srcrefTreeIfMissing(record.classNode);
       privDecl.insertBefore(insertionPoint);
 
-      // Add `PRIVATE$uid.$self = this;` to the original code.
-      Node privSelf =
-          astFactory.createGetPropWithUnknownType(
-              astFactory.createConstantName(privName, type(StandardColors.UNKNOWN)), "$self");
-      Node assignSelf =
-          astFactory
-              .createAssignStatement(privSelf, astFactory.createThisForEs6Class(record.classNode))
-              .srcrefTreeIfMissing(record.classNode);
-      assignSelf.insertBefore(insertionPoint);
+      if (record.needsInstanceSelf) {
+        // Add `PRIVATE$uid.$self = this;` to the original code.
+        Node privSelf =
+            astFactory.createGetPropWithUnknownType(
+                astFactory.createConstantName(privName, type(StandardColors.UNKNOWN)), "$self");
+        Node assignSelf =
+            astFactory
+                .createAssignStatement(privSelf, astFactory.createThisForEs6Class(record.classNode))
+                .srcrefTreeIfMissing(record.classNode);
+        assignSelf.insertBefore(insertionPoint);
+      }
 
       // Add `PRIVATE_MAP$uid.set(this, PRIVATE$uid);` to the original code.
       Node mapNameNode = astFactory.createNameWithUnknownType(mapName);
@@ -1180,6 +1422,23 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       String staticMapName = record.getStaticPrivateMapVarName(compiler, t);
       String privName = record.getStaticPrivateVarName(compiler, t);
 
+      // Pre-scan static private accessors to check if any getter/setter references 'this'.
+      // If so, we must set $self on the static private object.
+      for (ClassRecord.PrivateMember pm : record.privateMembers) {
+        if (pm.isStatic && pm.kind == ClassRecord.PrivateMemberKind.ACCESSOR) {
+          if (pm.getterNode != null
+              && pm.getterNode.hasChildren()
+              && hasThisReference(pm.getterNode.getFirstChild())) {
+            record.needsStaticSelf = true;
+          }
+          if (pm.setterNode != null
+              && pm.setterNode.hasChildren()
+              && hasThisReference(pm.setterNode.getFirstChild())) {
+            record.needsStaticSelf = true;
+          }
+        }
+      }
+
       // Add `const PRIVATE$uid = Object.create(null);` to the original code.
       Node createProp =
           astFactory.createGetPropWithUnknownType(
@@ -1192,17 +1451,19 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
               .srcrefTreeIfMissing(record.classNode);
       staticInitTempParent.addChildToBack(privDecl);
 
-      // Add `PRIVATE$uid.$self = ClassName;` to the original code.
-      Node privSelf =
-          astFactory.createGetPropWithUnknownType(
-              astFactory.createConstantName(privName, type(StandardColors.UNKNOWN)), "$self");
-      Node assignSelf =
-          astFactory
-              .createAssignStatement(
-                  privSelf,
-                  record.createNewNameReferenceNode().srcrefTreeIfMissing(record.classNode))
-              .srcrefTreeIfMissing(record.classNode);
-      staticInitTempParent.addChildToBack(assignSelf);
+      if (record.needsStaticSelf) {
+        // Add `PRIVATE$uid.$self = ClassName;` to the original code.
+        Node privSelf =
+            astFactory.createGetPropWithUnknownType(
+                astFactory.createConstantName(privName, type(StandardColors.UNKNOWN)), "$self");
+        Node assignSelf =
+            astFactory
+                .createAssignStatement(
+                    privSelf,
+                    record.createNewNameReferenceNode().srcrefTreeIfMissing(record.classNode))
+                .srcrefTreeIfMissing(record.classNode);
+        staticInitTempParent.addChildToBack(assignSelf);
+      }
 
       // Add `STATIC_PRIVATE_MAP$uid.set(ClassName, PRIVATE$uid);` to the original code.
       Node mapNameNode = astFactory.createNameWithUnknownType(staticMapName);
@@ -1214,6 +1475,8 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
               astFactory.createConstantName(privName, type(StandardColors.UNKNOWN)));
       Node mapSetStmt = astFactory.exprResult(mapSetCall).srcrefTreeIfMissing(record.classNode);
       staticInitTempParent.addChildToBack(mapSetStmt);
+
+      addStaticPrivateMembers(record, privName, staticInitTempParent);
     }
 
     while (!staticMembers.isEmpty()) {
@@ -1280,12 +1543,12 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       return;
     }
 
-    // If there are no super references, place all the static initialization code after the class.
-    // TODO: b/236744850 - Also skip if there are private field refs.
+    // If there are no super references or private field references, place all the static
+    // initialization code after the class.
     if (!hasPriv
         && !NodeUtil.has(
             staticInitTempParent,
-            /* pred= */ Node::isSuper,
+            /* pred= */ (n) -> n.isSuper() || n.isPrivateIdentifier(),
             /* traverseChildrenPred= */ (n) ->
                 !n.isClass() && (!n.isFunction() || n.isArrowFunction()))) {
       while (staticInitTempParent.hasChildren()) {
@@ -1331,6 +1594,60 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
             .srcrefTree(classMembers);
     Node staticInitCallStmt = astFactory.exprResult(staticInitCall);
     staticInitCallStmt.insertAfter(insertionPoint);
+  }
+
+  /** Attaches static private methods and accessors to the static private object. */
+  private void addStaticPrivateMembers(
+      ClassRecord record, String privName, Node staticInitTempParent) {
+    for (ClassRecord.PrivateMember pm : record.privateMembers) {
+      // Only process static private members for static initialization.
+      if (pm.isStatic) {
+        // Assign static private method definitions to the static private object (e.g.,
+        // PRIVATE$uid.method = function() {}).
+        if (pm.kind == ClassRecord.PrivateMemberKind.METHOD
+            && pm.methodNode != null
+            && pm.methodNode.hasChildren()) {
+          rewriteSuperReferencesInPrivateMember(pm.methodNode, record);
+          Node fnNode = pm.methodNode.getFirstChild().detach();
+          pm.methodNode.detach();
+          Node lhs =
+              astFactory.createGetPropWithUnknownType(
+                  astFactory.createConstantName(privName, type(StandardColors.UNKNOWN)),
+                  pm.propertyName());
+          Node assign = astFactory.createAssignStatement(lhs, fnNode);
+          assign.srcrefTreeIfMissing(pm.methodNode);
+          staticInitTempParent.addChildToBack(assign);
+        } else if (pm.kind == ClassRecord.PrivateMemberKind.ACCESSOR) {
+          // Assign static private accessor definitions to the static private object via
+          // Object.defineProperty.
+          Node descriptorLit = astFactory.createObjectLit();
+          if (pm.getterNode != null && pm.getterNode.hasChildren()) {
+            rewriteSuperReferencesInPrivateMember(pm.getterNode, record);
+            Node getFn = pm.getterNode.getFirstChild().detach();
+            pm.getterNode.detach();
+            rewriteThisToThisDotSelf(getFn);
+            descriptorLit.addChildToBack(astFactory.createStringKey("get", getFn));
+          }
+          if (pm.setterNode != null && pm.setterNode.hasChildren()) {
+            rewriteSuperReferencesInPrivateMember(pm.setterNode, record);
+            Node setFn = pm.setterNode.getFirstChild().detach();
+            pm.setterNode.detach();
+            rewriteThisToThisDotSelf(setFn);
+            descriptorLit.addChildToBack(astFactory.createStringKey("set", setFn));
+          }
+          Node defineProp =
+              astFactory.createGetPropWithUnknownType(
+                  astFactory.createNameWithUnknownType("Object"), "defineProperty");
+          Node call =
+              astFactory.createCallWithUnknownType(
+                  defineProp,
+                  astFactory.createConstantName(privName, type(StandardColors.UNKNOWN)),
+                  astFactory.createString(pm.propertyName()),
+                  descriptorLit);
+          staticInitTempParent.addChildToBack(astFactory.exprResult(call));
+        }
+      }
+    }
   }
 
   private void maybeUpdateClassSelfRef(NodeTraversal t, Node nameNode) {
@@ -1464,15 +1781,14 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
 
     /** Information about a private member declaration in the class. */
-    // TODO(b/236744850): Add getterNode, setterNode, and accessor fields in future CLs when private
-    // getter/setter transpilation is supported.
     static class PrivateMember {
       final String name;
       final PrivateMemberKind kind;
       final boolean isStatic;
-      boolean hasSuper = false;
 
       @Nullable Node methodNode;
+      @Nullable Node getterNode;
+      @Nullable Node setterNode;
 
       final List<Node> declarationNodes = new ArrayList<>();
 
@@ -1483,6 +1799,10 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
         this.declarationNodes.add(initialNode);
         if (kind == PrivateMemberKind.METHOD) {
           this.methodNode = initialNode;
+        } else if (initialNode.isGetterDef()) {
+          this.getterNode = initialNode;
+        } else if (initialNode.isSetterDef()) {
+          this.setterNode = initialNode;
         }
       }
 
@@ -1512,9 +1832,19 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     /** Whether the class has any static private members. */
     boolean hasStaticPrivateMembers = false;
 
+    /** Whether any instance private accessor body references top-level `this`. */
+    boolean needsInstanceSelf = false;
+
+    /** Whether any static private accessor body references top-level `this`. */
+    boolean needsStaticSelf = false;
+
     void recordPrivateMember(Node n) {
       checkArgument(n.isPrivateIdentifier());
-      String name = n.getString();
+      String name =
+          n.hasChildren() && n.getFirstChild().isName()
+              ? n.getFirstChild().getString()
+              : n.getString();
+      checkArgument(name.startsWith("#"), name);
       boolean isStatic = n.isStaticMember();
 
       PrivateMemberKind kind;
@@ -1532,6 +1862,11 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       if (privateMembersByName.containsKey(name)) {
         pm = privateMembersByName.get(name);
         pm.declarationNodes.add(n);
+        if (n.isGetterDef()) {
+          pm.getterNode = n;
+        } else if (n.isSetterDef()) {
+          pm.setterNode = n;
+        }
       } else {
         pm = new PrivateMember(name, kind, isStatic, n);
         privateMembers.add(pm);
@@ -1539,10 +1874,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       }
 
       if ((kind == PrivateMemberKind.METHOD || kind == PrivateMemberKind.ACCESSOR) && !isStatic) {
-        pm.hasSuper |= NodeUtil.referencesSuper(NodeUtil.getFunctionBody(n.getFirstChild()));
-        if (!pm.hasSuper) {
-          hasInstancePrivateMethodsOrAccessors = true;
-        }
+        hasInstancePrivateMethodsOrAccessors = true;
       }
 
       if (isStatic) {
@@ -1800,5 +2132,13 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       return enclosingStmt.getParent();
     }
     return t.getScopeRoot();
+  }
+
+  /**
+   * Returns true if the node represents a private member declaration (field, method, or accessor)
+   * with a private identifier starting with '#'.
+   */
+  private static boolean isPrivateMember(Node n) {
+    return n.isPrivateIdentifier() || (n.hasChildren() && n.getFirstChild().isPrivateIdentifier());
   }
 }
