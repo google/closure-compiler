@@ -701,6 +701,132 @@ GPUExternalTextureDescriptor.prototype.source;
  */
 function GPUExternalTexture() {}
 
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpubindgrouplayoutentry
+ */
+function GPUBindGroupLayoutEntry() {}
+/** @type {!GPUIndex32} */
+GPUBindGroupLayoutEntry.prototype.binding;
+/** @type {!GPUBufferBindingLayout|undefined} */
+GPUBindGroupLayoutEntry.prototype.buffer;
+/** @type {!GPUExternalTextureBindingLayout|undefined} */
+GPUBindGroupLayoutEntry.prototype.externalTexture;
+/** @type {!GPUSamplerBindingLayout|undefined} */
+GPUBindGroupLayoutEntry.prototype.sampler;
+/** @type {!GPUStorageTextureBindingLayout|undefined} */
+GPUBindGroupLayoutEntry.prototype.storageTexture;
+/** @type {!GPUTextureBindingLayout|undefined} */
+GPUBindGroupLayoutEntry.prototype.texture;
+/** @type {!GPUShaderStageFlags} */
+GPUBindGroupLayoutEntry.prototype.visibility;
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpubindgrouplayoutdescriptor
+ */
+function GPUBindGroupLayoutDescriptor() {}
+/** @type {!Array<!GPUBindGroupLayoutEntry>} */
+GPUBindGroupLayoutDescriptor.prototype.entries;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUBindGroupLayout
+ */
+function GPUBindGroupLayout() {}
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpubindgroupentry
+ */
+function GPUBindGroupEntry() {}
+/** @type {!GPUIndex32} */
+GPUBindGroupEntry.prototype.binding;
+/** @type {!GPUBindingResource} */
+GPUBindGroupEntry.prototype.resource;
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpubindgroupdescriptor
+ */
+function GPUBindGroupDescriptor() {}
+/** @type {!Array<!GPUBindGroupEntry>} */
+GPUBindGroupDescriptor.prototype.entries;
+/** @type {!GPUBindGroupLayout} */
+GPUBindGroupDescriptor.prototype.layout;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUBindGroup
+ */
+function GPUBindGroup() {}
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpushadermoduledescriptor
+ */
+function GPUShaderModuleDescriptor() {}
+/** @type {string} */
+GPUShaderModuleDescriptor.prototype.code;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUShaderModule
+ */
+function GPUShaderModule() {}
+/**
+ * @return {!Promise<!GPUCompilationInfo>}
+ */
+GPUShaderModule.prototype.getCompilationInfo = function() {};
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/GPUCompilationMessage
+ */
+function GPUCompilationMessage() {}
+/** @type {number} */
+GPUCompilationMessage.prototype.length;
+/** @type {number} */
+GPUCompilationMessage.prototype.lineNum;
+/** @type {number} */
+GPUCompilationMessage.prototype.linePos;
+/** @type {string} */
+GPUCompilationMessage.prototype.message;
+/** @type {number} */
+GPUCompilationMessage.prototype.offset;
+/** @type {!GPUCompilationMessageType} */
+GPUCompilationMessage.prototype.type;
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/GPUCompilationInfo
+ */
+function GPUCompilationInfo() {}
+/** @type {!ReadonlyArray<!GPUCompilationMessage>} */
+GPUCompilationInfo.prototype.messages;
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpupipelinelayoutdescriptor
+ */
+function GPUPipelineLayoutDescriptor() {}
+/** @type {!Array<!GPUBindGroupLayout|null>} */
+GPUPipelineLayoutDescriptor.prototype.bindGroupLayouts;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUPipelineLayout
+ */
+function GPUPipelineLayout() {}
+
 /** @typedef {number} */
 var GPUBufferDynamicOffset;
 
