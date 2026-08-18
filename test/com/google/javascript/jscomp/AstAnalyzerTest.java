@@ -728,7 +728,13 @@ public final class AstAnalyzerTest {
           kase().expect(false).js("'a'.replace(/a/, 'x')").globalRegExp(false),
 
           // Dynamic import changes global state
-          kase().expect(true).token(DYNAMIC_IMPORT).js("import('./module.js')"));
+          kase().expect(true).token(DYNAMIC_IMPORT).js("import('./module.js')"),
+
+          // Symbol() call expressions are side-effect free
+          kase().expect(false).js("Symbol()"),
+          kase().expect(false).js("Symbol('desc')"),
+          kase().expect(true).js("Symbol(foo())"),
+          kase().expect(true).js("Symbol()").assumeBuiltinsPure(false));
     }
   }
 
@@ -776,6 +782,9 @@ public final class AstAnalyzerTest {
           kase().js("Object();").token(CALL).expect(false),
           kase().js("Object?.();").token(OPTCHAIN_CALL).expect(false),
           kase().js("new Object();").token(NEW).expect(false),
+          // Symbol() is known not to have side-effects
+          kase().js("Symbol();").token(CALL).expect(false),
+          kase().js("Symbol('desc');").token(CALL).expect(false),
           // TAGGED_TEMPLATELIT is just a special syntax for a CALL.
           kase().js("foo`template`;").token(TAGGED_TEMPLATELIT).expect(true),
 
@@ -956,7 +965,8 @@ public final class AstAnalyzerTest {
             {"BigInt"},
             {"Boolean"},
             {"RegExp"},
-            {"Error"}
+            {"Error"},
+            {"Symbol"}
           });
     }
 

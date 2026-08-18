@@ -65,7 +65,7 @@ public class AstAnalyzer {
   // TODO(johnlenz): consider adding an extern annotation for this.
   private static final ImmutableSet<String> BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS =
       ImmutableSet.of(
-          "Object", "Array", "String", "Number", "BigInt", "Boolean", "RegExp", "Error");
+          "Object", "Array", "String", "Number", "BigInt", "Boolean", "RegExp", "Error", "Symbol");
   private static final ImmutableSet<String> REGEXP_METHODS = ImmutableSet.of("test", "exec");
   private static final ImmutableSet<String> STRING_REGEXP_METHODS =
       ImmutableSet.of("match", "replace", "search", "split");

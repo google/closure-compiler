@@ -296,6 +296,15 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRemoveUnusedSymbol() {
+    Externs externs = externs("var Symbol = function(opt_desc) {}; var foo = function() {};");
+    test(externs, srcs("var x = Symbol();"), expected(""));
+    test(externs, srcs("const x = Symbol('desc');"), expected(""));
+    test(externs, srcs("let x = Symbol();"), expected(""));
+    test(externs, srcs("var x = Symbol(foo());"), expected("Symbol(foo());"));
+  }
+
+  @Test
   public void testRemoveUnusedVarsFn0() {
     // Test with function expressions in another function call
     test(

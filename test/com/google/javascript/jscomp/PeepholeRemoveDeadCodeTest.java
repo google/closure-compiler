@@ -479,6 +479,9 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("Math?.random(f() + g());");
     fold("Math.random(f(),g(),h())", "f(),g(),h();");
     foldSame("Math?.random(f(),g(),h());");
+    fold("Symbol()", "");
+    fold("Symbol('desc')", "");
+    fold("Symbol(f())", "f();");
 
     // Calls to functions with unknown side-effects are preserved.
     foldSame("f();");
