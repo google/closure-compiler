@@ -52,7 +52,18 @@ $jscomp.polyfill('Object.fromEntries', function(orig) {
 
       var key = pair[0];
       var val = pair[1];
-      obj[key] = val;
+      // Use Object.defineProperty to implement CreateDataPropertyOrThrow per
+      // ECMA-262 24.1.1.2 (Object.fromEntries): defining an own property on
+      // obj rather than going through a plain assignment, which would
+      // invoke an inherited setter (e.g. for a "__proto__" key) instead of
+      // creating an own property, letting a caller-supplied key/value pair
+      // reassign obj's own prototype.
+      Object.defineProperty(obj, /** @type {string|symbol} */ (key), {
+        value: val,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
     }
 
     return obj;
@@ -60,3 +71,4 @@ $jscomp.polyfill('Object.fromEntries', function(orig) {
 
   return fromEntries;
 }, 'es_2019', 'es3');
+
