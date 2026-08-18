@@ -52,7 +52,15 @@ $jscomp.polyfill('Object.fromEntries', function(orig) {
 
       var key = pair[0];
       var val = pair[1];
-      obj[key] = val;
+      // Per ECMA-262 20.1.2.5 (Object.fromEntries), properties are added via
+      // CreateDataPropertyOrThrow, which creates an own property and does not
+      // invoke prototype setters (e.g. for '__proto__').
+      Object.defineProperty(obj, /** @type {string|symbol} */ (key), {
+        value: val,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
     }
 
     return obj;
