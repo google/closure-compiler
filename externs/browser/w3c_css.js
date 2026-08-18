@@ -655,34 +655,79 @@ function CSSStartingStyleRule() {}
 
 /**
  * @constructor
- * @extends {CSSStyleProperties}
  * @implements {IObject<(string|number), string>}
  * @implements {IArrayLike<string>}
  * @implements {Iterable<string>}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration
+ * @see https://developer.mozilla.org/docs/Web/API/CSSStyleDeclaration
  */
-function CSSStyleDeclaration() {}
+function CSSStyleDeclarationBase() {}
 
 /** @override */
-CSSStyleDeclaration.prototype[Symbol.iterator] = function() {};
+CSSStyleDeclarationBase.prototype[Symbol.iterator] = function() {};
 
 /**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-cssText
  */
-CSSStyleDeclaration.prototype.cssText;
+CSSStyleDeclarationBase.prototype.cssText;
 
 /**
  * @type {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-length
  */
-CSSStyleDeclaration.prototype.length;
+CSSStyleDeclarationBase.prototype.length;
 
 /**
  * @type {CSSRule}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-parentRule
  */
-CSSStyleDeclaration.prototype.parentRule;
+CSSStyleDeclarationBase.prototype.parentRule;
+
+/**
+ * @param {string} propertyName
+ * @return {string}
+ * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-getPropertyPriority
+ */
+CSSStyleDeclarationBase.prototype.getPropertyPriority = function(
+    propertyName) {};
+
+/**
+ * @param {string} propertyName
+ * @return {string}
+ * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-getPropertyValue
+ */
+CSSStyleDeclarationBase.prototype.getPropertyValue = function(propertyName) {};
+
+/**
+ * @param {number} index
+ * @return {string}
+ * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-item
+ */
+CSSStyleDeclarationBase.prototype.item = function(index) {};
+
+/**
+ * @param {string} propertyName
+ * @return {string}
+ * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-removeProperty
+ */
+CSSStyleDeclarationBase.prototype.removeProperty = function(propertyName) {};
+
+/**
+ * @param {string} propertyName
+ * @param {string|null} value
+ * @param {string=} opt_priority
+ * @return {undefined}
+ * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-setProperty
+ */
+CSSStyleDeclarationBase.prototype.setProperty = function(
+    propertyName, value, opt_priority) {};
+
+/**
+ * @constructor
+ * @extends {CSSStyleProperties}
+ * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration
+ */
+function CSSStyleDeclaration() {}
 
 /**
  * @param {string} propertyName
@@ -690,50 +735,6 @@ CSSStyleDeclaration.prototype.parentRule;
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-getPropertyCSSValue
  */
 CSSStyleDeclaration.prototype.getPropertyCSSValue = function(propertyName) {};
-
-/**
- * @param {string} propertyName
- * @return {string}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-getPropertyPriority
- */
-CSSStyleDeclaration.prototype.getPropertyPriority = function(propertyName) {};
-
-/**
- * @param {string} propertyName
- * @return {string}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-getPropertyValue
- */
-CSSStyleDeclaration.prototype.getPropertyValue = function(propertyName) {};
-
-/**
- * @param {number} index
- * @return {string}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-item
- */
-CSSStyleDeclaration.prototype.item = function(index) {};
-
-/**
- * @param {string} propertyName
- * @return {string}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-removeProperty
- */
-CSSStyleDeclaration.prototype.removeProperty = function(propertyName) {};
-
-/**
- * @param {string} propertyName
- * @param {string} value
- * @param {string=} opt_priority
- * @return {undefined}
- * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-setProperty
- */
-CSSStyleDeclaration.prototype.setProperty = function(
-    propertyName, value, opt_priority) {};
-
-/**
- * @type {string}
- * @see https://drafts.csswg.org/css-view-transitions/#propdef-view-transition-name
- */
-CSSStyleDeclaration.prototype.viewTransitionName;
 
 // IE-specific
 
@@ -1412,6 +1413,7 @@ ElementCSSInlineStyle.prototype.style;
 
 /**
  * @constructor
+ * @extends {CSSStyleDeclarationBase}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties
  */
 function CSSStyleProperties() {}
