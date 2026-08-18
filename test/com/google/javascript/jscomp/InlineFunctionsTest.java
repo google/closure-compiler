@@ -5126,10 +5126,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538170231): InlineFunctions: do not inline functions referencing new.target
   @Test
   public void testNotInliningFunctionWithNewTarget() {
-    test(
+    testSame(
         """
         function isCalled() { return new.target === undefined; }
         class Widget {
@@ -5138,27 +5137,12 @@ public class InlineFunctionsTest extends CompilerTestCase {
           }
         }
         new Widget(externalInput);
-        """,
-        """
-        class Widget {
-          constructor(data) {
-            if (new.target === undefined) { this.data = sanitize(data); } else { this.data = data; }
-          }
-        }
-        new Widget(externalInput);
         """);
 
-    test(
+    testSame(
         """
-        window.g = function() {
-          function f() { return new.target; }
-          var x = f();
-        };
-        """,
-        """
-        window.g = function() {
-          var x = new.target;
-        };
+        function f() { return new.target; }
+        var x = f();
         """);
   }
 

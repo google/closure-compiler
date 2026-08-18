@@ -231,8 +231,8 @@ class FunctionInjector {
             return n.getString().equals("eval")
                 || (!fnName.isEmpty() && n.getString().equals(fnName))
                 || (!fnRecursionName.isEmpty() && n.getString().equals(fnRecursionName));
-          } else if (n.isSuper()) {
-            // Don't inline if this function or its inner functions contains super
+          } else if (n.isSuper() || n.getToken() == Token.NEW_TARGET) {
+            // Don't inline if this function or its inner functions contains super or new.target
             return true;
           }
           return false;
