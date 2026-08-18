@@ -479,6 +479,228 @@ GPUStorageTextureBindingLayout.prototype.viewDimension;
  */
 function GPUExternalTextureBindingLayout() {}
 
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpubufferdescriptor
+ */
+function GPUBufferDescriptor() {}
+/** @type {boolean|undefined} */
+GPUBufferDescriptor.prototype.mappedAtCreation;
+/** @type {!GPUSize64} */
+GPUBufferDescriptor.prototype.size;
+/** @type {!GPUBufferUsageFlags} */
+GPUBufferDescriptor.prototype.usage;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUBuffer
+ */
+function GPUBuffer() {}
+/** @type {!GPUBufferMapState} */
+GPUBuffer.prototype.mapState;
+/** @type {!GPUSize64Out} */
+GPUBuffer.prototype.size;
+/** @type {!GPUFlagsConstant} */
+GPUBuffer.prototype.usage;
+/** @return {undefined} */
+GPUBuffer.prototype.destroy = function() {};
+/**
+ * @param {!GPUSize64=} opt_offset
+ * @param {!GPUSize64=} opt_size
+ * @return {!ArrayBuffer}
+ */
+GPUBuffer.prototype.getMappedRange = function(opt_offset, opt_size) {};
+/**
+ * @param {!GPUMapModeFlags} mode
+ * @param {!GPUSize64=} opt_offset
+ * @param {!GPUSize64=} opt_size
+ * @return {!Promise<void>}
+ */
+GPUBuffer.prototype.mapAsync = function(mode, opt_offset, opt_size) {};
+/** @return {undefined} */
+GPUBuffer.prototype.unmap = function() {};
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpubufferbinding
+ */
+function GPUBufferBinding() {}
+/** @type {!GPUBuffer} */
+GPUBufferBinding.prototype.buffer;
+/** @type {!GPUSize64|undefined} */
+GPUBufferBinding.prototype.offset;
+/** @type {!GPUSize64|undefined} */
+GPUBufferBinding.prototype.size;
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpusamplerdescriptor
+ */
+function GPUSamplerDescriptor() {}
+/** @type {!GPUAddressMode|undefined} */
+GPUSamplerDescriptor.prototype.addressModeU;
+/** @type {!GPUAddressMode|undefined} */
+GPUSamplerDescriptor.prototype.addressModeV;
+/** @type {!GPUAddressMode|undefined} */
+GPUSamplerDescriptor.prototype.addressModeW;
+/** @type {!GPUCompareFunction|undefined} */
+GPUSamplerDescriptor.prototype.compare;
+/** @type {number|undefined} */
+GPUSamplerDescriptor.prototype.lodMaxClamp;
+/** @type {number|undefined} */
+GPUSamplerDescriptor.prototype.lodMinClamp;
+/** @type {!GPUFilterMode|undefined} */
+GPUSamplerDescriptor.prototype.magFilter;
+/** @type {number|undefined} */
+GPUSamplerDescriptor.prototype.maxAnisotropy;
+/** @type {!GPUFilterMode|undefined} */
+GPUSamplerDescriptor.prototype.minFilter;
+/** @type {!GPUMipmapFilterMode|undefined} */
+GPUSamplerDescriptor.prototype.mipmapFilter;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUSampler
+ */
+function GPUSampler() {}
+
+/**
+ * @record
+ * @extends {GPUTexelCopyBufferLayout}
+ * @see https://gpuweb.github.io/gpuweb/#gputexelcopybufferinfo
+ */
+function GPUTexelCopyBufferInfo() {}
+/** @type {!GPUBuffer} */
+GPUTexelCopyBufferInfo.prototype.buffer;
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gputextureviewdescriptor
+ */
+function GPUTextureViewDescriptor() {}
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUTextureViewDescriptor.prototype.arrayLayerCount;
+/** @type {!GPUTextureAspect|undefined} */
+GPUTextureViewDescriptor.prototype.aspect;
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUTextureViewDescriptor.prototype.baseArrayLayer;
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUTextureViewDescriptor.prototype.baseMipLevel;
+/** @type {!GPUTextureViewDimension|undefined} */
+GPUTextureViewDescriptor.prototype.dimension;
+/** @type {!GPUTextureFormat|undefined} */
+GPUTextureViewDescriptor.prototype.format;
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUTextureViewDescriptor.prototype.mipLevelCount;
+/** @type {!GPUTextureUsageFlags|undefined} */
+GPUTextureViewDescriptor.prototype.usage;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUTextureView
+ */
+function GPUTextureView() {}
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gputexturedescriptor
+ */
+function GPUTextureDescriptor() {}
+/** @type {!GPUTextureDimension|undefined} */
+GPUTextureDescriptor.prototype.dimension;
+/** @type {!GPUTextureFormat} */
+GPUTextureDescriptor.prototype.format;
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUTextureDescriptor.prototype.mipLevelCount;
+/** @type {!GPUSize32|undefined} */
+GPUTextureDescriptor.prototype.sampleCount;
+/** @type {!GPUExtent3D} */
+GPUTextureDescriptor.prototype.size;
+/** @type {!GPUTextureUsageFlags} */
+GPUTextureDescriptor.prototype.usage;
+/** @type {!Array<!GPUTextureFormat>|undefined} */
+GPUTextureDescriptor.prototype.viewFormats;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUTexture
+ */
+function GPUTexture() {}
+/** @type {!GPUIntegerCoordinateOut} */
+GPUTexture.prototype.depthOrArrayLayers;
+/** @type {!GPUTextureDimension} */
+GPUTexture.prototype.dimension;
+/** @type {!GPUTextureFormat} */
+GPUTexture.prototype.format;
+/** @type {!GPUIntegerCoordinateOut} */
+GPUTexture.prototype.height;
+/** @type {!GPUIntegerCoordinateOut} */
+GPUTexture.prototype.mipLevelCount;
+/** @type {!GPUSize32Out} */
+GPUTexture.prototype.sampleCount;
+/** @type {!GPUFlagsConstant} */
+GPUTexture.prototype.usage;
+/** @type {!GPUIntegerCoordinateOut} */
+GPUTexture.prototype.width;
+/**
+ * @param {!GPUTextureViewDescriptor=} opt_descriptor
+ * @return {!GPUTextureView}
+ */
+GPUTexture.prototype.createView = function(opt_descriptor) {};
+/** @return {undefined} */
+GPUTexture.prototype.destroy = function() {};
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#gputexelcopytextureinfo
+ */
+function GPUTexelCopyTextureInfo() {}
+/** @type {!GPUTextureAspect|undefined} */
+GPUTexelCopyTextureInfo.prototype.aspect;
+/** @type {!GPUIntegerCoordinate|undefined} */
+GPUTexelCopyTextureInfo.prototype.mipLevel;
+/** @type {!GPUOrigin3D|undefined} */
+GPUTexelCopyTextureInfo.prototype.origin;
+/** @type {!GPUTexture} */
+GPUTexelCopyTextureInfo.prototype.texture;
+
+/**
+ * @record
+ * @extends {GPUTexelCopyTextureInfo}
+ * @see https://gpuweb.github.io/gpuweb/#gpucopyexternalimagedestinfo
+ */
+function GPUCopyExternalImageDestInfo() {}
+/** @type {!PredefinedColorSpace|undefined} */
+GPUCopyExternalImageDestInfo.prototype.colorSpace;
+/** @type {boolean|undefined} */
+GPUCopyExternalImageDestInfo.prototype.premultipliedAlpha;
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuexternaltexturedescriptor
+ */
+function GPUExternalTextureDescriptor() {}
+/** @type {!PredefinedColorSpace|undefined} */
+GPUExternalTextureDescriptor.prototype.colorSpace;
+/** @type {!HTMLVideoElement|!VideoFrame} */
+GPUExternalTextureDescriptor.prototype.source;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUExternalTexture
+ */
+function GPUExternalTexture() {}
+
 /** @typedef {number} */
 var GPUBufferDynamicOffset;
 
@@ -800,3 +1022,9 @@ var GPUOrigin2D;
 
 /** @typedef {!Array<!GPUIntegerCoordinate>|!GPUOrigin3DDict} */
 var GPUOrigin3D;
+
+/**
+ * @typedef {!GPUSampler|!GPUTexture|!GPUTextureView|!GPUBuffer|!GPUBufferBinding|!GPUExternalTexture}
+ * @see https://gpuweb.github.io/gpuweb/#typedefdef-gpubindingresource
+ */
+var GPUBindingResource;
