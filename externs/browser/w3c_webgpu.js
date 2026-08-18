@@ -1303,6 +1303,156 @@ function GPUCommandBufferDescriptor() {}
  */
 function GPUCommandBuffer() {}
 
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpurenderpasslayout
+ */
+function GPURenderPassLayout() {}
+/** @type {!Array<!GPUTextureFormat|null>} */
+GPURenderPassLayout.prototype.colorFormats;
+/** @type {!GPUTextureFormat|undefined} */
+GPURenderPassLayout.prototype.depthStencilFormat;
+/** @type {!GPUSize32|undefined} */
+GPURenderPassLayout.prototype.sampleCount;
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpurenderbundledescriptor
+ */
+function GPURenderBundleDescriptor() {}
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPURenderBundle
+ */
+function GPURenderBundle() {}
+
+/**
+ * @record
+ * @extends {GPURenderPassLayout}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpurenderbundleencoderdescriptor
+ */
+function GPURenderBundleEncoderDescriptor() {}
+/** @type {boolean|undefined} */
+GPURenderBundleEncoderDescriptor.prototype.depthReadOnly;
+/** @type {boolean|undefined} */
+GPURenderBundleEncoderDescriptor.prototype.stencilReadOnly;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @implements {GPUBindingCommandsMixin}
+ * @implements {GPUDebugCommandsMixin}
+ * @implements {GPURenderCommandsMixin}
+ * @see https://developer.mozilla.org/docs/Web/API/GPURenderBundleEncoder
+ */
+function GPURenderBundleEncoder() {}
+/**
+ * @param {!GPURenderBundleDescriptor=} opt_descriptor
+ * @return {!GPURenderBundle}
+ */
+GPURenderBundleEncoder.prototype.finish = function(opt_descriptor) {};
+// From GPUBindingCommandsMixin
+/**
+ * @override
+ * @param {!GPUIndex32} index
+ * @param {!GPUBindGroup|null} bindGroup
+ * @param {(!Array<!GPUBufferDynamicOffset>|!Uint32Array|!Iterable<!GPUBufferDynamicOffset>)=}
+ *     opt_dynamicOffsetsOrDynamicOffsetsData
+ * @param {!GPUSize64=} opt_dynamicOffsetsDataStart
+ * @param {!GPUSize32=} opt_dynamicOffsetsDataLength
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.setBindGroup = function(
+    index, bindGroup, opt_dynamicOffsetsOrDynamicOffsetsData,
+    opt_dynamicOffsetsDataStart, opt_dynamicOffsetsDataLength) {};
+// From GPUDebugCommandsMixin
+/**
+ * @override
+ * @param {string} markerLabel
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.insertDebugMarker = function(markerLabel) {};
+/**
+ * @override
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.popDebugGroup = function() {};
+/**
+ * @override
+ * @param {string} groupLabel
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.pushDebugGroup = function(groupLabel) {};
+// From GPURenderCommandsMixin
+/**
+ * @override
+ * @param {!GPUSize32} vertexCount
+ * @param {!GPUSize32=} opt_instanceCount
+ * @param {!GPUSize32=} opt_firstVertex
+ * @param {!GPUSize32=} opt_firstInstance
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.draw = function(
+    vertexCount, opt_instanceCount, opt_firstVertex, opt_firstInstance) {};
+/**
+ * @override
+ * @param {!GPUSize32} indexCount
+ * @param {!GPUSize32=} opt_instanceCount
+ * @param {!GPUSize32=} opt_firstIndex
+ * @param {!GPUSignedOffset32=} opt_baseVertex
+ * @param {!GPUSize32=} opt_firstInstance
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.drawIndexed = function(
+    indexCount, opt_instanceCount, opt_firstIndex, opt_baseVertex,
+    opt_firstInstance) {};
+/**
+ * @override
+ * @param {!GPUBuffer} indirectBuffer
+ * @param {!GPUSize64} indirectOffset
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.drawIndexedIndirect = function(
+    indirectBuffer, indirectOffset) {};
+/**
+ * @override
+ * @param {!GPUBuffer} indirectBuffer
+ * @param {!GPUSize64} indirectOffset
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.drawIndirect = function(
+    indirectBuffer, indirectOffset) {};
+/**
+ * @override
+ * @param {!GPUBuffer} buffer
+ * @param {!GPUIndexFormat} indexFormat
+ * @param {!GPUSize64=} opt_offset
+ * @param {!GPUSize64=} opt_size
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.setIndexBuffer = function(
+    buffer, indexFormat, opt_offset, opt_size) {};
+/**
+ * @override
+ * @param {!GPURenderPipeline} pipeline
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.setPipeline = function(pipeline) {};
+/**
+ * @override
+ * @param {!GPUIndex32} slot
+ * @param {!GPUBuffer|null} buffer
+ * @param {!GPUSize64=} opt_offset
+ * @param {!GPUSize64=} opt_size
+ * @return {undefined}
+ */
+GPURenderBundleEncoder.prototype.setVertexBuffer = function(
+    slot, buffer, opt_offset, opt_size) {};
+
 /** @typedef {number} */
 var GPUBufferDynamicOffset;
 
