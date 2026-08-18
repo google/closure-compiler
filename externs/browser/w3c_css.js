@@ -312,6 +312,7 @@ CSSRule.PAGE_RULE;
 /** @const {number} */ CSSRule.NAMESPACE_RULE;
 /** @const {number} */ CSSRule.KEYFRAMES_RULE;
 /** @const {number} */ CSSRule.KEYFRAME_RULE;
+/** @const {number} */ CSSRule.MARGIN_RULE;
 /** @const {number} */ CSSRule.SUPPORTS_RULE;
 /** @const {number} */ CSSRule.COUNTER_STYLE_RULE;
 /** @const {number} */ CSSRule.FONT_FEATURE_VALUES_RULE;
@@ -5059,6 +5060,33 @@ FontFaceSet.prototype.ready;
 FontFaceSet.prototype.status;
 
 /**
+ * @return {!IteratorIterable<!FontFace>}
+ * @nosideeffects
+ */
+FontFaceSet.prototype[Symbol.iterator] = function() {};
+
+/**
+ * @return {!IteratorIterable<!Array<!FontFace>>}
+ * @nosideeffects
+ */
+FontFaceSet.prototype.entries = function() {};
+
+/**
+ * @return {!IteratorIterable<!FontFace>}
+ * @nosideeffects
+ */
+FontFaceSet.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<!FontFace>}
+ * @nosideeffects
+ */
+FontFaceSet.prototype.values = function() {};
+
+/** @type {number} */
+FontFaceSet.prototype.size;
+
+/**
  * @constructor
  * @param {string} type
  * @param {{
@@ -5206,6 +5234,12 @@ CSSKeyframesRule.prototype.name;
 CSSKeyframesRule.prototype.cssRules;
 
 /**
+ * @see https://drafts.csswg.org/css-animations/#dom-csskeyframesrule-length
+ * @type {number}
+ */
+CSSKeyframesRule.prototype.length;
+
+/**
  * @see https://drafts.csswg.org/css-animations/#dom-csskeyframesrule-findrule
  * @param {string} key The key text for the rule to find.
  * @return {?CSSKeyframeRule}
@@ -5223,3 +5257,171 @@ CSSKeyframesRule.prototype.appendRule = function(rule) {};
  * @param {string} key The key text for the rule to delete.
  */
 CSSKeyframesRule.prototype.deleteRule = function(key) {};
+
+/**
+ * @return {!IteratorIterable<!CSSKeyframeRule>}
+ */
+CSSKeyframesRule.prototype[Symbol.iterator] = function() {};
+
+/**
+ * @constructor
+ * @extends {CSSStyleDeclarationBase}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSPageDescriptors
+ */
+function CSSPageDescriptors() {}
+
+/** @type {string} */
+CSSPageDescriptors.prototype.margin;
+
+/** @type {string} */
+CSSPageDescriptors.prototype.marginBottom;
+
+/** @type {string} */
+CSSPageDescriptors.prototype.marginLeft;
+
+/** @type {string} */
+CSSPageDescriptors.prototype.marginRight;
+
+/** @type {string} */
+CSSPageDescriptors.prototype.marginTop;
+
+/** @type {string} */
+CSSPageDescriptors.prototype.size;
+
+
+/**
+ * @constructor
+ * @extends {CSSStyleDeclarationBase}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSPositionTryDescriptors
+ */
+function CSSPositionTryDescriptors() {}
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.alignSelf;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.blockSize;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.bottom;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.height;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.inlineSize;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.inset;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.insetBlock;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.insetBlockEnd;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.insetBlockStart;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.insetInline;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.insetInlineEnd;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.insetInlineStart;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.justifySelf;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.left;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.margin;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.marginBlock;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.marginBlockEnd;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.marginBlockStart;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.marginBottom;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.marginInline;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.marginInlineEnd;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.marginInlineStart;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.marginLeft;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.marginRight;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.marginTop;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.maxBlockSize;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.maxHeight;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.maxInlineSize;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.maxWidth;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.minBlockSize;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.minHeight;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.minInlineSize;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.minWidth;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.placeSelf;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.positionAnchor;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.positionArea;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.right;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.top;
+
+/** @type {string} */
+CSSPositionTryDescriptors.prototype.width;
+
+/**
+ * @constructor
+ * @extends {CSSRule}
+ * @see https://developer.mozilla.org/docs/Web/API/CSSPositionTryRule
+ */
+function CSSPositionTryRule() {}
+
+/** @type {string} */
+CSSPositionTryRule.prototype.name;
+
+/** @type {!CSSPositionTryDescriptors} */
+CSSPositionTryRule.prototype.style;
