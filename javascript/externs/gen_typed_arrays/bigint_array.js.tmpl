@@ -1,0 +1,321 @@
+
+/**
+ * @param {number|!ArrayBufferView|!Array<bigint>|!ArrayBuffer|!SharedArrayBuffer|null}
+ *     lengthOrArrayOrBuffer
+ *     NOTE: We require that at least this first argument be present even though
+ *         the ECMAScript spec allows it to be absent, because this is better
+ *         for readability and detection of programmer errors. We accept a null
+ *         value for backwards compatibility with existing externs.
+ * @param {number=} byteOffset
+ * @param {number=} bufferLength
+ * @template TArrayBuffer (unused)
+ * @constructor
+ * @implements {IArrayLike<bigint>}
+ * @implements {Iterable<bigint>}
+ * @extends {ArrayBufferView}
+ * @throws {Error}
+ * @modifies {arguments}
+ */
+function {TYPED_ARRAY}(lengthOrArrayOrBuffer, byteOffset, bufferLength) {}
+
+/** @const {number} */
+{TYPED_ARRAY}.BYTES_PER_ELEMENT;
+
+/** @const {number} */
+{TYPED_ARRAY}.prototype.BYTES_PER_ELEMENT;
+
+/**
+ * @param {string|!IArrayLike<bigint>|!Iterable<bigint>} source
+ * @param {function(this:S, ?, number): bigint=} mapFn
+ * @param {S=} thisArg
+ * @template S
+ * @return {!{TYPED_ARRAY}}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
+ */
+{TYPED_ARRAY}.from = function(source, mapFn, thisArg) {};
+
+/**
+ * @param {...bigint} var_args
+ * @return {!{TYPED_ARRAY}}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
+ */
+{TYPED_ARRAY}.of = function(var_args) {};
+
+/**
+ * NOTE: this is an ES2022 extern.
+ * @param {number} index
+ * @return {(bigint|undefined)}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/at
+ */
+{TYPED_ARRAY}.prototype.at = function(index) {};
+
+/**
+ * @param {number} target
+ * @param {number} start
+ * @param {number=} opt_end
+ * @return {!{TYPED_ARRAY}}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/copyWithin
+ */
+{TYPED_ARRAY}.prototype.copyWithin = function(target, start, opt_end) {};
+
+/**
+ * @return {!IteratorIterable<!Array<bigint>>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
+ */
+{TYPED_ARRAY}.prototype.entries = function() {};
+
+/**
+ * @param {function(this:S, bigint, number, !{TYPED_ARRAY}) : *} callback
+ * @param {S=} opt_thisArg
+ * @return {boolean}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/every
+ */
+{TYPED_ARRAY}.prototype.every = function(callback, opt_thisArg) {};
+
+/**
+ * @param {bigint} value
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @return {!{TYPED_ARRAY}}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill
+ */
+{TYPED_ARRAY}.prototype.fill = function(value, opt_begin, opt_end) {};
+
+/**
+ * @param {function(this:S, bigint, number, !{TYPED_ARRAY}) : *} callback
+ * @param {S=} opt_thisArg
+ * @return {!{TYPED_ARRAY}}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/filter
+ */
+{TYPED_ARRAY}.prototype.filter = function(callback, opt_thisArg) {};
+
+/**
+ * @param {function(this:S, bigint, number, !{TYPED_ARRAY}) : *} callback
+ * @param {S=} opt_thisArg
+ * @return {(bigint|undefined)}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/find
+ */
+{TYPED_ARRAY}.prototype.find = function(callback, opt_thisArg) {};
+
+/**
+ * @param {function(this:S, bigint, number, !{TYPED_ARRAY}) : *} callback
+ * @param {S=} opt_thisArg
+ * @return {number}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/findIndex
+ */
+{TYPED_ARRAY}.prototype.findIndex = function(callback, opt_thisArg) {};
+
+/**
+ * @param {function(this:S, bigint, number, !{TYPED_ARRAY}) : boolean}
+ *     callback
+ * @param {S=} opt_thisArg
+ * @return {(bigint|undefined)}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/findLast
+ */
+{TYPED_ARRAY}.prototype.findLast = function(callback, opt_thisArg) {};
+
+/**
+ * @param {function(this:S, bigint, number, !{TYPED_ARRAY}) : boolean}
+ *     callback
+ * @param {S=} opt_thisArg
+ * @return {number}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/findLastIndex
+ */
+{TYPED_ARRAY}.prototype.findLastIndex = function(callback, opt_thisArg) {};
+
+/**
+ * @param {function(this:S, bigint, number, !{TYPED_ARRAY}) : ?} callback
+ * @param {S=} opt_thisArg
+ * @return {undefined}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/forEach
+ */
+{TYPED_ARRAY}.prototype.forEach = function(callback, opt_thisArg) {};
+
+/**
+ * NOTE: this is an ES2016 (ES7) extern.
+ * @param {bigint} searchElement
+ * @param {number=} opt_fromIndex
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/includes
+ */
+{TYPED_ARRAY}.prototype.includes = function(searchElement, opt_fromIndex) {};
+
+/**
+ * @param {bigint} searchElement
+ * @param {number=} opt_fromIndex
+ * @return {number}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/indexOf
+ */
+{TYPED_ARRAY}.prototype.indexOf = function(searchElement, opt_fromIndex) {};
+
+/**
+ * @param {string=} opt_separator
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/join
+ */
+{TYPED_ARRAY}.prototype.join = function(opt_separator) {};
+
+/**
+ * @return {!IteratorIterable<bigint>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
+ */
+{TYPED_ARRAY}.prototype.keys = function() {};
+
+/**
+ * @param {bigint} searchElement
+ * @param {number=} opt_fromIndex
+ * @return {number}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/lastIndexOf
+ */
+{TYPED_ARRAY}.prototype.lastIndexOf = function(
+    searchElement, opt_fromIndex) {};
+
+/** @type {number} */
+{TYPED_ARRAY}.prototype.length;
+
+/**
+ * @param {function(this:S, bigint, number, !{TYPED_ARRAY}) : bigint}
+ *     callback
+ * @param {S=} opt_thisArg
+ * @return {!{TYPED_ARRAY}}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/map
+ */
+{TYPED_ARRAY}.prototype.map = function(callback, opt_thisArg) {};
+
+/**
+ * @param {function((bigint|INIT|RET), bigint, number, !{TYPED_ARRAY}) : RET}
+ *     callback
+ * @param {INIT=} opt_initialValue
+ * @return {RET}
+ * @template INIT,RET
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/reduce
+ */
+{TYPED_ARRAY}.prototype.reduce = function(callback, opt_initialValue) {};
+
+/**
+ * @param {function((bigint|INIT|RET), bigint, number, !{TYPED_ARRAY}) : RET}
+ *     callback
+ * @param {INIT=} opt_initialValue
+ * @return {RET}
+ * @template INIT,RET
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/reduceRight
+ */
+{TYPED_ARRAY}.prototype.reduceRight = function(callback, opt_initialValue) {};
+
+/**
+ * @return {!{TYPED_ARRAY}}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/reverse
+ */
+{TYPED_ARRAY}.prototype.reverse = function() {};
+
+/**
+ * @param {!ArrayBufferView|!Array<bigint>} array
+ * @param {number=} opt_offset
+ * @return {undefined}
+ * @throws {!RangeError}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/set
+ */
+{TYPED_ARRAY}.prototype.set = function(array, opt_offset) {};
+
+/**
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @return {!{TYPED_ARRAY}}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/slice
+ */
+{TYPED_ARRAY}.prototype.slice = function(opt_begin, opt_end) {};
+
+/**
+ * @param {function(this:S, bigint, number, !{TYPED_ARRAY}) : *} callback
+ * @param {S=} opt_thisArg
+ * @return {boolean}
+ * @template S
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/some
+ */
+{TYPED_ARRAY}.prototype.some = function(callback, opt_thisArg) {};
+
+/**
+ * @param {(function(bigint, bigint) : number)=} opt_compareFunction
+ * @return {!{TYPED_ARRAY}}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/sort
+ */
+{TYPED_ARRAY}.prototype.sort = function(opt_compareFunction) {};
+
+/**
+ * @param {number} begin
+ * @param {number=} opt_end
+ * @return {!{TYPED_ARRAY}}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/subarray
+ */
+{TYPED_ARRAY}.prototype.subarray = function(begin, opt_end) {};
+
+/**
+ * @return {!IteratorIterable<bigint>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
+ */
+{TYPED_ARRAY}.prototype.values = function() {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @return {!{TYPED_ARRAY}}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toReversed
+ */
+{TYPED_ARRAY}.prototype.toReversed = function() {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {function(bigint, bigint): number=} compareFn
+ * @return {!{TYPED_ARRAY}}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toSorted
+ */
+{TYPED_ARRAY}.prototype.toSorted = function(compareFn) {};
+
+/**
+ * NOTE: this is an ES2023 extern.
+ * @param {number} index
+ * @param {bigint} value
+ * @return {!{TYPED_ARRAY}}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/with
+ */
+{TYPED_ARRAY}.prototype.with = function(index, value) {};
+
+/**
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toLocaleString
+ * @override
+ */
+{TYPED_ARRAY}.prototype.toLocaleString = function() {};
+
+/**
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/toString
+ * @override
+ */
+{TYPED_ARRAY}.prototype.toString = function() {};
+
+/** @override */
+{TYPED_ARRAY}.prototype[Symbol.iterator] = function() {};
