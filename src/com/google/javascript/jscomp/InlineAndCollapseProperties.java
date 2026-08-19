@@ -1211,6 +1211,9 @@ class InlineAndCollapseProperties implements CompilerPass {
 
   /** Check if the name has multiple sets that are not of the form "a = a || {}" */
   private static boolean isUnsafelyReassigned(Name name) {
+    if (name.getTotalSets() <= 1) {
+      return false;
+    }
     boolean foundOriginalDefinition = false;
     for (Ref ref : name.getRefs()) {
       if (!ref.isSet()) {
