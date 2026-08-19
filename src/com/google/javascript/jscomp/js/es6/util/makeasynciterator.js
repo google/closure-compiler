@@ -40,7 +40,7 @@ $jscomp.makeAsyncIterator = function(iterable) {
 
 /**
  *
- * @param {!Iterator<T>} iterator
+ * @param {!IteratorLike<T>} iterator
  * @constructor
  * @implements {AsyncIteratorIterable<T>}
  * @template T
@@ -55,7 +55,7 @@ $jscomp.AsyncIteratorFromSyncWrapper = function(iterator) {
   };
 
   /**
-   * @return {!Iterator<!Promise<!IIterableResult<T>>>}
+   * @return {!IteratorLike<!Promise<!IIterableResult<T>>>}
    */
   this[Symbol.iterator] = function() {
     return iterator;

@@ -24,7 +24,7 @@
  * be exposed to user code.
  *
  * @param {string|!Iterable<T>|!IteratorLike<T>|!Arguments} iterable
- * @return {!Iterator<T>}
+ * @return {!IteratorLike<T>}
  * @template T
  * @suppress {reportUnknownTypes}
  */

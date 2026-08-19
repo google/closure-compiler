@@ -138,7 +138,7 @@ MediaKeyStatusMap.prototype.size;
 
 /**
  * Array entry 0 is the key, 1 is the value.
- * @return {!Iterator<!Array<!BufferSource|string>>}
+ * @return {!IteratorLike<!Array<!BufferSource|string>>}
  */
 MediaKeyStatusMap.prototype.entries = function() {};
 
@@ -168,19 +168,19 @@ MediaKeyStatusMap.prototype.has = function(keyId) {};
 
 
 /**
- * @return {!Iterator<!BufferSource>}
+ * @return {!IteratorLike<!BufferSource>}
  */
 MediaKeyStatusMap.prototype.keys = function() {};
 
 
 /**
- * @return {!Iterator<string>}
+ * @return {!IteratorLike<string>}
  */
 MediaKeyStatusMap.prototype.values = function() {};
 
 
 /**
- * @return {!Iterator<!Array<!BufferSource|string>>}
+ * @return {!IteratorLike<!Array<!BufferSource|string>>}
  */
 MediaKeyStatusMap.prototype[Symbol.iterator] = function() {};
 

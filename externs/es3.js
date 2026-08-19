@@ -167,7 +167,7 @@ IIterableResult.prototype.value;
 function Iterable() {}
 
 /**
- * @return {!Iterator<T, ?, *>}
+ * @return {!IteratorLike<T, ?, *>}
  */
 Iterable.prototype[Symbol.iterator] = function() {};
 
