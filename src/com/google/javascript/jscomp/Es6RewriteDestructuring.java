@@ -559,6 +559,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
         if (next != null) {
           throw new IllegalStateException("object rest may not be followed by any properties");
         }
+        // Emit Object.assign here after preceding property bindings to preserve evaluation
+        // side-effect ordering (e.g. default value evaluations, property extractions).
+        // TODO(b/538156291): Properties already bound are still copied during Object.assign and
+        // then deleted, so getters for those properties may still be invoked during Object.assign.
         // TODO(b/116532470): see if casting this to a more specific type fixes disambiguation
         Node assignCall =
             astFactory.createCall(
@@ -569,7 +573,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
 
         Node restTempDecl = IR.var(createTempVarNameNode(restTempVarName, tempVarType), assignCall);
         restTempDecl.srcrefTreeIfMissing(objectPattern);
-        restTempDecl.insertAfter(tempDecl);
+        restTempDecl.insertBefore(nodeToDetach);
 
         Node restName = child.getOnlyChild(); // e.g. get `rest` from `const {...rest} = {};`
         if (restName.getString().startsWith(DESTRUCTURING_TEMP_VAR)) {
@@ -618,10 +622,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
    *   {a, [foo()]:b, ...x} = rhs;
    * becomes
    *   var temp = rhs;
+   *   a = temp.a;
+   *   var temp2 = foo();
+   *   b = temp[temp2];
    *   var temp1 = Object.assign({}, temp);
-   *   var temp2 = foo()
-   *   a = temp.a
-   *   b = temp[foo()]
    *   x = (delete temp1.a, delete temp1[temp2], temp1);
    * </pre>
    *

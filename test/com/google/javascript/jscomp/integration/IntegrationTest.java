@@ -4576,9 +4576,9 @@ async function abc() {
         """
         function foo($jscomp$destructuring$var0){
           var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;
-          var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
           var a = $jscomp$destructuring$var1.a;
           var b = $jscomp$destructuring$var1.b;
+          var $jscomp$destructuring$var2 = Object.assign({}, $jscomp$destructuring$var1);
           var c = (delete $jscomp$destructuring$var2.a,
                   delete $jscomp$destructuring$var2.b,
                   $jscomp$destructuring$var2);

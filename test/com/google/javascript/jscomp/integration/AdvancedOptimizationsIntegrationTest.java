@@ -420,10 +420,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         var a = console,
             b = a.log,
             c = {a:1, b:2, c:3},
-            d = Object.assign({}, c),
-            e = c.a,
-            f = (delete d.a, d);
-        b.call(a, {a:e, d:f});
+            d = c.a,
+            e = Object.assign({}, c),
+            f = (delete e.a, e);
+        b.call(a, {a:d, d:f});
         """);
     assertThat(lastCompiler.getRuntimeJsLibManager().getInjectedLibraries())
         .contains("es6/object/assign");
