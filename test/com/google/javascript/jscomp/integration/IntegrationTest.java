@@ -5692,4 +5692,40 @@ async function abc() {
         })().then(alert);
         """);
   }
+
+  @Test
+  public void testPerformanceEventTimingExterns() throws Exception {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setEnvironment(CompilerOptions.Environment.BROWSER);
+
+    externs = AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    test(
+        options,
+        """
+        function logTiming(entry) {
+          /** @type {!PerformanceEventTiming} */
+          const timing = /** @type {!PerformanceEventTiming} */ (entry);
+          alert(timing.processingStart);
+          alert(timing.processingEnd);
+          alert(timing.cancelable);
+          alert(timing.target);
+          alert(timing.interactionId);
+          alert(timing.toJSON());
+        }
+        window['logTiming'] = logTiming;
+        """,
+        """
+        window.logTiming = function(a) {
+          alert(a.processingStart);
+          alert(a.processingEnd);
+          alert(a.cancelable);
+          alert(a.target);
+          alert(a.interactionId);
+          alert(a.toJSON());
+        };
+        """);
+  }
 }
+

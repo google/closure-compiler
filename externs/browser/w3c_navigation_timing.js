@@ -233,6 +233,16 @@ function PerformanceEventTiming() {}
 /** @type {number} */ PerformanceEventTiming.prototype.interactionId;
 
 /**
+ * Differing from TS .d.ts definition (which has 0 parameters) to match
+ * Object.prototype.toJSON(opt_key) in es5.js.
+ * @override
+ * @param {*=} opt_key
+ * @return {*}
+ */
+PerformanceEventTiming.prototype.toJSON = function(opt_key) {};
+
+
+/**
  * @record
  * @see https://www.w3.org/TR/user-timing-3/#performancemarkoptions-dictionary
  */
