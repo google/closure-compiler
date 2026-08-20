@@ -232,6 +232,19 @@ public final class SourceMap {
     if (node.getOriginalName() != null) {
       return node.getOriginalName();
     }
+    // If this is the name identifier of a function declaration/expression and the name node itself
+    // has no originalName, fall back to the enclosing FUNCTION node's originalName.
+    // This covers functions that were originally anonymous (class methods compiled to prototype
+    // assignments, `var f = function(){}` patterns): SourceInformationAnnotator skips empty-string
+    // NAME nodes but always annotates the FUNCTION node. When the renaming pass later fills in the
+    // NAME, the node's originalName remains null. The FUNCTION node's originalName is the correct
+    // original name to use.
+    if (node.isName()) {
+      Node parent = node.getParent();
+      if (parent != null && parent.isFunction() && parent.getFirstChild() == node) {
+        return parent.getOriginalName();
+      }
+    }
     if (node.isMemberFunctionDef()) {
       return node.getFirstChild().getOriginalName();
     }
