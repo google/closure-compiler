@@ -1848,4 +1848,50 @@ var __WEBPACK_AMD_DEFINE_RESULT__$$module$test;
     String code = "export var foo = 1, bar = 2;";
     testModules("test.js", code, code);
   }
+
+  @Test
+  public void testRequireDot() {
+    test(
+        srcs(
+            SourceFile.fromCode(Compiler.joinPathParts("mod", "index.js"), "module.exports = {};"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("mod", "sub.js"),
+                """
+                var name = require('.');
+                (function() { let foo = name; foo(); })();
+                """)),
+        expected(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("mod", "index.js"),
+                "/** @const */ var module$mod$index = {/** @const */ default: {}};"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("mod", "sub.js"),
+                """
+                var name = module$mod$index.default;
+                (function() { let foo = module$mod$index.default; foo(); })();
+                """)));
+  }
+
+  @Test
+  public void testRequireDotDot() {
+    test(
+        srcs(
+            SourceFile.fromCode(Compiler.joinPathParts("mod", "index.js"), "module.exports = {};"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("mod", "sub", "sub.js"),
+                """
+                var name = require('..');
+                (function() { let foo = name; foo(); })();
+                """)),
+        expected(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("mod", "index.js"),
+                "/** @const */ var module$mod$index = {/** @const */ default: {}};"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("mod", "sub", "sub.js"),
+                """
+                var name = module$mod$index.default;
+                (function() { let foo = module$mod$index.default; foo(); })();
+                """)));
+  }
 }

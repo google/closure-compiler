@@ -1461,4 +1461,50 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             var module$testcode2 = {};
             """));
   }
+
+  @Test
+  public void testImportDot() {
+    setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
+    test(
+        srcs(
+            SourceFile.fromCode("mod/index.js", "export const foo = 1;"),
+            SourceFile.fromCode("mod/sub.js", "import {foo} from '.'; use(foo);")),
+        expected(
+            SourceFile.fromCode(
+                "mod/index.js",
+                """
+                const foo$$module$mod$index = 1;
+                /** @const */ var module$mod$index = {};
+                /** @const */ module$mod$index.foo = foo$$module$mod$index;
+                """),
+            SourceFile.fromCode(
+                "mod/sub.js",
+                """
+                use(foo$$module$mod$index);
+                /** @const */ var module$mod$sub = {};
+                """)));
+  }
+
+  @Test
+  public void testImportDotDot() {
+    setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
+    test(
+        srcs(
+            SourceFile.fromCode("mod/index.js", "export const foo = 1;"),
+            SourceFile.fromCode("mod/sub/sub.js", "import {foo} from '..'; use(foo);")),
+        expected(
+            SourceFile.fromCode(
+                "mod/index.js",
+                """
+                const foo$$module$mod$index = 1;
+                /** @const */ var module$mod$index = {};
+                /** @const */ module$mod$index.foo = foo$$module$mod$index;
+                """),
+            SourceFile.fromCode(
+                "mod/sub/sub.js",
+                """
+                use(foo$$module$mod$index);
+                /** @const */ var module$mod$sub$sub = {};
+                """)));
+  }
 }

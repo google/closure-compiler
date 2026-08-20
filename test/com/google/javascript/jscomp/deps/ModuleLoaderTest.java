@@ -852,6 +852,41 @@ public final class ModuleLoaderTest {
     assertThat(errors).isEmpty();
   }
 
+  @Test
+  public void testRelativeIdentifierDotAndDotDot() {
+    assertThat(ModuleLoader.isRelativeIdentifier(".")).isTrue();
+    assertThat(ModuleLoader.isRelativeIdentifier("..")).isTrue();
+    assertThat(ModuleLoader.isAmbiguousIdentifier(".")).isFalse();
+    assertThat(ModuleLoader.isAmbiguousIdentifier("..")).isFalse();
+  }
+
+  @Test
+  public void testLocateDotAndDotDotNode() {
+    ImmutableList<CompilerInput> compilerInputs =
+        inputs(
+            "/app/index.js",
+            "/app/sub/sub.js",
+            "/app/sub/index.js",
+            "/app/sub/sub2/sub2.js",
+            "/B/package.json",
+            "/B/lib/b.js",
+            "/B/lib/index.js");
+
+    ModuleLoader loader =
+        ModuleLoader.builder()
+            .setModuleRoots(ImmutableList.of())
+            .setInputs(compilerInputs)
+            .setFactory(new NodeModuleResolver.Factory(PACKAGE_JSON_MAIN_ENTRIES))
+            .setPathResolver(PathResolver.RELATIVE)
+            .build();
+
+    assertUri("/app/sub/index.js", resolveJsModule(loader.resolve("/app/sub/sub.js"), "."));
+    assertUri("/app/sub/index.js", resolveJsModule(loader.resolve("/app/sub/sub2/sub2.js"), ".."));
+    assertUri("/app/index.js", resolveJsModule(loader.resolve("/app/sub/sub.js"), ".."));
+    assertUri("/B/lib/b.js", resolveJsModule(loader.resolve("/B/lib/sub.js"), ".."));
+    assertUri("/B/lib/index.js", resolveJsModule(loader.resolve("/B/lib/sub.js"), "."));
+  }
+
   CompilerInput input(String name) {
     return new CompilerInput(SourceFile.fromCode(name, ""), false);
   }

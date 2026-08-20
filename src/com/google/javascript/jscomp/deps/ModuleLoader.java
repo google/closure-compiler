@@ -246,7 +246,10 @@ public final class ModuleLoader {
 
   /** Whether this is relative to the current file, or a top-level identifier. */
   public static boolean isRelativeIdentifier(String name) {
-    return name.startsWith("." + MODULE_SLASH) || name.startsWith(".." + MODULE_SLASH);
+    return name.startsWith("." + MODULE_SLASH)
+        || name.startsWith(".." + MODULE_SLASH)
+        || name.equals(".")
+        || name.equals("..");
   }
 
   /** Whether this is absolute to the compilation. */
