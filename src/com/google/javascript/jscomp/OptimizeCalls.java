@@ -555,8 +555,10 @@ class OptimizeCalls implements CompilerPass {
         Node grandparent = parent.getParent();
         if (n == parent.getFirstChild()
             && grandparent != null
-            && (grandparent.isCall() || grandparent.isOptChainCall())) {
-          return false; // `a.foo()` or `a?.foo()` or `a?.[foo]()`
+            && (grandparent.isCall()
+                || grandparent.isOptChainCall()
+                || grandparent.isTaggedTemplateLit())) {
+          return false; // `a.foo()` or `a?.foo()` or `a?.[foo]()` or `a.foo`bar``
         }
         return true;
       }
