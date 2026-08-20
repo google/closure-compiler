@@ -518,6 +518,7 @@ $jscomp.generator.Context.prototype.enterFinallyBlock = function(
   }
   this.catchAddress_ = nextCatchAddress || 0;
   this.finallyAddress_ = nextFinallyAddress || 0;
+  this.abruptCompletion_ = null;
 };
 $jscomp.generator.Context.prototype['enterFinallyBlock'] =
     $jscomp.generator.Context.prototype.enterFinallyBlock;
