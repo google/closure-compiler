@@ -1273,28 +1273,29 @@ StylePropertyMapReadOnly.prototype.size;
  * @return {(CSSStyleValue|undefined)}
  * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/get
  */
-StylePropertyMapReadOnly.prototype.get = function(property) {}
+StylePropertyMapReadOnly.prototype.get = function(property) {};
 
 /**
  * @param {string} property
  * @return {!Array<!CSSStyleValue>}
  * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/getAll
  */
-StylePropertyMapReadOnly.prototype.getAll = function(property) {}
+StylePropertyMapReadOnly.prototype.getAll = function(property) {};
 
 /**
  * @param {string} property
  * @return {boolean}
  * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/has
  */
-StylePropertyMapReadOnly.prototype.has = function(property) {}
+StylePropertyMapReadOnly.prototype.has = function(property) {};
 
 /**
  * @param {function(!Array<!CSSStyleValue>, string, !StylePropertyMapReadOnly): void} callbackfn
  * @param {*=} opt_thisArg
  * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMapReadOnly/forEach
  */
-StylePropertyMapReadOnly.prototype.forEach = function(callbackfn, opt_thisArg) {}
+StylePropertyMapReadOnly.prototype.forEach = function(
+    callbackfn, opt_thisArg) {};
 
 /**
  * @return {!IteratorIterable<!Array<string|!Iterable<!CSSStyleValue>>>}

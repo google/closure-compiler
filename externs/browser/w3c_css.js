@@ -327,7 +327,6 @@ function StylePropertyMap() {}
 /**
  * @param {string} property
  * @param {...(CSSStyleValue|string)} values
-
  * @return {undefined}
  * @see https://developer.mozilla.org/docs/Web/API/StylePropertyMap/append
  */
