@@ -2217,12 +2217,10 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("var a = {['a']:x}['a']", "var a = x");
     test("var a = {['a']:x}?.['a']", "var a = x");
     test("var a = {['a']:x}?.['a'].b", "var a = x.b");
-    // TODO(b/538141064): Fix PeepholeFoldConstants to not drop optional chaining in nested object
-    // literal access
     test("var a = {a: {b: 1}}?.a?.b", "var a = 1");
-    test("var a = {a: null}?.a?.b", "var a = null.b");
+    test("var a = {a: null}?.a?.b", "var a = null?.b");
     test("var a = {['a']: {b: 1}}?.['a']?.b", "var a = 1");
-    test("var a = {['a']: null}?.['a']?.b", "var a = null.b");
+    test("var a = {['a']: null}?.['a']?.b", "var a = null?.b");
 
     test("var a = { get ['a']() { return 1; }}['a']", "var a = function() { return 1; }();");
     test("var a = {'a': x, ['a']: y}['a']", "var a = y;");

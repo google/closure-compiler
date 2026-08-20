@@ -2039,7 +2039,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     Node parent = n.getParent();
 
-    if (NodeUtil.isOptChainNode(parent)) {
+    if (NodeUtil.isOptChainNode(parent)
+        && n.isFirstChildOf(parent)
+        && !parent.isOptionalChainStart()) {
 
       /*
        * If the chain continues after `n`, simply doing `n.replaceWith(value)` below would leave the
