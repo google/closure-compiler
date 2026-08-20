@@ -864,14 +864,16 @@ public final class JsDocInfoParser {
         case THROWS -> {
           lineno = stream.getLineno();
           charno = stream.getCharno();
+          String throwsAnnotation = "";
           if (!lookAheadForAnnotation()) {
             ExtractionInfo throwsInfo = extractMultilineTextualBlock(token);
-            String throwsAnnotation = throwsInfo.string;
-            throwsAnnotation = throwsAnnotation.trim();
-            if (throwsAnnotation.length() > 0) {
-              jsdocBuilder.recordThrowsAnnotation(throwsAnnotation);
-            }
+            throwsAnnotation = throwsInfo.string.trim();
             token = throwsInfo.token;
+          }
+          if (jsdocBuilder.isNoSideEffectsRecorded()) {
+            addParserWarning(Msg.JSDOC_NOSIDEEFFECTS_WITH_THROWS, lineno, charno);
+          } else if (!jsdocBuilder.recordThrowsAnnotation(throwsAnnotation)) {
+            addParserWarning(Msg.JSDOC_THROWS, lineno, charno);
           }
           return token;
         }
@@ -976,7 +978,11 @@ public final class JsDocInfoParser {
           return token;
         }
         case NO_SIDE_EFFECTS -> {
-          if (!jsdocBuilder.recordNoSideEffects()) {
+          if (jsdocBuilder.isModifiesRecorded()) {
+            addParserWarning(Msg.JSDOC_NOSIDEEFFECTS_WITH_MODIFIES);
+          } else if (jsdocBuilder.isThrowsRecorded()) {
+            addParserWarning(Msg.JSDOC_NOSIDEEFFECTS_WITH_THROWS);
+          } else if (!jsdocBuilder.recordNoSideEffects()) {
             addParserWarning(Msg.JSDOC_NOSIDEEFFECTS);
           }
           return eatUntilEOLIfNotAnnotation();
@@ -1537,7 +1543,9 @@ public final class JsDocInfoParser {
         addParserWarning(Msg.JSDOC_MODIFIES);
       } else {
         token = next();
-        if (!jsdocBuilder.recordModifies(modifies)) {
+        if (jsdocBuilder.isNoSideEffectsRecorded()) {
+          addParserWarning(Msg.JSDOC_NOSIDEEFFECTS_WITH_MODIFIES);
+        } else if (!jsdocBuilder.recordModifies(modifies)) {
           addParserWarning(Msg.JSDOC_MODIFIES_DUPLICATE);
         }
       }

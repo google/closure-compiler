@@ -119,6 +119,10 @@ public enum Msg {
   JSDOC_NODTS("extra @nodts tag"),
   JSDOC_NOINLINE("extra @noinline tag"),
   JSDOC_NOSIDEEFFECTS("conflicting @nosideeffects tag"),
+  JSDOC_NOSIDEEFFECTS_WITH_MODIFIES(
+      "@nosideeffects functions cannot have @modifies (modifying arguments/this is a side effect)"),
+  JSDOC_NOSIDEEFFECTS_WITH_THROWS(
+      "@nosideeffects functions cannot have @throws (throwing is a side effect)"),
   JSDOC_OVERRIDE("extra @override/@inheritDoc tag."),
   JSDOC_POLYMERBEHAVIOR_EXTRA("extra @polymerBehavior tag"),
   JSDOC_POLYMER_EXTRA("extra @polymer tag"),
@@ -138,6 +142,7 @@ public enum Msg {
   JSDOC_TEMPLATE_TYPETRANSFORMATION_EXPRESSIONMISSING("Missing type transformation expression."),
   JSDOC_TEMPLATE_TYPETRANSFORMATION_MISSINGDELIMIIER(
       "Expected end delimiter for a type transformation."),
+  JSDOC_THROWS("conflicting @throws tag"),
   JSDOC_TYPE("conflicting @type tag"),
   JSDOC_TYPESUMMARY("extra @typeSummary tag"),
   JSDOC_TYPETRANSFORMATION_EXTRA_PARAM("Found extra parameter in {0}"),

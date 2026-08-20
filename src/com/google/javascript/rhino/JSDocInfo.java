@@ -1956,6 +1956,9 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordThrowsAnnotation(String annotation) {
       populated = true;
+      if (checkBit(Bit.NOSIDEEFFECTS)) {
+        return false;
+      }
       // TODO(user): Does it make sense to check for singleton tags here?
       // Note that if the @throws annotation appears before a singleton tag like @type,
       // the throws annotation is preserved, but if it appears after the singleton tag,
@@ -1969,9 +1972,8 @@ public class JSDocInfo implements Serializable {
           // the side effect.
           throwsAnnotations.add("");
         }
-        return true;
       }
-      return false;
+      return true;
     }
 
     /** Adds an author to the current information. */
@@ -2603,7 +2605,24 @@ public class JSDocInfo implements Serializable {
      * JSDocInfo#isNoSideEffects()} flag set to {@code true}.
      */
     public boolean recordNoSideEffects() {
-      return !hasAnySingletonSideEffectTags() && populateBit(Bit.NOSIDEEFFECTS, true);
+      return !hasAnySingletonSideEffectTags()
+          && isPropEmpty(THROWS_ANNOTATIONS)
+          && populateBit(Bit.NOSIDEEFFECTS, true);
+    }
+
+    /** Returns whether current JSDoc is annotated with {@code @nosideeffects}. */
+    public boolean isNoSideEffectsRecorded() {
+      return checkBit(Bit.NOSIDEEFFECTS);
+    }
+
+    /** Returns whether current JSDoc is annotated with {@code @modifies}. */
+    public boolean isModifiesRecorded() {
+      return !isPropEmpty(MODIFIES);
+    }
+
+    /** Returns whether current JSDoc is annotated with {@code @throws}. */
+    public boolean isThrowsRecorded() {
+      return !isPropEmpty(THROWS_ANNOTATIONS);
     }
 
     /**

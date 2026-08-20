@@ -108,7 +108,6 @@ public final class CommandLineRunnerTest {
               /**
                * @constructor
                * @param {...*} var_args
-               * @nosideeffects
                * @throws {Error}
                */
               function Function(var_args) {}

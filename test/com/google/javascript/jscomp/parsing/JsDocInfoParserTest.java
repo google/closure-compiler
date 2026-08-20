@@ -3442,12 +3442,69 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         @modifies {this}
         @nosideeffects */
         """,
-        "conflicting @nosideeffects tag");
+        "@nosideeffects functions cannot have @modifies (modifying arguments/this is a side"
+            + " effect)");
   }
 
   @Test
   public void testBadModifies9() {
-    parse("@nosideeffects @modifies {this} */", "conflicting @modifies tag");
+    parse(
+        "@nosideeffects @modifies {this} */",
+        "@nosideeffects functions cannot have @modifies (modifying arguments/this is a side"
+            + " effect)");
+  }
+
+  @Test
+  public void testConflictingThrowsAndNoSideEffects1() {
+    parse(
+        """
+        @throws {Error}
+        @nosideeffects */
+        """,
+        "@nosideeffects functions cannot have @throws (throwing is a side effect)");
+  }
+
+  @Test
+  public void testConflictingThrowsAndNoSideEffects2() {
+    parse(
+        """
+        @nosideeffects
+        @throws {Error} */
+        """,
+        "@nosideeffects functions cannot have @throws (throwing is a side effect)");
+  }
+
+  @Test
+  public void testDuplicateNoSideEffects() {
+    parse(
+        """
+        @nosideeffects
+        @nosideeffects */
+        """,
+        "conflicting @nosideeffects tag");
+  }
+
+  @Test
+  public void testThrowsAndModifiesCompatible() {
+    JSDocInfo info =
+        parse(
+            """
+            @modifies {this}
+            @throws {Error} Some error */
+            """,
+            true);
+    assertThat(info.modifiesThis()).isTrue();
+    assertThat(info.getThrowsAnnotations()).containsExactly("{Error} Some error");
+
+    info =
+        parse(
+            """
+            @throws {Error} Some error
+            @modifies {this} */
+            """,
+            true);
+    assertThat(info.modifiesThis()).isTrue();
+    assertThat(info.getThrowsAnnotations()).containsExactly("{Error} Some error");
   }
 
   @Test
