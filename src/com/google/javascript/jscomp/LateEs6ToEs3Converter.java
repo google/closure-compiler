@@ -229,12 +229,31 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, Comp
       statement = statement.getParent();
     }
 
-    result.srcrefTreeIfMissing(obj);
-    obj.replaceWith(result);
+    boolean isInsideLoopHeader = NodeUtil.isLoopStructure(statement);
 
-    Node var = IR.var(astFactory.createName(objName, objectType), obj);
-    var.srcrefTreeIfMissing(statement);
-    var.insertBefore(statement);
-    compiler.reportChangeToEnclosingScope(var);
+    if (isInsideLoopHeader) {
+      Node placeholder = IR.empty();
+      obj.replaceWith(placeholder);
+
+      Node assignEmptyObj =
+          astFactory.createAssign(astFactory.createName(objName, objectType), obj);
+      result = astFactory.createComma(assignEmptyObj, result);
+      result.srcrefTreeIfMissing(obj);
+
+      placeholder.replaceWith(result);
+
+      Node var = IR.var(astFactory.createName(objName, objectType));
+      var.srcrefTreeIfMissing(statement);
+      var.insertBefore(statement);
+      compiler.reportChangeToEnclosingScope(var);
+    } else {
+      result.srcrefTreeIfMissing(obj);
+      obj.replaceWith(result);
+
+      Node var = IR.var(astFactory.createName(objName, objectType), obj);
+      var.srcrefTreeIfMissing(statement);
+      var.insertBefore(statement);
+      compiler.reportChangeToEnclosingScope(var);
+    }
   }
 }

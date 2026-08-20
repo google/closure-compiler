@@ -78,7 +78,6 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         "var x = {a: function() { return 0; } };");
   }
 
-  // TODO(b/538171097): Reinitialize computed property temporary variables in LateEs6ToEs3Converter
   @Test
   public void testInitSymbolIterator() {
     test(
@@ -99,7 +98,6 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test("var obj = { f() { alert(1); }, x };", "var obj = { f: function() { alert(1); }, x: x };");
   }
 
-  // TODO(b/538171097): Reinitialize computed property temporary variables in LateEs6ToEs3Converter
   @Test
   public void testComputedPropertiesWithMethod() {
     test(
@@ -112,7 +110,6 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538171097): Reinitialize computed property temporary variables in LateEs6ToEs3Converter
   @Test
   public void testComputedProperties() {
     test(
@@ -212,7 +209,6 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538171097): Reinitialize computed property temporary variables in LateEs6ToEs3Converter
   @Test
   public void testComputedPropGetterSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
@@ -509,28 +505,40 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
             """));
   }
 
-  // TODO(b/538171097): Reinitialize computed property temporary variables in LateEs6ToEs3Converter
+
   @Test
   public void testComputedPropertyInLoopHeader() {
     test(
         "for (; {[foo]: bar}; ) {}",
         """
-        var COMP_PROP_VAR$0 = {};
-        for (; (COMP_PROP_VAR$0[foo] = bar, COMP_PROP_VAR$0); ) {}
+        var COMP_PROP_VAR$0;
+        for (; (COMP_PROP_VAR$0 = {}, (COMP_PROP_VAR$0[foo] = bar, COMP_PROP_VAR$0)); ) {}
         """);
 
     test(
         "while ({[foo]: bar}) {}",
         """
-        var COMP_PROP_VAR$0 = {};
-        for (; (COMP_PROP_VAR$0[foo] = bar, COMP_PROP_VAR$0); ) {}
+        var COMP_PROP_VAR$0;
+        for (; (COMP_PROP_VAR$0 = {}, (COMP_PROP_VAR$0[foo] = bar, COMP_PROP_VAR$0)); ) {}
         """);
 
     test(
         "do {} while ({[foo]: bar});",
         """
-        var COMP_PROP_VAR$0 = {};
-        do {} while ((COMP_PROP_VAR$0[foo] = bar, COMP_PROP_VAR$0));
+        var COMP_PROP_VAR$0;
+        do {} while ((COMP_PROP_VAR$0 = {}, (COMP_PROP_VAR$0[foo] = bar, COMP_PROP_VAR$0)));
+        """);
+  }
+
+  @Test
+  public void testComputedPropertyInLoopBody() {
+    test(
+        "while (true) { var x = {[foo]: bar}; }",
+        """
+        for (; true;) {
+          var COMP_PROP_VAR$0 = {};
+          var x = (COMP_PROP_VAR$0[foo] = bar, COMP_PROP_VAR$0);
+        }
         """);
   }
 
