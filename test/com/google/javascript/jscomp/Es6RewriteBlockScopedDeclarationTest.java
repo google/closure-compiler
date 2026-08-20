@@ -2175,15 +2175,15 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             // Note that we wrap the entire object literal in an IIFE, because that's simpler
             // than trying to individually wrap the getter and setter methods defined in it.
               var a =
-                  (function(LOOP$0$PARAM$1) {
+                  (function(LOOP$0$PARAM$2) {
                     return {
                       get foo() {
-                        return LOOP$0$PARAM$1.bar;
+                        return LOOP$0$PARAM$2.bar;
                       },
                       set foo(x) {
-                        use(LOOP$0$PARAM$1.bar);
+                        use(LOOP$0$PARAM$2.bar);
                       },
-                      prop: LOOP$0$PARAM$1.bar
+                      prop: LOOP$0$PARAM$2.bar
                   };
               })(LOOP$0);
               LOOP$0.bar = 43;
@@ -2220,11 +2220,11 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
               LOOP$0.bar = 42;
               /** @const */
               LOOP$0.baz = 43;
-              var a = (function(LOOP$0$PARAM$1) {
+              var a = (function(LOOP$0$PARAM$2) {
                return {
                 get foo() {
-                   return LOOP$0$PARAM$1.bar +
-                       LOOP$0$PARAM$1.baz;
+                   return LOOP$0$PARAM$2.bar +
+                       LOOP$0$PARAM$2.baz;
                 }
               };
              })(LOOP$0);
@@ -2263,10 +2263,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
               LOOP$0.bar = 42;
               LOOP$0.baz = 43;
               var a =
-                  (function(LOOP$0$PARAM$1) {
+                  (function(LOOP$0$PARAM$2) {
                     return {
-                      set foo(x = LOOP$0$PARAM$1.bar) {
-                        return x + LOOP$0$PARAM$1.baz;
+                      set foo(x = LOOP$0$PARAM$2.bar) {
+                        return x + LOOP$0$PARAM$2.baz;
                       }
                     };
                   })(LOOP$0);
@@ -2473,7 +2473,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     loopClosureTest(srcs, expected);
   }
 
-  // TODO(b/538167732): Fix this/arguments handling in loop closure object getters/setters
   @Test
   public void testReferenceToLoopScopedLetInObjectWithThisAndArguments() {
     Sources srcs =
@@ -2495,19 +2494,23 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         expected(
             """
             function h(userInput) {
+              /** @const */
+              var $ARGUMENTS$1 = arguments;
+              /** @const */
+              var $THIS$1 = this;
               var out = [];
               var LOOP$0 = {};
               LOOP$0.i = 0;
               for (; LOOP$0.i < 3;
                   LOOP$0 = { i: LOOP$0.i },
                   LOOP$0.i++) {
-                out.push((function(LOOP$0$PARAM$1) {
+                out.push((function(LOOP$0$PARAM$2) {
                   return {
                     get idx() {
-                      return LOOP$0$PARAM$1.i;
+                      return LOOP$0$PARAM$2.i;
                     },
-                    ctx: this.policy,
-                    raw: arguments[0]
+                    ctx: $THIS$1.policy,
+                    raw: $ARGUMENTS$1[0]
                   };
                 })(LOOP$0));
               }

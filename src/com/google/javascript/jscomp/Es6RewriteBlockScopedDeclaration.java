@@ -550,6 +550,32 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     private Set<Node> createWrapperFunctions() {
       Set<Node> wrapperFunctions = new LinkedHashSet<>();
       for (Node functionOrObjectLit : nodesRequiringLoopObjectsClosureMap.keySet()) {
+        // Wrapping an object literal in an IIFE would otherwise rebind `this` and `arguments` in
+        // object properties/methods to the IIFE. Use ThisAndArgumentsReferenceUpdater to capture
+        // and rewrite them to outer aliases before wrapping in the IIFE.
+        if (functionOrObjectLit.isObjectLit()) {
+          Node enclosingFunction = NodeUtil.getEnclosingFunction(functionOrObjectLit);
+          Node scopeBody =
+              enclosingFunction != null
+                  ? enclosingFunction.getLastChild()
+                  : NodeUtil.getEnclosingScript(functionOrObjectLit);
+          boolean isConstructor =
+              enclosingFunction != null && NodeUtil.isEs6Constructor(enclosingFunction);
+          Node script = NodeUtil.getEnclosingScript(functionOrObjectLit);
+          CompilerInput input = compiler.getInput(script.getInputId());
+          ThisAndArgumentsReferenceUpdater.ThisAndArgumentsContext thisContext =
+              new ThisAndArgumentsReferenceUpdater.ThisAndArgumentsContext(
+                  scopeBody, isConstructor, uniqueIdSupplier.getUniqueId(input));
+          ThisAndArgumentsReferenceUpdater updater =
+              new ThisAndArgumentsReferenceUpdater(compiler, thisContext, astFactory);
+          NodeTraversal.traverse(compiler, functionOrObjectLit, updater);
+          thisContext.addVarDeclarations(compiler, astFactory, script);
+          for (Node child = scopeBody.getFirstChild(); child != null; child = child.getNext()) {
+            if (child.isLet() || child.isConst()) {
+              letConsts.add(child);
+            }
+          }
+        }
         Node returnNode = IR.returnNode();
         Set<LoopObject> objects = nodesRequiringLoopObjectsClosureMap.get(functionOrObjectLit);
         Node[] parameterNames = new Node[objects.size()];
