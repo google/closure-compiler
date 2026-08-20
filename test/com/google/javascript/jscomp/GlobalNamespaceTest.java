@@ -1174,6 +1174,26 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
+  public void testCannotCollapseConditionalAndObjectLitProperty() {
+    GlobalNamespace namespace = parse("var foo = x && {prop: 0}; use(foo.prop);");
+
+    Name fooProp = namespace.getSlot("foo.prop");
+
+    // We should not convert foo.prop -> foo$prop because use(foo) might read foo.prop
+    assertThat(fooProp.canCollapse()).isFalse();
+  }
+
+  @Test
+  public void testCannotCollapseConditionalAndObjectLitNestedProperty() {
+    GlobalNamespace namespace = parse("var foo = x && {prop: {nested: 0}}; use(foo.prop.nested);");
+
+    Name fooProp = namespace.getSlot("foo.prop.nested");
+
+    // We should not convert foo.prop -> foo$prop because use(foo) might read foo.prop
+    assertThat(fooProp.canCollapse()).isFalse();
+  }
+
+  @Test
   public void testGitHubIssue3733() {
     GlobalNamespace namespace =
         parse(

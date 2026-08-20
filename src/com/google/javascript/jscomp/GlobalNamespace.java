@@ -1888,12 +1888,19 @@ class GlobalNamespace
             return Inlinability.DO_NOT_INLINE;
           }
           // We may be in a deeply nested object literal like, `{a: {b: {c: 1}}}`, so find the
-          // outermost object literal node in order to determine whether it is used conditionally.
-          final Node objectLitParent = getOutermostObjectLit(declaration).getParent();
-          if (objectLitParent.isOr() || objectLitParent.isHook()) {
-            // Case: `var x = y || {a: b}` or `var x = cond ? y : {a: b}`.
-            logDecision(Inlinability.DO_NOT_INLINE, "conditional definition");
-            return Inlinability.DO_NOT_INLINE;
+          // outermost object literal node and check its ancestor expressions to determine
+          // whether it is used conditionally.
+          for (Node child = getOutermostObjectLit(declaration), p = child.getParent();
+              p != null && p.getParent() != null && !NodeUtil.isStatement(p);
+              child = p, p = p.getParent()) {
+            if ((p.isOr() && p.getFirstChild() != child)
+                || (p.isHook() && p.getFirstChild() != child)
+                || (p.isAnd() && p.getFirstChild() != child)) {
+              // Case: `var x = y || {a: b}` or `var x = cond ? y : {a: b}` or `var x = cond && {a:
+              // b}`.
+              logDecision(Inlinability.DO_NOT_INLINE, "conditional definition");
+              return Inlinability.DO_NOT_INLINE;
+            }
           }
         }
       }
