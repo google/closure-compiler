@@ -1933,11 +1933,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         case 7:
           GEN_CONTEXT$0.enterFinallyBlock(0, 5);
           GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
+          break;
           GEN_CONTEXT$0.leaveFinallyBlock(5);
           break;
         case 5:
           GEN_CONTEXT$0.enterFinallyBlock();
           GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
+          break;
           GEN_CONTEXT$0.leaveFinallyBlock(2);
           break;
         case 2:
@@ -1973,6 +1975,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         case 5:
           GEN_CONTEXT$0.enterFinallyBlock();
           GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
+          break;
           GEN_CONTEXT$0.leaveFinallyBlock(2);
           break;
         case 2:
@@ -2013,6 +2016,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         case 7:
           GEN_CONTEXT$0.enterFinallyBlock(0, 5);
           GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
+          break;
           GEN_CONTEXT$0.leaveFinallyBlock(5);
           break;
         case 5:
@@ -2059,6 +2063,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         case 8:
           GEN_CONTEXT$0.enterFinallyBlock(0, 0, 1);
           GEN_CONTEXT$0.jumpThroughFinallyBlocks(2);
+          break;
           GEN_CONTEXT$0.leaveFinallyBlock(9, 1);
           break;
         case 9:
@@ -2073,7 +2078,6 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538166694): Es6RewriteGenerators return in finally with subsequent statements
   @Test
   public void testBreakInFinallyWithSubsequentStatements() {
     rewriteGeneratorBodyWithVars(
@@ -2097,14 +2101,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         }
         GEN_CONTEXT$0.enterFinallyBlock();
         if (guard) {
-          GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
+          return GEN_CONTEXT$0.jumpThroughFinallyBlocks(0);
         }
         sink();
         return GEN_CONTEXT$0.leaveFinallyBlock(1);
         """);
   }
 
-  // TODO(b/538166694): Es6RewriteGenerators return in finally with subsequent statements
   @Test
   public void testContinueInFinallyWithSubsequentStatements() {
     rewriteGeneratorBodyWithVars(
@@ -2128,7 +2131,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         }
         GEN_CONTEXT$0.enterFinallyBlock();
         if (guard) {
-          GEN_CONTEXT$0.jumpThroughFinallyBlocks(1);
+          return GEN_CONTEXT$0.jumpThroughFinallyBlocks(1);
         }
         sink();
         return GEN_CONTEXT$0.leaveFinallyBlock(1);

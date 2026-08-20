@@ -346,7 +346,12 @@ $jscomp.generator.Context.prototype['return'] =
 $jscomp.generator.Context.prototype.jumpThroughFinallyBlocks = function(
     nextAddress) {
   this.abruptCompletion_ = {jumpTo: nextAddress};
-  this.nextAddress = this.finallyAddress_;
+  if (this.finallyAddress_ < nextAddress) {
+    this.nextAddress = nextAddress;
+    this.abruptCompletion_ = null;
+  } else {
+    this.nextAddress = this.finallyAddress_;
+  }
 };
 $jscomp.generator.Context.prototype['jumpThroughFinallyBlocks'] =
     $jscomp.generator.Context.prototype.jumpThroughFinallyBlocks;

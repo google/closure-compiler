@@ -1519,14 +1519,7 @@ final class Es6RewriteGenerators implements CompilerPass {
                   type(StandardColors.NULL_OR_VOID),
                   section.getNumber(sourceNode))
               .insertBefore(sourceNode);
-          if (nestedFinallyBlockCount == 0) {
-            sourceNode.replaceWith(createBreakNodeFor(sourceNode));
-          } else {
-            // If we are in a finally block, we need to detach the source node to prevent an extra
-            // break from being generated. The break is not needed because the
-            // jumpThroughFinallyBlocks call will handle the control flow.
-            sourceNode.detach();
-          }
+          sourceNode.replaceWith(createBreakNodeFor(sourceNode));
         } else {
           // "break;" inside a loop or swtich statement:
           // for (...) {
