@@ -232,27 +232,63 @@ class FunctionToBlockMutator {
     return null;
   }
 
-  /** For all VAR node with uninitialized declarations, set the values to be "undefined". */
+  /**
+   * For all VAR declarations (and LET declarations outside loops) that are uninitialized, set their
+   * initial values to "undefined" and hoist them to the containing block.
+   *
+   * <p>When a function is called within a loop, local variables are recreated on each call in
+   * normal execution. When inlined into the loop, uninitialized variables would otherwise retain
+   * their values across loop iterations.
+   */
   private static void fixUninitializedVarDeclarations(Node n, Node containingBlock) {
-    // Inner loop structure must already have logic to initialize its
-    // variables.  In particular FOR-IN structures must not be modified.
-    if (NodeUtil.isLoopStructure(n)) {
+    fixUninitializedVarDeclarations(n, containingBlock, /* inLoop= */ false);
+  }
+
+  private static void fixUninitializedVarDeclarations(
+      Node n, Node containingBlock, boolean inLoop) {
+    // Nested functions have their own scope and activation records, so their local variables
+    // should not be hoisted out to the containing block.
+    if (n.isFunction()) {
       return;
     }
 
-    if ((n.isVar() || n.isLet()) && n.hasOneChild()) {
+    // Inner loop structures: var declarations inside loops are still function-scoped and
+    // need to be initialized at the containing block level to avoid carrying values across
+    // outer loop iterations. However, let declarations inside loops are block-scoped to
+    // that loop and do not need hoisting.
+    if (NodeUtil.isLoopStructure(n)) {
+      Node body = NodeUtil.getLoopCodeBlock(n);
+      if (body != null) {
+        fixUninitializedVarDeclarations(body, containingBlock, /* inLoop= */ true);
+      }
+      if (n.isVanillaFor()) {
+        Node init = n.getFirstChild();
+        if (init != null && !init.isEmpty()) {
+          fixUninitializedVarDeclarations(init, containingBlock, /* inLoop= */ true);
+        }
+      }
+      return;
+    }
+
+    if ((n.isVar() || (n.isLet() && !inLoop)) && n.hasOneChild()) {
       Node name = n.getFirstChild();
       // It isn't initialized.
       if (!name.hasChildren()) {
         Node srcLocation = name;
         name.addChildToBack(NodeUtil.newUndefinedNode(srcLocation));
-        containingBlock.addChildToFront(n.detach());
+        Node parent = n.getParent();
+        if (parent != null && parent.isVanillaFor() && parent.getFirstChild() == n) {
+          n.replaceWith(IR.empty());
+        } else {
+          n.detach();
+        }
+        containingBlock.addChildToFront(n);
       }
       return;
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      fixUninitializedVarDeclarations(c, containingBlock);
+      fixUninitializedVarDeclarations(c, containingBlock, inLoop);
     }
   }
 
