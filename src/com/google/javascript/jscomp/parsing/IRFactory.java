@@ -1404,8 +1404,8 @@ class IRFactory {
           errorReporter.error(
               "Private identifiers may not be used in this context",
               sourceName,
-              identifierToken.location.start.line,
-              identifierToken.location.start.column);
+              lineno(identifierToken),
+              charno(identifierToken));
         }
         value = identifierToken.getMaybePrivateValue();
       } else {

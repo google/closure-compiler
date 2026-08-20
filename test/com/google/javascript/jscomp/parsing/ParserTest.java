@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.testing.CodeSubTree;
+import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -48,6 +49,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import org.junit.Before;
@@ -6714,6 +6716,35 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testPrivateProperty_invalid_referencePrivatePropFromObjectLiteralViaOptionalChain() {
     parseError("const o = {}; o?.#f;", INVALID_PRIVATE_ID);
+  }
+
+  @Test
+  public void testPrivateProperty_invalid_lineNumber() {
+    List<String> errors = new ArrayList<>();
+    List<Integer> lines = new ArrayList<>();
+    List<Integer> cols = new ArrayList<>();
+    ErrorReporter reporter =
+        new ErrorReporter() {
+          @Override
+          public void warning(String message, String sourceName, int line, int lineOffset) {}
+
+          @Override
+          public void error(String message, String sourceName, int line, int lineOffset) {
+            errors.add(message);
+            lines.add(line);
+            cols.add(lineOffset);
+          }
+        };
+    ParserRunner.parse(
+        new SimpleSourceFile("testcode", SourceKind.STRONG),
+        "const x = #foo;\nconst y = {\n  #pf: 1,\n};\nconst z = #bar;",
+        createConfig(),
+        reporter);
+    assertThat(errors)
+        .containsExactly(INVALID_PRIVATE_ID, INVALID_PRIVATE_ID, INVALID_PRIVATE_ID)
+        .inOrder();
+    assertThat(lines).containsExactly(1, 3, 5).inOrder();
+    assertThat(cols).containsExactly(10, 2, 10).inOrder();
   }
 
   @Test
