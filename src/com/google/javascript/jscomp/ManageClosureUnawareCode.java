@@ -65,10 +65,10 @@ final class ManageClosureUnawareCode implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
-      tryUnwrapClosureUnawareShadowedCode(t, n);
+      tryUnwrapClosureUnawareShadowedCode(n);
     }
 
-    private void tryUnwrapClosureUnawareShadowedCode(NodeTraversal t, Node n) {
+    private void tryUnwrapClosureUnawareShadowedCode(Node n) {
       Node shadowAstRoot = n.getClosureUnawareShadow();
       if (shadowAstRoot == null) {
         return;

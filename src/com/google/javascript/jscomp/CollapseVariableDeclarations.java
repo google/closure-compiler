@@ -63,7 +63,7 @@ class CollapseVariableDeclarations implements CompilerPass {
     /** Variable declaration that any following var nodes should be collapsed into */
     final Node startNode;
 
-    Collapse(Node startNode, Node endNode, Node parent) {
+    Collapse(Node startNode) {
       this.startNode = startNode;
     }
   }
@@ -139,7 +139,7 @@ class CollapseVariableDeclarations implements CompilerPass {
 
       if (hasNodesToCollapse) {
         nodesToCollapse.add(varNode);
-        collapses.add(new Collapse(varNode, n, parent));
+        collapses.add(new Collapse(varNode));
       }
     }
   }

@@ -348,7 +348,7 @@ class CrossChunkCodeMotion implements CompilerPass {
       DeclarationStatementGroupCycle cycle = null;
       for (DeclarationStatementGroup dsg : dsgsLatestFirst) {
         if (cycle == null || !cycle.currentChunk.equals(dsg.currentChunk)) {
-          cycle = new DeclarationStatementGroupCycle(this, dsg.currentChunk);
+          cycle = new DeclarationStatementGroupCycle(dsg.currentChunk);
           cyclesLatestFirst.add(cycle);
         }
         cycle.dsgs.add(dsg);
@@ -558,7 +558,7 @@ class CrossChunkCodeMotion implements CompilerPass {
     final JSChunk currentChunk;
     final Deque<DeclarationStatementGroup> dsgs;
 
-    DeclarationStatementGroupCycle(GlobalSymbolCycle globalSymbolCycle, JSChunk currentChunk) {
+    DeclarationStatementGroupCycle(JSChunk currentChunk) {
       this.currentChunk = currentChunk;
       this.dsgs = new ArrayDeque<>();
     }

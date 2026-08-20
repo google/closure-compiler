@@ -95,9 +95,8 @@ final class ClosureCodeRemoval implements CompilerPass {
      *
      * @param nameNode The LHS
      * @param assignNode The parent ASSIGN node
-     * @param traversal Access to further levels, assumed to start at 1
      */
-    RemovableAssignment(Node nameNode, Node assignNode, NodeTraversal traversal) {
+    RemovableAssignment(Node nameNode, Node assignNode) {
       this.node = nameNode;
       this.parent = assignNode;
 
@@ -143,15 +142,13 @@ final class ClosureCodeRemoval implements CompilerPass {
             valueNode.isQualifiedName() &&
             valueNode.matchesQualifiedName(ABSTRACT_METHOD_NAME)) {
           // Foo.prototype.bar = goog.abstractMethod
-          abstractMethodAssignmentNodes.add(
-              new RemovableAssignment(n.getFirstChild(), n, t));
+          abstractMethodAssignmentNodes.add(new RemovableAssignment(n.getFirstChild(), n));
         } else if (n.getJSDocInfo() != null
             && n.getJSDocInfo().isAbstract()
             && NodeUtil.isEmptyFunctionExpression(valueNode)
             && !n.getJSDocInfo().isConstructor()) {
           // @abstract
-          abstractMethodAssignmentNodes.add(
-              new RemovableAssignment(n.getFirstChild(), n, t));
+          abstractMethodAssignmentNodes.add(new RemovableAssignment(n.getFirstChild(), n));
         }
       } else if (n.isMemberFunctionDef() && parent.isClassMembers()) {
         if (n.getJSDocInfo() != null && n.getJSDocInfo().isAbstract()) {

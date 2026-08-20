@@ -786,11 +786,10 @@ public final class EsModuleProcessor implements NodeTraversal.Callback, ModulePr
   private void visitExportNameDeclaration(NodeTraversal t, Node export, Node declaration) {
     //    export var Foo;
     //    export let {a, b:[c,d]} = {};
-    NodeUtil.visitLhsNodesInNode(
-        declaration, lhs -> addExportNameDeclaration(t, lhs, export, declaration));
+    NodeUtil.visitLhsNodesInNode(declaration, lhs -> addExportNameDeclaration(t, lhs, export));
   }
 
-  private void addExportNameDeclaration(NodeTraversal t, Node lhs, Node export, Node declaration) {
+  private void addExportNameDeclaration(NodeTraversal t, Node lhs, Node export) {
     checkState(lhs.isName());
     String name = lhs.getString();
     if (!currentModuleBuilder.add(

@@ -139,12 +139,11 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
 
     // Get the only number arg as a double as long as it is the only argument
-    Double onlyArg = null;
     Node valueNode = callTarget.getNext();
     if (valueNode == null || valueNode.getNext() != null) {
       return subtree;
     }
-    onlyArg = getSideEffectFreeNumberValueNoConversion(valueNode);
+    Double onlyArg = getSideEffectFreeNumberValueNoConversion(valueNode);
     Node replacement = null;
     if (onlyArg != null) {
       switch (methodName) {

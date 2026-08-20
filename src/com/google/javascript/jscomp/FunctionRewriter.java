@@ -135,7 +135,7 @@ class FunctionRewriter implements CompilerPass {
     private final Node oldChild;
     private final Node newChild;
 
-    Reduction(Node parent, Node oldChild, Node newChild) {
+    Reduction(Node oldChild, Node newChild) {
       this.oldChild = oldChild;
       this.newChild = newChild;
     }
@@ -186,7 +186,7 @@ class FunctionRewriter implements CompilerPass {
       for (Reducer reducer : reducers) {
         Node replacement = reducer.reduce(node);
         if (replacement != node) {
-          reductions.put(reducer, new Reduction(parent, node, replacement));
+          reductions.put(reducer, new Reduction(node, replacement));
           return false;
         }
       }
