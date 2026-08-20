@@ -49,7 +49,8 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
     setGenericNameReplacements(
         ImmutableMap.of(
             "KEY", "$jscomp$key$",
-            "ITER", "$jscomp$iter$"));
+            "ITER", "$jscomp$iter$",
+            "RET_FN", "$jscomp$retFn$"));
   }
 
   @Override
@@ -71,11 +72,18 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         var i;
         var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
         var KEY$1$i = ITER$0.next();
-        for (;
-            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
-           i = KEY$1$i.value;
-          {
-            console.log(i);
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+             i = KEY$1$i.value;
+            {
+              console.log(i);
+            }
+          }
+        } finally {
+          if (KEY$1$i && !KEY$1$i.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
@@ -86,11 +94,18 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         """
         var ITER$0 = (0, $jscomp.makeIterator)([1,2,3])
         var KEY$1$i = ITER$0.next();
-        for (;
-            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
-          i = KEY$1$i.value;
-          {
-            console.log(i);
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+            i = KEY$1$i.value;
+            {
+              console.log(i);
+            }
+          }
+        } finally {
+          if (KEY$1$i && !KEY$1$i.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
@@ -102,11 +117,18 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         var i;
         var ITER$0 = (0, $jscomp.makeIterator)(arr)
         var KEY$1$i = ITER$0.next();
-        for (;
-            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
-           i = KEY$1$i.value;
-          {
-            console.log(i);
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+             i = KEY$1$i.value;
+            {
+              console.log(i);
+            }
+          }
+        } finally {
+          if (KEY$1$i && !KEY$1$i.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
@@ -117,11 +139,18 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         """
         var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
         var KEY$1$i = ITER$0.next();
-        for (;
-            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
-          const i = KEY$1$i.value;
-          {
-            console.log(i);
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+            const i = KEY$1$i.value;
+            {
+              console.log(i);
+            }
+          }
+        } finally {
+          if (KEY$1$i && !KEY$1$i.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
@@ -132,20 +161,34 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         """
         var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
         var KEY$1$i = ITER$0.next();
-        for (;
-            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
-          const i = KEY$1$i.value;
-          {
-            console.log(i);
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+            const i = KEY$1$i.value;
+            {
+              console.log(i);
+            }
+          }
+        } finally {
+          if (KEY$1$i && !KEY$1$i.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
-        var ITER$2 = (0, $jscomp.makeIterator)([4, 5, 6]);
-        var KEY$3$i$jscomp$1 = ITER$2.next();
-        for (;
-            !KEY$3$i$jscomp$1.done; KEY$3$i$jscomp$1 = ITER$2.next()) {
-          const i$jscomp$1 = KEY$3$i$jscomp$1.value;
-          {
-            console.log(i$jscomp$1);
+        var ITER$3 = (0, $jscomp.makeIterator)([4, 5, 6]);
+        var KEY$4$i$jscomp$1 = ITER$3.next();
+        var RET_FN$5;
+        try {
+          for (;
+              !KEY$4$i$jscomp$1.done; KEY$4$i$jscomp$1 = ITER$3.next()) {
+            const i$jscomp$1 = KEY$4$i$jscomp$1.value;
+            {
+              console.log(i$jscomp$1);
+            }
+          }
+        } finally {
+          if (KEY$4$i$jscomp$1 && !KEY$4$i$jscomp$1.done && (RET_FN$5 = ITER$3.return)) {
+            RET_FN$5.call(ITER$3);
           }
         }
         """);
@@ -157,10 +200,17 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         var i;
         var ITER$0 = (0, $jscomp.makeIterator)([1,2,3])
         var KEY$1$i = ITER$0.next();
-        for (;
-            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
-           i = KEY$1$i.value;
-          {}
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+             i = KEY$1$i.value;
+            {}
+          }
+        } finally {
+          if (KEY$1$i && !KEY$1$i.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
+          }
         }
         """);
 
@@ -171,11 +221,18 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         var i;
         var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
         var KEY$1$i = ITER$0.next();
-        for (;
-            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
-           i = KEY$1$i.value;
-          {
-            console.log(i);
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+             i = KEY$1$i.value;
+            {
+              console.log(i);
+            }
+          }
+        } finally {
+          if (KEY$1$i && !KEY$1$i.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
@@ -187,11 +244,18 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         var i = 'outer';
         var ITER$0 = (0, $jscomp.makeIterator)([1,2,3])
         var KEY$1$i$jscomp$1 = ITER$0.next();
-        for (;
-            !KEY$1$i$jscomp$1.done; KEY$1$i$jscomp$1 = ITER$0.next()) {
-          let i$jscomp$1 = KEY$1$i$jscomp$1.value;
-          {
-            alert(i$jscomp$1);
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$i$jscomp$1.done; KEY$1$i$jscomp$1 = ITER$0.next()) {
+            let i$jscomp$1 = KEY$1$i$jscomp$1.value;
+            {
+              alert(i$jscomp$1);
+            }
+          }
+        } finally {
+          if (KEY$1$i$jscomp$1 && !KEY$1$i$jscomp$1.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         alert(i);
@@ -205,18 +269,29 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
 """
 var ITER$0 = (0, $jscomp.makeIterator)([1,2,3])
 var KEY$1$CID = ITER$0.next();
-for (;
-    !KEY$1$CID.done; KEY$1$CID = ITER$0.next()) {
-  let CID = KEY$1$CID.value;
-  {
-    alert(CID);
+var RET_FN$2;
+try {
+  for (;
+      !KEY$1$CID.done; KEY$1$CID = ITER$0.next()) {
+    let CID = KEY$1$CID.value;
+    {
+      alert(CID);
+    }
+  }
+} finally {
+  if (KEY$1$CID && !KEY$1$CID.done && (RET_FN$2 = ITER$0.return)) {
+    RET_FN$2.call(ITER$0);
   }
 }
 """);
     Node script = getLastCompiler().getJsRoot().getOnlyChild();
     checkState(script.isScript(), script.getToken());
-    Node forLoop = script.getLastChild();
-    checkState(forLoop.isVanillaFor());
+    Node tryFinally = script.getLastChild();
+    checkState(tryFinally.isTry(), tryFinally.getToken());
+    Node tryBlock = tryFinally.getFirstChild();
+    checkState(tryBlock.isBlock(), tryBlock.getToken());
+    Node forLoop = tryBlock.getFirstChild();
+    checkState(forLoop.isVanillaFor(), forLoop.getToken());
     Node forBody = forLoop.getLastChild();
     checkState(forBody.isBlock());
     Node declaration = forBody.getFirstChild();
@@ -237,11 +312,18 @@ for (;
         """
         var ITER$0=(0, $jscomp.makeIterator)([]);
         var KEY$1$x=ITER$0.next();
-        for(;
-            !KEY$1$x.done; KEY$1$x=ITER$0.next()) {
-          let x = KEY$1$x.value;
-          {
-            let x$jscomp$1 = 0;
+        var RET_FN$2;
+        try {
+          for(;
+              !KEY$1$x.done; KEY$1$x=ITER$0.next()) {
+            let x = KEY$1$x.value;
+            {
+              let x$jscomp$1 = 0;
+            }
+          }
+        } finally {
+          if (KEY$1$x && !KEY$1$x.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
@@ -254,10 +336,17 @@ for (;
         """
         var ITER$0=(0, $jscomp.makeIterator)([]);
         var KEY$1$x=ITER$0.next();
-        for(;
-            !KEY$1$x.done;KEY$1$x=ITER$0.next()) {
-          let x = KEY$1$x.value;
-          {}
+        var RET_FN$2;
+        try {
+          for(;
+              !KEY$1$x.done;KEY$1$x=ITER$0.next()) {
+            let x = KEY$1$x.value;
+            {}
+          }
+        } finally {
+          if (KEY$1$x && !KEY$1$x.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
+          }
         }
         """);
     test(
@@ -265,10 +354,17 @@ for (;
         """
         var ITER$0=(0, $jscomp.makeIterator)([]);
         var KEY$1$x=ITER$0.next();
-        for(;
-            !KEY$1$x.done;KEY$1$x=ITER$0.next()) {
-          x = KEY$1$x.value;
-          {}
+        var RET_FN$2;
+        try {
+          for(;
+              !KEY$1$x.done;KEY$1$x=ITER$0.next()) {
+            x = KEY$1$x.value;
+            {}
+          }
+        } finally {
+          if (KEY$1$x && !KEY$1$x.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
+          }
         }
         """);
   }
@@ -296,11 +392,18 @@ for (;
         var i;
         var ITER$0 = (0, $jscomp.makeIterator)([1,2]);
         var KEY$1$i = ITER$0.next();
-        a: for (;
-            !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
-           i = KEY$1$i.value;
-          {
-            console.log(i);
+        var RET_FN$2;
+        try {
+          a: for (;
+              !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+             i = KEY$1$i.value;
+            {
+              console.log(i);
+            }
+          }
+        } finally {
+          if (KEY$1$i && !KEY$1$i.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
@@ -311,11 +414,18 @@ for (;
         var x;
         var ITER$0 = (0, $jscomp.makeIterator)([1,2]);
         var KEY$1$x = ITER$0.next();
-        a: b: for(;
-            !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
-           x = KEY$1$x.value;
-          {
-            console.log(x);
+        var RET_FN$2;
+        try {
+          a: b: for(;
+              !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+             x = KEY$1$x.value;
+            {
+              console.log(x);
+            }
+          }
+        } finally {
+          if (KEY$1$x && !KEY$1$x.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
@@ -329,11 +439,18 @@ for (;
         var obj = {a: 0};
         var ITER$0 = (0, $jscomp.makeIterator)([1,2,3])
         var KEY$1$a = ITER$0.next();
-        for (;
-            !KEY$1$a.done; KEY$1$a = ITER$0.next()) {
-          obj.a = KEY$1$a.value;
-          {
-            console.log(obj.a);
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$a.done; KEY$1$a = ITER$0.next()) {
+            obj.a = KEY$1$a.value;
+            {
+              console.log(obj.a);
+            }
+          }
+        } finally {
+          if (KEY$1$a && !KEY$1$a.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
@@ -347,10 +464,17 @@ for (;
         function f() { return {}; }
         var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
         var KEY$1$a = ITER$0.next();
-        for (;
-            !KEY$1$a.done; KEY$1$a = ITER$0.next()) {
-          f()['x' + 1] = KEY$1$a.value;
-          {}
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$a.done; KEY$1$a = ITER$0.next()) {
+            f()['x' + 1] = KEY$1$a.value;
+            {}
+          }
+        } finally {
+          if (KEY$1$a && !KEY$1$a.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
+          }
         }
         """);
   }
@@ -375,15 +499,21 @@ for (;
             """
             var ITER$0 = (0, $jscomp.makeIterator)([1,2,3]);
             var KEY$1$x = ITER$0.next();
-            for (;
-                !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
-              let x = KEY$1$x.value;
-              {}
+            var RET_FN$2;
+            try {
+              for (;
+                  !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+                let x = KEY$1$x.value;
+                {}
+              }
+            } finally {
+              if (KEY$1$x && !KEY$1$x.done && (RET_FN$2 = ITER$0.return)) {
+                RET_FN$2.call(ITER$0);
+              }
             }
             """));
   }
 
-  // TODO(b/538171099): Support iterator closing (calling return() in finally) in Es6ForOfConverter
   @Test
   public void testForOfBreak() {
     test(
@@ -392,19 +522,25 @@ for (;
         var x;
         var ITER$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
         var KEY$1$x = ITER$0.next();
-        for (;
-            !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
-          x = KEY$1$x.value;
-          {
-            if (x === 2) {
-              break;
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+            x = KEY$1$x.value;
+            {
+              if (x === 2) {
+                break;
+              }
             }
+          }
+        } finally {
+          if (KEY$1$x && !KEY$1$x.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
   }
 
-  // TODO(b/538171099): Support iterator closing (calling return() in finally) in Es6ForOfConverter
   @Test
   public void testForOfReturn() {
     test(
@@ -414,20 +550,26 @@ for (;
           var x;
           var ITER$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
           var KEY$1$x = ITER$0.next();
-          for (;
-              !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
-            x = KEY$1$x.value;
-            {
-              if (x === 2) {
-                return x;
+          var RET_FN$2;
+          try {
+            for (;
+                !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+              x = KEY$1$x.value;
+              {
+                if (x === 2) {
+                  return x;
+                }
               }
+            }
+          } finally {
+            if (KEY$1$x && !KEY$1$x.done && (RET_FN$2 = ITER$0.return)) {
+              RET_FN$2.call(ITER$0);
             }
           }
         }
         """);
   }
 
-  // TODO(b/538171099): Support iterator closing (calling return() in finally) in Es6ForOfConverter
   @Test
   public void testForOfThrow() {
     test(
@@ -436,15 +578,23 @@ for (;
         var x;
         var ITER$0 = (0, $jscomp.makeIterator)([1, 2, 3]);
         var KEY$1$x = ITER$0.next();
-        for (;
-            !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
-          x = KEY$1$x.value;
-          {
-            if (x === 2) {
-              throw new Error();
+        var RET_FN$2;
+        try {
+          for (;
+              !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+            x = KEY$1$x.value;
+            {
+              if (x === 2) {
+                throw new Error();
+              }
             }
+          }
+        } finally {
+          if (KEY$1$x && !KEY$1$x.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
   }
 }
+

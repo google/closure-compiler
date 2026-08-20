@@ -26,6 +26,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Converts ES6 "for of" loops to ES5. */
 public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCallback
@@ -39,6 +41,8 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
   private static final String ITER_BASE = "$jscomp$iter$";
 
   private static final String ITER_RESULT = "$jscomp$key$";
+
+  private static final String RET_FN = "$jscomp$retFn$";
 
   public Es6ForOfConverter(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -93,16 +97,24 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     // `$jscomp$key$extraName`
     Node iterResult = astFactory.createNameWithUnknownType(iteratorResultName);
     iterResult.makeNonIndexable();
+
+    String returnFuncName = RET_FN + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
+    Node retFn = astFactory.createNameWithUnknownType(returnFuncName);
+    retFn.makeNonIndexable();
+
     // `$jscomp.makeIterator(iterable)`
     Node callMakeIterator =
         astFactory
             .createJSCompMakeIteratorCall(iterable, this.namespace)
             .srcrefTreeIfMissing(iterable);
     // `var $jscomp$iter$0 = $jscomp.makeIterator(iterable)`
-    Node initIter = IR.var(iterName, callMakeIterator).srcrefTreeIfMissing(iterable);
+    Node initIter = IR.var(iterName.cloneTree(), callMakeIterator).srcrefTreeIfMissing(iterable);
     // var $jscomp$key$extraName = $jscomp$iter$0.next();
     Node initIterResult =
         IR.var(iterResult.cloneTree(), getNext.cloneTree()).srcrefTreeIfMissing(iterable);
+    // var $jscomp$retFn$0;
+    Node initRetFn = IR.var(retFn.cloneTree()).srcrefTreeIfMissing(iterable);
+
     // !$jscomp$key$extraName.done
     Node cond =
         astFactory.createNot(
@@ -142,14 +154,49 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     Node newBody = IR.block(declarationOrAssign, body).srcref(body);
     Node empty = astFactory.createEmpty();
     Node newFor = IR.forNode(empty, cond, incr, newBody).srcrefTreeIfMissing(node);
-    node.replaceWith(newFor);
-    // Check if the for loop has a parent that is a label i.e. `loop 1: for(...of .. .)`
-    Node insertionPoint = newFor;
-    while (insertionPoint.getParent().isLabel()) {
+
+    // Build finally block:
+    // if ($jscomp$key$extraName && !$jscomp$key$extraName.done && ($jscomp$retFn$0 =
+    // $jscomp$iter$0.return)) {
+    //   $jscomp$retFn$0.call($jscomp$iter$0);
+    // }
+    Node notDone =
+        astFactory.createNot(
+            astFactory.createGetProp(iterResult.cloneTree(), "done", type(StandardColors.BOOLEAN)));
+    Node and1 = astFactory.createAnd(iterResult.cloneTree(), notDone);
+    Node getReturn = astFactory.createGetPropWithUnknownType(iterName.cloneTree(), "return");
+    Node assignRetFn = astFactory.createAssign(retFn.cloneTree(), getReturn);
+    Node ifCond = astFactory.createAnd(and1, assignRetFn);
+
+    Node callRetFn =
+        astFactory.createCall(
+            astFactory.createGetPropWithUnknownType(retFn.cloneTree(), "call"),
+            type(StandardColors.UNKNOWN),
+            iterName.cloneTree());
+    Node ifBody = astFactory.createBlock(astFactory.exprResult(callRetFn));
+    Node ifStmt = astFactory.createIf(ifCond, ifBody);
+    Node finallyBlock = astFactory.createBlock(ifStmt);
+
+    // Check if the for loop has a parent that is a label i.e. `loop1: for(...of ...)`
+    List<Node> labelNames = new ArrayList<>();
+    Node insertionPoint = node;
+    while (insertionPoint.getParent() != null && insertionPoint.getParent().isLabel()) {
       insertionPoint = insertionPoint.getParent();
+      labelNames.add(insertionPoint.getFirstChild().cloneNode());
     }
-    initIter.insertBefore(insertionPoint);
+
+    Node innerLoop = newFor;
+    for (Node labelName : labelNames) {
+      innerLoop = astFactory.createLabel(labelName, innerLoop);
+    }
+    Node tryBlock = astFactory.createBlock(innerLoop);
+    Node tryFinally = astFactory.createTryFinally(tryBlock, finallyBlock).srcrefTreeIfMissing(node);
+
+    insertionPoint.replaceWith(tryFinally);
+
+    initIter.insertBefore(tryFinally);
     initIterResult.insertAfter(initIter);
-    compiler.reportChangeToEnclosingScope(newFor);
+    initRetFn.insertAfter(initIterResult);
+    compiler.reportChangeToEnclosingScope(tryFinally);
   }
 }

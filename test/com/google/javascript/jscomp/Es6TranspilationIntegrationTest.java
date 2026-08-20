@@ -92,6 +92,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             .putAll(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS)
             .put("KEY", "$jscomp$key$")
             .put("ITER", "$jscomp$iter$")
+            .put("RET_FN", "$jscomp$retFn$")
             .put("COMP_PROP", "$jscomp$compprop")
             .buildOrThrow());
   }
@@ -2218,10 +2219,17 @@ $jscomp.inherits(FooPromise, Promise);
         // for-of rewriting prepends the unique ID `$jscomp$key$m123..456$0` to its declared
         // name as it does to all for-of loop keys.
         var KEY$1$i$jscomp$1 = ITER$0.next();
-        for (; !KEY$1$i$jscomp$1.done; KEY$1$i$jscomp$1 = ITER$0.next()) {
-          var i$jscomp$1 = KEY$1$i$jscomp$1.value;
-          {
-            alert(i$jscomp$1);
+        var RET_FN$2;
+        try {
+          for (; !KEY$1$i$jscomp$1.done; KEY$1$i$jscomp$1 = ITER$0.next()) {
+            var i$jscomp$1 = KEY$1$i$jscomp$1.value;
+            {
+              alert(i$jscomp$1);
+            }
+          }
+        } finally {
+          if (KEY$1$i$jscomp$1 && !KEY$1$i$jscomp$1.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         alert(i);
@@ -2241,11 +2249,18 @@ $jscomp.inherits(FooPromise, Promise);
         // prepends `$jscomp$key$m123..456$0` to its declared name as it does to all for-of
         // loop keys.
         var KEY$1$i = ITER$0.next();
-        for (; !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
-          /** @const */
-          var i = KEY$1$i.value; // marked as const name
-          {
-            i; // marked as const name
+        var RET_FN$2;
+        try {
+          for (; !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+            /** @const */
+            var i = KEY$1$i.value; // marked as const name
+            {
+              i; // marked as const name
+            }
+          }
+        } finally {
+          if (KEY$1$i && !KEY$1$i.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
@@ -2265,46 +2280,65 @@ $jscomp.inherits(FooPromise, Promise);
             }
         }
         """,
-"""
-function inorder1(t) {
-  var x;
-  var ITER$0;
-  var KEY$1$x; // key for first for-of loop
-  var ITER$2;
-  var KEY$3$x;
-  return $jscomp.generator.createGenerator(inorder1, function($jscomp$generator$context$m1146332801$4) {
-    switch($jscomp$generator$context$m1146332801$4.getNextAddressJsc()) {
-      case 1:
-        ITER$0 = (0, $jscomp.makeIterator)([]);
-        KEY$1$x = ITER$0.next();
-      case 2:
-        if (!!KEY$1$x.done) {
-          $jscomp$generator$context$m1146332801$4.jumpTo(4);
-          break;
+        """
+        function inorder1(t) {
+          var x;
+          var ITER$0;
+          var KEY$1$x;
+          var RET_FN$2;
+          var ITER$3;
+          var KEY$4$x;
+          var RET_FN$5;
+          return $jscomp.generator.createGenerator(inorder1, function($jscomp$generator$context$m1146332801$6) {
+            switch($jscomp$generator$context$m1146332801$6.getNextAddressJsc()) {
+              case 1:
+                ITER$0 = (0,$jscomp.makeIterator)([]);
+                KEY$1$x = ITER$0.next();
+                $jscomp$generator$context$m1146332801$6.setFinallyBlock(2);
+              case 4:
+                if (!!KEY$1$x.done) {
+                  $jscomp$generator$context$m1146332801$6.jumpTo(2);
+                  break;
+                }
+                x = KEY$1$x.value;
+                return $jscomp$generator$context$m1146332801$6.yield(x, 5);
+              case 5:
+                KEY$1$x = ITER$0.next();
+                $jscomp$generator$context$m1146332801$6.jumpTo(4);
+                break;
+              case 2:
+                $jscomp$generator$context$m1146332801$6.enterFinallyBlock();
+                if (KEY$1$x && !KEY$1$x.done && (RET_FN$2 = ITER$0.return)) {
+                  RET_FN$2.call(ITER$0);
+                }
+                $jscomp$generator$context$m1146332801$6.leaveFinallyBlock(3);
+                break;
+              case 3:
+                ITER$3 = (0,$jscomp.makeIterator)([]);
+                KEY$4$x = ITER$3.next();
+                $jscomp$generator$context$m1146332801$6.setFinallyBlock(8);
+              case 10:
+                if (!!KEY$4$x.done) {
+                  $jscomp$generator$context$m1146332801$6.jumpTo(8);
+                  break;
+                }
+                x = KEY$4$x.value;
+                return $jscomp$generator$context$m1146332801$6.yield(x, 11);
+              case 11:
+                KEY$4$x = ITER$3.next();
+                $jscomp$generator$context$m1146332801$6.jumpTo(10);
+                break;
+              case 8:
+                $jscomp$generator$context$m1146332801$6.enterFinallyBlock();
+                if (KEY$4$x && !KEY$4$x.done && (RET_FN$5 = ITER$3.return)) {
+                  RET_FN$5.call(ITER$3);
+                }
+                $jscomp$generator$context$m1146332801$6.leaveFinallyBlock(0);
+                break;
+            }
+          });
         }
-        x = KEY$1$x.value;
-        return $jscomp$generator$context$m1146332801$4.yield(x, 3);
-      case 3:
-        KEY$1$x = ITER$0.next();
-        $jscomp$generator$context$m1146332801$4.jumpTo(2);
-        break;
-      case 4:
-        ITER$2 = (0, $jscomp.makeIterator)([]);
-        KEY$3$x = ITER$2.next();
-      case 6:
-        if (!!KEY$3$x.done) {
-          $jscomp$generator$context$m1146332801$4.jumpTo(0);
-          break;
-        }
-        x = KEY$3$x.value;
-        return $jscomp$generator$context$m1146332801$4.yield(x, 7);
-      case 7:
-        KEY$3$x = ITER$2.next();
-        $jscomp$generator$context$m1146332801$4.jumpTo(6);
-        break;
-    }
-  });}
-""");
+        """);
   }
 
   @Test
@@ -2318,10 +2352,17 @@ function inorder1(t) {
         """
         var ITER$0 = (0, $jscomp.makeIterator)([]);
         var KEY$1$x = ITER$0.next();
-        for (; !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
-          var x = KEY$1$x.value;
-          {
-            var x$jscomp$1 = 0;
+        var RET_FN$2;
+        try {
+          for (; !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+            var x = KEY$1$x.value;
+            {
+              var x$jscomp$1 = 0;
+            }
+          }
+        } finally {
+          if (KEY$1$x && !KEY$1$x.done && (RET_FN$2 = ITER$0.return)) {
+            RET_FN$2.call(ITER$0);
           }
         }
         """);
