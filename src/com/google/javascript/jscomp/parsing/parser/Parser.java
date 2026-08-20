@@ -2743,6 +2743,8 @@ public class Parser {
         reportError(
             "Unary operator '%s' requires parentheses before '**'",
             left.asUnaryExpression().operator);
+      } else if (left.type == ParseTreeType.AWAIT_EXPRESSION) {
+        reportError("Unary operator 'await' requires parentheses before '**'");
       }
       Token operator = nextToken();
       ParseTree right = parseExponentiationExpression();

@@ -162,6 +162,25 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testExponentOperator() {
     parseError("-x**y", "Unary operator '-' requires parentheses before '**'");
+    parseError("+x**y", "Unary operator '+' requires parentheses before '**'");
+    parseError("!x**y", "Unary operator '!' requires parentheses before '**'");
+    parseError("~x**y", "Unary operator '~' requires parentheses before '**'");
+    parseError("typeof x**y", "Unary operator 'typeof' requires parentheses before '**'");
+    parseError("void x**y", "Unary operator 'void' requires parentheses before '**'");
+    parseError("delete x**y", "Unary operator 'delete' requires parentheses before '**'");
+    parseError("await x**y", "Unary operator 'await' requires parentheses before '**'");
+    parseError(
+        "async function f() { await x ** y; }",
+        "Unary operator 'await' requires parentheses before '**'");
+    parseError(
+        "async () => { await x ** y; };",
+        "Unary operator 'await' requires parentheses before '**'");
+    parseError(
+        "({ async f() { await x ** y; } });",
+        "Unary operator 'await' requires parentheses before '**'");
+    parseError(
+        "class C { async m() { await x ** y; } }",
+        "Unary operator 'await' requires parentheses before '**'");
 
     expectFeatures(Feature.EXPONENT_OP);
 
@@ -170,8 +189,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // the left operand.
     parse("-(x**y)");
     parse("(-x)**y");
+    parse("async function f() { (await x) ** y; }");
     // Parens are not required for unary operator on the right operand
     parse("x**-y");
+    parse("async function f() { x ** await y; }");
     parse("x/y**z");
 
     parse("2 ** 3 > 3");
