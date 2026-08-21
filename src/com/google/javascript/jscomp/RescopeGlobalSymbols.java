@@ -68,20 +68,20 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final Set<String> crossChunkNames = new LinkedHashSet<>();
 
   /**
-   * Global identifiers that are used in more than one chunk and are written to from a chunk other
-   * than the defining one. Only populated if optimizeLocalAccess is not DISABLED.
+   * Global cross-chunk identifiers that are written to from a chunk other than the defining one.
+   * Only populated if optimizeLocalAccess is not DISABLED.
    */
-  private final Set<String> globalNamesWithWriteFromOtherChunk = new LinkedHashSet<>();
+  private final Set<String> crossChunkNamesWithWriteFromOtherChunk = new LinkedHashSet<>();
 
   /**
-   * Names that are read in the chunk where they are defined. Only populated if optimizeLocalAccess
-   * is not DISABLED.
+   * Global identifiers that are read in the chunk where they are defined. Only populated if
+   * optimizeLocalAccess is not DISABLED.
    */
-  private final Set<String> globalNamesWithLocalRead = new LinkedHashSet<>();
+  private final Set<String> globalNamesWithReadInDefiningChunk = new LinkedHashSet<>();
 
   /**
-   * Track which global symbols are written to outside from a nested scope (i.e. not the global
-   * scope). Only populated if optimizeLocalAccess is ALL_CHUNKS.
+   * Global identifiers that are written to from a nested scope (i.e. not the global scope) in their
+   * defining chunk. Only populated if optimizeLocalAccess is an ALL_CHUNKS option.
    */
   private final Set<String> globalNamesWithInnerScopeWriteInDefiningChunk = new LinkedHashSet<>();
 
@@ -296,11 +296,11 @@ final class RescopeGlobalSymbols implements CompilerPass {
           if (optimizeLocalAccess != CompilerOptions.OptimizeLocalAccess.DISABLED
               && NodeUtil.isLValue(n)
               && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
-            globalNamesWithWriteFromOtherChunk.add(name);
+            crossChunkNamesWithWriteFromOtherChunk.add(name);
           }
         } else if (optimizeLocalAccess != CompilerOptions.OptimizeLocalAccess.DISABLED
             && n != v.getNameNode()) {
-          globalNamesWithLocalRead.add(name);
+          globalNamesWithReadInDefiningChunk.add(name);
         }
       }
     }
@@ -458,9 +458,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (containsRescopedOrInitializedVars(declaration, isGlobalDeclaration)) {
           for (Node lhs : allLhsNodes) {
             String name = lhs.getString();
-            if (!globalNamesWithWriteFromOtherChunk.contains(name)
+            if (!crossChunkNamesWithWriteFromOtherChunk.contains(name)
                 && !isExternVar(name, t)
-                && (!isCrossChunkName(name) || globalNamesWithLocalRead.contains(name))) {
+                && (!isCrossChunkName(name) || globalNamesWithReadInDefiningChunk.contains(name))) {
               preDeclarations.add(
                   new ChunkGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
             }
@@ -531,7 +531,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       for (Node child = declaration.getFirstChild(); child != null; child = child.getNext()) {
         if (isGlobalDeclaration
             && child.isName()
-            && globalNamesWithWriteFromOtherChunk.contains(child.getString())) {
+            && crossChunkNamesWithWriteFromOtherChunk.contains(child.getString())) {
           return true;
         }
         if (child.hasChildren() || child.isDestructuringLhs()) {
@@ -574,11 +574,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
         JSChunk currentChunk = t.getChunk();
         JSChunk definingChunk = var.getInput().getChunk();
         if (currentChunk == definingChunk) {
-          if (!globalNamesWithWriteFromOtherChunk.contains(name)
-              && globalNamesWithLocalRead.contains(name)) {
+          if (!crossChunkNamesWithWriteFromOtherChunk.contains(name)
+              && globalNamesWithReadInDefiningChunk.contains(name)) {
             // If the cross-chunk variable is defined in this chunk, and not re-assigned in any
-            // other
-            // chunk, then we skip the replacement and keep the local name.
+            // other chunk, then we skip the replacement and keep the local name.
             if (NodeUtil.isLValue(n) && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
               // Any assignment needs to be also set on the global namespace symbol.
               addGlobalNamespaceAlias(n, name);
@@ -594,7 +593,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
           //     assignments are guaranteed to happen during the initial execution of the chunk.
           // 3. The current chunk depends on the defining chunk, so all writes are guaranteed to
           //     have occurred already when the current chunk is loaded.
-          if (!globalNamesWithWriteFromOtherChunk.contains(name)
+          if (!crossChunkNamesWithWriteFromOtherChunk.contains(name)
               && !globalNamesWithInnerScopeWriteInDefiningChunk.contains(name)
               && compiler.getChunkGraph().dependsOn(currentChunk, definingChunk)) {
             localAliasesToDeclare
