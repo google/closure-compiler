@@ -3631,7 +3631,13 @@ public class CompilerOptions {
      * other chunks that use the global symbol, and use the local alias instead of the global
      * namespace. This is only done for symbols that are not reassigned anywhere.
      */
-    ALL_CHUNKS
+    ALL_CHUNKS,
+
+    /**
+     * In addition to {@link #ALL_CHUNKS}, create dedicated singleton holder objects for mutable
+     * cross-chunk symbols (e.g. `var a = _.a = {};`) and access them via `a._`.
+     */
+    ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS,
   }
 
   /**

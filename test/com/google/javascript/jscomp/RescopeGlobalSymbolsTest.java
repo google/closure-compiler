@@ -1257,4 +1257,86 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .build()),
         expected("var f = function() { return _.a; };", "_.a = 1;"));
   }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_reassignedOutsideStaticExecution() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("var a = 1; function f() { a = 2; } a + 1;")
+                .addChunk("a;")
+                .build()),
+        expected(
+            "var a = _.a = {}; a._ = 1; var f = function() { a._ = 2; }; a._ + 1;",
+            "var a = _.a; a._;"));
+  }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_reassignedInOtherChunk() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("var a = 1; a + 1;")
+                .addChunk("a = 2; a;")
+                .build()),
+        expected("var a = _.a = {}; a._ = 1; a._ + 1;", "var a = _.a; a._ = 2; a._;"));
+  }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_multipleHolderSymbols() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("var a = 1; a + 1;")
+                .addChunk("var b = 1; b + 1;")
+                .addChunk("a = 2; b = 2;")
+                .build()),
+        expected(
+            "var a = _.a = {}; a._ = 1; a._ + 1;",
+            "var b = _.b = {}; b._ = 1; b._ + 1;",
+            "var a = _.a; var b = _.b; a._ = 2; b._ = 2;"));
+  }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_parentAccessesChildHolder() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("function f() { return a; }")
+                .addChunk("var a = 1; function g() { a = 2; } a + 1;")
+                .build()),
+        expected(
+            "var a = _.a = {}; var f = function() { return a._; };",
+            "var a = _.a; a._ = 1; var g = function() { a._ = 2; }; a._ + 1;"));
+  }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_branchingCommonParent() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forTree()
+                .addChunk("var x = 1;")
+                .addChunk("var a = 1; a + 1;")
+                .addChunk("a = 2; a + 2;")
+                .build()),
+        expected(
+            "_.a = {}; var x = 1;",
+            "var a = _.a; a._ = 1; a._ + 1;",
+            "var a = _.a; a._ = 2; a._ + 2;"));
+  }
 }

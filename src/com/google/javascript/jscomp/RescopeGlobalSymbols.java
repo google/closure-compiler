@@ -147,6 +147,22 @@ final class RescopeGlobalSymbols implements CompilerPass {
         || (v.getScope().isGlobal() && this.externNames.contains(varname));
   }
 
+  private ImmutableSet<String> collectWrappedReassignableCrossChunkNames() {
+    if (optimizeLocalAccess
+        != CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS) {
+      return ImmutableSet.of();
+    }
+
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    builder.addAll(crossChunkNamesWithWriteFromOtherChunk);
+    for (String name : globalNamesWithInnerScopeWriteInDefiningChunk) {
+      if (isCrossChunkName(name)) {
+        builder.add(name);
+      }
+    }
+    return builder.build();
+  }
+
   private void addExternForGlobalSymbolNamespace() {
     Node varNode = IR.var(IR.name(globalSymbolNamespace));
     CompilerInput input = compiler.getSynthesizedExternsInput();
@@ -180,15 +196,18 @@ final class RescopeGlobalSymbols implements CompilerPass {
     CombinedCompilerPass.traverse(compiler, root, nonMutatingPasses);
 
     // Rewrite all references to be property accesses of the single symbol.
-    RewriteScopeCallback rewriteScope = new RewriteScopeCallback();
+    RewriteScopeCallback rewriteScope =
+        new RewriteScopeCallback(collectWrappedReassignableCrossChunkNames());
     NodeTraversal.traverse(compiler, root, rewriteScope);
 
     // Remove the var from statements in global scope if the declared names have been rewritten
     // in the previous pass.
     NodeTraversal.traverse(compiler, root, new RemoveGlobalVarCallback());
     rewriteScope.declareChunkGlobals();
-    if (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS) {
-      rewriteScope.declareLocalAliases();
+    if (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS
+        || optimizeLocalAccess
+            == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS) {
+      rewriteScope.declareLocalAliasesAndWrappers();
     }
   }
 
@@ -272,7 +291,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
         CompilerInput input = v.getInput();
 
-        if (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS
+        if ((optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS
+                || optimizeLocalAccess
+                    == CompilerOptions.OptimizeLocalAccess
+                        .ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS)
             && !t.inGlobalScope()
             && (input == null || input.getChunk() == t.getChunk())
             && NodeUtil.isLValue(n)
@@ -388,14 +410,40 @@ final class RescopeGlobalSymbols implements CompilerPass {
    *
    * (This is invalid syntax, but the VAR token is removed later).
    */
+  // TODO(user): Move this class to its own file.
   private class RewriteScopeCallback implements NodeTraversal.Callback {
     final List<ChunkGlobal> preDeclarations = new ArrayList<>();
 
     /**
-     * Map of chunks to the set of global symbols that need to be aliased in that chunk. Only
-     * populated if optimizeLocalAccess is ALL_CHUNKS.
+     * Map from chunks to the set of global symbols to be aliased directly for that chunk (e.g. `var
+     * a = _.a`). Only populated if optimizeLocalAccess is an ALL_CHUNKS option. These symbols are
+     * used in that chunk, to avoid declaring unnecessary aliases. They can only be reassigned
+     * during static execution of the defining chunk. If
+     * ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS is set, then reassignable symbols that should be
+     * wrapped and aliased will be tracked separately in wrappedReassignableCrossChunkNames.
      */
-    final Map<JSChunk, Set<String>> localAliasesToDeclare = new LinkedHashMap<>();
+    final Map<JSChunk, Set<String>> localAliasesForUnwrappedCrossChunkNames = new LinkedHashMap<>();
+
+    /**
+     * Map from global wrapped reassignable symbols to the chunks that use them. Only populated if
+     * optimizeLocalAccess is ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS. This is used to
+     * determine which chunks to define the wrapper objects in. These symbols are wrapped in holder
+     * objects in that chunk (e.g. `_.a = {}`). Subsequent assignments look like `a._ = value`,
+     * where `a` is a local alias for `_.a`). These symbols may be reassigned anywhere.
+     */
+    final Map<String, Set<JSChunk>> chunksUsingWrappedReassignableSymbols = new LinkedHashMap<>();
+
+    /**
+     * Global symbols that are reassignable and will be wrapped in an object. This allows for
+     * constant tracking and inlining by the JavaScript runtime, and enables safe aliasing in all
+     * chunks. Only populated if optimizeLocalAccess is
+     * ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS.
+     */
+    final ImmutableSet<String> wrappedReassignableCrossChunkNames;
+
+    RewriteScopeCallback(ImmutableSet<String> wrappedReassignableCrossChunkNames) {
+      this.wrappedReassignableCrossChunkNames = wrappedReassignableCrossChunkNames;
+    }
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -459,6 +507,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
           for (Node lhs : allLhsNodes) {
             String name = lhs.getString();
             if (!crossChunkNamesWithWriteFromOtherChunk.contains(name)
+                && !wrappedReassignableCrossChunkNames.contains(name)
                 && !isExternVar(name, t)
                 && (!isCrossChunkName(name) || globalNamesWithReadInDefiningChunk.contains(name))) {
               preDeclarations.add(
@@ -519,7 +568,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
      *
      * <ul>
      *   <li>Rescoped: `var a;` where `a` is a cross-chunk name with a nonlocal write (becomes
-     *       `_.a`).
+     *       `_.a`), or `a` is a reassignable cross-chunk name (becomes `a._`).
      *   <li>Initialized: `var a = 1;` (has children) or `var [a] = [1];` (destructuring LHS).
      * </ul>
      *
@@ -531,7 +580,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
       for (Node child = declaration.getFirstChild(); child != null; child = child.getNext()) {
         if (isGlobalDeclaration
             && child.isName()
-            && crossChunkNamesWithWriteFromOtherChunk.contains(child.getString())) {
+            && (crossChunkNamesWithWriteFromOtherChunk.contains(child.getString())
+                || wrappedReassignableCrossChunkNames.contains(child.getString()))) {
           return true;
         }
         if (child.hasChildren() || child.isDestructuringLhs()) {
@@ -570,14 +620,17 @@ final class RescopeGlobalSymbols implements CompilerPass {
         return;
       }
 
+      JSChunk currentChunk = t.getChunk();
+
       if (optimizeLocalAccess != CompilerOptions.OptimizeLocalAccess.DISABLED) {
-        JSChunk currentChunk = t.getChunk();
         JSChunk definingChunk = var.getInput().getChunk();
         if (currentChunk == definingChunk) {
           if (!crossChunkNamesWithWriteFromOtherChunk.contains(name)
+              && !wrappedReassignableCrossChunkNames.contains(name)
               && globalNamesWithReadInDefiningChunk.contains(name)) {
-            // If the cross-chunk variable is defined in this chunk, and not re-assigned in any
-            // other chunk, then we skip the replacement and keep the local name.
+            // If the cross-chunk variable is defined in this chunk, not re-assigned in any other
+            // chunk, and not rewritten to wrapper access, then we skip the replacement and keep the
+            // local name.
             if (NodeUtil.isLValue(n) && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
               // Any assignment needs to be also set on the global namespace symbol.
               addGlobalNamespaceAlias(n, name);
@@ -585,7 +638,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
             // Early return to skip replacing the symbol.
             return;
           }
-        } else if (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS) {
+        } else if (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS
+            || optimizeLocalAccess
+                == CompilerOptions.OptimizeLocalAccess
+                    .ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS) {
           // Variables defined in a different chunk are still safe for local aliasing if all of the
           // following conditions are met.
           // 1. The variable is not written to in any other chunk than in the defining chunk.
@@ -596,7 +652,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
           if (!crossChunkNamesWithWriteFromOtherChunk.contains(name)
               && !globalNamesWithInnerScopeWriteInDefiningChunk.contains(name)
               && compiler.getChunkGraph().dependsOn(currentChunk, definingChunk)) {
-            localAliasesToDeclare
+            localAliasesForUnwrappedCrossChunkNames
                 .computeIfAbsent(currentChunk, k -> new LinkedHashSet<>())
                 .add(name);
             // Early return to skip replacing the symbol.
@@ -604,15 +660,27 @@ final class RescopeGlobalSymbols implements CompilerPass {
           }
         }
       }
-      replaceSymbol(n, name);
+
+      if (wrappedReassignableCrossChunkNames.contains(name)) {
+        // If the symbol is a wrapper for a reassignable symbol, record the chunk using the symbol
+        // to ensure the wrapper is initialized before use, and replace the symbol with an access to
+        // the wrapper.
+        chunksUsingWrappedReassignableSymbols
+            .computeIfAbsent(name, k -> new LinkedHashSet<>())
+            .add(currentChunk);
+        Node replacement = IR.getprop(IR.name(name), "_");
+        replaceSymbol(n, name, replacement);
+      } else {
+        // Otherwise replace the symbol with an access on the global namespace symbol.
+        Node replacement = IR.getprop(IR.name(globalSymbolNamespace), name);
+        replaceSymbol(n, name, replacement);
+      }
     }
 
-    /** Replaces a global cross-chunk name with an access on the global namespace symbol */
-    private void replaceSymbol(Node node, String name) {
+    /** Replaces a symbol with an access to the replacement. */
+    private void replaceSymbol(Node node, String name, Node replacement) {
       Node parent = node.getParent();
-      Node replacement = IR.getprop(IR.name(globalSymbolNamespace), name);
       replacement.srcrefTree(node);
-
       node.replaceWith(replacement);
       compiler.reportChangeToEnclosingScope(replacement);
       if (parent.isCall() && !maybeReferencesThis.contains(name)) {
@@ -679,28 +747,96 @@ final class RescopeGlobalSymbols implements CompilerPass {
     }
 
     /**
-     * Adds local alias declarations (e.g. `var a = _.a;`) at the beginning of chunks for
-     * cross-chunk variables that can be safely accessed locally. Must be called after
-     * RemoveGlobalVarCallback. Only applies if optimizeLocalAccess is ALL_CHUNKS.
+     * Declares local aliases (e.g. `var a = _.a;`) and wrapper objects (e.g. `_.a = {};` or `var a
+     * = _.a = {};`) at the beginning of chunks for cross-chunk variables that can be safely
+     * accessed locally. Must be called after RemoveGlobalVarCallback. Only applies if
+     * optimizeLocalAccess is an ALL_CHUNKS option.
      */
-    private void declareLocalAliases() {
-      for (Map.Entry<JSChunk, Set<String>> entry : localAliasesToDeclare.entrySet()) {
-        JSChunk chunk = entry.getKey();
-        Set<String> names = entry.getValue();
-        if (names.isEmpty()) {
+    private void declareLocalAliasesAndWrappers() {
+      JSChunkGraph chunkGraph = compiler.getChunkGraph();
+      Iterable<JSChunk> chunks = chunkGraph.getAllChunks();
+      JSChunk defaultRootChunk = chunks.iterator().next();
+
+      // Compute the chunk in which to define the wrapper for each wrapped reassignable symbol.
+      Map<String, JSChunk> wrapperAssignmentChunks = new LinkedHashMap<>();
+      if (!wrappedReassignableCrossChunkNames.isEmpty()) {
+        for (String name : wrappedReassignableCrossChunkNames) {
+          Set<JSChunk> usingChunks =
+              chunksUsingWrappedReassignableSymbols.getOrDefault(name, ImmutableSet.of());
+          JSChunk wrapperAssignmentChunk =
+              usingChunks.isEmpty()
+                  ? defaultRootChunk
+                  : chunkGraph.getDeepestCommonDependencyInclusive(usingChunks);
+          wrapperAssignmentChunks.put(name, wrapperAssignmentChunk);
+        }
+      }
+
+      // Prepend local aliases and wrapper assignments to each chunk.
+      for (JSChunk chunk : chunkGraph.getAllChunks()) {
+        List<Node> chunkDecls =
+            constructLocalAliasAndWrapperDeclarationsForChunk(chunk, wrapperAssignmentChunks);
+        if (chunkDecls.isEmpty()) {
           continue;
         }
         ImmutableList<CompilerInput> inputs = chunk.getInputs();
-        CompilerInput firstInput = inputs.get(0);
-        Node script = firstInput.getAstRoot(compiler);
-        for (String name : names) {
-          // AST for local alias: var name = globals.name
-          Node alias = IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name));
-          alias.srcrefTree(script);
-          script.addChildToFront(alias);
-          compiler.reportChangeToEnclosingScope(script);
+        Node script = inputs.get(0).getAstRoot(compiler);
+        Node insertionPoint = script.getFirstChild();
+        for (Node decl : chunkDecls) {
+          decl.srcrefTree(script);
+          if (insertionPoint == null) {
+            script.addChildToBack(decl);
+          } else {
+            decl.insertBefore(insertionPoint);
+          }
+        }
+        compiler.reportChangeToEnclosingScope(script);
+      }
+    }
+
+    /**
+     * Constructs all local alias declarations and wrapper assignments that need to be prepended to
+     * the given chunk.
+     */
+    private List<Node> constructLocalAliasAndWrapperDeclarationsForChunk(
+        JSChunk chunk, Map<String, JSChunk> wrapperAssignmentChunks) {
+      List<Node> chunkDecls = new ArrayList<>();
+
+      Set<String> localAliases = localAliasesForUnwrappedCrossChunkNames.get(chunk);
+      if (localAliases != null) {
+        for (String name : localAliases) {
+          // Define the local alias for the cross-chunk symbol: `var name = _.name;`.
+          chunkDecls.add(IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name)));
         }
       }
+
+      for (String name : wrappedReassignableCrossChunkNames) {
+        JSChunk assignmentChunk = wrapperAssignmentChunks.get(name);
+        Set<JSChunk> usingChunks = chunksUsingWrappedReassignableSymbols.get(name);
+        if (chunk.equals(assignmentChunk)) {
+          // Define the wrapper object for the reassignable symbol in this chunk.
+          if (usingChunks != null && usingChunks.contains(chunk)) {
+            // The symbol is used in this chunk, so we also declare a local alias:
+            // `var name = _.name = {};`.
+            chunkDecls.add(
+                IR.var(
+                    IR.name(name),
+                    IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), IR.objectlit())));
+          } else {
+            // The symbol is not used in this chunk, so we only define the wrapper object:
+            // `_.name = {};`.
+            chunkDecls.add(
+                IR.exprResult(
+                    IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), IR.objectlit())));
+          }
+        } else if (usingChunks != null && usingChunks.contains(chunk)) {
+          // If the wrapper is defined in a different chunk, but the symbol is used in this
+          // chunk, then only declare a local alias.
+          // var name = _.name;
+          chunkDecls.add(IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name)));
+        }
+      }
+
+      return chunkDecls;
     }
 
     /** Variable that doesn't cross chunk boundaries. */
