@@ -126,6 +126,10 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         return true;
       }
 
+      if ((n.isGetProp() || n.isGetElem()) && NodeUtil.isLValue(n)) {
+        return namesToCheck == null || !isTopLevelAssignTarget(n);
+      }
+
       for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
         if (!ControlFlowGraph.isEnteringNewCfgNode(c) && apply(c)) {
           return true;

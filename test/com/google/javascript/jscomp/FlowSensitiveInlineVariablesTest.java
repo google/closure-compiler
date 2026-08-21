@@ -1262,68 +1262,72 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
     inline("var x = 1; noSFX`${1}`; var a = x;", "var x; noSFX`${1}`; var a = 1;");
   }
 
-  // TODO(b/538125080): Fix FlowSensitiveInlineVariables inlines functions reading properties across
-  // property writes
   @Test
   public void testNoInlineAcrossPropertyWrites() {
     // Property assignment via dot notation (obj.p = v)
-    inline(
+    noInline(
         """
         var user = {};
         var r = (function(){ return user.role; })();
         user.role = 'admin';
         if (r !== 'admin') doPrivileged();
-        """,
-        """
-        var user = {};
-        var r;
-        user.role = 'admin';
-        if ((function(){ return user.role; })() !== 'admin') doPrivileged();
         """);
 
     // Property assignment via bracket notation (obj[k] = v)
-    inline(
+    noInline(
         """
         var user = {};
         var r = (function(){ return user['role']; })();
         user['role'] = 'admin';
         if (r !== 'admin') doPrivileged();
-        """,
-        """
-        var user = {};
-        var r;
-        user['role'] = 'admin';
-        if ((function(){ return user['role']; })() !== 'admin') doPrivileged();
         """);
 
     // Compound property assignment (obj.p += v)
-    inline(
+    noInline(
         """
         var user = {};
         var r = (function(){ return user.role; })();
         user.role += 'admin';
         if (r !== 'admin') doPrivileged();
-        """,
-        """
-        var user = {};
-        var r;
-        user.role += 'admin';
-        if ((function(){ return user.role; })() !== 'admin') doPrivileged();
         """);
 
     // Property increment/decrement (obj.p++)
-    inline(
+    noInline(
         """
         var user = {};
         var r = (function(){ return user.role; })();
         user.role++;
         if (r !== 'admin') doPrivileged();
+        """);
+
+    // Property assignment in the same statement, evaluated before the use
+    noInline(
+        """
+        var user = {};
+        var r = (function(){ return user.role; })();
+        print(user.role = 'admin', r);
+        """);
+
+    // Property assignment in the same statement, evaluated after the definition
+    noInline(
+        """
+        var user = {};
+        var r = (function(){ return user.role; })(), _ = user.role = 'admin';
+        if (r !== 'admin') doPrivileged();
+        """);
+
+    // Safe to inline: property assignment is the top-level assign target of the use,
+    // so the mutation occurs after the RHS is evaluated
+    inline(
+        """
+        var user = {};
+        var r = (function(){ return user.role; })();
+        user.role = r;
         """,
         """
         var user = {};
         var r;
-        user.role++;
-        if ((function(){ return user.role; })() !== 'admin') doPrivileged();
+        user.role = (function(){ return user.role; })();
         """);
   }
 
