@@ -140,7 +140,11 @@ class FunctionArgumentInjector {
     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
     Node cArg = callNode.getSecondChild();
     if (cArg != null && NodeUtil.isFunctionObjectCall(callNode)) {
-      argMap.put(THIS_MARKER, new ParamArgPair(THIS_MARKER_NODE, cArg));
+      if (!fnNode.isArrowFunction()) {
+        argMap.put(THIS_MARKER, new ParamArgPair(THIS_MARKER_NODE, cArg));
+      } else {
+        argMap.put(THIS_MARKER, new ParamArgPair(THIS_MARKER_NODE, IR.thisNode()));
+      }
       cArg = cArg.getNext();
     } else {
       // 'apply' isn't supported yet.
@@ -325,7 +329,8 @@ class FunctionArgumentInjector {
         (!block.hasChildren()
             || (block.hasOneChild() && !bodyMayHaveConditionalCode(block.getLastChild())));
     boolean hasMinimalParameters =
-        NodeUtil.isUndefined(argMap.get(THIS_MARKER).arg())
+        (NodeUtil.isUndefined(argMap.get(THIS_MARKER).arg())
+                || (fnNode.isArrowFunction() && argMap.get(THIS_MARKER).arg().isThis()))
             && argCount <= 2; // this + one parameter
 
     // Get the list of parameters that may need temporaries due to side-effects.
@@ -411,7 +416,8 @@ class FunctionArgumentInjector {
       // mark all names upto requiresTempsUptoParameterName as namesNeedingTemps
       for (String parameterName : argMap.keySet()) {
         if (parameterName.equals(THIS_MARKER)
-            && NodeUtil.isUndefined(argMap.get(THIS_MARKER).arg())) {
+            && (NodeUtil.isUndefined(argMap.get(THIS_MARKER).arg())
+                || (fnNode.isArrowFunction() && argMap.get(THIS_MARKER).arg().isThis()))) {
           /* When there is no explicit this arg passed into the call, the argMap contains an entry
            * <"this", undefined Node>. See the `getFunctionCallParameterMap` method.
            *

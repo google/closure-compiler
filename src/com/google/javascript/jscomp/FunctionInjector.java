@@ -260,7 +260,7 @@ class FunctionInjector {
 
     // Allow direct function calls or "fn.call" style calls.
     Node callNode = ref.callNode;
-    if (!isSupportedCallType(callNode)) {
+    if (!isSupportedCallType(callNode, fnNode)) {
       return CanInlineResult.NO;
     }
 
@@ -303,10 +303,10 @@ class FunctionInjector {
    * @param callNode The call evaluate.
    * @return Whether the call is of a type that is supported.
    */
-  private boolean isSupportedCallType(Node callNode) {
+  private boolean isSupportedCallType(Node callNode, Node fnNode) {
     if (!callNode.getFirstChild().isName()) {
       if (NodeUtil.isFunctionObjectCall(callNode)) {
-        if (!assumeStrictThis) {
+        if (!assumeStrictThis && !fnNode.isArrowFunction()) {
           Node thisValue = callNode.getSecondChild();
           if (thisValue == null || !thisValue.isThis()) {
             return false;
@@ -869,10 +869,12 @@ class FunctionInjector {
     if (!callNode.getFirstChild().isName()) {
       if (NodeUtil.isFunctionObjectCall(callNode)) {
         // TODO(johnlenz): Support replace this with a value.
-        if (cArg == null || !cArg.isThis()) {
+        if (!fnNode.isArrowFunction() && (cArg == null || !cArg.isThis())) {
           return CanInlineResult.NO;
         }
-        cArg = cArg.getNext();
+        if (cArg != null) {
+          cArg = cArg.getNext();
+        }
       } else {
         // ".apply" call should be filtered before this.
         checkState(!NodeUtil.isFunctionObjectApply(callNode));

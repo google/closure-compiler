@@ -421,24 +421,24 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "4");
   }
 
-  // TODO(b/538123284): InlineFunctions: support inlining arrow functions called via .call()
   @Test
   public void testInlineArrowFunction_call() {
-    testSame(
+    test(
         """
         const fn = () => this.x;
         fn.call(obj);
-        """);
+        """,
+        "this.x;");
   }
 
-  // TODO(b/538123284): InlineFunctions: support inlining arrow functions called via .call()
   @Test
   public void testInlineArrowFunction_callWithArgs() {
-    testSame(
+    test(
         """
         const fn = (a) => this.x + a;
         fn.call(obj, 1);
-        """);
+        """,
+        "this.x + 1;");
   }
 
   @Test
