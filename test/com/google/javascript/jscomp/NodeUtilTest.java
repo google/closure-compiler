@@ -129,6 +129,11 @@ public final class NodeUtilTest {
     private Node parseSecond(Token token, String js) {
       return getNode(parseFirst(token, js), token);
     }
+
+    private AstAnalyzer getAstAnalyzer() {
+      checkState(compiler != null);
+      return compiler.getAstAnalyzer();
+    }
   }
 
   private static Node parse(String js) {
@@ -749,6 +754,28 @@ public final class NodeUtilTest {
               NodeUtil.isFunctionDeclaration(
                   parseFirst(FUNCTION, "export default (foo) => { alert(foo); }")))
           .isFalse();
+    }
+
+    private boolean checkParamSideEffects(String js) {
+      ParseHelper ph = new ParseHelper();
+      Node fn = ph.parseFirst(FUNCTION, js);
+      return NodeUtil.functionParametersMayHaveSideEffects(fn, ph.getAstAnalyzer());
+    }
+
+    @Test
+    public void testFunctionParametersMayHaveSideEffects() {
+      assertThat(checkParamSideEffects("function f() {}")).isFalse();
+      assertThat(checkParamSideEffects("function f(a, b) {}")).isFalse();
+      assertThat(checkParamSideEffects("function f(a = 1) {}")).isFalse();
+      assertThat(checkParamSideEffects("function f(a = 'default') {}")).isFalse();
+      assertThat(checkParamSideEffects("function f(...a) {}")).isFalse();
+
+      assertThat(checkParamSideEffects("function f(a = audit()) {}")).isTrue();
+      assertThat(checkParamSideEffects("function f({a}) {}")).isTrue();
+      assertThat(checkParamSideEffects("function f([a]) {}")).isTrue();
+      assertThat(checkParamSideEffects("function f({a} = {}) {}")).isTrue();
+      assertThat(checkParamSideEffects("function f(...[a]) {}")).isTrue();
+      assertThat(checkParamSideEffects("function f(a, {b}, ...c) {}")).isTrue();
     }
 
     @Test

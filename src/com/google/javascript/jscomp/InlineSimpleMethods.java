@@ -219,6 +219,11 @@ class InlineSimpleMethods implements CompilerPass {
         // it's unclear it's worth the complexity.
         return true;
       }
+      if (NodeUtil.functionParametersMayHaveSideEffects(n, astAnalyzer)) {
+        // Methods with parameters that may have side effects or throw on destructuring are not
+        // inlined to prevent altering runtime behavior.
+        return true;
+      }
       JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(n.getParent());
       if (jsDocInfo != null && jsDocInfo.isNoInline()) {
         return true;

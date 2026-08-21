@@ -458,11 +458,9 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
         """);
   }
 
-  // TODO(b/538170228): Do not fold array property assignments past ITER_SPREAD in
-  // PeepholeCollectPropertyAssignments
   @Test
   public void testArraySpread() {
-    test("var a = [1, ...spread]; a[2] = 3;", "var a = [1, ...spread, 3];");
+    testSame("var a = [1, ...spread]; a[2] = 3;");
     testSame("var a = [...spread]; a[0] = 1;");
     testSame("var a = [1, ...spread]; a[0] = 2;");
   }

@@ -4300,6 +4300,43 @@ public final class NodeUtil {
     return fnNode.getSecondChild();
   }
 
+  /**
+   * Returns whether any parameter of the given function node may have side effects when evaluated,
+   * or may throw an exception during parameter pattern matching / destructuring.
+   *
+   * @param fnNode A FUNCTION node.
+   * @param astAnalyzer The AstAnalyzer to check side effects of default parameter initializers.
+   * @return true if function parameters may have side effects or throw; false otherwise.
+   */
+  public static boolean functionParametersMayHaveSideEffects(Node fnNode, AstAnalyzer astAnalyzer) {
+    checkArgument(fnNode.isFunction());
+    Node paramList = getFunctionParameters(fnNode);
+    for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
+      if (param.isName()) {
+        continue;
+      }
+      if (param.isRest()) {
+        if (param.getFirstChild().isName()) {
+          continue;
+        }
+        return true;
+      }
+      if (param.isDefaultValue()) {
+        Node target = param.getFirstChild();
+        Node initializer = param.getSecondChild();
+        if (!target.isName()) {
+          return true;
+        }
+        if (astAnalyzer.mayHaveSideEffects(initializer)) {
+          return true;
+        }
+        continue;
+      }
+      return true;
+    }
+    return false;
+  }
+
   static boolean isConstantVar(Node node, @Nullable Scope scope) {
     if (isConstantName(node)) {
       return true;

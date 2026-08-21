@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -194,6 +196,12 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     if (maxIndexAssigned + 4 < index) {
       return false;
     }
+    // If the array literal contains a spread element, its runtime length and element
+    // offsets are unknown, so subsequent indexed property assignments cannot safely
+    // be appended to or folded into the literal.
+    if (arrayLiteralHasSpread(arrayLiteral)) {
+      return false;
+    }
     if (index > maxIndexAssigned) {
       while (maxIndexAssigned < index - 1) {
         // Pad the array if it is sparse.
@@ -216,6 +224,20 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
 
     propertyCandidate.detach();
     return true;
+  }
+
+  private static boolean arrayLiteralHasSpread(Node arrayLiteral) {
+    Node script = NodeUtil.getEnclosingScript(arrayLiteral);
+    FeatureSet scriptFeatures = script != null ? NodeUtil.getFeatureSetOfScript(script) : null;
+    if (scriptFeatures != null && !scriptFeatures.has(Feature.SPREAD_EXPRESSIONS)) {
+      return false;
+    }
+    for (Node child = arrayLiteral.getFirstChild(); child != null; child = child.getNext()) {
+      if (child.isSpread()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private boolean collectObjectProperty(Node objectLiteral, Node propertyCandidate) {
