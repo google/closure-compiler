@@ -6492,6 +6492,12 @@ CustomElementRegistry.prototype.get = function(tagName) {};
 CustomElementRegistry.prototype.getName = function(constructor) {};
 
 /**
+ * @param {!Node} root
+ * @return {undefined}
+ */
+CustomElementRegistry.prototype.initialize = function(root) {};
+
+/**
  * @param {string} tagName
  * @return {!Promise<undefined>}
  */

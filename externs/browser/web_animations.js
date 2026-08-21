@@ -155,6 +155,9 @@ Animation.prototype.onfinish;
 /** @type {?function(!Event)} */
 Animation.prototype.onremove;
 
+/** @type {number|null} */
+Animation.prototype.overallProgress;
+
 /** @type {boolean} */
 Animation.prototype.pending;
 
