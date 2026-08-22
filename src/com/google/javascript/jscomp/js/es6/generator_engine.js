@@ -807,9 +807,23 @@ $jscomp.generator.Engine_.prototype.return_ = function(value) {
 $jscomp.generator.Engine_.prototype.throw_ = function(exception) {
   this.context_.start_();
   if (this.context_.yieldAllIterator_) {
-    return this.yieldAllStep_(
-        this.context_.yieldAllIterator_['throw'], exception,
-        this.context_.next_);
+    /** @const */ var throwFn = this.context_.yieldAllIterator_['throw'];
+    if (throwFn) {
+      return this.yieldAllStep_(throwFn, exception, this.context_.next_);
+    }
+    /** @const */ var iter = this.context_.yieldAllIterator_;
+    this.context_.yieldAllIterator_ = null;
+    try {
+      if (iter['return']) {
+        /** @const */ var returnResult = iter['return']();
+        $jscomp.generator.ensureIteratorResultIsObject_(returnResult);
+      }
+      this.context_.throw_(
+          new TypeError("The iterator does not provide a 'throw' method."));
+    } catch (e) {
+      this.context_.throw_(e);
+    }
+    return this.nextStep_();
   }
   this.context_.throw_(exception);
   return this.nextStep_();
