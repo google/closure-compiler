@@ -406,12 +406,12 @@ function ArrayBuffer(length) {}
 ArrayBuffer.prototype.byteLength;
 
 /**
- * @param {number} begin
- * @param {number=} opt_end
+ * @param {number=} begin
+ * @param {number=} end
  * @return {!ArrayBuffer}
  * @nosideeffects
  */
-ArrayBuffer.prototype.slice = function(begin, opt_end) {};
+ArrayBuffer.prototype.slice = function(begin, end) {};
 
 /**
  * @param {*} arg
