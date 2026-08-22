@@ -259,6 +259,7 @@ public final class CompilerTest {
   public void testInputSourceMapInline() {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
+    compiler.getOptions().setResolveSourceMapAnnotations(true);
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=" + BASE64_ENCODED_SOURCE_MAP;
     CompilerInput input = new CompilerInput(SourceFile.fromCode("tmp", code));
     input.getAstRoot(compiler);
@@ -290,6 +291,7 @@ public final class CompilerTest {
   public void testInputSourceMapInlineContent() {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
+    compiler.getOptions().setResolveSourceMapAnnotations(true);
     String code =
         SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=" + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
     CompilerInput input = new CompilerInput(SourceFile.fromCode("tmp", code));
@@ -305,6 +307,7 @@ public final class CompilerTest {
   public void testResolveRelativeSourceMap() throws Exception {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
+    compiler.getOptions().setResolveSourceMapAnnotations(true);
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
@@ -330,6 +333,7 @@ public final class CompilerTest {
   public void testResolveRelativeDirSourceMap() throws Exception {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
+    compiler.getOptions().setResolveSourceMapAnnotations(true);
     File tempDir = Files.createTempDir();
     File relativedir = new File(tempDir, "/relativedir");
     relativedir.mkdir();
@@ -356,6 +360,7 @@ public final class CompilerTest {
   public void testMissingSourceMapFile() throws Exception {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
+    compiler.getOptions().setResolveSourceMapAnnotations(true);
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo-does-not-exist.js.map";
     File jsFile = new File(tempDir, "foo2.js");
@@ -434,6 +439,7 @@ public final class CompilerTest {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setSourceMapOutputPath("fake/source_map_path.js.map");
     options.setApplyInputSourceMaps(true);
+    options.setResolveSourceMapAnnotations(true);
     options.setSourceMapIncludeSourcesContent(true);
     String code =
         SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=" + BASE64_ENCODED_SOURCE_MAP_WITH_CONTENT;
@@ -1603,6 +1609,7 @@ public final class CompilerTest {
     // maps when running the final stage later.
     options.setAlwaysGatherSourceMapInfo(true);
     options.setApplyInputSourceMaps(true);
+    options.setResolveSourceMapAnnotations(true);
     options.setSourceMapIncludeSourcesContent(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     List<SourceFile> externs =
@@ -1690,6 +1697,7 @@ public final class CompilerTest {
     // path is stored in this field.
     options.setSourceMapOutputPath("dummy");
     options.setApplyInputSourceMaps(true);
+    options.setResolveSourceMapAnnotations(true);
     options.setSourceMapIncludeSourcesContent(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     List<SourceFile> externs =

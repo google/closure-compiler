@@ -40,6 +40,15 @@ import org.junit.runners.JUnit4;
 public final class CompilerOptionsTest {
 
   @Test
+  public void testResolveSourceMapAnnotationsDefaultsToFalse() {
+    CompilerOptions options = new CompilerOptions();
+    assertThat(options.getResolveSourceMapAnnotations()).isFalse();
+
+    options.setResolveSourceMapAnnotations(true);
+    assertThat(options.getResolveSourceMapAnnotations()).isTrue();
+  }
+
+  @Test
   public void testBrowserFeaturesetYearOptionSetsLanguageOut() {
     CompilerOptions options = new CompilerOptions();
     options.setBrowserFeaturesetYear(2012);
