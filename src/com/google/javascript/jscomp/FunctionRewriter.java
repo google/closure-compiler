@@ -28,23 +28,20 @@ import org.jspecify.annotations.Nullable;
 /**
  * Reduces the size of common function expressions.
  *
- * This pass will rewrite:
+ * <p>This pass will rewrite:
  *
- * C.prototype.getA = function() { return this.a_ };
- * C.prototype.setA = function(newValue) { this.a_ = newValue };
+ * <p>C.prototype.getA = function() { return this.a_ }; C.prototype.setA = function(newValue) {
+ * this.a_ = newValue };
  *
- * as:
+ * <p>as:
  *
- * C.prototype.getA = JSCompiler_get("a");
- * C.prototype.setA = JSCompiler_set("a");
+ * <p>C.prototype.getA = JSCompiler_get("a"); C.prototype.setA = JSCompiler_set("a");
  *
- * if by doing so we will save bytes, after the helper functions are
- * added and renaming is done.
+ * <p>if by doing so we will save bytes, after the helper functions are added and renaming is done.
  *
- * NOTE: JSCompiler_get and JSCompiler_set turn dotted accesses to
- * computed accesses, which causes JS engines to use dictionary lookups.
- * Because of this perf regression, this pass is off by default in advanced
- * mode even though it improves code size.
+ * <p>NOTE: JSCompiler_get and JSCompiler_set turn dotted accesses to computed accesses, which
+ * causes JS engines to use dictionary lookups. Because of this perf regression, this pass is off by
+ * default in advanced mode even though it improves code size.
  */
 class FunctionRewriter implements CompilerPass {
   private final AbstractCompiler compiler;
@@ -70,8 +67,7 @@ class FunctionRewriter implements CompilerPass {
 
     // Accumulate possible reductions in the reduction multi-map.  They
     // will be applied in the loop below.
-    NodeTraversal.traverse(compiler, root,
-                           new ReductionGatherer(reducers, reductionMap));
+    NodeTraversal.traverse(compiler, root, new ReductionGatherer(reducers, reductionMap));
 
     // Apply reductions iff they will provide some savings.
     for (Reducer reducer : reducers) {
@@ -125,12 +121,11 @@ class FunctionRewriter implements CompilerPass {
         && !NodeUtil.isGetOrSetKey(parent)
         && !parent.isMemberFunctionDef()
         && !n.isAsyncFunction()
-        && !n.isGeneratorFunction();
+        && !n.isGeneratorFunction()
+        && !NodeUtil.hasNonSimpleParameters(n);
   }
 
-  /**
-   * Information needed to apply a reduction.
-   */
+  /** Information needed to apply a reduction. */
   private class Reduction {
     private final Node oldChild;
     private final Node newChild;
@@ -140,21 +135,16 @@ class FunctionRewriter implements CompilerPass {
       this.newChild = newChild;
     }
 
-    /**
-     * Apply the reduction by replacing the old child with the new child.
-     */
+    /** Apply the reduction by replacing the old child with the new child. */
     void apply() {
       oldChild.replaceWith(newChild);
       NodeUtil.markFunctionsDeleted(oldChild, compiler);
       compiler.reportChangeToEnclosingScope(newChild);
     }
 
-    /**
-     * Estimate number of bytes saved by applying this reduction.
-     */
+    /** Estimate number of bytes saved by applying this reduction. */
     int estimateSavings() {
-      return InlineCostEstimator.getCost(oldChild) -
-          InlineCostEstimator.getCost(newChild);
+      return InlineCostEstimator.getCost(oldChild) - InlineCostEstimator.getCost(newChild);
     }
   }
 
@@ -168,11 +158,9 @@ class FunctionRewriter implements CompilerPass {
 
     /**
      * @param reducers List of reducers to apply during traversal.
-     * @param reductions Reducer -> Reduction multimap,
-     *                   populated during traversal.
+     * @param reductions Reducer -> Reduction multimap, populated during traversal.
      */
-    ReductionGatherer(List<Reducer> reducers,
-                      Multimap<Reducer, Reduction> reductions) {
+    ReductionGatherer(List<Reducer> reducers, Multimap<Reducer, Reduction> reductions) {
       // Use a native array to avoid creating an iterator for every node in the AST.
       // which accord to pprof accounts for ~20% of the runtime of this pass.
       this.reducers = reducers.toArray(new Reducer[0]);
@@ -180,9 +168,7 @@ class FunctionRewriter implements CompilerPass {
     }
 
     @Override
-    public boolean shouldTraverse(NodeTraversal raversal,
-                                  Node node,
-                                  Node parent) {
+    public boolean shouldTraverse(NodeTraversal raversal, Node node, Node parent) {
       for (Reducer reducer : reducers) {
         Node replacement = reducer.reduce(node);
         if (replacement != node) {
@@ -193,15 +179,11 @@ class FunctionRewriter implements CompilerPass {
       return true;
     }
 
-
     @Override
-    public void visit(NodeTraversal traversal, Node node, Node parent) {
-    }
+    public void visit(NodeTraversal traversal, Node node, Node parent) {}
   }
 
-  /**
-   * Interface implemented by the strength-reduction optimizers below.
-   */
+  /** Interface implemented by the strength-reduction optimizers below. */
   abstract static class Reducer {
     /**
      * @return JS source for helper methods used by this reduction.
@@ -209,8 +191,8 @@ class FunctionRewriter implements CompilerPass {
     abstract String getHelperSource();
 
     /**
-     * @return root of the reduced subtree if a reduction was applied;
-     *         otherwise returns the node argument.
+     * @return root of the reduced subtree if a reduction was applied; otherwise returns the node
+     *     argument.
      */
     abstract Node reduce(Node node);
 
@@ -232,20 +214,15 @@ class FunctionRewriter implements CompilerPass {
   }
 
   /**
-   * Reduces return immutable constant literal methods declarations
-   * with calls to a constant return method factory.
+   * Reduces return immutable constant literal methods declarations with calls to a constant return
+   * method factory.
    *
-   * Example:
-   *   a.prototype.b = function() {}
-   * is reduced to:
-   *   a.prototype.b = emptyFn();
+   * <p>Example: a.prototype.b = function() {} is reduced to: a.prototype.b = emptyFn();
    */
   private static class EmptyFunctionReducer extends Reducer {
     static final String FACTORY_METHOD_NAME = "JSCompiler_emptyFn";
     static final String HELPER_SOURCE =
-        "function " + FACTORY_METHOD_NAME + "() {" +
-        "  return function() {}" +
-        "}";
+        "function " + FACTORY_METHOD_NAME + "() {" + "  return function() {}" + "}";
 
     @Override
     public String getHelperSource() {
@@ -262,10 +239,7 @@ class FunctionRewriter implements CompilerPass {
     }
   }
 
-  /**
-   * Base class for reducers that match functions that contain a
-   * single return statement.
-   */
+  /** Base class for reducers that match functions that contain a single return statement. */
   abstract static class SingleReturnStatementReducer extends Reducer {
 
     /**
@@ -287,21 +261,23 @@ class FunctionRewriter implements CompilerPass {
   }
 
   /**
-   * Reduces property getter method declarations with calls to a
-   * getter method factory.
+   * Reduces property getter method declarations with calls to a getter method factory.
    *
-   * Example:
-   *   a.prototype.b = function(a) {return a}
-   * is reduced to:
-   *   a.prototype.b = getter(a);
+   * <p>Example: a.prototype.b = function(a) {return a} is reduced to: a.prototype.b = getter(a);
    */
   private static class IdentityReducer extends SingleReturnStatementReducer {
     static final String FACTORY_METHOD_NAME = "JSCompiler_identityFn";
     static final String HELPER_SOURCE =
-        "function " + FACTORY_METHOD_NAME + "() {" +
-        "  return function(" + FACTORY_METHOD_NAME + "_value) {" +
-             "return " + FACTORY_METHOD_NAME + "_value}" +
-        "}";
+        "function "
+            + FACTORY_METHOD_NAME
+            + "() {"
+            + "  return function("
+            + FACTORY_METHOD_NAME
+            + "_value) {"
+            + "return "
+            + FACTORY_METHOD_NAME
+            + "_value}"
+            + "}";
 
     @Override
     public String getHelperSource() {
@@ -322,8 +298,7 @@ class FunctionRewriter implements CompilerPass {
     }
 
     /**
-     * Checks if the function matches the pattern:
-     *   function(<value>, <rest>) {return <value>}
+     * Checks if the function matches the pattern: function(<value>, <rest>) {return <value>}
      *
      * @return Whether the function matches the pattern.
      */
@@ -341,22 +316,24 @@ class FunctionRewriter implements CompilerPass {
   }
 
   /**
-   * Reduces return immutable constant literal methods declarations
-   * with calls to a constant return method factory.
+   * Reduces return immutable constant literal methods declarations with calls to a constant return
+   * method factory.
    *
-   * Example:
-   *   a.prototype.b = function() {return 10}
-   * is reduced to:
-   *   a.prototype.b = returnconst(10);
+   * <p>Example: a.prototype.b = function() {return 10} is reduced to: a.prototype.b =
+   * returnconst(10);
    */
-  private static class ReturnConstantReducer
-      extends SingleReturnStatementReducer {
+  private static class ReturnConstantReducer extends SingleReturnStatementReducer {
     static final String FACTORY_METHOD_NAME = "JSCompiler_returnArg";
     static final String HELPER_SOURCE =
-        "function " + FACTORY_METHOD_NAME +
-        "(" + FACTORY_METHOD_NAME + "_value) {" +
-        "  return function() {return " + FACTORY_METHOD_NAME + "_value}" +
-        "}";
+        "function "
+            + FACTORY_METHOD_NAME
+            + "("
+            + FACTORY_METHOD_NAME
+            + "_value) {"
+            + "  return function() {return "
+            + FACTORY_METHOD_NAME
+            + "_value}"
+            + "}";
 
     @Override
     public String getHelperSource() {
@@ -385,8 +362,7 @@ class FunctionRewriter implements CompilerPass {
      */
     private @Nullable Node getValueNode(Node functionNode) {
       Node value = maybeGetSingleReturnRValue(functionNode);
-      if (value != null &&
-          NodeUtil.isImmutableValue(value)) {
+      if (value != null && NodeUtil.isImmutableValue(value)) {
         return value;
       }
       return null;
@@ -394,21 +370,23 @@ class FunctionRewriter implements CompilerPass {
   }
 
   /**
-   * Reduces property getter method declarations with calls to a
-   * getter method factory.
+   * Reduces property getter method declarations with calls to a getter method factory.
    *
-   * Example:
-   *   a.prototype.b = function() {return this.b_}
-   * is reduced to:
-   *   a.prototype.b = getter("b_");
+   * <p>Example: a.prototype.b = function() {return this.b_} is reduced to: a.prototype.b =
+   * getter("b_");
    */
   private static class GetterReducer extends SingleReturnStatementReducer {
     static final String FACTORY_METHOD_NAME = "JSCompiler_get";
     static final String HELPER_SOURCE =
-        "function " + FACTORY_METHOD_NAME + "(" +
-        FACTORY_METHOD_NAME + "_name) {" +
-        "  return function() {return this[" + FACTORY_METHOD_NAME + "_name]}" +
-        "}";
+        "function "
+            + FACTORY_METHOD_NAME
+            + "("
+            + FACTORY_METHOD_NAME
+            + "_name) {"
+            + "  return function() {return this["
+            + FACTORY_METHOD_NAME
+            + "_name]}"
+            + "}";
 
     @Override
     public String getHelperSource() {
@@ -442,9 +420,7 @@ class FunctionRewriter implements CompilerPass {
      */
     private @Nullable Node getGetPropertyName(Node functionNode) {
       Node value = maybeGetSingleReturnRValue(functionNode);
-      if (value != null &&
-          value.isGetProp() &&
-          value.getFirstChild().isThis()) {
+      if (value != null && value.isGetProp() && value.getFirstChild().isThis()) {
         return value;
       }
       return null;
@@ -452,23 +428,28 @@ class FunctionRewriter implements CompilerPass {
   }
 
   /**
-   * Reduces property setter method declarations with calls to a
-   * setter method factory.
+   * Reduces property setter method declarations with calls to a setter method factory.
    *
-   * Example:
-   *   a.prototype.setB = function(value) {this.b_ = value}
-   * reduces to:
-   *   a.prototype.setB = getter("b_");
+   * <p>Example: a.prototype.setB = function(value) {this.b_ = value} reduces to: a.prototype.setB =
+   * getter("b_");
    */
   private static class SetterReducer extends Reducer {
     static final String FACTORY_METHOD_NAME = "JSCompiler_set";
     static final String HELPER_SOURCE =
-        "function " + FACTORY_METHOD_NAME + "(" +
-        FACTORY_METHOD_NAME + "_name) {" +
-        "  return function(" + FACTORY_METHOD_NAME + "_value) {" +
-        "this[" + FACTORY_METHOD_NAME + "_name] = " +
-        FACTORY_METHOD_NAME + "_value}" +
-        "}";
+        "function "
+            + FACTORY_METHOD_NAME
+            + "("
+            + FACTORY_METHOD_NAME
+            + "_name) {"
+            + "  return function("
+            + FACTORY_METHOD_NAME
+            + "_value) {"
+            + "this["
+            + FACTORY_METHOD_NAME
+            + "_name] = "
+            + FACTORY_METHOD_NAME
+            + "_value}"
+            + "}";
 
     @Override
     public String getHelperSource() {

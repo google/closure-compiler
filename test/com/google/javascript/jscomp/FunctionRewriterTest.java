@@ -281,79 +281,34 @@ public final class FunctionRewriterTest extends CompilerTestCase {
         1);
   }
 
-  // TODO(b/538130078): Fix FunctionRewriter to not rewrite functions with non-simple parameters
   @Test
   public void testNoRewriteWithNonSimpleParameters() {
     // Empty function with default parameter side effect
-    checkCompilesTo(
-        "a.prototype.foo = function(a = audit()) {}",
-        EMPTY_HELPER,
-        "a.prototype.foo = JSCompiler_emptyFn()",
-        10);
+    checkCompilesToSame("a.prototype.foo = function(a = audit()) {}", 10);
     // Empty function with rest parameter
-    checkCompilesTo(
-        "a.prototype.foo = function(...a) {}",
-        EMPTY_HELPER,
-        "a.prototype.foo = JSCompiler_emptyFn()",
-        10);
+    checkCompilesToSame("a.prototype.foo = function(...a) {}", 10);
     // Empty function with destructuring parameter
-    checkCompilesTo(
-        "a.prototype.foo = function({a}) {}",
-        EMPTY_HELPER,
-        "a.prototype.foo = JSCompiler_emptyFn()",
-        10);
+    checkCompilesToSame("a.prototype.foo = function({a}) {}", 10);
 
     // Return constant with default parameter side effect
-    checkCompilesTo(
-        "a.prototype.foo = function(a = audit()) { return 1; }",
-        RETURNARG_HELPER,
-        "a.prototype.foo = JSCompiler_returnArg(1)",
-        10);
+    checkCompilesToSame("a.prototype.foo = function(a = audit()) { return 1; }", 10);
     // Return constant with rest parameter
-    checkCompilesTo(
-        "a.prototype.foo = function(...a) { return 1; }",
-        RETURNARG_HELPER,
-        "a.prototype.foo = JSCompiler_returnArg(1)",
-        10);
+    checkCompilesToSame("a.prototype.foo = function(...a) { return 1; }", 10);
 
     // Getter with default parameter side effect
-    checkCompilesTo(
-        "a.prototype.foo = function(a = audit()) { return this.x; }",
-        GET_HELPER,
-        "a.prototype.foo = JSCompiler_get('x')",
-        10);
+    checkCompilesToSame("a.prototype.foo = function(a = audit()) { return this.x; }", 10);
     // Getter with destructuring parameter
-    checkCompilesTo(
-        "a.prototype.foo = function({a}) { return this.x; }",
-        GET_HELPER,
-        "a.prototype.foo = JSCompiler_get('x')",
-        10);
+    checkCompilesToSame("a.prototype.foo = function({a}) { return this.x; }", 10);
 
     // Setter with default parameter side effect in a second parameter
-    checkCompilesTo(
-        "a.prototype.foo = function(v, a = audit()) { this.x = v; }",
-        SET_HELPER,
-        "a.prototype.foo = JSCompiler_set('x')",
-        10);
+    checkCompilesToSame("a.prototype.foo = function(v, a = audit()) { this.x = v; }", 10);
     // Setter with destructuring in a second parameter
-    checkCompilesTo(
-        "a.prototype.foo = function(v, {a}) { this.x = v; }",
-        SET_HELPER,
-        "a.prototype.foo = JSCompiler_set('x')",
-        10);
+    checkCompilesToSame("a.prototype.foo = function(v, {a}) { this.x = v; }", 10);
 
     // Identity with default parameter side effect in a second parameter
-    checkCompilesTo(
-        "a.prototype.foo = function(v, a = audit()) { return v; }",
-        IDENTITY_HELPER,
-        "a.prototype.foo = JSCompiler_identityFn()",
-        10);
+    checkCompilesToSame("a.prototype.foo = function(v, a = audit()) { return v; }", 10);
     // Identity with destructuring in a second parameter
-    checkCompilesTo(
-        "a.prototype.foo = function(v, {a}) { return v; }",
-        IDENTITY_HELPER,
-        "a.prototype.foo = JSCompiler_identityFn()",
-        10);
+    checkCompilesToSame("a.prototype.foo = function(v, {a}) { return v; }", 10);
   }
 
   private void checkCompilesTo(

@@ -1175,7 +1175,6 @@ public final class NodeUtil {
       case NAME -> {
         // Non-constant names values may have been changed.
         return !isConstantVar(n, scope) && !knownConstants.contains(n.getString());
-
       }
       // Properties on constant NAMEs can still be side-effected.
       case GETPROP -> {
@@ -4301,6 +4300,24 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns whether the given function node has any non-simple parameters (e.g. default values,
+   * rest parameters, or destructuring patterns).
+   *
+   * @param fnNode A FUNCTION node.
+   * @return true if function parameters are non-simple; false otherwise.
+   */
+  public static boolean hasNonSimpleParameters(Node fnNode) {
+    checkArgument(fnNode.isFunction());
+    Node paramList = getFunctionParameters(fnNode);
+    for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
+      if (!param.isName()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Returns whether any parameter of the given function node may have side effects when evaluated,
    * or may throw an exception during parameter pattern matching / destructuring.
    *
@@ -5106,7 +5123,6 @@ public final class NodeUtil {
   }
 
   private static final Node NUMBER_NAN = IR.getprop(IR.name("Number"), "NaN");
-
 
   static int countAstSizeUpToLimit(Node n, final int limit) {
     // Java doesn't allow accessing mutable local variables from another class.
