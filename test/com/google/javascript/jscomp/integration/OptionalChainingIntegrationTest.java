@@ -148,4 +148,31 @@ public final class OptionalChainingIntegrationTest extends IntegrationTestCase {
     // JSC_WRONG_ARGUMENT_COUNT error is reported
     test(options, "var x = x || {}; x.f = function() {}; x?.f(3);", DiagnosticGroups.CHECK_TYPES);
   }
+
+  @Test
+  public void testDirectVsIndirectEval() {
+    CompilerOptions options = createCompilerOptions();
+    options.setFoldConstants(true);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addExtra("function eval(x) {}").buildExternsFile("externs"));
+    test(
+        options,
+        """
+        function f(a, x) {
+          if (a) {
+            return eval(x);
+          } else {
+            return (0, eval)(x);
+          }
+        }
+        f(true, '1');
+        """,
+        """
+        (function(b, a) {
+          return b ? eval(a) : (0,eval)(a);
+        })(!0, "1");
+        """);
+  }
 }
+

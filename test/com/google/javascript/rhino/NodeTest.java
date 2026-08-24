@@ -232,8 +232,8 @@ public class NodeTest {
 
     Node indirectEvalCall = IR.call(IR.name("eval"));
     indirectEvalCall.getFirstChild().putBooleanProp(Node.DIRECT_EVAL, false);
-    // TODO(b/538169809): fix this it should not be equivalent
-    assertNode(directEvalCall).isEquivalentTo(indirectEvalCall);
+
+    assertNode(directEvalCall).isNotEquivalentTo(indirectEvalCall);
   }
 
   @Test

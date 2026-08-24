@@ -1648,4 +1648,12 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
         }
         """);
   }
+
+  @Test
+  public void testDontFoldDirectAndIndirectEval() {
+    test(
+        "function f(a, x) { if (a) { return eval(x); } else { return (0, eval)(x); } }",
+        "function f(a, x) { return a ? eval(x) : (0, eval)(x); }");
+  }
 }
+

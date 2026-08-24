@@ -1201,6 +1201,10 @@ public class Node {
     }
   }
 
+  public final void removeProp(Prop prop) {
+    this.propListHead = rebuildListWithoutProp(this.propListHead, prop);
+  }
+
   static long nodePropertyToBit(NodeProperty prop) {
     return 1L << prop.getNumber();
   }
@@ -2493,6 +2497,7 @@ public class Node {
           .put(Prop.INCRDECR, (n) -> n.getIntProp(Prop.INCRDECR))
           .put(Prop.QUOTED, (n) -> n.getIntProp(Prop.QUOTED))
           .put(Prop.FREE_CALL, (n) -> n.getBooleanProp(Prop.FREE_CALL))
+          .put(Prop.DIRECT_EVAL, (n) -> n.getBooleanProp(Prop.DIRECT_EVAL))
           .put(Prop.COMPUTED_PROP_METHOD, (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_METHOD))
           .put(Prop.COMPUTED_PROP_GETTER, (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_GETTER))
           .put(Prop.COMPUTED_PROP_SETTER, (n) -> n.getBooleanProp(Prop.COMPUTED_PROP_SETTER))
