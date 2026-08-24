@@ -1693,6 +1693,16 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCall_toString() {
+    fold("(10).toString();", "");
+    fold("(10).toString(16);", "");
+    fold("x.toString(2);", "");
+    fold("foo().toString(16);", "foo();");
+    fold("(10)?.toString(16);", "");
+    foldSame("(10).toString(16, 2);");
+  }
+
+  @Test
   public void testCall_containingSpread() {
     // We use a function with no side-effects, otherwise the entire invocation would be preserved.
     fold("Math.sin(...c)", "([...c])");

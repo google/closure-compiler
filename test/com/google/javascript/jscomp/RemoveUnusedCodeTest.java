@@ -979,6 +979,13 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUnusedAssign_toString() {
+    test("var x = (10).toString(16);", "");
+    test("var x = (10).toString();", "");
+    test("var x = (10).toString(16, 2);", "(10).toString(16, 2);");
+  }
+
+  @Test
   public void testUnusedAssign7() {
     // This loop is normalized to "var i;for(i in..."
     test(
