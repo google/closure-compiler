@@ -1079,7 +1079,7 @@ function GPURenderPipeline() {}
 GPURenderPipeline.prototype.getBindGroupLayout = function(index) {};
 
 /**
- * @record
+ * @interface
  * @see https://gpuweb.github.io/gpuweb/#gpubindingcommandsmixin
  */
 function GPUBindingCommandsMixin() {}
@@ -1097,7 +1097,7 @@ GPUBindingCommandsMixin.prototype.setBindGroup = function(
     opt_dynamicOffsetsDataStart, opt_dynamicOffsetsDataLength) {};
 
 /**
- * @record
+ * @interface
  * @see https://gpuweb.github.io/gpuweb/#gpudebugcommandsmixin
  */
 function GPUDebugCommandsMixin() {}
@@ -1117,7 +1117,7 @@ GPUDebugCommandsMixin.prototype.popDebugGroup = function() {};
 GPUDebugCommandsMixin.prototype.pushDebugGroup = function(groupLabel) {};
 
 /**
- * @record
+ * @interface
  * @see https://gpuweb.github.io/gpuweb/#gpurendercommandsmixin
  */
 function GPURenderCommandsMixin() {}
