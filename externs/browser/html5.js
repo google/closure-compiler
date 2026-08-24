@@ -4448,6 +4448,7 @@ HTMLElement.prototype.dataset;
 /**
  * @constructor
  * @implements {IArrayLike<string>}
+ * @implements {Iterable<string>}
  * @see https://dom.spec.whatwg.org/#interface-domtokenlist
  */
 function DOMTokenList() {}
@@ -4525,6 +4526,29 @@ DOMTokenList.prototype.toggle = function(token, opt_force) {};
 DOMTokenList.prototype.toString = function() {};
 
 /**
+ * @param {?function(this:S, string, number, !DOMTokenList): ?} callback
+ * @param {S=} opt_thisobj
+ * @template S
+ * @return {undefined}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/forEach
+ */
+DOMTokenList.prototype.forEach = function(callback, opt_thisobj) {};
+
+/**
+ * @return {!IteratorIterable<!Array<number|string>>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/entries
+ */
+DOMTokenList.prototype.entries = function() {};
+
+/**
+ * @return {!IteratorIterable<number>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/keys
+ */
+DOMTokenList.prototype.keys = function() {};
+
+/**
  * @return {!IteratorIterable<string>} An iterator to go through all values of
  *     the key/value pairs contained in this object.
  * @nosideeffects
@@ -4533,19 +4557,9 @@ DOMTokenList.prototype.toString = function() {};
 DOMTokenList.prototype.values = function() {};
 
 /**
- * @return {!IteratorIterable<!Array<number|string>>}
- * @nosideeffects
- */
-DOMTokenList.prototype.entries = function() {};
-
-/**
- * @return {!IteratorIterable<number>}
- * @nosideeffects
- */
-DOMTokenList.prototype.keys = function() {};
-
-/**
  * @return {!IteratorIterable<string>}
+ * @nosideeffects
+ * @override
  */
 DOMTokenList.prototype[Symbol.iterator] = function() {};
 
