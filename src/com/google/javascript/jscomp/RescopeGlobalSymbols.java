@@ -19,8 +19,10 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -416,7 +418,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
     /**
      * Map from chunks to the set of global symbols to be aliased directly for that chunk (e.g. `var
-     * a = _.a`). Only populated if optimizeLocalAccess is an ALL_CHUNKS option. These symbols are
+     * {a} = _`). Only populated if optimizeLocalAccess is an ALL_CHUNKS option. These symbols are
      * used in that chunk, to avoid declaring unnecessary aliases. They can only be reassigned
      * during static execution of the defining chunk. If
      * ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS is set, then reassignable symbols that should be
@@ -747,9 +749,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
     }
 
     /**
-     * Declares local aliases (e.g. `var a = _.a;`) and wrapper objects (e.g. `_.a = {};` or `var a
-     * = _.a = {};`) at the beginning of chunks for cross-chunk variables that can be safely
-     * accessed locally. Must be called after RemoveGlobalVarCallback. Only applies if
+     * Declares local aliases (e.g. `var {a} = _;` or `var a = _.a;`) and wrapper objects (e.g. `_.a
+     * = {};` or `var a = _.a = {};`) at the beginning of chunks for cross-chunk variables that can
+     * be safely accessed locally. Must be called after RemoveGlobalVarCallback. Only applies if
      * optimizeLocalAccess is an ALL_CHUNKS option.
      */
     private void declareLocalAliasesAndWrappers() {
@@ -773,70 +775,102 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
       // Prepend local aliases and wrapper assignments to each chunk.
       for (JSChunk chunk : chunkGraph.getAllChunks()) {
-        List<Node> chunkDecls =
-            constructLocalAliasAndWrapperDeclarationsForChunk(chunk, wrapperAssignmentChunks);
-        if (chunkDecls.isEmpty()) {
-          continue;
-        }
-        ImmutableList<CompilerInput> inputs = chunk.getInputs();
-        Node script = inputs.get(0).getAstRoot(compiler);
-        Node insertionPoint = script.getFirstChild();
-        for (Node decl : chunkDecls) {
-          decl.srcrefTree(script);
-          if (insertionPoint == null) {
-            script.addChildToBack(decl);
-          } else {
-            decl.insertBefore(insertionPoint);
-          }
-        }
-        compiler.reportChangeToEnclosingScope(script);
+        declareLocalAliasesAndWrappersForChunk(chunk, wrapperAssignmentChunks);
       }
     }
 
     /**
-     * Constructs all local alias declarations and wrapper assignments that need to be prepended to
-     * the given chunk.
+     * Declares all local aliases and wrapper assignments that need to be prepended to the given
+     * chunk.
      */
-    private List<Node> constructLocalAliasAndWrapperDeclarationsForChunk(
+    private void declareLocalAliasesAndWrappersForChunk(
         JSChunk chunk, Map<String, JSChunk> wrapperAssignmentChunks) {
-      List<Node> chunkDecls = new ArrayList<>();
-
-      Set<String> localAliases = localAliasesForUnwrappedCrossChunkNames.get(chunk);
-      if (localAliases != null) {
-        for (String name : localAliases) {
-          // Define the local alias for the cross-chunk symbol: `var name = _.name;`.
-          chunkDecls.add(IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name)));
-        }
+      ImmutableList<CompilerInput> inputs = chunk.getInputs();
+      if (inputs.isEmpty()) {
+        return;
       }
+      Node script = inputs.get(0).getAstRoot(compiler);
+      Node insertionPoint = script.getFirstChild();
+      boolean changed = false;
 
-      for (String name : wrappedReassignableCrossChunkNames) {
-        JSChunk assignmentChunk = wrapperAssignmentChunks.get(name);
-        Set<JSChunk> usingChunks = chunksUsingWrappedReassignableSymbols.get(name);
-        if (chunk.equals(assignmentChunk)) {
-          // Define the wrapper object for the reassignable symbol in this chunk.
-          if (usingChunks != null && usingChunks.contains(chunk)) {
-            // The symbol is used in this chunk, so we also declare a local alias:
-            // `var name = _.name = {};`.
-            chunkDecls.add(
-                IR.var(
-                    IR.name(name),
-                    IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), IR.objectlit())));
-          } else {
-            // The symbol is not used in this chunk, so we only define the wrapper object:
-            // `_.name = {};`.
-            chunkDecls.add(
-                IR.exprResult(
-                    IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), IR.objectlit())));
+      Set<String> wrappedReassignableLocalAliases = ImmutableSet.of();
+      if (optimizeLocalAccess
+          == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS) {
+        wrappedReassignableLocalAliases = new LinkedHashSet<>();
+
+        for (String name : wrappedReassignableCrossChunkNames) {
+          JSChunk assignmentChunk = wrapperAssignmentChunks.get(name);
+          Set<JSChunk> usingChunks = chunksUsingWrappedReassignableSymbols.get(name);
+          if (chunk.equals(assignmentChunk)) {
+            // Define the wrapper object for the reassignable symbol in this chunk.
+            if (usingChunks != null && usingChunks.contains(chunk)) {
+              // The symbol is used in this chunk, so we also declare a local alias:
+              // `var name = _.name = {};`.
+              addDeclaration(
+                  script,
+                  insertionPoint,
+                  IR.var(
+                      IR.name(name),
+                      IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), IR.objectlit())));
+            } else {
+              // The symbol is not used in this chunk, so we only define the wrapper object:
+              // `_.name = {};`.
+              addDeclaration(
+                  script,
+                  insertionPoint,
+                  IR.exprResult(
+                      IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), IR.objectlit())));
+            }
+            changed = true;
+          } else if (usingChunks != null && usingChunks.contains(chunk)) {
+            // If the wrapper is defined in a different chunk, but the symbol is used in this
+            // chunk, then only declare a local alias.
+            wrappedReassignableLocalAliases.add(name);
           }
-        } else if (usingChunks != null && usingChunks.contains(chunk)) {
-          // If the wrapper is defined in a different chunk, but the symbol is used in this
-          // chunk, then only declare a local alias.
-          // var name = _.name;
-          chunkDecls.add(IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name)));
         }
       }
 
-      return chunkDecls;
+      // Combine all local aliases into a single destructuring assignment
+      // (e.g. `var {a, b, c} = _;`) if output is ES2015+, otherwise declare
+      // individual local aliases (e.g. `var a = _.a;`).
+      Iterable<String> localAliases =
+          Iterables.concat(
+              localAliasesForUnwrappedCrossChunkNames.getOrDefault(chunk, ImmutableSet.of()),
+              wrappedReassignableLocalAliases);
+      if (!Iterables.isEmpty(localAliases)) {
+        if (compiler.getOptions().getOutputFeatureSet().contains(Feature.OBJECT_DESTRUCTURING)) {
+          Node objectPattern = IR.objectPattern();
+          for (String name : localAliases) {
+            Node stringKey = IR.stringKey(name, IR.name(name));
+            stringKey.setShorthandProperty(true);
+            objectPattern.addChildToBack(stringKey);
+          }
+          addDeclaration(
+              script, insertionPoint, IR.var(objectPattern, IR.name(globalSymbolNamespace)));
+          NodeUtil.addFeatureToScript(script, Feature.OBJECT_DESTRUCTURING, compiler);
+        } else {
+          for (String name : localAliases) {
+            addDeclaration(
+                script,
+                insertionPoint,
+                IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name)));
+          }
+        }
+        changed = true;
+      }
+
+      if (changed) {
+        compiler.reportChangeToEnclosingScope(script);
+      }
+    }
+
+    private static void addDeclaration(Node script, Node insertionPoint, Node decl) {
+      decl.srcrefTree(script);
+      if (insertionPoint == null) {
+        script.addChildToBack(decl);
+      } else {
+        decl.insertBefore(insertionPoint);
+      }
     }
 
     /** Variable that doesn't cross chunk boundaries. */

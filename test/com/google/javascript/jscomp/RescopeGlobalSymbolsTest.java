@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
 import org.junit.Test;
@@ -1176,7 +1177,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     assumeCrossChunkNames = false;
     test(
         srcs(JSChunkGraphBuilder.forChain().addChunk("var a = 1; a + 1;").addChunk("a;").build()),
-        expected("var a; a = _.a = 1; a + 1;", "var a = _.a; a;"));
+        expected("var a; a = _.a = 1; a + 1;", "var {a} = _; a;"));
   }
 
   @Test
@@ -1189,7 +1190,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .addChunk("var a = 1; a = 2; a + 1;")
                 .addChunk("a;")
                 .build()),
-        expected("var a; a = _.a = 1; a = _.a = 2; a + 1;", "var a = _.a; a;"));
+        expected("var a; a = _.a = 1; a = _.a = 2; a + 1;", "var {a} = _; a;"));
   }
 
   @Test
@@ -1229,7 +1230,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .addChunk("a; a + 2;")
                 .addChunk("a; a + 3;")
                 .build()),
-        expected("var a; a = _.a = 1; a + 1;", "var a = _.a; a; a + 2;", "var a = _.a; a; a + 3;"));
+        expected("var a; a = _.a = 1; a + 1;", "var {a} = _; a; a + 2;", "var {a} = _; a; a + 3;"));
   }
 
   @Test
@@ -1271,7 +1272,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .build()),
         expected(
             "var a = _.a = {}; a._ = 1; var f = function() { a._ = 2; }; a._ + 1;",
-            "var a = _.a; a._;"));
+            "var {a} = _; a._;"));
   }
 
   @Test
@@ -1285,7 +1286,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .addChunk("var a = 1; a + 1;")
                 .addChunk("a = 2; a;")
                 .build()),
-        expected("var a = _.a = {}; a._ = 1; a._ + 1;", "var a = _.a; a._ = 2; a._;"));
+        expected("var a = _.a = {}; a._ = 1; a._ + 1;", "var {a} = _; a._ = 2; a._;"));
   }
 
   @Test
@@ -1303,7 +1304,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         expected(
             "var a = _.a = {}; a._ = 1; a._ + 1;",
             "var b = _.b = {}; b._ = 1; b._ + 1;",
-            "var a = _.a; var b = _.b; a._ = 2; b._ = 2;"));
+            "var {a, b} = _; a._ = 2; b._ = 2;"));
   }
 
   @Test
@@ -1319,7 +1320,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .build()),
         expected(
             "var a = _.a = {}; var f = function() { return a._; };",
-            "var a = _.a; a._ = 1; var g = function() { a._ = 2; }; a._ + 1;"));
+            "var {a} = _; a._ = 1; var g = function() { a._ = 2; }; a._ + 1;"));
   }
 
   @Test
@@ -1336,7 +1337,36 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .build()),
         expected(
             "_.a = {}; var x = 1;",
-            "var a = _.a; a._ = 1; a._ + 1;",
-            "var a = _.a; a._ = 2; a._ + 2;"));
+            "var {a} = _; a._ = 1; a._ + 1;",
+            "var {a} = _; a._ = 2; a._ + 2;"));
+  }
+
+  @Test
+  public void testAllChunksLocalAccessOptimization_es5() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    optimizeLocalAccess = CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(JSChunkGraphBuilder.forChain().addChunk("var a = 1; a + 1;").addChunk("a;").build()),
+        expected("var a; a = _.a = 1; a + 1;", "var a = _.a; a;"));
+  }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_multipleHolderSymbols_es5() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("var a = 1; a + 1;")
+                .addChunk("var b = 1; b + 1;")
+                .addChunk("a = 2; b = 2;")
+                .build()),
+        expected(
+            "var a = _.a = {}; a._ = 1; a._ + 1;",
+            "var b = _.b = {}; b._ = 1; b._ + 1;",
+            "var a = _.a; var b = _.b; a._ = 2; b._ = 2;"));
   }
 }
