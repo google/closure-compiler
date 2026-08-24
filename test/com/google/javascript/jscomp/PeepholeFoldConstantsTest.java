@@ -1797,6 +1797,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // Cannot fold
     test("x = [foo(), 0].length", "x = [foo(),0].length");
     testSame("x = y.length");
+    testSame("[1, 2].length = 0;");
+    test("[1, 2].length >>= 1;", "[1, 2].length = 1;");
+    testSame("[1, 2].length++;");
+    testSame("++[1, 2].length;");
+    testSame("[1, 2].length--;");
+    testSame("--[1, 2].length;");
     testSame("x = [...'abc'].length");
     testSame("x = [1, ...'ab', 3].length");
     testSame("x = [...`abc`].length");
@@ -1810,6 +1816,14 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // Test Unicode escapes are accounted for.
     test("x = '123\u01dc'.length", "x = 4");
+
+    // Cannot fold when length is an lvalue
+    testSame("\"a\".length = 1;");
+    test("\"a\".length >>= 1;", "\"a\".length = 0;");
+    testSame("\"a\".length++;");
+    testSame("++\"a\".length;");
+    testSame("\"a\".length--;");
+    testSame("--\"a\".length;");
   }
 
   @Test
@@ -1959,6 +1973,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("x*=y");
     testSame("x**=y");
     testSame("x.y+=z");
+    testSame("\"a\".length >>= 1;");
+    testSame("[1, 2].length >>= 1;");
   }
 
   @Test

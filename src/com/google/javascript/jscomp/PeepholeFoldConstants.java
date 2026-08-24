@@ -1739,6 +1739,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     if (name.equals("length")) {
+      if (NodeUtil.isLValue(n)) {
+        return n;
+      }
       int knownLength = -1;
       switch (left.getToken()) {
         case ARRAYLIT -> {
