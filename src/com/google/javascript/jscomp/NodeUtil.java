@@ -1954,17 +1954,21 @@ public final class NodeUtil {
    * `({a}).a.b.c.d()?.x.y.z` when the passed in endOfOptChainSegment is `({a})?.a.b.c.d()`.
    */
   static void convertToNonOptionalChainSegment(Node endOfOptChainSegment) {
+    Node start = getStartOfOptChainSegment(endOfOptChainSegment);
+    convertToNonOptionalChainSegmentDownTo(endOfOptChainSegment, start.getFirstChild());
+  }
+
+  /**
+   * Given the end of an optional chain segment, changes all nodes from {@code endOfOptChainSegment}
+   * down to (but excluding) {@code stopNode} into non-optional nodes.
+   */
+  static void convertToNonOptionalChainSegmentDownTo(Node endOfOptChainSegment, Node stopNode) {
     checkArgument(isEndOfOptChainSegment(endOfOptChainSegment), endOfOptChainSegment);
-    // Since part of changing the nodes removes the isOptionalChainStart() marker we look for to
-    // know we're done, this logic is easier to read if we just find all the nodes first, then
-    // change them.
     ArrayDeque<Node> segmentNodes = new ArrayDeque<>();
     Node segmentNode = endOfOptChainSegment;
-    while (true) {
-      checkState(NodeUtil.isOptChainNode(segmentNode), segmentNode);
-      segmentNodes.add(segmentNode);
-      if (segmentNode.isOptionalChainStart()) {
-        break;
+    while (segmentNode != null && !segmentNode.equals(stopNode)) {
+      if (NodeUtil.isOptChainNode(segmentNode)) {
+        segmentNodes.add(segmentNode);
       }
       segmentNode = segmentNode.getFirstChild();
     }

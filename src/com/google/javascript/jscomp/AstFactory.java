@@ -1352,6 +1352,15 @@ final class AstFactory {
     return result;
   }
 
+  /**
+   * Creates a nullish short-circuit hook {@code receiver == null ? void 0 : resultExpr} used for
+   * optional chaining.
+   */
+  Node createOptionalChainShortCircuit(Node receiver, Node resultExpr) {
+    Node cond = createEq(receiver, createNull());
+    return createHook(cond, createUndefinedValue(), resultExpr);
+  }
+
   Node createArraylit(Node... elements) {
     return createArraylit(Arrays.asList(elements));
   }

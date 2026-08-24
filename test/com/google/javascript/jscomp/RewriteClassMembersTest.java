@@ -134,28 +134,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """);
   }
 
-  private void assertTranspilationOfPrivateClassPropertiesNotYetImplemented(String src) {
-    setLanguageOut(LanguageMode.ECMASCRIPT_2022);
-    // TODO(b/236744850): currently, Feature.PRIVATE_ELEMENTS is set to ES_UNSUPPORTED. We
-    // need to update this test once we support private class properties.
-    AssertionError error1 = assertThrows(AssertionError.class, () -> test(src, src));
-    assertThat(error1)
-        .hasMessageThat()
-        .contains("Transpilation of 'Private elements' is not yet implemented.");
-
-    setLanguageOut(LanguageMode.ECMASCRIPT_2021);
-    AssertionError error2 = assertThrows(AssertionError.class, () -> test(src, src));
-    assertThat(error2)
-        .hasMessageThat()
-        .contains("Transpilation of 'Private elements' is not yet implemented.");
-
-    setLanguageOut(LanguageMode.UNSUPPORTED);
-    AssertionError error3 = assertThrows(AssertionError.class, () -> test(src, src));
-    assertThat(error3)
-        .hasMessageThat()
-        .contains("Transpilation of 'Private elements' is not yet implemented.");
-  }
-
   @Test
   public void testPrivateField() {
     test(
@@ -1134,9 +1112,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """);
   }
 
+  // Verifies optional chaining on an instance private field access (otherObj?.#field)
+  // short-circuits before private map lookup.
   @Test
   public void testPrivateOptionalChaining() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #field = 2;
@@ -1144,12 +1124,26 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return otherObj?.#field;
           }
         }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.field = 2;
+          }
+          access(otherObj) {
+            return otherObj == null ? void 0 : PRIVATE_MAP$0.get(otherObj).field;
+          }
+        }
         """);
   }
 
+  // Verifies optional chaining on an instance private field using 'this' reference (this?.#field).
   @Test
   public void testPrivateOptionalChaining_direct() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #field = 2;
@@ -1157,12 +1151,27 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return this?.#field;
           }
         }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.field = 2;
+          }
+          access() {
+            return this == null ? void 0 : PRIVATE_MAP$0.get(this).field;
+          }
+        }
         """);
   }
 
+  // Verifies optional chaining when reading an instance private method as a property tear-off
+  // (otherObj?.#method).
   @Test
   public void testPrivateMethodAccessWithOptionalChain() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #method() {}
@@ -1170,17 +1179,693 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return otherObj?.#method;
           }
         }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function() {}
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          access(otherObj) {
+            return otherObj == null ? void 0 : PRIVATE_MAP$0.get(otherObj).method;
+          }
+        }
         """);
   }
 
+  // Verifies invoking an instance private method on an optional receiver (otherObj?.#method())
+  // short-circuits before private map lookup.
   @Test
   public void testPrivateMethodCallWithOptionalChain() {
-    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+    test(
         """
         class Foo {
           #method() {}
           access(otherObj) {
             return otherObj?.#method();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function() {}
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          access(otherObj) {
+            return otherObj == null ? void 0 : PRIVATE_MAP$0.get(otherObj).method.call(otherObj);
+          }
+        }
+        """);
+  }
+
+  // Verifies invoking a private method on an optional receiver with side effects
+  // (getObj()?.#method()) extracts a temp variable and short-circuits before lookup.
+  @Test
+  public void testPrivateMethodCallWithOptionalChain_sideEffectingReceiver() {
+    test(
+        """
+        class Foo {
+          #method() {}
+          access() {
+            return getObj()?.#method();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$2 = Object.create(null, {
+          method: {
+            value: function() {}
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$3 = Object.create(PRIVATE_PROTO$2);
+            PRIVATE_MAP$0.set(this, PRIVATE$3);
+          }
+          access() {
+            let TMP$1;
+            return (TMP$1 = getObj(), TMP$1 == null ? void 0 : PRIVATE_MAP$0.get(TMP$1).method.call(TMP$1));
+          }
+        }
+        """);
+  }
+
+  // Verifies optional chaining on an instance private field with a side-effecting receiver
+  // (getObj()?.#field) extracts a temp variable.
+  @Test
+  public void testPrivateOptionalChaining_sideEffectingReceiverField() {
+    test(
+        """
+        class Foo {
+          #field = 10;
+          access() {
+            return getObj()?.#field;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            PRIVATE$2.field = 10;
+          }
+          access() {
+            let TMP$1;
+            return (TMP$1 = getObj(), TMP$1 == null ? void 0 : PRIVATE_MAP$0.get(TMP$1).field);
+          }
+        }
+        """);
+  }
+
+  // Verifies optional chaining on an instance private field or method followed by non-optional
+  // trailing segment property accesses (e.g., obj?.#field.prop) wraps the entire segment in
+  // short-circuiting check.
+  @Test
+  public void testPrivateOptionalChaining_trailingSegment() {
+    test(
+        """
+        class Foo {
+          #field = { prop: 42 };
+          access(obj) {
+            return obj?.#field.prop;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.field = { prop: 42 };
+          }
+          access(obj) {
+            return obj == null ? void 0 : PRIVATE_MAP$0.get(obj).field.prop;
+          }
+        }
+        """);
+  }
+
+  // Verifies optional chaining where the private field access continues an optional chain
+  // (e.g., obj?.a.#field) extracts a temp variable and guards PRIVATE_MAP.get against nullish
+  // receivers.
+  @Test
+  public void testPrivateOptionalChaining_continuationChain() {
+    test(
+        """
+        class Foo {
+          #field = 10;
+          access(obj) {
+            return obj?.a.#field;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            PRIVATE$2.field = 10;
+          }
+          access(obj) {
+            let TMP$1;
+            return (TMP$1 = obj?.a, TMP$1 == null ? void 0 : PRIVATE_MAP$0.get(TMP$1).field);
+          }
+        }
+        """);
+  }
+
+  // Verifies optional chaining on an outer class's private field accessed from inside an inner
+  // class.
+  @Test
+  public void testPrivateOptionalChaining_outerClassFieldFromInner() {
+    test(
+        """
+        class Outer {
+          #x = 1;
+          createInner() {
+            return class Inner {
+              readOuter(o) { return o?.#x; }
+            };
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+        class Outer {
+          constructor() {
+            const PRIVATE$2 = Object.create(null);
+            PRIVATE_MAP$1.set(this, PRIVATE$2);
+            PRIVATE$2.x = 1;
+          }
+          createInner() {
+            const CLASS_DECL$0 = class {
+              readOuter(o) {
+                return o == null ? void 0 : PRIVATE_MAP$1.get(o).x;
+              }
+            };
+            return CLASS_DECL$0;
+          }
+        }
+        """);
+  }
+
+  // Verifies multiple optional chained field and method accesses on instantiated objects.
+  @Test
+  public void testPrivateOptionalChaining_instantiatedCalls() {
+    test(
+        """
+        class Foo {
+          #field = 42;
+          #method() { return 100; }
+          getField(obj) {
+            return obj?.#field;
+          }
+          getMethod(obj) {
+            return obj?.#method;
+          }
+        }
+        const foo = new Foo();
+        const validField = foo.getField(foo);
+        const nullField = foo.getField(null);
+        const validMethod = foo.getMethod(foo);
+        const nullMethod = foo.getMethod(null);
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function() {
+              return 100;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            PRIVATE$2.field = 42;
+          }
+          getField(obj) {
+            return obj == null ? void 0 : PRIVATE_MAP$0.get(obj).field;
+          }
+          getMethod(obj$jscomp$1) {
+            return obj$jscomp$1 == null ? void 0 : PRIVATE_MAP$0.get(obj$jscomp$1).method;
+          }
+        }
+        const foo = new Foo();
+        const validField = foo.getField(foo);
+        const nullField = foo.getField(null);
+        const validMethod = foo.getMethod(foo);
+        const nullMethod = foo.getMethod(null);
+        """);
+  }
+
+  // Verifies optional chaining on a static private field access (cls?.#staticField) short-circuits
+  // on nullish class receiver.
+  @Test
+  public void testPrivateStaticFieldWithOptionalChain() {
+    test(
+        """
+        class Foo {
+          static #staticField = 10;
+          static getStaticField(cls) {
+            return cls?.#staticField;
+          }
+        }
+        """,
+        """
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          static getStaticField(cls) {
+            return cls == null ? void 0 : STATIC_PRIVATE_MAP$0.get(cls).staticField;
+          }
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = Object.create(null);
+            STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
+            PRIVATE$1.staticField = 10;
+          }
+        }
+        Foo.STATIC_INIT$2();
+        """);
+  }
+
+  // Verifies optional chaining when invoking a static private method on an optional class receiver
+  // (cls?.#staticMethod()).
+  @Test
+  public void testPrivateStaticMethodWithOptionalChain() {
+    test(
+        """
+        class Foo {
+          static #staticMethod() { return 20; }
+          static callStaticMethod(cls) {
+            return cls?.#staticMethod();
+          }
+        }
+        """,
+        """
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          static callStaticMethod(cls) {
+            return cls == null ? void 0 : STATIC_PRIVATE_MAP$0.get(cls).staticMethod.call(cls);
+          }
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = Object.create(null);
+            STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
+            PRIVATE$1.staticMethod = function() {
+              return 20;
+            };
+          }
+        }
+        Foo.STATIC_INIT$2();
+        """);
+  }
+
+  // Verifies optional chaining on an instance private getter access (otherObj?.#getter).
+  @Test
+  public void testPrivateGetterWithOptionalChain() {
+    test(
+        """
+        class Foo {
+          get #getter() { return this; }
+          accessGetter(obj) {
+            return obj?.#getter;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          getter: {
+            get: function() { return this.$self; }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          accessGetter(obj) {
+            return obj == null ? void 0 : PRIVATE_MAP$0.get(obj).getter;
+          }
+        }
+        """);
+  }
+
+  // Verifies optional chaining on a static private getter access (cls?.#staticGetter).
+  @Test
+  public void testPrivateStaticGetterWithOptionalChain() {
+    test(
+        """
+        class Foo {
+          static get #staticGetter() { return this; }
+          static accessStaticGetter(cls) {
+            return cls?.#staticGetter;
+          }
+        }
+        """,
+        """
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          static accessStaticGetter(cls) {
+            return cls == null ? void 0 : STATIC_PRIVATE_MAP$0.get(cls).staticGetter;
+          }
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE$1.$self = Foo;
+            STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
+            Object.defineProperty(PRIVATE$1, "staticGetter", {
+              get: function() { return this.$self; }
+            });
+          }
+        }
+        Foo.STATIC_INIT$2();
+        """);
+  }
+
+  // Verifies optional call invocation on a non-optional static private method
+  // (Foo.#staticMethod?.(a)).
+  @Test
+  public void testPrivateStaticMethodWithOptionalMethodCall() {
+    test(
+        """
+        class Foo {
+          static #staticMethod(a) { return a; }
+          static call(a) {
+            return Foo.#staticMethod?.(a);
+          }
+        }
+        """,
+        """
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          static call(a$jscomp$1) {
+            return STATIC_PRIVATE_MAP$0.get(Foo).staticMethod?.call(Foo, a$jscomp$1);
+          }
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = Object.create(null);
+            STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
+            PRIVATE$1.staticMethod = function(a) {
+              return a;
+            };
+          }
+        }
+        Foo.STATIC_INIT$2();
+        """);
+  }
+
+  // Verifies both optional receiver and optional invocation on a static private method
+  // (Foo?.#staticMethod?.(a)).
+  @Test
+  public void testPrivateStaticMethodWithBothReceiverAndMethodOptional() {
+    test(
+        """
+        class Foo {
+          static #staticMethod(a) { return a; }
+          static call(a) {
+            return Foo?.#staticMethod?.(a);
+          }
+        }
+        """,
+        """
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          static call(a$jscomp$1) {
+            return Foo == null ? void 0 : STATIC_PRIVATE_MAP$0.get(Foo).staticMethod?.call(Foo, a$jscomp$1);
+          }
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = Object.create(null);
+            STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
+            PRIVATE$1.staticMethod = function(a) {
+              return a;
+            };
+          }
+        }
+        Foo.STATIC_INIT$2();
+        """);
+  }
+
+  // Verifies optional call invocation on a non-optional instance private method (obj.#method?.(a)).
+  @Test
+  public void testPrivateOptionalChaining_optionalMethodCall() {
+    test(
+        """
+        class Foo {
+          #method(a) { return a; }
+          call(obj, a) {
+            return obj.#method?.(a);
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function(a) { return a; }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          call(obj, a$jscomp$1) {
+            return PRIVATE_MAP$0.get(obj).method?.call(obj, a$jscomp$1);
+          }
+        }
+        """);
+  }
+
+  // Verifies both optional receiver and optional invocation on an instance private method
+  // (obj?.#method?.(a)).
+  @Test
+  public void testPrivateOptionalChaining_bothReceiverAndMethodOptional() {
+    test(
+        """
+        class Foo {
+          #method(a) { return a; }
+          call(obj, a) {
+            return obj?.#method?.(a);
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          method: {
+            value: function(a) { return a; }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          call(obj, a$jscomp$1) {
+            return obj == null ? void 0 : PRIVATE_MAP$0.get(obj).method?.call(obj, a$jscomp$1);
+          }
+        }
+        """);
+  }
+
+  // Verifies optional invocation on a private field holding a function (this.#field?.(a)).
+  @Test
+  public void testPrivateOptionalChaining_fieldHoldingFunction() {
+    test(
+        """
+        class Foo {
+          #field = (a) => a;
+          call(a) {
+            return this.#field?.(a);
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.field = (a) => {
+              return a;
+            };
+          }
+          call(a$jscomp$1) {
+            return PRIVATE_MAP$0.get(this).field?.call(this, a$jscomp$1);
+          }
+        }
+        """);
+  }
+
+  // Verifies optional invocation on a static private field holding an arrow function
+  // (Foo.#field?.(a)).
+  @Test
+  public void testPrivateOptionalChaining_staticFieldHoldingArrowFunction() {
+    test(
+        """
+        class Foo {
+          static #field = (a) => a;
+          static call(a) {
+            return Foo.#field?.(a);
+          }
+        }
+        """,
+        """
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          static call(a$jscomp$1) {
+            return STATIC_PRIVATE_MAP$0.get(Foo).field?.call(Foo, a$jscomp$1);
+          }
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = Object.create(null);
+            STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
+            PRIVATE$1.field = (a) => {
+              return a;
+            };
+          }
+        }
+        Foo.STATIC_INIT$2();
+        """);
+  }
+
+  // Verifies optional invocation on an instance private field holding a function expression
+  // referencing this.
+  @Test
+  public void testPrivateOptionalChaining_fieldHoldingFunctionExpressionWithThis() {
+    test(
+        """
+        class Foo {
+          x = 1;
+          #field = function() { return this.x; };
+          call() {
+            return this.#field?.();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            this.x = 1;
+            PRIVATE$1.field = function() {
+              return this.x;
+            };
+          }
+          call() {
+            return PRIVATE_MAP$0.get(this).field?.call(this);
+          }
+        }
+        """);
+  }
+
+  // Verifies optional invocation on a static private field holding a function expression
+  // referencing this.
+  @Test
+  public void testPrivateOptionalChaining_staticFieldHoldingFunctionExpressionWithThis() {
+    test(
+        """
+        class Foo {
+          static x = 1;
+          static #field = function() { return this.x; };
+          static call() {
+            return Foo.#field?.();
+          }
+        }
+        """,
+        """
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          static call() {
+            return STATIC_PRIVATE_MAP$0.get(Foo).field?.call(Foo);
+          }
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = Object.create(null);
+            STATIC_PRIVATE_MAP$0.set(Foo, PRIVATE$1);
+            Foo.x = 1;
+            PRIVATE$1.field = function() {
+              return this.x;
+            };
+          }
+        }
+        Foo.STATIC_INIT$2();
+        """);
+  }
+
+  // Verifies optional chained property read followed by an optional property access
+  // (obj?.#field?.prop).
+  @Test
+  public void testPrivateOptionalChaining_chainedAccess() {
+    test(
+        """
+        class Foo {
+          #field = { prop: 123 };
+          getProp(obj) {
+            return obj?.#field?.prop;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.field = { prop: 123 };
+          }
+          getProp(obj) {
+            return (obj == null ? void 0 : PRIVATE_MAP$0.get(obj).field)?.prop;
+          }
+        }
+        """);
+  }
+
+  // Verifies optional chained method invocation on a property receiver (obj.foo?.#method()).
+  @Test
+  public void testPrivateOptionalChaining_chainedMethodCall() {
+    test(
+        """
+        class Foo {
+          #method() {}
+          callMethod(obj) {
+            return obj.foo?.#method();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$2 = Object.create(null, {
+          method: {
+            value: function() {}
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$3 = Object.create(PRIVATE_PROTO$2);
+            PRIVATE_MAP$0.set(this, PRIVATE$3);
+          }
+          callMethod(obj) {
+            let TMP$1;
+            return (TMP$1 = obj.foo, TMP$1 == null ? void 0 : PRIVATE_MAP$0.get(TMP$1).method.call(TMP$1));
           }
         }
         """);
@@ -1281,6 +1966,51 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
           getSub() {
             return PRIVATE_MAP$3.get(this).subMethod.call(this);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodWithSuperReference() {
+    test(
+        """
+        class Base {
+          baseProp = 5;
+          baseMethod() { return 10; }
+        }
+        class Sub extends Base {
+          #privateMethod() {
+            return super.baseMethod() + super.baseProp;
+          }
+          callPrivate() {
+            return this.#privateMethod();
+          }
+        }
+        """,
+        """
+        class Base {
+          constructor() {
+            this.baseProp = 5;
+          }
+          baseMethod() { return 10; }
+        }
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          privateMethod: {
+            value: function() {
+              return Base.prototype.baseMethod.call(this) + Reflect.get(Base.prototype, JSCompiler_renameProperty("baseProp", Base), this);
+            }
+          }
+        });
+        class Sub extends Base {
+          constructor() {
+            super(...arguments);
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          callPrivate() {
+            return PRIVATE_MAP$0.get(this).privateMethod.call(this);
           }
         }
         """);

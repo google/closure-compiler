@@ -904,4 +904,189 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
     test(options, src, expected);
   }
+
+  @Test
+  public void privateClassMembers_optionalChainingIntegrationTest() {
+    CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra("/** @const */ var $jscomp = {};")
+                .buildExternsFile("externs"));
+
+    String src =
+        """
+        class Foo {
+          #field = 100;
+          #fnField = (x) => x * 2;
+          #nullFn = null;
+          #method(val) {
+            return this.#field + val;
+          }
+          get #getter() {
+            return this.#field * 2;
+          }
+
+          getField(target) {
+            return target?.#field;
+          }
+          callMethod(target, val) {
+            return target?.#method(val);
+          }
+          callFnField(target, val) {
+            return target?.#fnField?.(val);
+          }
+          callNullFn(target, val) {
+            return target?.#nullFn?.(val);
+          }
+          getGetter(target) {
+            return target?.#getter;
+          }
+
+          static #staticField = 500;
+          static #staticMethod(val) {
+            return this.#staticField + val;
+          }
+          static get #staticGetter() {
+            return this.#staticField * 3;
+          }
+
+          static getStaticField(target) {
+            return target?.#staticField;
+          }
+          static callStaticMethod(target, val) {
+            return target?.#staticMethod(val);
+          }
+          static getStaticGetter(target) {
+            return target?.#staticGetter;
+          }
+        }
+
+        const f = new Foo();
+        console.log(f.getField(f));
+        console.log(f.getField(null));
+        try {
+          f.getField({});
+        } catch (e) {
+          console.log(e instanceof TypeError);
+        }
+        console.log(f.callMethod(f, 50));
+        console.log(f.callMethod(null, 50));
+        try {
+          f.callMethod({}, 50);
+        } catch (e) {
+          console.log(e instanceof TypeError);
+        }
+        console.log(f.callFnField(f, 10));
+        console.log(f.callFnField(null, 10));
+        console.log(f.callNullFn(f, 10));
+        console.log(f.getGetter(f));
+        console.log(f.getGetter(null));
+        console.log(Foo.getStaticField(Foo));
+        console.log(Foo.getStaticField(null));
+        console.log(Foo.callStaticMethod(Foo, 100));
+        console.log(Foo.callStaticMethod(null, 100));
+        console.log(Foo.getStaticGetter(Foo));
+        console.log(Foo.getStaticGetter(null));
+        """;
+
+    String expected =
+        """
+        const $jscomp$privateMap$98447280$0 = new $jscomp.PrivateMap();
+        const $jscomp$priv$proto$98447280$2 = Object.create(null, {
+          method: {
+            value: function(val) {
+              return $jscomp$privateMap$98447280$0.get(this).field + val;
+            }
+          },
+          getter: {
+            get: function() {
+              return $jscomp$privateMap$98447280$0.get(this.$self).field * 2;
+            }
+          }
+        });
+        const $jscomp$staticPrivateMap$98447280$1 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            var $jscomp$priv$98447280$3 = Object.create($jscomp$priv$proto$98447280$2);
+            $jscomp$priv$98447280$3.$self = this;
+            $jscomp$privateMap$98447280$0.set(this, $jscomp$priv$98447280$3);
+            $jscomp$priv$98447280$3.field = 100;
+            $jscomp$priv$98447280$3.fnField = x => x * 2;
+            $jscomp$priv$98447280$3.nullFn = null;
+          }
+          getField(target) {
+            return target == null ? void 0 : $jscomp$privateMap$98447280$0.get(target).field;
+          }
+          callMethod(target, val) {
+            return target == null ? void 0 : $jscomp$privateMap$98447280$0.get(target).method.call(target, val);
+          }
+          callFnField(target, val) {
+            return target == null ? void 0 : $jscomp$privateMap$98447280$0.get(target).fnField?.call(target, val);
+          }
+          callNullFn(target, val) {
+            return target == null ? void 0 : $jscomp$privateMap$98447280$0.get(target).nullFn?.call(target, val);
+          }
+          getGetter(target) {
+            return target == null ? void 0 : $jscomp$privateMap$98447280$0.get(target).getter;
+          }
+          static getStaticField(target) {
+            return target == null ? void 0 : $jscomp$staticPrivateMap$98447280$1.get(target).staticField;
+          }
+          static callStaticMethod(target, val) {
+            return target == null ? void 0 : $jscomp$staticPrivateMap$98447280$1.get(target).staticMethod.call(target, val);
+          }
+          static getStaticGetter(target) {
+            return target == null ? void 0 : $jscomp$staticPrivateMap$98447280$1.get(target).staticGetter;
+          }
+          static $jscomp$staticInit$98447280$5() {
+            var $jscomp$priv$98447280$4 = Object.create(null);
+            $jscomp$priv$98447280$4.$self = Foo;
+            $jscomp$staticPrivateMap$98447280$1.set(Foo, $jscomp$priv$98447280$4);
+            $jscomp$priv$98447280$4.staticMethod = function(val) {
+              return $jscomp$staticPrivateMap$98447280$1.get(this).staticField + val;
+            };
+            Object.defineProperty($jscomp$priv$98447280$4, "staticGetter", {
+              get: function() {
+                return $jscomp$staticPrivateMap$98447280$1.get(this.$self).staticField * 3;
+              }
+            });
+            $jscomp$priv$98447280$4.staticField = 500;
+          }
+        }
+        Foo.$jscomp$staticInit$98447280$5();
+        const f = new Foo();
+        console.log(f.getField(f));
+        console.log(f.getField(null));
+        try {
+          f.getField({});
+        } catch (e) {
+          console.log(e instanceof TypeError);
+        }
+        console.log(f.callMethod(f, 50));
+        console.log(f.callMethod(null, 50));
+        try {
+          f.callMethod({}, 50);
+        } catch (e) {
+          console.log(e instanceof TypeError);
+        }
+        console.log(f.callFnField(f, 10));
+        console.log(f.callFnField(null, 10));
+        console.log(f.callNullFn(f, 10));
+        console.log(f.getGetter(f));
+        console.log(f.getGetter(null));
+        console.log(Foo.getStaticField(Foo));
+        console.log(Foo.getStaticField(null));
+        console.log(Foo.callStaticMethod(Foo, 100));
+        console.log(Foo.callStaticMethod(null, 100));
+        console.log(Foo.getStaticGetter(Foo));
+        console.log(Foo.getStaticGetter(null));
+        """;
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    test(options, src, expected);
+  }
 }

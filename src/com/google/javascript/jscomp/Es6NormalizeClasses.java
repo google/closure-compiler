@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.AstFactory.type;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -33,6 +34,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -736,12 +738,6 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    * scope to reduce WeakMap lookup overhead.
    */
   private void rewritePrivateGetProp(NodeTraversal t, Node getPropNode) {
-    checkArgument(getPropNode.isGetProp() || getPropNode.isOptChainGetProp(), getPropNode);
-    if (getPropNode.isOptChainGetProp()) {
-      maybeReportPrivatePropertiesCannotConvertYet(getPropNode);
-      return;
-    }
-
     String name = getPropNode.getString();
     ResolvedPrivateMember resolved = findPrivateMember(name);
     if (resolved == null) {
@@ -760,129 +756,244 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       return;
     }
 
-    if (pm.kind == ClassRecord.PrivateMemberKind.METHOD) {
-      rewritePrivateMethodAccess(t, getPropNode, record, pm);
-      return;
-    }
-
-    rewritePrivateFieldOrAccessorAccess(t, getPropNode, record, pm);
+    Node parent = getPropNode.getParent();
+    rewritePrivateMemberAccess(t, getPropNode, record, pm, parent);
   }
 
   /**
-   * Rewrites access to a private method.
+   * Rewrites a private member access or invocation.
    *
-   * <p>Direct call (e.g., {@code obj.#method(a, b)}):
+   * <p>Handles three primary cases:
    *
-   * <ul>
-   *   <li>If {@code obj} is side-effect-free (e.g., {@code this} or a simple variable name):
-   *       Rewritten to {@code PRIVATE_MAP.get(obj).method.call(obj, a, b)}.
-   *   <li>If {@code obj} may have side-effects (e.g., {@code getObj().#method(a, b)}): Rewritten
-   *       using a temporary variable to evaluate the receiver only once: {@code (TMP = getObj(),
-   *       PRIVATE_MAP.get(TMP).method.call(TMP, a, b))}.
-   * </ul>
+   * <ol>
+   *   <li>Direct member calls with side-effecting receivers (e.g. {@code getObj()?.#method(a)} or
+   *       {@code getObj()?.#field(a)}):
+   *       <pre>{@code
+   * let TMP;
+   * (TMP = getObj(), TMP == null ? void 0 : PRIVATE_MAP.get(TMP).member.call(TMP, a))
    *
-   * <p>Indirect read / method tear-off (e.g., {@code const fn = obj.#method}): Rewritten to {@code
-   * PRIVATE_MAP.get(obj).method}.
+   * }</pre>
+   *   <li>Direct member calls with side-effect-free receivers (e.g. {@code this.#method(a)} or
+   *       {@code obj?.#field?.(a)}):
+   *       <pre>{@code
+   * obj == null ? void 0 : PRIVATE_MAP.get(obj).member.call(obj, a)
+   *
+   * }</pre>
+   *   <li>Indirect reads, field accesses, and method tear-offs (e.g. {@code const fn =
+   *       obj?.#method} or {@code obj?.#field}):
+   *       <pre>{@code
+   * const fn = obj == null ? void 0 : PRIVATE_MAP.get(obj).member;
+   *
+   * }</pre>
+   * </ol>
    */
-  private void rewritePrivateMethodAccess(
-      NodeTraversal t, Node getPropNode, ClassRecord record, ClassRecord.PrivateMember pm) {
-    Node parent = getPropNode.getParent();
-    boolean isDirectCall = parent.isCall() && Objects.equals(parent.getFirstChild(), getPropNode);
-    String memberPropName = pm.propertyName();
-
+  private void rewritePrivateMemberAccess(
+      NodeTraversal t,
+      Node getPropNode,
+      ClassRecord record,
+      ClassRecord.PrivateMember pm,
+      Node parent) {
+    boolean isStatic = pm.isStatic;
     String mapVarName =
-        pm.isStatic
+        isStatic
             ? record.getStaticPrivateMapVarName(compiler, t)
             : record.getPrivateMapVarName(compiler, t);
-    Node receiver = getPropNode.getFirstChild().detach();
+    String memberPropName = pm.propertyName();
 
+    Node receiver = getPropNode.getFirstChild().detach();
     Node mapNameNode = astFactory.createNameWithUnknownType(mapVarName);
     Node getCallee = astFactory.createGetPropWithUnknownType(mapNameNode, "get");
 
+    boolean isOptChain = getPropNode.isOptChainGetProp();
+    Node endOfSegment = isOptChain ? NodeUtil.getEndOfOptChainSegment(getPropNode) : null;
+
+    boolean isDirectCall =
+        (parent.isCall() || parent.isOptChainCall())
+            && Objects.equals(parent.getFirstChild(), getPropNode);
+
     if (isDirectCall) {
+      boolean isOptionalCall = parent.isOptChainCall() && parent.isOptionalChainStart();
+
+      parent.setIsOptionalChainStart(false);
+
       if (receiverNeedsTempVar(receiver)) {
         // If evaluating receiver twice could introduce side effects or alter execution state,
         // declare a temporary variable (e.g. `let TMP;`) and evaluate the call using a comma
         // expression:
-        // `(TMP = receiver, PRIVATE_MAP.get(TMP).method.call(TMP, ...args))`
+        // `(TMP = receiver, PRIVATE_MAP.get(TMP).member.call(TMP, ...args))`
         String tempName = generateUniqueTmpVarName(t);
         Node insertionBlock = getDeclarationInsertionPoint(getPropNode, t);
         Node decl = astFactory.createSingleLetNameDeclaration(tempName);
-        insertionBlock.addChildToFront(decl.srcrefTreeIfMissing(insertionBlock));
+        insertionBlock.addChildToFront(decl.srcrefTree(getPropNode));
         NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
 
         Node tempNameNode1 = astFactory.createNameWithUnknownType(tempName).srcref(getPropNode);
         Node assign = astFactory.createAssign(tempNameNode1, receiver).srcref(getPropNode);
+        receiver = astFactory.createNameWithUnknownType(tempName).srcref(getPropNode);
 
         Node tempNameNode2 = astFactory.createNameWithUnknownType(tempName).srcref(getPropNode);
         Node tempNameNode3 = astFactory.createNameWithUnknownType(tempName).srcref(getPropNode);
 
         Node getCall =
             astFactory.createCallWithUnknownType(getCallee, tempNameNode2).srcref(getPropNode);
-        Node methodGetProp =
-            astFactory.createGetPropWithUnknownType(getCall, memberPropName).srcref(getPropNode);
-        Node callCallee =
-            astFactory.createGetPropWithUnknownType(methodGetProp, "call").srcref(getPropNode);
+        Node methodGetProp = astFactory.createGetPropWithUnknownType(getCall, memberPropName);
+        Node callCallee = createCallCallee(methodGetProp, isOptionalCall, getPropNode);
+        parent.setToken(callCallee.isOptChainGetProp() ? Token.OPTCHAIN_CALL : Token.CALL);
 
-        callCallee.srcrefTree(getPropNode);
+        callCallee.srcrefTreeIfMissing(getPropNode);
         tempNameNode3.srcrefTree(getPropNode);
 
         getPropNode.detach();
         parent.addChildToFront(callCallee);
         tempNameNode3.insertAfter(callCallee);
 
+        Node resultExpr =
+            wrapOptionalChainStartIfNecessary(receiver, parent, endOfSegment, isOptChain);
         Node placeholder = IR.empty();
-        parent.replaceWith(placeholder);
-        Node comma = astFactory.createComma(assign, parent).srcref(getPropNode);
+        resultExpr.replaceWith(placeholder);
+        Node comma = astFactory.createComma(assign, resultExpr).srcref(getPropNode);
         placeholder.replaceWith(comma);
 
         t.reportCodeChange();
       } else {
-        // Direct private method call with a side-effect-free receiver (e.g. `this` or a simple
+        // Direct private member call with a side-effect-free receiver (e.g. `this` or a simple
         // variable):
-        // Rewritten to `PRIVATE_MAP.get(receiver).method.call(receiver, ...args)`.
+        // Rewritten to `PRIVATE_MAP.get(receiver).member.call(receiver, ...args)`.
         Node getCall = astFactory.createCallWithUnknownType(getCallee, receiver);
         Node methodGetProp = astFactory.createGetPropWithUnknownType(getCall, memberPropName);
-        Node callCallee = astFactory.createGetPropWithUnknownType(methodGetProp, "call");
-
-        callCallee.srcrefTree(getPropNode);
         Node receiverArg = receiver.cloneTree();
         receiverArg.srcrefTree(getPropNode);
 
         getPropNode.detach();
+        Node callCallee = createCallCallee(methodGetProp, isOptionalCall, getPropNode);
+        parent.setToken(callCallee.isOptChainGetProp() ? Token.OPTCHAIN_CALL : Token.CALL);
+        callCallee.srcrefTreeIfMissing(getPropNode);
         parent.addChildToFront(callCallee);
         receiverArg.insertAfter(callCallee);
+        wrapOptionalChainStartIfNecessary(receiver, parent, endOfSegment, isOptChain);
         t.reportCodeChange();
       }
     } else {
-      // Indirect read / method tear-off (e.g., `const fn = this.#method`):
+      // Indirect read, field access, or method tear-off (e.g., `const fn = this.#method` or
+      // `this.#field`):
       // Rewritten to `PRIVATE_MAP.get(receiver).propertyName`.
+      Node assignComma = extractReceiverTmpIfNecessary(t, receiver, getPropNode, isOptChain);
+      if (assignComma != null) {
+        receiver = assignComma.getFirstChild().cloneTree();
+      }
       Node getCall = astFactory.createCallWithUnknownType(getCallee, receiver);
       Node methodGetProp = astFactory.createGetPropWithUnknownType(getCall, memberPropName);
-
       getPropNode.replaceWith(methodGetProp.srcrefTree(getPropNode));
+      Node result =
+          wrapOptionalChainStartIfNecessary(receiver, methodGetProp, endOfSegment, isOptChain);
+
+      if (assignComma != null) {
+        Node placeholder = IR.empty();
+        result.replaceWith(placeholder);
+        Node comma = astFactory.createComma(assignComma, result).srcref(getPropNode);
+        placeholder.replaceWith(comma);
+      }
+
       t.reportCodeChange();
     }
   }
 
-  private void rewritePrivateFieldOrAccessorAccess(
-      NodeTraversal t, Node getPropNode, ClassRecord record, ClassRecord.PrivateMember pm) {
-    boolean isStatic = pm.isStatic;
-    String mapVarName =
-        isStatic
-            ? record.getStaticPrivateMapVarName(compiler, t)
-            : record.getPrivateMapVarName(compiler, t);
-    String propName = pm.propertyName();
+  /**
+   * Extracts a temporary variable declaration for a side-effecting receiver in an optional chain.
+   *
+   * <p>For example, when transpiling:
+   *
+   * <pre>{@code
+   * // JS input:
+   * getObj()?.#field
+   *
+   * // Transpiled JS output:
+   * let TMP;
+   * (TMP = getObj(), TMP == null ? void 0 : PRIVATE_MAP.get(TMP).field)
+   * }</pre>
+   *
+   * @return an assignment node {@code (TMP = receiver)} to prepend in a comma expression, or {@code
+   *     null} if no temporary variable is needed.
+   */
+  private @Nullable Node extractReceiverTmpIfNecessary(
+      NodeTraversal t, Node receiver, Node getPropNode, boolean isOptChain) {
+    if (!isOptChain || !receiverNeedsTempVar(receiver)) {
+      return null;
+    }
+    String tempName = generateUniqueTmpVarName(t);
+    Node insertionBlock = getDeclarationInsertionPoint(getPropNode, t);
+    Node decl = astFactory.createSingleLetNameDeclaration(tempName);
+    insertionBlock.addChildToFront(decl.srcrefTree(getPropNode));
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
 
-    Node receiver = getPropNode.getFirstChild().detach();
-    Node mapNameNode = astFactory.createNameWithUnknownType(mapVarName);
-    Node getCallee = astFactory.createGetPropWithUnknownType(mapNameNode, "get");
-    Node getCall = astFactory.createCallWithUnknownType(getCallee, receiver);
+    Node tempNameNode = astFactory.createNameWithUnknownType(tempName).srcref(getPropNode);
+    return astFactory.createAssign(tempNameNode, receiver).srcref(getPropNode);
+  }
 
-    Node propGet = astFactory.createGetPropWithUnknownType(getCall, propName);
+  /**
+   * Wraps an optional chained private member access with a nullish short-circuit check on the
+   * receiver, climbing to the end of the current optional chain segment.
+   *
+   * <p>For example, transpiles:
+   *
+   * <pre>{@code
+   * // Trailing property access in optional chain segment:
+   * obj?.#field.prop
+   * // -> obj == null ? void 0 : PRIVATE_MAP.get(obj).field.prop
+   *
+   * // Direct private method invocation:
+   * obj?.#method(arg)
+   * // -> obj == null ? void 0 : PRIVATE_MAP.get(obj).method.call(obj, arg)
+   * }</pre>
+   */
+  @CanIgnoreReturnValue
+  private Node wrapOptionalChainStartIfNecessary(
+      Node receiver, Node accessExpr, @Nullable Node endOfSegment, boolean isOptChain) {
+    if (!isOptChain) {
+      return accessExpr;
+    }
+    Node segmentRoot =
+        (endOfSegment != null && endOfSegment.getParent() != null) ? endOfSegment : accessExpr;
+    if (!Objects.equals(segmentRoot, accessExpr)) {
+      NodeUtil.convertToNonOptionalChainSegmentDownTo(segmentRoot, accessExpr);
+    }
 
-    getPropNode.replaceWith(propGet.srcrefTree(getPropNode));
-    t.reportCodeChange();
+    Node placeholder = IR.empty();
+    if (segmentRoot.getParent() != null) {
+      segmentRoot.replaceWith(placeholder);
+    }
+    // We must short-circuit before calling PRIVATE_MAP.get(receiver), since PRIVATE_MAP.get throws
+    // on nullish receivers.
+    Node hook =
+        astFactory
+            .createOptionalChainShortCircuit(receiver.cloneTree(), segmentRoot)
+            .srcrefTreeIfMissing(segmentRoot);
+    if (placeholder.getParent() != null) {
+      placeholder.replaceWith(hook);
+    }
+    Node hookParent = hook.getParent();
+    if (hookParent != null && (hookParent.isCall() || hookParent.isOptChainCall())) {
+      hook.setIsParenthesized(true);
+      if (Objects.equals(hookParent.getFirstChild(), hook)) {
+        hookParent.putBooleanProp(Node.FREE_CALL, true);
+      }
+    }
+    return hook;
+  }
+
+  /**
+   * Creates the {@code .call} property access node for a private method invocation.
+   *
+   * <p>If the invocation itself was optional (e.g. {@code obj.#method?.(arg)}), starts a new
+   * optional chain segment ({@code .call?.(obj, arg)}). Otherwise creates a standard property
+   * access {@code .call(obj, arg)}.
+   */
+  private Node createCallCallee(Node methodGetProp, boolean isOptionalCall, Node getPropNode) {
+    if (isOptionalCall) {
+      return astFactory.createStartOptChainGetprop(methodGetProp, "call", type(getPropNode));
+    } else {
+      return astFactory.createGetPropWithUnknownType(methodGetProp, "call");
+    }
   }
 
   /**
@@ -990,7 +1101,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
                 if (!isStatic || !compiler.getOptions().getAssumeStaticInheritanceIsNotUsed()) {
                   Node callCallee =
                       astFactory.createGetPropWithUnknownType(parent.detach(), "call");
-                  grandParent.addChildToFront(callCallee);
+                  grandParent.addChildToFront(callCallee.srcrefTreeIfMissing(parent));
                   Node thisArg = astFactory.createThis(type(StandardColors.UNKNOWN)).srcref(n);
                   thisArg.insertAfter(callCallee);
                 }
@@ -1018,7 +1129,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
                         propKey,
                         rhs,
                         astFactory.createThis(type(StandardColors.UNKNOWN)).srcref(n));
-                grandParent.replaceWith(reflectSet.srcrefTree(grandParent));
+                grandParent.replaceWith(reflectSet.srcrefTreeIfMissing(grandParent));
               } else {
                 // Getter read: super.prop
                 Node propKey =
@@ -1039,7 +1150,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
                         target,
                         propKey,
                         astFactory.createThis(type(StandardColors.UNKNOWN)).srcref(n));
-                parent.replaceWith(reflectGet.srcrefTree(parent));
+                parent.replaceWith(reflectGet.srcrefTreeIfMissing(parent));
               }
               compiler.reportChangeToEnclosingScope(fnBody);
             }
@@ -1575,7 +1686,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     staticInitBlock.addChildrenToFront(staticInitTempParent.removeChildren());
 
     Node classMembers = NodeUtil.getClassMembers(record.classNode);
-    staticInitMethod.srcrefTree(classMembers);
+    staticInitMethod.srcrefTreeIfMissing(classMembers);
     classMembers.addChildToBack(staticInitMethod);
     compiler.reportChangeToChangeScope(staticInitMethodFunc);
     t.reportCodeChange(staticInitMethod);
@@ -1591,7 +1702,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
                     staticInitMethodName,
                     type(staticInitMethodFunc)),
                 type(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID))
-            .srcrefTree(classMembers);
+            .srcrefTreeIfMissing(classMembers);
     Node staticInitCallStmt = astFactory.exprResult(staticInitCall);
     staticInitCallStmt.insertAfter(insertionPoint);
   }
@@ -1644,7 +1755,12 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
                   astFactory.createConstantName(privName, type(StandardColors.UNKNOWN)),
                   astFactory.createString(pm.propertyName()),
                   descriptorLit);
-          staticInitTempParent.addChildToBack(astFactory.exprResult(call));
+          Node declNode = pm.getPrimaryDeclarationNode();
+          Node exprResult = astFactory.exprResult(call);
+          if (declNode != null) {
+            exprResult.srcrefTreeIfMissing(declNode);
+          }
+          staticInitTempParent.addChildToBack(exprResult);
         }
       }
     }
@@ -1808,6 +1924,20 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
       String propertyName() {
         return name.startsWith("#") ? name.substring(1) : name;
+      }
+
+      /**
+       * Returns the primary AST declaration node for source reference mapping, prioritizing getter,
+       * then setter, then the first declaration node.
+       */
+      @Nullable Node getPrimaryDeclarationNode() {
+        if (getterNode != null) {
+          return getterNode;
+        }
+        if (setterNode != null) {
+          return setterNode;
+        }
+        return Iterables.getFirst(declarationNodes, null);
       }
     }
 

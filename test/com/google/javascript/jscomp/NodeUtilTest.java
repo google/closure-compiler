@@ -4484,6 +4484,21 @@ public final class NodeUtilTest {
       assertThat(outterGetProp.getFirstChild().getSecondChild().isOptChainGetProp()).isTrue();
     }
 
+    @Test
+    public void convertSegmentDownToStopNode() {
+      // `expr?.prop1.prop2.prop3`
+      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), "prop1");
+      Node middleGetProp = IR.continueOptChainGetprop(innerGetProp, "prop2");
+      Node outerGetProp = IR.continueOptChainGetprop(middleGetProp, "prop3");
+
+      NodeUtil.convertToNonOptionalChainSegmentDownTo(outerGetProp, innerGetProp);
+      // outer and middle are converted
+      assertThat(outerGetProp.isGetProp()).isTrue();
+      assertThat(middleGetProp.isGetProp()).isTrue();
+      // stopNode (innerGetProp) remains untouched
+      assertThat(innerGetProp.isOptChainGetProp()).isTrue();
+    }
+
     // All nodes till the current chain's start are converted to non-optional.
     private static boolean isChainConverted(Node node) {
       if (node == null) {
