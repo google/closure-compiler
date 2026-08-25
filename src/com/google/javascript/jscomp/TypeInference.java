@@ -83,12 +83,6 @@ import org.jspecify.annotations.Nullable;
  */
 class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
 
-  // TODO(johnlenz): We no longer make this check, but we should.
-  static final DiagnosticType FUNCTION_LITERAL_UNDEFINED_THIS =
-      DiagnosticType.warning(
-          "JSC_FUNCTION_LITERAL_UNDEFINED_THIS",
-          "Function literal argument refers to undefined this argument");
-
   static final DiagnosticType REASSIGN_CLASS_PROTOTYPE =
       DiagnosticType.error(
           "JSC_REASSIGN_CLASS_PROTOTYPE", "Reassigning a class prototype is not allowed");

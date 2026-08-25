@@ -31,20 +31,6 @@ import java.util.Map;
  */
 class ValidityCheck implements CompilerPass {
 
-  static final DiagnosticType CANNOT_PARSE_GENERATED_CODE =
-      DiagnosticType.error(
-          "JSC_CANNOT_PARSE_GENERATED_CODE",
-          "Internal compiler error. Cannot parse generated code: {0}");
-
-  static final DiagnosticType GENERATED_BAD_CODE =
-      DiagnosticType.error(
-          "JSC_GENERATED_BAD_CODE",
-          "Internal compiler error. Generated bad code."
-              + "----------------------------------------\n"
-              + "Expected:\n{0}\n"
-              + "----------------------------------------\n"
-              + "Actual:\n{1}");
-
   static final DiagnosticType EXTERN_PROPERTIES_CHANGED =
       DiagnosticType.error(
           "JSC_EXTERN_PROPERTIES_CHANGED",

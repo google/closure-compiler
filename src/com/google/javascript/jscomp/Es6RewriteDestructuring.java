@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
-import static com.google.javascript.jscomp.DiagnosticType.error;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.colors.StandardColors;
@@ -41,11 +40,6 @@ import java.util.Iterator;
  * of destructuring.
  */
 public final class Es6RewriteDestructuring implements NodeTraversal.Callback, CompilerPass {
-
-  public static final DiagnosticType UNEXPECTED_DESTRUCTURING_REST_PARAMETER =
-      error(
-          "JSC_UNEXPECTED_DESTRUCTURING_REST_PARAMETER",
-          "Es6RewriteDestructuring not expecting object pattern rest parameter");
 
   enum ObjectDestructuringRewriteMode {
     /**

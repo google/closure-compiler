@@ -58,9 +58,6 @@ class ProcessTweaks implements CompilerPass {
           .or(CharMatcher.anyOf("0123456789_."));
 
   // Warnings and Errors.
-  static final DiagnosticType UNKNOWN_TWEAK_WARNING =
-      DiagnosticType.warning("JSC_UNKNOWN_TWEAK_WARNING", "no tweak registered with ID {0}");
-
   static final DiagnosticType TWEAK_MULTIPLY_REGISTERED_ERROR =
       DiagnosticType.error(
           "JSC_TWEAK_MULTIPLY_REGISTERED_ERROR", "Tweak {0} has already been registered.");
@@ -77,11 +74,6 @@ class ProcessTweaks implements CompilerPass {
       DiagnosticType.error(
           "JSC_NON_GLOBAL_TWEAK_INIT_ERROR",
           "tweak declaration {0} must occur in the global scope");
-
-  static final DiagnosticType TWEAK_OVERRIDE_AFTER_REGISTERED_ERROR =
-      DiagnosticType.error(
-          "JSC_TWEAK_OVERRIDE_AFTER_REGISTERED_ERROR",
-          "Cannot override the default value of tweak {0} after it has been registered");
 
   static final DiagnosticType TWEAK_WRONG_GETTER_TYPE_WARNING =
       DiagnosticType.warning(

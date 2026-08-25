@@ -46,9 +46,6 @@ class ReplaceIdGenerators implements CompilerPass {
       DiagnosticType.error(
           "JSC_CONDITIONAL_ID_GENERATOR_CALL", "Id generator call must be unconditional");
 
-  static final DiagnosticType INVALID_GENERATOR_ID_MAPPING =
-      DiagnosticType.error("JSC_INVALID_GENERATOR_ID_MAPPING", "Invalid generator id mapping. {0}");
-
   static final DiagnosticType MISSING_NAME_MAP_FOR_GENERATOR =
       DiagnosticType.warning(
           "JSC_MISSING_NAME_MAP_FOR_GENERATOR",

@@ -87,11 +87,6 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
           "JSC_INVALID_DESTRUCTURING_REQUIRE",
           "Destructuring goog.require must be a simple object pattern.");
 
-  static final DiagnosticType AWAIT_GOOG_REQUIRE_CALLS =
-      DiagnosticType.error(
-          "JSC_AWAIT_GOOG_REQUIRE_CALLS",
-          "goog.require(Type) and goog.forwardDeclare can not be in an 'await' expression.");
-
   static final DiagnosticType LET_GOOG_REQUIRE =
       DiagnosticType.disabled(
           "JSC_LET_GOOG_REQUIRE",
