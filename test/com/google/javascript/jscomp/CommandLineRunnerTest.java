@@ -2239,7 +2239,7 @@ public final class CommandLineRunnerTest {
               "--dependency_mode=NONE",
               "--env=CUSTOM",
               "--js=" + input,
-              "--typed_ast_output_file__INTENRNAL_USE_ONLY=" + typedAst,
+              "--typed_ast_output_file=" + typedAst,
             },
             new PrintStream(outReader),
             new PrintStream(errReader));
@@ -2267,7 +2267,7 @@ public final class CommandLineRunnerTest {
               "--dependency_mode=NONE",
               "--env=CUSTOM",
               "--js=" + input,
-              "--typed_ast_input_file__INTERNAL_USE_ONLY=" + typedAst,
+              "--typed_ast_input_file=" + typedAst,
               "--js_output_file=" + restoredOutput,
             },
             new PrintStream(outReader),
@@ -2349,7 +2349,7 @@ public final class CommandLineRunnerTest {
     assertWithMessage(errReader.toString(UTF_8)).that(directExitCode).isEqualTo(0);
 
     ArrayList<String> restoredArguments = new ArrayList<>(List.of(commonArguments));
-    restoredArguments.add("--typed_ast_input_file__INTERNAL_USE_ONLY=" + combinedTypedAst);
+    restoredArguments.add("--typed_ast_input_file=" + combinedTypedAst);
     restoredArguments.add("--num_parallel_threads=2");
     restoredArguments.add("--js_output_file=" + restoredOutput);
     CommandLineRunner restored =

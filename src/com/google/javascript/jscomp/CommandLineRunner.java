@@ -593,14 +593,12 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     @Option(
         name = "--typed_ast_output_file",
-        usage = "Sets file to output in-progress typedAST format. DO NOT USE!",
-        hidden = true)
+        usage = "Sets file to output in-progress typedAST format.")
     private @Nullable String typedAstOutputFile = null;
 
     @Option(
-        name = "--typed_ast_input_file__INTERNAL_USE_ONLY",
-        usage = "Reads an in-progress typedAST list produced by a checks-only compilation.",
-        hidden = true)
+        name = "--typed_ast_input_file",
+        usage = "Reads an in-progress typedAST list produced by a checks-only compilation.")
     private @Nullable String typedAstInputFile = null;
 
     @Option(
