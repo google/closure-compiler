@@ -173,12 +173,6 @@ var OffscreenRenderingContextId;
 var RenderingContext;
 
 /**
- * @interface
- * @see https://gpuweb.github.io/gpuweb/#gpucanvascontext
- */
-function GPUCanvasContext() {}
-
-/**
  * @typedef {string}
  * Valid values: "forward" | "backward" | "none"
  */

@@ -1780,6 +1780,309 @@ GPUCommandEncoder.prototype.popDebugGroup = function() {};
  */
 GPUCommandEncoder.prototype.pushDebugGroup = function(groupLabel) {};
 
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpudevicedescriptor
+ */
+function GPUDeviceDescriptor() {}
+/** @type {!GPUQueueDescriptor|undefined} */
+GPUDeviceDescriptor.prototype.defaultQueue;
+/** @type {!Array<!GPUFeatureName>|undefined} */
+GPUDeviceDescriptor.prototype.requiredFeatures;
+/** @type {!Object<string,!GPUSize64|undefined>|undefined} */
+GPUDeviceDescriptor.prototype.requiredLimits;
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/GPUDeviceLostInfo
+ */
+function GPUDeviceLostInfo() {}
+/** @type {string} */
+GPUDeviceLostInfo.prototype.message;
+/** @type {!GPUDeviceLostReason} */
+GPUDeviceLostInfo.prototype.reason;
+
+/**
+ * @record
+ * @extends {GPUObjectDescriptorBase}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuqueuedescriptor
+ */
+function GPUQueueDescriptor() {}
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUQueue
+ */
+function GPUQueue() {}
+/**
+ * @param {!GPUCopyExternalImageSourceInfo} source
+ * @param {!GPUCopyExternalImageDestInfo} destination
+ * @param {!GPUExtent3D|!Iterable<!GPUIntegerCoordinate>} copySize
+ * @return {undefined}
+ */
+GPUQueue.prototype.copyExternalImageToTexture = function(
+    source, destination, copySize) {};
+/**
+ * @return {!Promise<undefined>}
+ */
+GPUQueue.prototype.onSubmittedWorkDone = function() {};
+/**
+ * @param {!Array<!GPUCommandBuffer>|!Iterable<!GPUCommandBuffer>}
+ *     commandBuffers
+ * @return {undefined}
+ */
+GPUQueue.prototype.submit = function(commandBuffers) {};
+/**
+ * @param {!GPUBuffer} buffer
+ * @param {!GPUSize64} bufferOffset
+ * @param {!AllowSharedBufferSource} data
+ * @param {!GPUSize64=} opt_dataOffset
+ * @param {!GPUSize64=} opt_size
+ * @return {undefined}
+ */
+GPUQueue.prototype.writeBuffer = function(
+    buffer, bufferOffset, data, opt_dataOffset, opt_size) {};
+/**
+ * @param {!GPUTexelCopyTextureInfo} destination
+ * @param {!AllowSharedBufferSource} data
+ * @param {!GPUTexelCopyBufferLayout} dataLayout
+ * @param {!GPUExtent3D|!Iterable<!GPUIntegerCoordinate>} size
+ * @return {undefined}
+ */
+GPUQueue.prototype.writeTexture = function(
+    destination, data, dataLayout, size) {};
+
+/**
+ * @record
+ * @extends {EventInit}
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpuuncapturederroreventinit
+ */
+function GPUUncapturedErrorEventInit() {}
+/** @type {!GPUError} */
+GPUUncapturedErrorEventInit.prototype.error;
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUUncapturedErrorEvent
+ * @param {string} type
+ * @param {!GPUUncapturedErrorEventInit} gpuUncapturedErrorEventInitDict
+ */
+function GPUUncapturedErrorEvent(type, gpuUncapturedErrorEventInitDict) {}
+/** @type {!GPUError} */
+GPUUncapturedErrorEvent.prototype.error;
+
+/**
+ * @constructor
+ * @extends {GPUObjectBase}
+ * @implements {EventTarget}
+ * @see https://developer.mozilla.org/docs/Web/API/GPUDevice
+ */
+function GPUDevice() {}
+/** @type {!GPUAdapterInfo} */
+GPUDevice.prototype.adapterInfo;
+/** @type {!GPUSupportedFeatures} */
+GPUDevice.prototype.features;
+/** @type {!GPUSupportedLimits} */
+GPUDevice.prototype.limits;
+/** @type {!Promise<!GPUDeviceLostInfo>} */
+GPUDevice.prototype.lost;
+/** @type {?function(!GPUUncapturedErrorEvent):*} */
+GPUDevice.prototype.onuncapturederror;
+/** @type {!GPUQueue} */
+GPUDevice.prototype.queue;
+/**
+ * @param {!GPUBindGroupDescriptor} descriptor
+ * @return {!GPUBindGroup}
+ */
+GPUDevice.prototype.createBindGroup = function(descriptor) {};
+/**
+ * @param {!GPUBindGroupLayoutDescriptor} descriptor
+ * @return {!GPUBindGroupLayout}
+ */
+GPUDevice.prototype.createBindGroupLayout = function(descriptor) {};
+/**
+ * @param {!GPUBufferDescriptor} descriptor
+ * @return {!GPUBuffer}
+ */
+GPUDevice.prototype.createBuffer = function(descriptor) {};
+/**
+ * @param {!GPUCommandEncoderDescriptor=} opt_descriptor
+ * @return {!GPUCommandEncoder}
+ */
+GPUDevice.prototype.createCommandEncoder = function(opt_descriptor) {};
+/**
+ * @param {!GPUComputePipelineDescriptor} descriptor
+ * @return {!GPUComputePipeline}
+ */
+GPUDevice.prototype.createComputePipeline = function(descriptor) {};
+/**
+ * @param {!GPUComputePipelineDescriptor} descriptor
+ * @return {!Promise<!GPUComputePipeline>}
+ */
+GPUDevice.prototype.createComputePipelineAsync = function(descriptor) {};
+/**
+ * @param {!GPUPipelineLayoutDescriptor} descriptor
+ * @return {!GPUPipelineLayout}
+ */
+GPUDevice.prototype.createPipelineLayout = function(descriptor) {};
+/**
+ * @param {!GPUQuerySetDescriptor} descriptor
+ * @return {!GPUQuerySet}
+ */
+GPUDevice.prototype.createQuerySet = function(descriptor) {};
+/**
+ * @param {!GPURenderBundleEncoderDescriptor} descriptor
+ * @return {!GPURenderBundleEncoder}
+ */
+GPUDevice.prototype.createRenderBundleEncoder = function(descriptor) {};
+/**
+ * @param {!GPURenderPipelineDescriptor} descriptor
+ * @return {!GPURenderPipeline}
+ */
+GPUDevice.prototype.createRenderPipeline = function(descriptor) {};
+/**
+ * @param {!GPURenderPipelineDescriptor} descriptor
+ * @return {!Promise<!GPURenderPipeline>}
+ */
+GPUDevice.prototype.createRenderPipelineAsync = function(descriptor) {};
+/**
+ * @param {!GPUSamplerDescriptor=} opt_descriptor
+ * @return {!GPUSampler}
+ */
+GPUDevice.prototype.createSampler = function(opt_descriptor) {};
+/**
+ * @param {!GPUShaderModuleDescriptor} descriptor
+ * @return {!GPUShaderModule}
+ */
+GPUDevice.prototype.createShaderModule = function(descriptor) {};
+/**
+ * @param {!GPUTextureDescriptor} descriptor
+ * @return {!GPUTexture}
+ */
+GPUDevice.prototype.createTexture = function(descriptor) {};
+/**
+ * @return {undefined}
+ */
+GPUDevice.prototype.destroy = function() {};
+/**
+ * @param {!GPUExternalTextureDescriptor} descriptor
+ * @return {!GPUExternalTexture}
+ */
+GPUDevice.prototype.importExternalTexture = function(descriptor) {};
+/**
+ * @return {!Promise<!GPUError|null>}
+ */
+GPUDevice.prototype.popErrorScope = function() {};
+/**
+ * @param {!GPUErrorFilter} filter
+ * @return {undefined}
+ */
+GPUDevice.prototype.pushErrorScope = function(filter) {};
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpucanvastonemapping
+ */
+function GPUCanvasToneMapping() {}
+/** @type {!GPUCanvasToneMappingMode|undefined} */
+GPUCanvasToneMapping.prototype.mode;
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpucanvasconfiguration
+ */
+function GPUCanvasConfiguration() {}
+/** @type {!GPUCanvasAlphaMode|undefined} */
+GPUCanvasConfiguration.prototype.alphaMode;
+/** @type {!PredefinedColorSpace|undefined} */
+GPUCanvasConfiguration.prototype.colorSpace;
+/** @type {!GPUDevice} */
+GPUCanvasConfiguration.prototype.device;
+/** @type {!GPUTextureFormat} */
+GPUCanvasConfiguration.prototype.format;
+/** @type {!GPUCanvasToneMapping|undefined} */
+GPUCanvasConfiguration.prototype.toneMapping;
+/** @type {!GPUTextureUsageFlags|undefined} */
+GPUCanvasConfiguration.prototype.usage;
+/** @type {!Array<!GPUTextureFormat>|undefined} */
+GPUCanvasConfiguration.prototype.viewFormats;
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/GPUCanvasContext
+ */
+function GPUCanvasContext() {}
+/** @type {!HTMLCanvasElement|!OffscreenCanvas} */
+GPUCanvasContext.prototype.canvas;
+/**
+ * @param {!GPUCanvasConfiguration} configuration
+ * @return {undefined}
+ */
+GPUCanvasContext.prototype.configure = function(configuration) {};
+/**
+ * @return {!GPUCanvasConfiguration|null}
+ */
+GPUCanvasContext.prototype.getConfiguration = function() {};
+/**
+ * @return {!GPUTexture}
+ */
+GPUCanvasContext.prototype.getCurrentTexture = function() {};
+/**
+ * @return {undefined}
+ */
+GPUCanvasContext.prototype.unconfigure = function() {};
+
+/**
+ * @record
+ * @see https://gpuweb.github.io/gpuweb/#dictdef-gpurequestadapteroptions
+ */
+function GPURequestAdapterOptions() {}
+/** @type {boolean|undefined} */
+GPURequestAdapterOptions.prototype.forceFallbackAdapter;
+/** @type {!GPUPowerPreference|undefined} */
+GPURequestAdapterOptions.prototype.powerPreference;
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/GPUAdapter
+ */
+function GPUAdapter() {}
+/** @type {!GPUSupportedFeatures} */
+GPUAdapter.prototype.features;
+/** @type {!GPUAdapterInfo} */
+GPUAdapter.prototype.info;
+/** @type {!GPUSupportedLimits} */
+GPUAdapter.prototype.limits;
+/**
+ * @param {!GPUDeviceDescriptor=} opt_descriptor
+ * @return {!Promise<!GPUDevice>}
+ */
+GPUAdapter.prototype.requestDevice = function(opt_descriptor) {};
+
+/**
+ * @constructor
+ * @see https://developer.mozilla.org/docs/Web/API/GPU
+ */
+function GPU() {}
+/** @type {!WGSLLanguageFeatures} */
+GPU.prototype.wgslLanguageFeatures;
+/** @return {!GPUTextureFormat} */
+GPU.prototype.getPreferredCanvasFormat = function() {};
+/**
+ * @param {!GPURequestAdapterOptions=} opt_options
+ * @return {!Promise<!GPUAdapter|null>}
+ */
+GPU.prototype.requestAdapter = function(opt_options) {};
+
+/** @type {!GPU} */
+Navigator.prototype.gpu;
+
+/** @type {!GPU} */
+WorkerNavigator.prototype.gpu;
+
 /** @typedef {number} */
 var GPUBufferDynamicOffset;
 
