@@ -6833,6 +6833,12 @@ google.maps.Maps3DLibrary.prototype.FlattenerElement;
 google.maps.Maps3DLibrary.prototype.GestureHandling;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {typeof google.maps.maps3d.Label3DElement}
+ */
+google.maps.Maps3DLibrary.prototype.Label3DElement;
+
+/**
  * @type {typeof google.maps.maps3d.LocationClickEvent}
  */
 google.maps.Maps3DLibrary.prototype.LocationClickEvent;
@@ -8194,6 +8200,18 @@ google.maps.PlacesLibrary = function() {};
 google.maps.PlacesLibrary.prototype.AccessibilityOptions;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.ActionButtonPosition}
+ */
+google.maps.PlacesLibrary.prototype.ActionButtonPosition;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.ActionLinkType}
+ */
+google.maps.PlacesLibrary.prototype.ActionLinkType;
+
+/**
  * @type {typeof google.maps.places.AddressComponent}
  */
 google.maps.PlacesLibrary.prototype.AddressComponent;
@@ -8202,6 +8220,30 @@ google.maps.PlacesLibrary.prototype.AddressComponent;
  * @type {typeof google.maps.places.AddressDescriptor}
  */
 google.maps.PlacesLibrary.prototype.AddressDescriptor;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.AdvancedPlaceDetailsCompactElement}
+ */
+google.maps.PlacesLibrary.prototype.AdvancedPlaceDetailsCompactElement;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.AdvancedPlaceDetailsElement}
+ */
+google.maps.PlacesLibrary.prototype.AdvancedPlaceDetailsElement;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.AdvancedPlaceListElement}
+ */
+google.maps.PlacesLibrary.prototype.AdvancedPlaceListElement;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.AdvancedPlaceSearchElement}
+ */
+google.maps.PlacesLibrary.prototype.AdvancedPlaceSearchElement;
 
 /**
  * @type {typeof google.maps.places.Area}
@@ -8384,6 +8426,12 @@ google.maps.PlacesLibrary.prototype.Place;
 google.maps.PlacesLibrary.prototype.PlaceAccessibleEntranceIconElement;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.PlaceActionEvent}
+ */
+google.maps.PlacesLibrary.prototype.PlaceActionEvent;
+
+/**
  * @type {typeof google.maps.places.PlaceAddressElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceAddressElement;
@@ -8402,6 +8450,12 @@ google.maps.PlacesLibrary.prototype.PlaceAttributionElement;
  * @type {typeof google.maps.places.PlaceAutocompleteElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceAutocompleteElement;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.PlaceButtonElement}
+ */
+google.maps.PlacesLibrary.prototype.PlaceButtonElement;
 
 /**
  * @type {typeof google.maps.places.PlaceContentConfigElement}
@@ -8452,6 +8506,12 @@ google.maps.PlacesLibrary.prototype.PlaceDetailsPlaceRequestElement;
  * @type {typeof google.maps.places.PlaceFeatureListElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceFeatureListElement;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.PlaceLinkElement}
+ */
+google.maps.PlacesLibrary.prototype.PlaceLinkElement;
 
 /**
  * @type {typeof google.maps.places.PlaceMediaElement}
@@ -18948,6 +19008,69 @@ google.maps.places.AccessibilityOptions.prototype
     .hasWheelchairAccessibleSeating;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * The slotted position of the control in the place details widget.
+ *
+ * Access by calling `const {ActionButtonPosition} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.ActionButtonPosition = {
+  /**
+   * The control is rendered in the corner of the widget. Corner controls render
+   * only an icon.
+   */
+  ACTION_CORNER: 'ACTION_CORNER',
+  /**
+   * The control is rendered in the main content area of the widget. Labels and
+   * icons are rendered.
+   */
+  ACTION_MAIN: 'ACTION_MAIN',
+};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * The action taken by a {@link google.maps.places.PlaceLinkElement} when
+ * clicked. Determines the icon, label and href destination.
+ *
+ * Access by calling `const {ActionLinkType} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.ActionLinkType = {
+  /**
+   * Triggers a tel: link to call the place. Behavior is operating system
+   * dependent.
+   */
+  CALL: 'CALL',
+  /**
+   * Use this action type for custom links. When using this action type, the
+   * <code>href</code> attribute must be set on the {@link
+   * google.maps.places.PlaceLinkElement}.
+   */
+  CUSTOM: 'CUSTOM',
+  /**
+   * Opens directions to the place in the location specified by {@link
+   * google.maps.places.PlaceLinkElement.target}.
+   */
+  OPEN_DIRECTIONS: 'OPEN_DIRECTIONS',
+  /**
+   * Opens the map in the location specified by {@link
+   * google.maps.places.PlaceLinkElement.target}.
+   */
+  OPEN_MAP: 'OPEN_MAP',
+  /**
+   * Opens the place&#39;s website in the location specified by {@link
+   * google.maps.places.PlaceLinkElement.target}.
+   */
+  OPEN_WEBSITE: 'OPEN_WEBSITE',
+};
+
+/**
  * Address component for the Place&#39;s location.
  *
  * Access by calling `const {AddressComponent} = await
@@ -19002,6 +19125,359 @@ google.maps.places.AddressDescriptor.prototype.areas;
  * @type {!Array<!google.maps.places.Landmark>}
  */
 google.maps.places.AddressDescriptor.prototype.landmarks;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Displays details for a place in a compact layout. Append a {@link
+ * google.maps.places.PlaceDetailsPlaceRequestElement} or {@link
+ * google.maps.places.PlaceDetailsLocationRequestElement} to specify the place
+ * to be rendered. Append a {@link
+ * google.maps.places.PlaceStandardContentElement}, {@link
+ * google.maps.places.PlaceAllContentElement} or specify specific content
+ * children to configure the content to render. <br><br> To use this element,
+ * enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
+ *
+ * Access by calling `const {AdvancedPlaceDetailsCompactElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.AdvancedPlaceDetailsCompactElementOptions=}
+ *     options
+ * @implements {google.maps.places.AdvancedPlaceDetailsCompactElementOptions}
+ * @extends {google.maps.places.PlaceDetailsCompactElement}
+ * @constructor
+ */
+google.maps.places.AdvancedPlaceDetailsCompactElement = function(options) {};
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.AdvancedPlaceDetailsCompactElement.prototype
+    .internalUsageAttributionIds;
+
+/**
+ * Read only. Place object containing the ID, location, and viewport of the
+ * currently rendered place.
+ * @type {!google.maps.places.Place|undefined}
+ */
+google.maps.places.AdvancedPlaceDetailsCompactElement.prototype.place;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>AdvancedPlaceDetailsCompactElement</code>.
+ * @extends {google.maps.places.PlaceDetailsCompactElementOptions}
+ * @record
+ */
+google.maps.places.AdvancedPlaceDetailsCompactElementOptions = function() {};
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.AdvancedPlaceDetailsCompactElementOptions.prototype
+    .internalUsageAttributionIds;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Displays details for a place in a full layout. Append either a {@link
+ * google.maps.places.PlaceDetailsPlaceRequestElement} or {@link
+ * google.maps.places.PlaceDetailsLocationRequestElement} to specify the place
+ * to be rendered. Append a {@link
+ * google.maps.places.PlaceStandardContentElement}, {@link
+ * google.maps.places.PlaceAllContentElement} or place details elements directly
+ * to configure the content to render. <br><br> Example: <pre><code>
+ * &lt;gmp-advanced-place-details&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-details-place-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;place="<var>PLACE_ID</var>"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-details-place-request&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-standard-content&gt;<br>
+ * &nbsp;&nbsp;&lt;/gmp-place-standard-content&gt;<br>
+ * &lt;/gmp-advanced-place-details&gt; </code></pre> <br> To use this element,
+ * enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
+ *
+ * Access by calling `const {AdvancedPlaceDetailsElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.AdvancedPlaceDetailsElementOptions=} options
+ * @implements {google.maps.places.AdvancedPlaceDetailsElementOptions}
+ * @extends {google.maps.places.PlaceDetailsElement}
+ * @constructor
+ */
+google.maps.places.AdvancedPlaceDetailsElement = function(options) {};
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.AdvancedPlaceDetailsElement.prototype
+    .internalUsageAttributionIds;
+
+/**
+ * Read only. Place object containing the ID, location, and viewport of the
+ * currently rendered place.
+ * @type {!google.maps.places.Place|undefined}
+ */
+google.maps.places.AdvancedPlaceDetailsElement.prototype.place;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>AdvancedPlaceDetailsElement</code>.
+ * @extends {google.maps.places.PlaceDetailsElementOptions}
+ * @record
+ */
+google.maps.places.AdvancedPlaceDetailsElementOptions = function() {};
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.AdvancedPlaceDetailsElementOptions.prototype
+    .internalUsageAttributionIds;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Displays the results of a place search in a list. Append one or more {@link
+ * google.maps.places.PlaceDetailsPlaceRequestElement} or set the
+ * <code>places</code> property to specify the places to display. Append
+ * a {@link google.maps.places.PlaceStandardContentElement} or {@link
+ * google.maps.places.PlaceAllContentElement} to specify which content to
+ * render. <br><br> Example: <pre><code> &lt;gmp-advanced-place-list&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-details-place-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;place="<var>PLACE_ID</var>"<br>
+ * &nbsp;&nbsp;&lt;/gmp-place-details-place-request&gt;<br>
+ * &nbsp;&nbsp;&lt;template slot="details-item"&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-media
+ * lightbox-preferred&gt;&lt;/gmp-place-media&gt;<br>
+ * &nbsp;&nbsp;&lt;/template&gt;<br> &lt;/gmp-advanced-place-list&gt;
+ * </code></pre> <br> To use the Advanced Place List Element, enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
+ *
+ * Access by calling `const {AdvancedPlaceListElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.AdvancedPlaceListElementOptions=} options
+ * @implements {google.maps.places.AdvancedPlaceListElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.AdvancedPlaceListElement = function(options) {};
+
+/**
+ * The position of the attribution logo and legal disclosure button.
+ * @default <code>PlaceSearchAttributionPosition.TOP</code>
+ * @type {!google.maps.places.PlaceSearchAttributionPosition|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElement.prototype.attributionPosition;
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElement.prototype
+    .internalUsageAttributionIds;
+
+/**
+ * The orientation variant (vertical or horizontal) of the element.
+ * @default <code>PlaceSearchOrientation.VERTICAL</code>
+ * @type {!google.maps.places.PlaceSearchOrientation|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElement.prototype.orientation;
+
+/**
+ * List of Place objects containing the IDs which should be displayed in this
+ * element. Note that all Places set in the places property might not be
+ * displayed if they could not be rendered(e.g. invalid ID, network request
+ * error, etc.). The places property can be read to retrieve the currently
+ * displayed places.
+ * @type {!Iterable<!google.maps.places.Place|string>|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElement.prototype.places;
+
+/**
+ * Whether or not the list items are selectable. If true, the list items will be
+ * buttons that dispatch the <code>gmp-select</code> event when clicked.
+ * Accessible keyboard navigation and selection is also supported.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElement.prototype.selectable;
+
+/**
+ * If true, truncates certain lines of content to fit on one line instead of
+ * wrapping.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElement.prototype.truncationPreferred;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>AdvancedPlaceListElement</code>.
+ * @record
+ */
+google.maps.places.AdvancedPlaceListElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.attributionPosition}.
+ * @type {!google.maps.places.PlaceSearchAttributionPosition|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElementOptions.prototype
+    .attributionPosition;
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElementOptions.prototype
+    .internalUsageAttributionIds;
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.orientation}.
+ * @type {!google.maps.places.PlaceSearchOrientation|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElementOptions.prototype.orientation;
+
+/**
+ * See {@link google.maps.places.AdvancedPlaceListElement.places}.
+ * @type {!Iterable<!google.maps.places.Place|string>|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElementOptions.prototype.places;
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.selectable}
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElementOptions.prototype.selectable;
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.truncationPreferred}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.AdvancedPlaceListElementOptions.prototype
+    .truncationPreferred;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Displays the results of an advanced place search in a list. Append a {@link
+ * google.maps.places.PlaceTextSearchRequestElement} or {@link
+ * google.maps.places.PlaceNearbySearchRequestElement} to specify the request to
+ * render results for. Append a {@link
+ * google.maps.places.PlaceStandardContentElement}, {@link
+ * google.maps.places.PlaceAllContentElement}, or a <code>&lt;template
+ * slot=&quot;details-item&quot;&gt;</code> to specify which content to render.
+ * <br><br> Example: <pre><code> &lt;gmp-advanced-place-search&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-text-search-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;text-query="<var>QUERY</var>"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-text-search-request&gt;<br>
+ * &nbsp;&nbsp;&lt;template slot="details-item"&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-media
+ * lightbox-preferred&gt;&lt;/gmp-place-media&gt;<br>
+ * &nbsp;&nbsp;&lt;/template&gt;<br> &lt;/gmp-advanced-place-search&gt;
+ * </code></pre> <br> To use the Advanced Place Search Element, enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
+ *
+ * Access by calling `const {AdvancedPlaceSearchElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.AdvancedPlaceSearchElementOptions=} options
+ * @implements {google.maps.places.AdvancedPlaceSearchElementOptions}
+ * @extends {google.maps.places.PlaceSearchElement}
+ * @constructor
+ */
+google.maps.places.AdvancedPlaceSearchElement = function(options) {};
+
+/**
+ * The position of the attribution logo and legal disclosure button.
+ * @default <code>PlaceSearchAttributionPosition.TOP</code>
+ * @type {!google.maps.places.PlaceSearchAttributionPosition|null|undefined}
+ */
+google.maps.places.AdvancedPlaceSearchElement.prototype.attributionPosition;
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.AdvancedPlaceSearchElement.prototype
+    .internalUsageAttributionIds;
+
+/**
+ * The orientation variant (vertical or horizontal) of the element.
+ * @default <code>PlaceSearchOrientation.VERTICAL</code>
+ * @type {!google.maps.places.PlaceSearchOrientation|null|undefined}
+ */
+google.maps.places.AdvancedPlaceSearchElement.prototype.orientation;
+
+/**
+ * Whether or not the list items are selectable. If true, the list items will be
+ * buttons that dispatch the <code>gmp-select</code> event when clicked.
+ * Accessible keyboard navigation and selection is also supported.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.AdvancedPlaceSearchElement.prototype.selectable;
+
+/**
+ * If true, truncates certain lines of content to fit on one line instead of
+ * wrapping.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.AdvancedPlaceSearchElement.prototype.truncationPreferred;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>AdvancedPlaceSearchElement</code>.
+ * @extends {google.maps.places.PlaceSearchElementOptions}
+ * @record
+ */
+google.maps.places.AdvancedPlaceSearchElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.attributionPosition}.
+ * @type {!google.maps.places.PlaceSearchAttributionPosition|null|undefined}
+ */
+google.maps.places.AdvancedPlaceSearchElementOptions.prototype
+    .attributionPosition;
+
+/**
+ * Identifiers used to attribute calls to specific packages or OSS libraries.
+ * @type {!Iterable<string>|null|undefined}
+ */
+google.maps.places.AdvancedPlaceSearchElementOptions.prototype
+    .internalUsageAttributionIds;
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.orientation}.
+ * @type {!google.maps.places.PlaceSearchOrientation|null|undefined}
+ */
+google.maps.places.AdvancedPlaceSearchElementOptions.prototype.orientation;
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.selectable}
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.AdvancedPlaceSearchElementOptions.prototype.selectable;
+
+/**
+ * See {@link google.maps.places.PlaceSearchElement.truncationPreferred}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.AdvancedPlaceSearchElementOptions.prototype
+    .truncationPreferred;
 
 /**
  * Area information and the area&#39;s relationship with the target location.
@@ -21841,6 +22317,25 @@ google.maps.places.PlaceAccessibleEntranceIconElement = function(options) {};
 google.maps.places.PlaceAccessibleEntranceIconElementOptions = function() {};
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * The event fired when the action button is clicked.
+ *
+ * Access by calling `const {PlaceActionEvent} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.places.PlaceActionEvent = function() {};
+
+/**
+ * The place that was clicked.
+ * @type {!google.maps.places.Place}
+ */
+google.maps.places.PlaceActionEvent.prototype.place;
+
+/**
  * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
  * google.maps.places.PlaceDetailsElement}, or {@link
  * google.maps.places.PlaceSearchElement} to show a place&#39;s address. Append
@@ -22270,6 +22765,70 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
  * @type {string|null|undefined}
  */
 google.maps.places.PlaceAutocompleteElementOptions.prototype.value;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Displays a button slotted into either the <code>action-main</code> slot or
+ * the <code>action-corner</code> slot. <code>PlaceButtonElement</code> has no
+ * default behavior. Attach an event listener to the element to define its
+ * behavior. By default the button will be shown in the <code>action-main</code>
+ * slot.
+ *
+ * Access by calling `const {PlaceButtonElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceButtonElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceButtonElement = function() {};
+
+/**
+ * The ARIA label for the internal control. Icon-only controls should always
+ * have an aria-label to describe their purpose and behavior. Controls rendered
+ * in the corner do not show a label so an aria-label is recommended to be used
+ * instead of the label for corner controls.
+ * @default <code>undefined</code>
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceButtonElement.prototype.actionAriaLabel;
+
+/**
+ * The label to display in the control. For links with predefined action types,
+ * this attribute is ignored. Links and buttons rendered in the action-corner
+ * slot do not display a label. It&#39;s recommended to use the
+ * <code>action-aria-label</code> attribute instead for corner controls.
+ * @default <code>undefined</code>
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceButtonElement.prototype.label;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceButtonElement</code>.
+ * @record
+ */
+google.maps.places.PlaceButtonElementOptions = function() {};
+
+/**
+ * The ARIA label for the internal control. Icon-only controls should always
+ * have an aria-label to describe their purpose and behavior. Controls rendered
+ * in the corner do not show a label so an aria-label is recommended to be used
+ * instead of the label for corner controls.
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceButtonElementOptions.prototype.actionAriaLabel;
+
+/**
+ * The label to display in the control. For links with predefined action types,
+ * this attribute is ignored. Links and buttons rendered in the action-corner
+ * slot do not display a label. It&#39;s recommended to use the
+ * <code>action-aria-label</code> attribute instead for corner controls.
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceButtonElementOptions.prototype.label;
 
 /**
  * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
@@ -22781,6 +23340,115 @@ google.maps.places.PlaceGeometry.prototype.location;
  * @type {!google.maps.LatLngBounds|undefined}
  */
 google.maps.places.PlaceGeometry.prototype.viewport;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Displays a link slotted into either the <code>action-main</code> slot or the
+ * <code>action-corner</code> slot. By default the link will be shown in the
+ * <code>action-main</code> slot. Use the <code>action</code> attribute to
+ * specify the behavior of the link. Several action types are available to use
+ * listed in {@link google.maps.places.ActionLinkType}. For a custom link,
+ * specify the <code>custom</code> action type and set the <code>href</code> and
+ * <code>label</code> attributes.
+ *
+ * Access by calling `const {PlaceLinkElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceLinkElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceLinkElement = function() {};
+
+/**
+ * The type of action to perform when the link is clicked. Determines the
+ * default label, icon and destination href of the link. Use the
+ * <code>custom</code> type and specify the <code>href</code> attribute to set a
+ * destination manually.
+ * @type {!google.maps.places.ActionLinkType|undefined}
+ */
+google.maps.places.PlaceLinkElement.prototype.action;
+
+/**
+ * The ARIA label for the internal control. Icon-only controls should always
+ * have an aria-label to describe their purpose and behavior. Controls rendered
+ * in the corner do not show a label so an aria-label is recommended to be used
+ * instead of the label for corner controls.
+ * @default <code>undefined</code>
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceLinkElement.prototype.actionAriaLabel;
+
+/**
+ * The URL to open when the link is clicked. This is only used when the
+ * <code>action</code> attribute is set to <code>custom</code>.
+ * @default <code>undefined</code>
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceLinkElement.prototype.href;
+
+/**
+ * The label to display in the control. For links with predefined action types,
+ * this attribute is ignored. Links and buttons rendered in the action-corner
+ * slot do not display a label. It&#39;s recommended to use the
+ * <code>action-aria-label</code> attribute instead for corner controls.
+ * @default <code>undefined</code>
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceLinkElement.prototype.label;
+
+/**
+ * Determines where the link opens. See <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target</a>.
+ * @default <code>undefined</code>
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceLinkElement.prototype.target;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceLinkElement</code>.
+ * @record
+ */
+google.maps.places.PlaceLinkElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlaceLinkElement.action}.
+ * @type {!google.maps.places.ActionLinkType|undefined}
+ */
+google.maps.places.PlaceLinkElementOptions.prototype.action;
+
+/**
+ * The ARIA label for the internal control. Icon-only controls should always
+ * have an aria-label to describe their purpose and behavior. Controls rendered
+ * in the corner do not show a label so an aria-label is recommended to be used
+ * instead of the label for corner controls.
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceLinkElementOptions.prototype.actionAriaLabel;
+
+/**
+ * See {@link google.maps.places.PlaceLinkElement.href}.
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceLinkElementOptions.prototype.href;
+
+/**
+ * The label to display in the control. For links with predefined action types,
+ * this attribute is ignored. Links and buttons rendered in the action-corner
+ * slot do not display a label. It&#39;s recommended to use the
+ * <code>action-aria-label</code> attribute instead for corner controls.
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceLinkElementOptions.prototype.label;
+
+/**
+ * See {@link google.maps.places.PlaceLinkElement.target}.
+ * @type {string|undefined}
+ */
+google.maps.places.PlaceLinkElementOptions.prototype.target;
 
 /**
  * Configures a {@link google.maps.places.PlaceDetailsCompactElement}, {@link
