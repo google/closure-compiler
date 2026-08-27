@@ -2585,7 +2585,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538125083): InlineVariables: fix cross-scope alias chain with intervening reassignment
   @Test
   public void testCrossScopeAliasChainWithInterveningReassignment() {
     test(
@@ -2604,8 +2603,9 @@ public final class InlineVariablesTest extends CompilerTestCase {
         function f() {
           var C = compute();
           {
+            let A = C;
             C = attacker();
-            sink(C); sink(C);
+            sink(A); sink(A);
           }
         }
         """);

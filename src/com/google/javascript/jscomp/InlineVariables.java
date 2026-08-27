@@ -31,6 +31,7 @@ import com.google.javascript.rhino.Node;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -574,6 +575,7 @@ class InlineVariables implements CompilerPass {
         }
 
         if (initialValueAnalysis.isAlias()
+            && Objects.equals(aliasedVar, initialValueAnalysis.getAliasedVar())
             && aliasedVarAnalysis.isSafeToInlineAliases()
             && isWellDefinedAssignedOnce()) {
           // The variable we aliased couldn't be inlined itself, or it was an alias for another
