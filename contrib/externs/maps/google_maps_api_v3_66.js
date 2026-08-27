@@ -8519,6 +8519,12 @@ google.maps.PlacesLibrary.prototype.PlaceLinkElement;
 google.maps.PlacesLibrary.prototype.PlaceMediaElement;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.PlaceNameElement}
+ */
+google.maps.PlacesLibrary.prototype.PlaceNameElement;
+
+/**
  * @type {typeof google.maps.places.PlaceNearbySearchRequestElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceNearbySearchRequestElement;
@@ -23506,6 +23512,28 @@ google.maps.places.PlaceMediaElementOptions.prototype.lightboxPreferred;
  * @type {!google.maps.places.MediaSize|null|undefined}
  */
 google.maps.places.PlaceMediaElementOptions.prototype.preferredSize;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Displays the name of a place within a place details element.
+ *
+ * Access by calling `const {PlaceNameElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceNameElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceNameElement = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceNameElement</code>.
+ * @record
+ */
+google.maps.places.PlaceNameElementOptions = function() {};
 
 /**
  * Configures a {@link google.maps.places.PlaceSearchElement} to load results
