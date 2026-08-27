@@ -882,8 +882,18 @@ public class Scanner {
           hexDigits = value.substring(escapeStart + 3, escapeEnd);
           escapeEnd++;
         }
+        // Identifiers are carried around the compiler as sequences of char (UTF-16 code units), so a
+        // code point that does not fit in a single char cannot be represented here. The value used
+        // to be cast straight to char, which silently kept only the low 16 bits: a braced escape for
+        // U+10041 was accepted as the identifier "A", and even code points above the U+10FFFF
+        // maximum (e.g. U+110041) slipped through the same way. Reject anything outside the BMP
+        // rather than aliasing it to a different character.
         // TODO(mattloring): Allow code points >= 0xFFFF (greater than the size of a char).
-        char ch = (char) Integer.parseInt(hexDigits, 0x10);
+        int codePoint = Integer.parseInt(hexDigits, 0x10);
+        if (codePoint > 0xFFFF) {
+          return null;
+        }
+        char ch = (char) codePoint;
         if (!Identifiers.isIdentifierPart(ch)) {
           return null;
         }
