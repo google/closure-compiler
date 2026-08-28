@@ -1073,7 +1073,7 @@ final class FunctionTypeBuilder {
     }
 
     // There are two cases where this type already exists in the current scope:
-    //   1. The type is a built-in that we initalized in JSTypeRegistry and is also defined in
+    //   1. The type is a built-in that we initialized in JSTypeRegistry and is also defined in
     //  externs.
     //   2. Cases like "class C {} C = class {}"
     // See https://github.com/google/closure-compiler/issues/2928 for some related bugs.

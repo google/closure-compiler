@@ -114,7 +114,7 @@ class ProcessDefines implements CompilerPass {
   static final DiagnosticType INVALID_DEFINE_LOCATION =
       DiagnosticType.error(
           "JSC_INVALID_DEFINE_LOCATION",
-          "@define must be initalized on a static qualified name in global or module scope");
+          "@define must be initialized on a static qualified name in global or module scope");
 
   static final DiagnosticType NON_CONST_DEFINE =
       DiagnosticType.error("JSC_NON_CONST_DEFINE", "@define {0} has already been set at {1}.");
