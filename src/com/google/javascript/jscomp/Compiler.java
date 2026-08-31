@@ -358,6 +358,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                     Feature.CONST_DECLARATIONS,
                     Feature.GENERATORS,
                     Feature.LET_DECLARATIONS));
+        case BROWSER_2019_WITHOUT_CLASSES ->
+            options.setOutputFeatureSet(
+                FeatureSet.BROWSER_2019.without(
+                    Feature.CLASSES,
+                    Feature.CLASS_GETTER_SETTER,
+                    Feature.NEW_TARGET,
+                    Feature.SUPER));
       }
     }
   }

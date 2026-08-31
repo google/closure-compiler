@@ -5338,6 +5338,23 @@ async function abc() {
   }
 
   @Test
+  public void browser2019WithoutClasses_doesNotRemoveAsyncAwait() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    options.setExperimentalOutputFeatureSet(
+        ExperimentalOutputFeatureSet.BROWSER_2019_WITHOUT_CLASSES);
+
+    test(
+        options,
+        "window['C'] = /** @dict */ class C { async f(p) { await p; return 0; } }",
+        """
+        const $jscomp$classDecl$98447280$0 = function() {};
+        $jscomp$classDecl$98447280$0.prototype.f = async function(p) { await p; return 0 };
+        window['C'] = $jscomp$classDecl$98447280$0
+        """);
+  }
+
+  @Test
   public void testNoSideEffectsPropagationOnStaticMembers_withEs2018Out() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
