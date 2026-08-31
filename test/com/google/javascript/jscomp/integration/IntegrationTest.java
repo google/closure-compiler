@@ -32,7 +32,7 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.AliasStringsMode;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
-import com.google.javascript.jscomp.CompilerOptions.ExperimentalForceTranspile;
+import com.google.javascript.jscomp.CompilerOptions.ExperimentalOutputFeatureSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
@@ -5283,12 +5283,13 @@ async function abc() {
   }
 
   @Test
-  public void performantWithAsyncStacks_doesNotRemoveAsyncAwait() {
+  public void es5WithSomePerformantEs2015AndAsyncFunctions_doesNotRemoveAsyncAwait() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(
         LanguageMode
             .ECMASCRIPT_2021); // does not matter when setForceTranspileExceptAsyncAwait(true)
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.PERFORMANT_WITH_ASYNC_STACKS);
+    options.setExperimentalOutputFeatureSet(
+        ExperimentalOutputFeatureSet.ES5_WITH_SOME_PERFORMANT_ES2015_AND_ASYNC_FUNCTIONS);
 
     // test transpiling let/const and classes but leave async functions untranspiled
     test(
@@ -5302,12 +5303,13 @@ async function abc() {
   }
 
   @Test
-  public void performantWithAsyncStacks_doesNotRemoveAsyncAwait2() {
+  public void es5WithSomePerformantEs2015AndAsyncFunctions_doesNotRemoveAsyncAwait2() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(
         LanguageMode
             .ECMASCRIPT_2021); // does not matter when setForceTranspileExceptAsyncAwait(true)
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.PERFORMANT_WITH_ASYNC_STACKS);
+    options.setExperimentalOutputFeatureSet(
+        ExperimentalOutputFeatureSet.ES5_WITH_SOME_PERFORMANT_ES2015_AND_ASYNC_FUNCTIONS);
 
     // test transpiling let/const, opt-chain and classes but leave async functions untranspiled
     test(
@@ -5322,13 +5324,14 @@ async function abc() {
   }
 
   @Test
-  public void performantWithAsyncStacks_withEs5Out() {
+  public void es5WithSomePerformantEs2015AndAsyncFunctions_withEs5Out() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setExperimentalForceTranspiles(ExperimentalForceTranspile.PERFORMANT_WITH_ASYNC_STACKS);
+    options.setExperimentalOutputFeatureSet(
+        ExperimentalOutputFeatureSet.ES5_WITH_SOME_PERFORMANT_ES2015_AND_ASYNC_FUNCTIONS);
 
-    // respects ES5 mode and lowers async await down to ES5 despite forcing
-    // `PERFORMANT_WITH_ASYNC_STACKS`
+    // respects ES5 mode and lowers async await down to ES5 despite setting
+    // `ES5_WITH_SOME_PERFORMANT_ES2015_AND_ASYNC_FUNCTIONS`
     testNoWarnings(options, "class C { async f(p) { let obj = await p; return obj?.prop; } }");
     assertThat(lastCompiler.toSource()).doesNotContain("async ");
     assertThat(lastCompiler.toSource()).doesNotContain("await ");

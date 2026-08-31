@@ -126,8 +126,7 @@ public class CompilerOptions {
   /** The JavaScript features that are allowed to be in the output. */
   private Optional<FeatureSet> outputFeatureSet = Optional.absent();
 
-  private ImmutableList<ExperimentalForceTranspile> experimentalForceTranspiles =
-      ImmutableList.of();
+  private Optional<ExperimentalOutputFeatureSet> experimentalOutputFeatureSet = Optional.absent();
 
   private Optional<Boolean> languageOutIsDefaultStrict = Optional.absent();
 
@@ -2085,32 +2084,28 @@ public class CompilerOptions {
     return languageIn.toFeatureSet();
   }
 
-  /** Options to force transpile specific features for performance experiments. */
+  /** Option to enable specific output features for performance experiments. */
   @Deprecated
-  public enum ExperimentalForceTranspile {
+  public enum ExperimentalOutputFeatureSet {
     /**
-     * Transpile performance sensitive features away, preserving ASYNC/AWAIT for debuggability
+     * If the output feature set is ES2015 or above, downgrade to ES5 output with only a small
+     * subset of ES2015 features enabled that are known not to have negative performance impact.
+     * Additionally allow ASYNC_FUNCTIONS and ASYNC_GENERATORS output for better async stack traces.
      *
-     * @deprecated Use setLanguageOut(LanguageMode.ECMASCRIPT5), or
-     *     setLangaugeOut(LanguageMode.ECMASCRIPT_2017) instead.
+     * @deprecated Use setBrowserFeaturesetYear or setLanguageOut instead.
      */
     @Deprecated
-    PERFORMANT_WITH_ASYNC_STACKS
+    ES5_WITH_SOME_PERFORMANT_ES2015_AND_ASYNC_FUNCTIONS,
   }
 
   @Deprecated
-  public void setExperimentalForceTranspiles(
-      ExperimentalForceTranspile... experimentalForceTranspile) {
-    if (experimentalForceTranspile.length > 1) {
-      checkState(
-          !experimentalForceTranspiles.contains(
-              ExperimentalForceTranspile.PERFORMANT_WITH_ASYNC_STACKS));
-    }
-    experimentalForceTranspiles = ImmutableList.copyOf(experimentalForceTranspile);
+  public void setExperimentalOutputFeatureSet(
+      ExperimentalOutputFeatureSet experimentalOutputFeatureSet) {
+    this.experimentalOutputFeatureSet = Optional.fromNullable(experimentalOutputFeatureSet);
   }
 
-  public ImmutableList<ExperimentalForceTranspile> getExperimentalForceTranspiles() {
-    return experimentalForceTranspiles;
+  public Optional<ExperimentalOutputFeatureSet> getExperimentalOutputFeatureSet() {
+    return experimentalOutputFeatureSet;
   }
 
   public boolean needsTranspilationFrom(FeatureSet languageLevel) {

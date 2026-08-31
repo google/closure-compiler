@@ -43,7 +43,6 @@ import com.google.gson.GsonBuilder;
 import com.google.javascript.jscomp.CodePrinter.LicenseTracker;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
-import com.google.javascript.jscomp.CompilerOptions.ExperimentalForceTranspile;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.SegmentOfCompilationToRun;
 import com.google.javascript.jscomp.ExpressionDecomposer.Workaround;
@@ -342,24 +341,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return options.getErrorFormat().toFormatter(this, colorize);
   }
 
-  private void initExperimentalForceTranspileOptions(CompilerOptions options) {
+  private void initExperimentalOutputFeatureSetOptions(CompilerOptions options) {
     FeatureSet featureSet = options.getOutputFeatureSet();
     if (Objects.equals(featureSet, FeatureSet.ES5) || Objects.equals(featureSet, FeatureSet.ES3)) {
       // do not change anything if language_out is configured to be ES5 or ES3.
       return;
     }
 
-    for (ExperimentalForceTranspile experimentalForceTranspile :
-        options.getExperimentalForceTranspiles()) {
-      switch (experimentalForceTranspile) {
-        case PERFORMANT_WITH_ASYNC_STACKS ->
+    if (options.getExperimentalOutputFeatureSet().isPresent()) {
+      switch (options.getExperimentalOutputFeatureSet().get()) {
+        case ES5_WITH_SOME_PERFORMANT_ES2015_AND_ASYNC_FUNCTIONS ->
             options.setOutputFeatureSet(
                 FeatureSet.ES5.with(
                     Feature.ASYNC_FUNCTIONS,
-                    Feature.GENERATORS,
-                    Feature.LET_DECLARATIONS,
+                    Feature.BLOCK_SCOPED_FUNCTION_DECLARATION,
                     Feature.CONST_DECLARATIONS,
-                    Feature.BLOCK_SCOPED_FUNCTION_DECLARATION));
+                    Feature.GENERATORS,
+                    Feature.LET_DECLARATIONS));
       }
     }
   }
@@ -371,7 +369,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public void initOptions(CompilerOptions options) {
     this.options = options;
     this.allowableFeatures = options.getLanguageIn().toFeatureSet();
-    initExperimentalForceTranspileOptions(options);
+    initExperimentalOutputFeatureSetOptions(options);
     if (errorManager == null) {
       if (this.outStream == null) {
         setErrorManager(new LoggerErrorManager(createMessageFormatter(), logger));
@@ -4408,8 +4406,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           return null;
         });
   }
-
-
 
   public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException {
     initWarningsGuard(options.getWarningsGuard());
