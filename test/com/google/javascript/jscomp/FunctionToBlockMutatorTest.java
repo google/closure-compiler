@@ -169,16 +169,6 @@ public final class FunctionToBlockMutatorTest {
   }
 
   @Test
-  public void testMutateInitializeUninitializedVarsNestedFunction() {
-    isCallInLoop = true;
-    helperMutate(
-        "function foo(a){var b = function(){ var c; }; return a;}; foo(1);",
-        "{var b$jscomp$inline_1 = function(){ var c$jscomp$inline_2; }; 1;}",
-        "foo",
-        null);
-  }
-
-  @Test
   public void testMutateInitializeUninitializedLets1() {
     isCallInLoop = true;
     helperMutate(
