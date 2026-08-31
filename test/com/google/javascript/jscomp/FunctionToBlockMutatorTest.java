@@ -198,6 +198,70 @@ public final class FunctionToBlockMutatorTest {
   }
 
   @Test
+  public void testMutateInitializeUninitializedVarInLoop() {
+    isCallInLoop = true;
+    // TODO(b/538170396): `b` should be initialized to `undefined` because
+    // it is used in a loop.
+    helperMutate(
+        """
+        function foo(a) {
+          for (var i = 0; i < 10; i++) {
+            var b;
+            return a;
+          }
+        }
+        foo(1);
+        """,
+        """
+        {
+          JSCompiler_inline_label_foo_3:
+          {
+            var i$jscomp$inline_1 = 0;
+            for (; i$jscomp$inline_1 < 10; i$jscomp$inline_1++) {
+              var b$jscomp$inline_2;
+              1;
+              break JSCompiler_inline_label_foo_3;
+            }
+          }
+        }
+        """,
+        "foo",
+        null);
+  }
+
+  @Test
+  public void testMutateInitializedVarInLoop() {
+    isCallInLoop = true;
+    // TODO(b/555250391): the initializer should not be hoisted out of the loop or
+    // lost when "foo" is inlined into the body of a loop
+    helperMutate(
+        """
+        function foo(a) {
+          for (var i = 0; i < 10; i++) {
+            var b = 1;
+            return a;
+          }
+        }
+        foo(1);
+        """,
+        """
+        {
+          JSCompiler_inline_label_foo_3:
+          {
+            var i$jscomp$inline_1 = 0;
+            for (; i$jscomp$inline_1 < 10; i$jscomp$inline_1++) {
+              var b$jscomp$inline_2 = 1;
+              1;
+              break JSCompiler_inline_label_foo_3;
+            }
+          }
+        }
+        """,
+        "foo",
+        null);
+  }
+
+  @Test
   public void testMutateCallInLoopVars1() {
     String src =
         """

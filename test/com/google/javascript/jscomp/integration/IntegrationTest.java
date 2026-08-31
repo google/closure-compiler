@@ -2252,6 +2252,89 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testInlineFunctionInLoopWithTranspiledLetInLoop() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2021);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setInlineFunctions(Reach.ALL);
+
+    test(
+        options,
+        """
+        function processEvents(items) {
+          for (var i = 0; i < items.length; i++) {
+            let event;
+            if (items[i]) {
+              event = items[i];
+            }
+            if (event) {
+              use(event);
+            }
+          }
+        }
+        function run() {
+          while (running) {
+            processEvents(list);
+          }
+        }
+        run();
+        """,
+        // b/555250391: This demonstrates that after being translated to a var `event` is being
+        // initialized at the start of each loop iteration.
+        """
+        for (; running;) {
+          for (var items$jscomp$inline_1 = list, i$jscomp$inline_2 = 0; i$jscomp$inline_2 < items$jscomp$inline_1.length; i$jscomp$inline_2++) {
+            var event$jscomp$inline_3 = void 0;
+            items$jscomp$inline_1[i$jscomp$inline_2] && (event$jscomp$inline_3 = items$jscomp$inline_1[i$jscomp$inline_2]);
+            event$jscomp$inline_3 && use(event$jscomp$inline_3);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testInlineFunctionInLoopUninitializedVarInInnerLoop() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2021);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setInlineFunctions(Reach.ALL);
+    externs = ImmutableList.of(SourceFile.fromCode("externs.js", "function chg() {} var running;"));
+
+    test(
+        options,
+        """
+        function callee() {
+          for (var i = 0; i < 10; i++) {
+            var ok;
+            if (ok) {
+              chg();
+            }
+            ok = true;
+          }
+        }
+        function caller() {
+          while (running) {
+            callee();
+          }
+        }
+        caller();
+        """,
+        // TODO(b/538170396): ok$jscomp$inline_2 should be initialized to `undefined`
+        // before entering the loop, as it would for a function scoped var.
+        """
+        for (; running;) {
+          for (var i$jscomp$inline_1 = 0; i$jscomp$inline_1 < 10; i$jscomp$inline_1++) {
+            var ok$jscomp$inline_2;
+            ok$jscomp$inline_2 && chg();
+            ok$jscomp$inline_2 = !0;
+          }
+        }
+        """);
+  }
+
+  @Test
   public void testRemoveUnusedVars1() {
     CompilerOptions options = createCompilerOptions();
     String code = "function f(x) {} f();";
