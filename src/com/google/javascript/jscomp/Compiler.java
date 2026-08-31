@@ -356,7 +356,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             options.setOutputFeatureSet(
                 FeatureSet.ES5.with(
                     Feature.ASYNC_FUNCTIONS,
-                    Feature.ASYNC_GENERATORS,
                     Feature.GENERATORS,
                     Feature.LET_DECLARATIONS,
                     Feature.CONST_DECLARATIONS,
