@@ -6287,6 +6287,24 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testConditionalSuperCalls() {
+    // See: BUG-1 in go/tsjs-private-elements-bugs
+    //
+    // Compiler Rejection on Branching super() with Fields (Won't fix now):
+    // Under ES2022, derived class constructors are allowed to call super() conditionally in
+    // separate branches (e.g. if (cond) super(-1) else super(1)). Class field initializations are
+    // defined by the specification to run immediately after super() returns and binds `this`.
+    //
+    // Current Compiler Behavior:
+    // Es6NormalizeClasses assumes that constructors with fields have at most one super() call at
+    // the root of the constructor body. When addTemporaryInsertionPoint() detects more than one
+    // super() call, it throws an IllegalStateException:
+    // "classes with public fields must have only one super() call at the constructor root".
+    //
+    // Reviewer Decision & Potential Future Fix:
+    // This will not be fixed now because the compiler error message is clear and descriptive. We
+    // will re-evaluate if necessary later if user requests arise. If revisited later, field and
+    // private initializations can be extracted into an arrow function assigned to a local variable
+    // and invoked immediately after each super() call.
     var ex =
         assertThrows(
             RuntimeException.class,
@@ -6296,8 +6314,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
                     class A { constructor(...args) {} }
                     class B extends A {
                       prop = 0;
+                      #x = 1;
                       constructor(a) {
                         if (a < 0) {
+                          // In ES2022, calling super() in branches is valid and binds `this`.
+                          // Compiler rejects multiple super() calls in branches at compile time.
                           super(-1);
                         } else {
                           super(1);
@@ -6310,5 +6331,272 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         .hasMessageThat()
         .contains(
             "classes with public fields must have only one super() call at the constructor root");
+  }
+
+  @Test
+  public void testForwardPrivateFieldAccess_evaluatesToUndefined() {
+    // TODO(b/236744850): Fix in a future CL by deferring property definition on the shadow instance
+    // record until initialization and wrapping forward reads with $jscomp.checkPrivateGet.
+    // See: BUG-2 in go/tsjs-private-elements-bugs
+    //
+    // Forward Private Field Access Evaluates to undefined instead of throwing TypeError:
+    // ES2022 Specification:
+    // Under ES2022 § 10.2.1.2 (InitializeInstanceElements), private field slots are installed
+    // sequentially as each field definition executes. Reading a private field whose initializer
+    // has not yet run must throw a TypeError at runtime because its private slot is uninitialized.
+    //
+    // Current Compiler Behavior:
+    // Closure Compiler allocates a single shared record object (PRIVATE$1 = Object.create(null))
+    // and registers the instance in the PrivateMap upon constructor entry:
+    //   PRIVATE_MAP$0.set(this, PRIVATE$1);
+    // When `#first = this.#later` executes, `#later` accesses the unassigned property on
+    // PRIVATE$1:
+    //   PRIVATE$1.first = PRIVATE_MAP$0.get(this).later;
+    // Because in JavaScript reading an unassigned property on an object returns undefined,
+    // this.#first silently evaluates to undefined instead of throwing a TypeError.
+    test(
+        """
+        class Foo {
+          // BUG: Evaluating `this.#later` here should throw a runtime TypeError per
+          // ES2022 § 10.2.1.2 because `#later` has not yet been initialized.
+          // In Closure Compiler, it silently evaluates to `undefined`.
+          #first = this.#later;
+          #later = 1;
+          getFirst() {
+            return this.#first;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            // BUG: `later` property is unassigned on PRIVATE$1, so this evaluates to undefined
+            // instead of throwing a runtime TypeError.
+            PRIVATE$1.first = PRIVATE_MAP$0.get(this).later;
+            PRIVATE$1.later = 1;
+          }
+          getFirst() {
+            return PRIVATE_MAP$0.get(this).first;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testAbruptConstructorExecution_leaksBrandedInstance() {
+    // TODO(b/236744850): Fix in a future CL by updating field brand checks (#prop in x) to check
+    // property existence on the shadow record (key in privateMap.get(x)) using non-throwing lookup.
+    // See: BUG-3 in go/tsjs-private-elements-bugs
+    //
+    // Abrupt Constructor Execution Leaks Fully-Branded Instance:
+    // ES2022 Specification:
+    // If an error is thrown during instance field initialization, constructor execution aborts.
+    // Any subsequent private fields that were never reached must NOT be branded on the leaked
+    // instance, so brand checks (`#later in leaked`) must return false.
+    //
+    // Current Compiler Behavior:
+    // Closure Compiler brands the instance at the very beginning of constructor execution by
+    // setting the instance in PRIVATE_MAP$0 before any field initializers run:
+    //   PRIVATE_MAP$0.set(this, PRIVATE$1);
+    // Even though `#later` throws an exception, `this` is already present in PRIVATE_MAP$0.
+    // Brand check `#later in x` transpiles to `PRIVATE_MAP$0.has(x)`, which returns true for
+    // the partially-constructed leaked instance.
+    test(
+        """
+        let leaked;
+        class Foo {
+          #first = (leaked = this, 1);
+          // Constructor aborts abruptly when evaluating this throw expression.
+          #later = (() => { throw new Error('fail'); })();
+          static isLaterBranded(x) {
+            // BUG: Under ES2022, `#later in leaked` should return false because construction
+            // aborted before #later was reached. In Closure Compiler, it returns true.
+            return #later in x;
+          }
+        }
+
+        // Code that triggers the bug at runtime:
+        try {
+          // 1. Attempting construction throws while initializing #later, leaking `this`.
+          new Foo();
+        } catch (e) {
+          // Expected: constructor aborted due to error in #later initializer.
+        }
+
+        // 2. Evaluate brand check on the leaked partially-constructed instance:
+        // - ES2022 Spec Requirement: Foo.isLaterBranded(leaked) === false (never reached #later).
+        // - Current Compiler Behavior: Evaluates to `true` because PRIVATE_MAP$0.set(this, ...)
+        //   ran at constructor entry before #later threw.
+        const leakedIsBranded = Foo.isLaterBranded(leaked);
+        """,
+        """
+        let leaked;
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            // BUG: The instance is branded in PRIVATE_MAP$0 before field initializers run.
+            // When #later throws below, leaked instance remains branded.
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.first = (leaked = this, 1);
+            PRIVATE$1.later = (() => { throw new Error('fail'); })();
+          }
+          static isLaterBranded(x) {
+            // BUG: Returns true on the leaked instance because PRIVATE_MAP$0.has(x) is true.
+            return PRIVATE_MAP$0.has(x);
+          }
+        }
+
+        try {
+          new Foo();
+        } catch (e) {
+        }
+        const leakedIsBranded = Foo.isLaterBranded(leaked);
+        """);
+  }
+
+  @Test
+  public void testSelfIdentifierCollision_overwritesInstancePointer() {
+    // TODO(b/236744850): Fix in a future CL by disambiguating private member property names on the
+    // shadow record with a class-unique prefix (and dedicated prefix for $self).
+    // See: BUG-4 in go/tsjs-private-elements-bugs
+    //
+    // Private Identifier #$self Name Collision with Compiler Internal Pointer:
+    // ES2022 Specification:
+    // `#$self` is a valid ECMAScript private identifier (PrivateIdentifier starts with # followed
+    // by IdentifierName, where $ is a valid identifier character).
+    //
+    // Current Compiler Behavior:
+    // In downlevel transpilation, private accessors/methods access the receiver instance via an
+    // internal property named `$self` attached to the private record:
+    //   PRIVATE$2.$self = this;
+    // When a user declares a private field named `#$self`, the compiler strips the `#` and emits:
+    //   PRIVATE$2.$self = 1;
+    // which directly overwrites the internal instance back-pointer with `1`.
+    // Subsequently, invoking the getter attempts to read `PRIVATE_MAP$0.get(this.$self).$self`,
+    // which evaluates to `PRIVATE_MAP$0.get(1).$self` and throws a runtime TypeError:
+    // "Cannot read properties of undefined".
+    test(
+        """
+        class Foo {
+          #$self = 1;
+          get #val() {
+            return this.#$self;
+          }
+          getVal() {
+            // BUG: Invoking getVal() throws a runtime TypeError ("Cannot read properties of undefined").
+            // The user field #$self overwrites the compiler's internal $self receiver pointer.
+            return this.#val;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          val: {
+            get: function() {
+              // BUG: this.$self was overwritten with 1 below; PRIVATE_MAP$0.get(1) returns undefined,
+              // and accessing .$self on undefined throws a runtime TypeError.
+              return PRIVATE_MAP$0.get(this.$self).$self;
+            }
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE$2.$self = this;
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            // BUG: User field assignment `#$self = 1` overwrites `PRIVATE$2.$self = this` set above.
+            PRIVATE$2.$self = 1;
+          }
+          getVal() {
+            return PRIVATE_MAP$0.get(this).val;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodAssignment_reportsCompileTimeError() {
+    // See: BUG-5 in go/tsjs-private-elements-bugs
+    //
+    // Private Method Assignment Triggers Compile-Time Error (Won't fix now):
+    // ES2022 Specification:
+    // Under ES2022 § 13.15.2, assigning to a private method (e.g. `this.#connect = null`) is
+    // syntactically valid code in ECMAScript grammar. At runtime, evaluating the assignment must
+    // throw a TypeError: "Cannot assign to private method #connect".
+    //
+    // Current Compiler Behavior & Reviewer Decision:
+    // Es6NormalizeClasses treats assignment to a private method as a compile-time build failure:
+    //   compiler.report(JSError.make(getPropNode, ILLEGAL_PRIVATE_MEMBER_ASSIGNMENT, ...));
+    // This will not be fixed now because catching illegal assignments at compile time intentionally
+    // shifts detectable bugs left to build time for Google codebases. We will re-evaluate if
+    // strict runtime parity is required later.
+    testError(
+        """
+        class Service {
+          #connect() {}
+          tamper() {
+            // BUG: Under ES2022 § 13.15.2, assigning to a private method is valid syntax that
+            // should throw a TypeError at runtime when tamper() executes.
+            // Instead, Closure Compiler raises a compile-time error:
+            // JSC_ILLEGAL_PRIVATE_MEMBER_ASSIGNMENT.
+            this.#connect = null;
+          }
+        }
+        """,
+        Es6NormalizeClasses.ILLEGAL_PRIVATE_MEMBER_ASSIGNMENT);
+  }
+
+  @Test
+  public void testSetterOnlyPrivatePropertyRead_evaluatesToUndefined() {
+    // TODO(b/236744850): Fix in a future CL by defining a throwing getter stub on the prototype
+    // record (or reporting a compile-time diagnostic).
+    // See: BUG-5 in go/tsjs-private-elements-bugs
+    //
+    // Reading Setter-Only Private Member Evaluates to undefined instead of TypeError:
+    // ES2022 Specification:
+    // Under ES2022 § 13.3.7.1, reading a private member that only defines a setter (and no getter)
+    // must throw a runtime TypeError: "Cannot read private member #val without a getter".
+    //
+    // Current Compiler Behavior:
+    // Private property reads rewrite to `PRIVATE_MAP$0.get(this).val`.
+    // Because PRIVATE_PROTO$1 defines a setter on `val` but no getter:
+    //   val: { set: function(v) {} }
+    // reading `PRIVATE_MAP$0.get(this).val` returns undefined without throwing any error.
+    test(
+        """
+        class Foo {
+          set #val(v) {}
+          getVal() {
+            // BUG: Under ES2022 § 13.3.7.1, reading a private property that has only a setter
+            // must throw a runtime TypeError ("Cannot read private member without a getter").
+            // Instead, reading this.#val evaluates to undefined.
+            return this.#val;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          val: {
+            set: function(v) {}
+          }
+        });
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          getVal() {
+            // BUG: PRIVATE_PROTO$1 has no getter, so reading .val evaluates to undefined
+            // instead of throwing a runtime TypeError.
+            return PRIVATE_MAP$0.get(this).val;
+          }
+        }
+        """);
   }
 }
