@@ -3245,7 +3245,7 @@ RTCStatsReport.prototype.id;
 
 
 /**
- * @return {!IteratorIterable<!Array<string|!RTCStats>>}
+ * @return {!MapIterator<!Array<string|!RTCStats>>}
  */
 RTCStatsReport.prototype[Symbol.iterator] = function() {};
 

@@ -29,7 +29,7 @@
 function ReadonlyMap() {}
 
 /**
- * @return {!IteratorIterable<!Array<K|V>>}
+ * @return {!MapIterator<!Array<K|V>>}
  * @nosideeffects
  */
 ReadonlyMap.prototype.entries = function() {};
@@ -58,7 +58,7 @@ ReadonlyMap.prototype.get = function(key) {};
 ReadonlyMap.prototype.has = function(key) {};
 
 /**
- * @return {!IteratorIterable<K>}
+ * @return {!MapIterator<K>}
  * @nosideeffects
  */
 ReadonlyMap.prototype.keys = function() {};
@@ -70,13 +70,13 @@ ReadonlyMap.prototype.keys = function() {};
 ReadonlyMap.prototype.size;
 
 /**
- * @return {!IteratorIterable<V>}
+ * @return {!MapIterator<V>}
  * @nosideeffects
  */
 ReadonlyMap.prototype.values = function() {};
 
 /**
- * @return {!IteratorIterable<!Array<K|V>>}
+ * @return {!MapIterator<!Array<K|V>>}
  * @nosideeffects
  */
 ReadonlyMap.prototype[Symbol.iterator] = function() {};
@@ -111,7 +111,7 @@ Map.prototype.delete = function(key) {};
 
 /**
  * @override
- * @return {!IteratorIterable<!Array<K|V>>}
+ * @return {!MapIterator<!Array<K|V>>}
  * @nosideeffects
  */
 Map.prototype.entries = function() {};
@@ -164,7 +164,7 @@ Map.prototype.has = function(key) {};
 
 /**
  * @override
- * @return {!IteratorIterable<K>}
+ * @return {!MapIterator<K>}
  * @nosideeffects
  */
 Map.prototype.keys = function() {};
@@ -187,14 +187,14 @@ Map.prototype.size;
 
 /**
  * @override
- * @return {!IteratorIterable<V>}
+ * @return {!MapIterator<V>}
  * @nosideeffects
  */
 Map.prototype.values = function() {};
 
 /**
  * @override
- * @return {!IteratorIterable<!Array<K|V>>}
+ * @return {!MapIterator<!Array<K|V>>}
  * @nosideeffects
  */
 Map.prototype[Symbol.iterator] = function() {};
@@ -338,25 +338,25 @@ ReadonlySet.prototype.has = function(value) {};
 ReadonlySet.prototype.size;
 
 /**
- * @return {!IteratorIterable<VALUE>}
+ * @return {!SetIterator<VALUE>}
  * @override
  */
 ReadonlySet.prototype[Symbol.iterator] = function() {};
 
 /**
- * @return {!IteratorIterable<!Array<VALUE>>}
+ * @return {!SetIterator<!Array<VALUE>>}
  * @nosideeffects
  */
 ReadonlySet.prototype.entries = function() {};
 
 /**
- * @return {!IteratorIterable<VALUE>}
+ * @return {!SetIterator<VALUE>}
  * @nosideeffects
  */
 ReadonlySet.prototype.keys = function() {};
 
 /**
- * @return {!IteratorIterable<VALUE>}
+ * @return {!SetIterator<VALUE>}
  * @nosideeffects
  */
 ReadonlySet.prototype.values = function() {};
@@ -451,7 +451,7 @@ Set.prototype.delete = function(value) {};
 
 /**
  * @override
- * @return {!IteratorIterable<!Array<VALUE>>} Where each array has two entries:
+ * @return {!SetIterator<!Array<VALUE>>} Where each array has two entries:
  *     [value, value]
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries
@@ -479,7 +479,7 @@ Set.prototype.has = function(value) {};
 
 /**
  * @override
- * @return {!IteratorIterable<VALUE>}
+ * @return {!SetIterator<VALUE>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/keys
  */
@@ -487,7 +487,7 @@ Set.prototype.keys = function() {};
 
 /**
  * @override
- * @return {!IteratorIterable<VALUE>}
+ * @return {!SetIterator<VALUE>}
  * @nosideeffects
  * @see https://tc39.es/ecma262/multipage/keyed-collections.html#sec-set.prototype.values
  */
@@ -561,7 +561,7 @@ Set.prototype.isSubsetOf = function(other) {};
 Set.prototype.isDisjointFrom = function(other) {};
 
 /**
- * @return {!IteratorIterable<VALUE>}
+ * @return {!SetIterator<VALUE>}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/Symbol.iterator
  * @override
  */

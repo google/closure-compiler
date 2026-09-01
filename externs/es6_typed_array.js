@@ -98,7 +98,7 @@ Int8Array.prototype.at = function(index) {};
 Int8Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -206,7 +206,7 @@ Int8Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 Int8Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -306,7 +306,7 @@ Int8Array.prototype.sort = function(opt_compareFunction) {};
 Int8Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -429,7 +429,7 @@ Uint8ClampedArray.prototype.at = function(index) {};
 Uint8ClampedArray.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -537,7 +537,7 @@ Uint8ClampedArray.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 Uint8ClampedArray.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -637,7 +637,7 @@ Uint8ClampedArray.prototype.sort = function(opt_compareFunction) {};
 Uint8ClampedArray.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -760,7 +760,7 @@ Int16Array.prototype.at = function(index) {};
 Int16Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -868,7 +868,7 @@ Int16Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 Int16Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -968,7 +968,7 @@ Int16Array.prototype.sort = function(opt_compareFunction) {};
 Int16Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -1091,7 +1091,7 @@ Uint16Array.prototype.at = function(index) {};
 Uint16Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -1199,7 +1199,7 @@ Uint16Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 Uint16Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -1299,7 +1299,7 @@ Uint16Array.prototype.sort = function(opt_compareFunction) {};
 Uint16Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -1422,7 +1422,7 @@ Int32Array.prototype.at = function(index) {};
 Int32Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -1530,7 +1530,7 @@ Int32Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 Int32Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -1630,7 +1630,7 @@ Int32Array.prototype.sort = function(opt_compareFunction) {};
 Int32Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -1753,7 +1753,7 @@ Uint32Array.prototype.at = function(index) {};
 Uint32Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -1861,7 +1861,7 @@ Uint32Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 Uint32Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -1961,7 +1961,7 @@ Uint32Array.prototype.sort = function(opt_compareFunction) {};
 Uint32Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -2084,7 +2084,7 @@ Float16Array.prototype.at = function(index) {};
 Float16Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -2192,7 +2192,7 @@ Float16Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 Float16Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -2292,7 +2292,7 @@ Float16Array.prototype.sort = function(opt_compareFunction) {};
 Float16Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -2415,7 +2415,7 @@ Float32Array.prototype.at = function(index) {};
 Float32Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -2523,7 +2523,7 @@ Float32Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 Float32Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -2623,7 +2623,7 @@ Float32Array.prototype.sort = function(opt_compareFunction) {};
 Float32Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -2746,7 +2746,7 @@ Float64Array.prototype.at = function(index) {};
 Float64Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -2854,7 +2854,7 @@ Float64Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 Float64Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -2954,7 +2954,7 @@ Float64Array.prototype.sort = function(opt_compareFunction) {};
 Float64Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -3077,7 +3077,7 @@ Uint8Array.prototype.at = function(index) {};
 Uint8Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -3185,7 +3185,7 @@ Uint8Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 Uint8Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -3285,7 +3285,7 @@ Uint8Array.prototype.sort = function(opt_compareFunction) {};
 Uint8Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -3540,7 +3540,7 @@ BigInt64Array.prototype.at = function(index) {};
 BigInt64Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<bigint>>}
+ * @return {!TypedArrayIterator<!Array<bigint>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -3648,7 +3648,7 @@ BigInt64Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 BigInt64Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<bigint>}
+ * @return {!TypedArrayIterator<bigint>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -3749,7 +3749,7 @@ BigInt64Array.prototype.sort = function(opt_compareFunction) {};
 BigInt64Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<bigint>}
+ * @return {!TypedArrayIterator<bigint>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */
@@ -3861,7 +3861,7 @@ BigUint64Array.prototype.at = function(index) {};
 BigUint64Array.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<bigint>>}
+ * @return {!TypedArrayIterator<!Array<bigint>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -3969,7 +3969,7 @@ BigUint64Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
 BigUint64Array.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<bigint>}
+ * @return {!TypedArrayIterator<bigint>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -4070,7 +4070,7 @@ BigUint64Array.prototype.sort = function(opt_compareFunction) {};
 BigUint64Array.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<bigint>}
+ * @return {!TypedArrayIterator<bigint>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */

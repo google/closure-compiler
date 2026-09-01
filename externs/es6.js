@@ -29,6 +29,21 @@
  * define them together in the es3 file.
  */
 
+/** @typedef {!IteratorIterable} */
+var ArrayIterator;
+
+/** @typedef {!IteratorIterable} */
+var MapIterator;
+
+/** @typedef {!IteratorIterable} */
+var SetIterator;
+
+/** @typedef {!IteratorIterable} */
+var StringIterator;
+
+/** @typedef {!IteratorIterable} */
+var TypedArrayIterator;
+
 /**
  * TODO(b/142881197): TReturn and TNext are not yet used for anything.
  * https://github.com/google/closure-compiler/issues/3489
@@ -381,7 +396,7 @@ String.prototype.trimEnd = function() {};
 /**
  * @this {String|string}
  * @param {!RegExp|string} regexp
- * @return {!IteratorIterable<!RegExpResult>}
+ * @return {!StringIterator<!RegExpResult>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/matchAll
  */
@@ -975,14 +990,14 @@ Array.from = function(arrayLike, opt_mapFn, opt_this) {};
 
 /**
  * @override
- * @return {!IteratorIterable<number>}
+ * @return {!ArrayIterator<number>}
  */
 Array.prototype.keys;
 
 
 /**
  * @override
- * @return {!IteratorIterable<T>}
+ * @return {!ArrayIterator<T>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/values
  */
@@ -991,7 +1006,7 @@ Array.prototype.values;
 
 /**
  * @override
- * @return {!IteratorIterable<!Array<number|T>>} Iterator of [key, value] pairs.
+ * @return {!ArrayIterator<!Array<number|T>>} Iterator of [key, value] pairs.
  */
 Array.prototype.entries;
 
@@ -1182,12 +1197,12 @@ Array.prototype.toSpliced = function(start, skipCount, var_toAdd) {};
  */
 Array.prototype.with = function(index, value) {};
 
-/** @return {!IteratorIterable<number>} */
+/** @return {!ArrayIterator<number>} */
 ReadonlyArray.prototype.keys;
 
 
 /**
- * @return {!IteratorIterable<T>}
+ * @return {!ArrayIterator<T>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/values
  */
@@ -1195,7 +1210,7 @@ ReadonlyArray.prototype.values;
 
 
 /**
- * @return {!IteratorIterable<!Array<number|T>>} Iterator of [key, value] pairs.
+ * @return {!ArrayIterator<!Array<number|T>>} Iterator of [key, value] pairs.
  */
 ReadonlyArray.prototype.entries;
 

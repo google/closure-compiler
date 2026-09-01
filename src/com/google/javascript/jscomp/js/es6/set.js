@@ -134,13 +134,13 @@ $jscomp.polyfill('Set',
 
   /** @override */
   PolyfillSet.prototype.entries = function() {
-    return this.map_.entries();
+    return /** @type {!SetIterator<!Array<VALUE>>} */ (this.map_.entries());
   };
 
 
   /** @override */
   PolyfillSet.prototype.values = function() {
-    return this.map_.values();
+    return /** @type {!SetIterator<VALUE>} */ (this.map_.values());
   };
 
 

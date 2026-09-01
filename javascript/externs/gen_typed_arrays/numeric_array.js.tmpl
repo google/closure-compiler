@@ -70,7 +70,7 @@ function {TYPED_ARRAY}(lengthOrArrayOrBuffer, opt_byteOffset, opt_length) {}
 {TYPED_ARRAY}.prototype.copyWithin = function(target, start, opt_end) {};
 
 /**
- * @return {!IteratorIterable<!Array<number>>}
+ * @return {!TypedArrayIterator<!Array<number>>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/entries
  */
@@ -178,7 +178,7 @@ function {TYPED_ARRAY}(lengthOrArrayOrBuffer, opt_byteOffset, opt_length) {}
 {TYPED_ARRAY}.prototype.join = function(opt_separator) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/keys
  */
@@ -278,7 +278,7 @@ function {TYPED_ARRAY}(lengthOrArrayOrBuffer, opt_byteOffset, opt_length) {}
 {TYPED_ARRAY}.prototype.subarray = function(begin, opt_end) {};
 
 /**
- * @return {!IteratorIterable<number>}
+ * @return {!TypedArrayIterator<number>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/values
  */

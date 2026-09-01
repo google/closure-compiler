@@ -67,19 +67,19 @@ GPUSupportedFeatures.prototype.size;
 GPUSupportedFeatures.prototype[Symbol.iterator] = function() {};
 /**
  * @override
- * @return {!IteratorIterable<!Array<string>>}
+ * @return {!SetIterator<!Array<string>>}
  * @nosideeffects
  */
 GPUSupportedFeatures.prototype.entries = function() {};
 /**
  * @override
- * @return {!IteratorIterable<string>}
+ * @return {!SetIterator<string>}
  * @nosideeffects
  */
 GPUSupportedFeatures.prototype.keys = function() {};
 /**
  * @override
- * @return {!IteratorIterable<string>}
+ * @return {!SetIterator<string>}
  * @nosideeffects
  */
 GPUSupportedFeatures.prototype.values = function() {};
@@ -235,19 +235,19 @@ WGSLLanguageFeatures.prototype.size;
 WGSLLanguageFeatures.prototype[Symbol.iterator] = function() {};
 /**
  * @override
- * @return {!IteratorIterable<!Array<string>>}
+ * @return {!SetIterator<!Array<string>>}
  * @nosideeffects
  */
 WGSLLanguageFeatures.prototype.entries = function() {};
 /**
  * @override
- * @return {!IteratorIterable<string>}
+ * @return {!SetIterator<string>}
  * @nosideeffects
  */
 WGSLLanguageFeatures.prototype.keys = function() {};
 /**
  * @override
- * @return {!IteratorIterable<string>}
+ * @return {!SetIterator<string>}
  * @nosideeffects
  */
 WGSLLanguageFeatures.prototype.values = function() {};

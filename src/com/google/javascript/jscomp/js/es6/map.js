@@ -220,28 +220,31 @@ $jscomp.polyfill('Map',
 
   /** @override */
   PolyfillMap.prototype.entries = function() {
-    return makeIterator(this, /** @return {!Array<(KEY|VALUE)>} */ function(
-        /** !$jscomp.MapEntry<KEY, VALUE> */ entry) {
-      return ([entry.key, entry.value]);
-    });
+    return /** @type {!MapIterator<!Array<KEY|VALUE>>} */ (
+        makeIterator(this, /** @return {!Array<(KEY|VALUE)>} */ function(
+            /** !$jscomp.MapEntry<KEY, VALUE> */ entry) {
+          return ([entry.key, entry.value]);
+        }));
   };
 
 
   /** @override */
   PolyfillMap.prototype.keys = function() {
-    return makeIterator(this, /** @return {KEY} */ function(
-        /** !$jscomp.MapEntry<KEY, VALUE> */ entry) {
-      return entry.key;
-    });
+    return /** @type {!MapIterator<KEY>} */ (
+        makeIterator(this, /** @return {KEY} */ function(
+            /** !$jscomp.MapEntry<KEY, VALUE> */ entry) {
+          return entry.key;
+        }));
   };
 
 
   /** @override */
   PolyfillMap.prototype.values = function() {
-    return makeIterator(this, /** @return {VALUE} */ function(
-        /** !$jscomp.MapEntry<KEY, VALUE> */ entry) {
-      return entry.value;
-    });
+    return /** @type {!MapIterator<VALUE>} */ (
+        makeIterator(this, /** @return {VALUE} */ function(
+            /** !$jscomp.MapEntry<KEY, VALUE> */ entry) {
+          return entry.value;
+        }));
   };
 
 
