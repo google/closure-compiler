@@ -695,6 +695,46 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         """
         goog.module('xyz');
 
+        var {[foo]: bar} = goog.require('other.x');
+        """,
+        INVALID_DESTRUCTURING_REQUIRE);
+
+    testError(
+        """
+        goog.module('xyz');
+
+        var {...rest} = goog.require('other.x');
+        """,
+        INVALID_DESTRUCTURING_REQUIRE);
+
+    testError(
+        """
+        goog.module('xyz');
+
+        var [foo, bar] = goog.requireType('other.x');
+        """,
+        INVALID_DESTRUCTURING_REQUIRE);
+
+    testError(
+        """
+        goog.module('xyz');
+
+        var {foo, bar = 'str'} = goog.requireType('other.x');
+        """,
+        INVALID_DESTRUCTURING_REQUIRE);
+
+    testError(
+        """
+        goog.module('xyz');
+
+        var {foo, bar: {name}} = goog.requireType('other.x');
+        """,
+        INVALID_DESTRUCTURING_REQUIRE);
+
+    testError(
+        """
+        goog.module('xyz');
+
         var foo = goog.require('abc.foo');
         var foo = goog.require('def.foo');
         """,

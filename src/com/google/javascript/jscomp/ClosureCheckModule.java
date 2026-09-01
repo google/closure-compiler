@@ -394,19 +394,23 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
       return false;
     } else if (importLhs.isDestructuringLhs() && nextQnamePart != null) {
       Node objPattern = importLhs.getFirstChild();
-      checkState(objPattern.isObjectPattern(), objPattern);
-      for (Node strKey = objPattern.getFirstChild(); strKey != null; strKey = strKey.getNext()) {
-        // const {foo: barFoo} = goog.require('ns.bar');
-        // Should use the short name "barFoo" instead of "ns.bar.foo".
-        if (strKey.hasOneChild() && strKey.getString().equals(nextQnamePart)) {
-          Node parent = n.getParent();
-          this.compiler.report(
-              JSError.make(
-                  (parent != null && parent.isGetProp()) ? parent : n,
-                  REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
-                  qname + "." + nextQnamePart,
-                  strKey.getFirstChild().getString()));
-          return false;
+      if (objPattern.isObjectPattern()) {
+        for (Node strKey = objPattern.getFirstChild(); strKey != null; strKey = strKey.getNext()) {
+          // const {foo: barFoo} = goog.require('ns.bar');
+          // Should use the short name "barFoo" instead of "ns.bar.foo".
+          if (strKey.isStringKey()
+              && strKey.hasOneChild()
+              && strKey.getFirstChild().isName()
+              && strKey.getString().equals(nextQnamePart)) {
+            Node parent = n.getParent();
+            this.compiler.report(
+                JSError.make(
+                    (parent != null && parent.isGetProp()) ? parent : n,
+                    REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
+                    qname + "." + nextQnamePart,
+                    strKey.getFirstChild().getString()));
+            return false;
+          }
         }
       }
     }
@@ -508,8 +512,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
       if (GOOG_FORWARD_DECLARE.matches(callNode.getFirstChild())) {
         t.report(lhs, INVALID_DESTRUCTURING_FORWARD_DECLARE);
       }
-    } else {
-      checkState(lhs.isName());
+    } else if (lhs.isName()) {
       checkShortName(t, lhs, callNode.getLastChild().getString());
     }
     currentModuleInfo.importsByLongRequiredName.put(extractFirstArgumentName(callNode), lhs);
@@ -556,7 +559,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback implements 
         stringKey = stringKey.getNext()) {
       if (!stringKey.isStringKey()) {
         return false;
-      } else if (!stringKey.getFirstChild().isName()) {
+      } else if (!stringKey.hasChildren() || !stringKey.getFirstChild().isName()) {
         return false;
       }
     }

@@ -493,6 +493,81 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   }
 
   @Test
+  public void googRequireDefaultValueDestructuringIsError() {
+    moduleType = ModuleType.GOOG_MODULE;
+
+    test(
+        srcs(
+            PROVIDES_SYMBOL_SRC,
+            makeTestFile(
+                """
+                goog.module('test');
+                const {property0 = 1} = goog.require('symbol');
+                """)),
+        error(INVALID_CLOSURE_IMPORT_DESTRUCTURING));
+  }
+
+  @Test
+  public void googRequireTypeDefaultValueDestructuringIsError() {
+    moduleType = ModuleType.GOOG_MODULE;
+
+    test(
+        srcs(
+            PROVIDES_SYMBOL_SRC,
+            makeTestFile(
+                """
+                goog.module('test');
+                const {property0 = 1} = goog.requireType('symbol');
+                """)),
+        error(INVALID_CLOSURE_IMPORT_DESTRUCTURING));
+  }
+
+  @Test
+  public void googRequireComputedPropertyDestructuringIsError() {
+    moduleType = ModuleType.GOOG_MODULE;
+
+    test(
+        srcs(
+            PROVIDES_SYMBOL_SRC,
+            makeTestFile(
+                """
+                goog.module('test');
+                const {[property0]: a} = goog.require('symbol');
+                """)),
+        error(INVALID_CLOSURE_IMPORT_DESTRUCTURING));
+  }
+
+  @Test
+  public void googRequireObjectRestDestructuringIsError() {
+    moduleType = ModuleType.GOOG_MODULE;
+
+    test(
+        srcs(
+            PROVIDES_SYMBOL_SRC,
+            makeTestFile(
+                """
+                goog.module('test');
+                const {...rest} = goog.require('symbol');
+                """)),
+        error(INVALID_CLOSURE_IMPORT_DESTRUCTURING));
+  }
+
+  @Test
+  public void googForwardDeclareNestedObjectDestructuringIsError() {
+    moduleType = ModuleType.GOOG_MODULE;
+
+    test(
+        srcs(
+            PROVIDES_SYMBOL_SRC,
+            makeTestFile(
+                """
+                goog.module('test');
+                const {property0: {a}} = goog.forwardDeclare('symbol');
+                """)),
+        error(NO_CLOSURE_IMPORT_DESTRUCTURING));
+  }
+
+  @Test
   public void googRequireLateIsError() {
     moduleType = ModuleType.GOOG_MODULE;
 

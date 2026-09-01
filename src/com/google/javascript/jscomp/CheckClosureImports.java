@@ -410,7 +410,7 @@ final class CheckClosureImports implements CompilerPass {
         if (!stringKey.isStringKey()) {
           return false;
         }
-        if (!stringKey.getFirstChild().isName()) {
+        if (!stringKey.hasChildren() || !stringKey.getFirstChild().isName()) {
           return false;
         }
       }
@@ -481,7 +481,7 @@ final class CheckClosureImports implements CompilerPass {
           } else {
             t.report(declaration, NO_CLOSURE_IMPORT_DESTRUCTURING, importType.callName());
           }
-        } else {
+        } else if (lhs.isName()) {
           checkShortName(t, lhs, call.getLastChild().getString());
         }
       }
