@@ -5221,6 +5221,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // Legal unicode but invalid in identifier
     parseError("Js\\u{99}ompiler", "Invalid escape sequence");
     parseError("Js\\u{10000}ompiler", "Invalid escape sequence");
+    // Code points outside the BMP must not be truncated to their low 16 bits. U+10041 shares its
+    // low bits with U+0041 ('A') and U+110041 is above the U+10FFFF maximum; both used to be
+    // silently accepted.
+    parseError("Js\\u{10041}ompiler", "Invalid escape sequence");
+    parseError("Js\\u{110041}ompiler", "Invalid escape sequence");
   }
 
   @Test
