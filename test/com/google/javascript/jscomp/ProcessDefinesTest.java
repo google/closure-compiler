@@ -687,6 +687,16 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDefineWithoutGoogDefine_suppressed() {
+    mode = ProcessDefines.Mode.CHECK;
+    enableDefineWithoutGoogDefineCheck = true;
+    testSame(
+        "/** @fileoverview @suppress {defineWithoutGoogDefine} */ /** @define {boolean} */ const"
+            + " MY_FLAG = true;");
+    testSame("/** @suppress {defineWithoutGoogDefine} @define {boolean} */ const MY_FLAG = true;");
+  }
+
+  @Test
   public void testGoogDefine_invalidCallLocation() {
     mode = ProcessDefines.Mode.CHECK;
 
