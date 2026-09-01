@@ -6556,8 +6556,8 @@ Event.prototype.composedPath = function() {};
 /**
  * @constructor
  * @param {{
- *     firesTouchEvents: (string|undefined),
- *     pointerMovementScrolls: (string|undefined)
+ *     firesTouchEvents: (boolean|undefined),
+ *     pointerMovementScrolls: (boolean|undefined)
  *   }=} opt_options
  */
 function InputDeviceCapabilities(opt_options) {}
