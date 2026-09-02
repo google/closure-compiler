@@ -2084,6 +2084,22 @@ public class CompilerOptions {
     return languageIn.toFeatureSet();
   }
 
+  /**
+   * Disables emitting public class fields natively, forcing them to be transpiled into constructor
+   * assignments.
+   */
+  public void setTranspilePublicClassFields(boolean transpile) {
+    if (transpile) {
+      setOutputFeatureSet(getOutputFeatureSet().without(FeatureSet.Feature.PUBLIC_CLASS_FIELDS));
+    } else {
+      setOutputFeatureSet(getOutputFeatureSet().with(FeatureSet.Feature.PUBLIC_CLASS_FIELDS));
+    }
+  }
+
+  public boolean getTranspilePublicClassFields() {
+    return !getOutputFeatureSet().has(FeatureSet.Feature.PUBLIC_CLASS_FIELDS);
+  }
+
   /** Option to enable specific output features for performance experiments. */
   @Deprecated
   public enum ExperimentalOutputFeatureSet {

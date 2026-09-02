@@ -208,4 +208,20 @@ public final class CompilerOptionsTest {
         .that(nonPrivateInstanceFields)
         .isEmpty();
   }
+
+  @Test
+  public void testTranspilePublicClassFields() {
+    CompilerOptions options = new CompilerOptions();
+    options.setBrowserFeaturesetYear(2023);
+    assertThat(options.getTranspilePublicClassFields()).isFalse();
+    assertThat(options.getOutputFeatureSet().has(Feature.PUBLIC_CLASS_FIELDS)).isTrue();
+
+    options.setTranspilePublicClassFields(true);
+    assertThat(options.getTranspilePublicClassFields()).isTrue();
+    assertThat(options.getOutputFeatureSet().has(Feature.PUBLIC_CLASS_FIELDS)).isFalse();
+
+    options.setTranspilePublicClassFields(false);
+    assertThat(options.getTranspilePublicClassFields()).isFalse();
+    assertThat(options.getOutputFeatureSet().has(Feature.PUBLIC_CLASS_FIELDS)).isTrue();
+  }
 }
