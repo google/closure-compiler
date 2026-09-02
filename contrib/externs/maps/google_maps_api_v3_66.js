@@ -28924,6 +28924,14 @@ google.maps.routes.RoutePolyline3DOptions.prototype.colorScheme;
 google.maps.routes.RoutePolyline3DOptions.prototype.polylineOptions;
 
 /**
+ * Whether to disable traffic-aware polylines. Traffic aware polylines are only
+ * available when routingPreference is set to TRAFFIC_AWARE or
+ * TRAFFIC_AWARE_OPTIMAL.
+ * @type {boolean|undefined}
+ */
+google.maps.routes.RoutePolyline3DOptions.prototype.trafficPolylinesDisabled;
+
+/**
  * Details about a section of a route corresponding to a polyline that can be
  * used to customize the polyline style.
  * @record
