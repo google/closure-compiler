@@ -5678,7 +5678,6 @@ JSCompiler_temp_const$jscomp$v0.bug = JSCompiler_inline_result$jscomp$v1;
         """);
   }
 
-  // TODO(b/538155258): InlineFunctions: uninitialized var in loop body
   @Test
   public void testInlineInLoopUninitializedVarInLoop() {
     test(
@@ -5699,8 +5698,9 @@ JSCompiler_temp_const$jscomp$v0.bug = JSCompiler_inline_result$jscomp$v1;
         """
         while (true) {
           {
-            for (var i$jscomp$inline_0 = 0; i$jscomp$inline_0 < 10; i$jscomp$inline_0++) {
-              var ok$jscomp$inline_1;
+            var ok$jscomp$inline_1 = void 0;
+            var i$jscomp$inline_0 = 0;
+            for (; i$jscomp$inline_0 < 10; i$jscomp$inline_0++) {
               if (ok$jscomp$inline_1) {
                 chg();
               }
@@ -5731,7 +5731,8 @@ JSCompiler_temp_const$jscomp$v0.bug = JSCompiler_inline_result$jscomp$v1;
         """
         while (true) {
           {
-            for (var i$jscomp$inline_0 = 0; i$jscomp$inline_0 < 10; i$jscomp$inline_0++) {
+            var i$jscomp$inline_0 = 0;
+            for (; i$jscomp$inline_0 < 10; i$jscomp$inline_0++) {
               let ok$jscomp$inline_1;
               if (ok$jscomp$inline_1) {
                 chg();

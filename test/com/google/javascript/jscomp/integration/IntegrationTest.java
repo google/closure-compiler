@@ -2280,14 +2280,12 @@ public final class IntegrationTest extends IntegrationTestCase {
         }
         run();
         """,
-        // b/555250391: This demonstrates that after being translated to a var `event` is being
-        // initialized at the start of each loop iteration.
+        // b/555250391 regression test: This demonstrates that after being translated to a var
+        // `event` is being initialized at the start of each loop iteration.
         """
         for (; running;) {
-          for (var items$jscomp$inline_1 = list, i$jscomp$inline_2 = 0; i$jscomp$inline_2 < items$jscomp$inline_1.length; i$jscomp$inline_2++) {
-            var event$jscomp$inline_3 = void 0;
-            items$jscomp$inline_1[i$jscomp$inline_2] && (event$jscomp$inline_3 = items$jscomp$inline_1[i$jscomp$inline_2]);
-            event$jscomp$inline_3 && use(event$jscomp$inline_3);
+          for (var event$jscomp$inline_3 = void 0, items$jscomp$inline_1 = list, i$jscomp$inline_2 = 0; i$jscomp$inline_2 < items$jscomp$inline_1.length; i$jscomp$inline_2++) {
+            event$jscomp$inline_3 = void 0, items$jscomp$inline_1[i$jscomp$inline_2] && (event$jscomp$inline_3 = items$jscomp$inline_1[i$jscomp$inline_2]), event$jscomp$inline_3 && use(event$jscomp$inline_3);
           }
         }
         """);
@@ -2321,14 +2319,12 @@ public final class IntegrationTest extends IntegrationTestCase {
         }
         caller();
         """,
-        // TODO(b/538170396): ok$jscomp$inline_2 should be initialized to `undefined`
+        // b/538170396 regression test: ok$jscomp$inline_2 should be initialized to `undefined`
         // before entering the loop, as it would for a function scoped var.
         """
         for (; running;) {
-          for (var i$jscomp$inline_1 = 0; i$jscomp$inline_1 < 10; i$jscomp$inline_1++) {
-            var ok$jscomp$inline_2;
-            ok$jscomp$inline_2 && chg();
-            ok$jscomp$inline_2 = !0;
+          for (var ok$jscomp$inline_2 = void 0, i$jscomp$inline_1 = 0; i$jscomp$inline_1 < 10; i$jscomp$inline_1++) {
+            ok$jscomp$inline_2 && chg(), ok$jscomp$inline_2 = !0;
           }
         }
         """);

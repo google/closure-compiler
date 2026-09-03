@@ -169,6 +169,27 @@ public final class FunctionToBlockMutatorTest {
   }
 
   @Test
+  public void testMutateInitializeUninitializedVarsNestedFunction() {
+    isCallInLoop = true;
+    helperMutate(
+        """
+        function foo(a){
+          var b = function(){ var c; };
+          return a;
+        };
+        foo(1);
+        """,
+        """
+        {
+          var b$jscomp$inline_1 = function(){ var c$jscomp$inline_2; };
+          1;
+        }
+        """,
+        "foo",
+        null);
+  }
+
+  @Test
   public void testMutateInitializeUninitializedLets1() {
     isCallInLoop = true;
     helperMutate(
@@ -200,7 +221,7 @@ public final class FunctionToBlockMutatorTest {
   @Test
   public void testMutateInitializeUninitializedVarInLoop() {
     isCallInLoop = true;
-    // TODO(b/538170396): `b` should be initialized to `undefined` because
+    // Demonstrates that `b` should be initialized to `undefined` because
     // it is used in a loop.
     helperMutate(
         """
@@ -216,9 +237,9 @@ public final class FunctionToBlockMutatorTest {
         {
           JSCompiler_inline_label_foo_3:
           {
+            var b$jscomp$inline_2 = void 0;
             var i$jscomp$inline_1 = 0;
             for (; i$jscomp$inline_1 < 10; i$jscomp$inline_1++) {
-              var b$jscomp$inline_2;
               1;
               break JSCompiler_inline_label_foo_3;
             }
@@ -232,7 +253,7 @@ public final class FunctionToBlockMutatorTest {
   @Test
   public void testMutateInitializedVarInLoop() {
     isCallInLoop = true;
-    // TODO(b/555250391): the initializer should not be hoisted out of the loop or
+    // Demonstrates that b's initializer should not be hoisted out of the loop or
     // lost when "foo" is inlined into the body of a loop
     helperMutate(
         """
@@ -248,9 +269,10 @@ public final class FunctionToBlockMutatorTest {
         {
           JSCompiler_inline_label_foo_3:
           {
+            var b$jscomp$inline_2 = void 0;
             var i$jscomp$inline_1 = 0;
             for (; i$jscomp$inline_1 < 10; i$jscomp$inline_1++) {
-              var b$jscomp$inline_2 = 1;
+              b$jscomp$inline_2 = 1;
               1;
               break JSCompiler_inline_label_foo_3;
             }
