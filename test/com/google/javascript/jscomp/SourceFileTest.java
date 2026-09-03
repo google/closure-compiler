@@ -568,6 +568,96 @@ public final class SourceFileTest {
     assertThat(sourceFile.getNumLines()).isEqualTo(999);
   }
 
+  @Test
+  public void testStripConfigSegment_barePrefixes() {
+    assertThat(SourceFile.stripConfigSegment("bin/foo/bar.js")).isEqualTo("foo/bar.js");
+    assertThat(SourceFile.stripConfigSegment("genfiles/foo/bar.js")).isEqualTo("foo/bar.js");
+    assertThat(SourceFile.stripConfigSegment("testlogs/foo/bar.js")).isEqualTo("foo/bar.js");
+  }
+
+  @Test
+  public void testStripConfigSegment_blazeOutPrefixes() {
+    assertThat(SourceFile.stripConfigSegment("blaze-out/k8-opt/bin/foo/bar.js"))
+        .isEqualTo("foo/bar.js");
+    assertThat(SourceFile.stripConfigSegment("blaze-out/k8-fastbuild/genfiles/foo/bar.js"))
+        .isEqualTo("foo/bar.js");
+    assertThat(SourceFile.stripConfigSegment("blaze-out/k8-dbg/testlogs/foo/bar.js"))
+        .isEqualTo("foo/bar.js");
+    assertThat(SourceFile.stripConfigSegment("/execroot/workspace/blaze-out/k8-opt/bin/foo/bar.js"))
+        .isEqualTo("foo/bar.js");
+  }
+
+  @Test
+  public void testStripConfigSegment_bazelOutPrefixes() {
+    assertThat(SourceFile.stripConfigSegment("bazel-out/k8-opt/bin/foo/bar.js"))
+        .isEqualTo("foo/bar.js");
+    assertThat(
+            SourceFile.stripConfigSegment("bazel-out/darwin_arm64-fastbuild/genfiles/foo/bar.js"))
+        .isEqualTo("foo/bar.js");
+    assertThat(SourceFile.stripConfigSegment("bazel-out/host/testlogs/foo/bar.js"))
+        .isEqualTo("foo/bar.js");
+    assertThat(SourceFile.stripConfigSegment("workspace/bazel-out/k8-opt/bin/foo/bar.js"))
+        .isEqualTo("foo/bar.js");
+  }
+
+  @Test
+  public void testStripConfigSegment_unalteredPaths() {
+    assertThat(SourceFile.stripConfigSegment("foo/bar.js")).isEqualTo("foo/bar.js");
+    assertThat(SourceFile.stripConfigSegment("my_bin/foo.js")).isEqualTo("my_bin/foo.js");
+    assertThat(SourceFile.stripConfigSegment("foo/bin/bar.js")).isEqualTo("foo/bin/bar.js");
+    assertThat(SourceFile.stripConfigSegment("blaze-out/k8-opt")).isEqualTo("blaze-out/k8-opt");
+    assertThat(SourceFile.stripConfigSegment("blaze-out/")).isEqualTo("blaze-out/");
+    assertThat(SourceFile.stripConfigSegment("blaze-out/k8-opt/other/foo.js"))
+        .isEqualTo("blaze-out/k8-opt/other/foo.js");
+    assertThat(SourceFile.stripConfigSegment("bazel-out/")).isEqualTo("bazel-out/");
+    assertThat(SourceFile.stripConfigSegment("bazel-out/k8-opt/other/foo.js"))
+        .isEqualTo("bazel-out/k8-opt/other/foo.js");
+    assertThat(SourceFile.stripConfigSegment("")).isEmpty();
+  }
+
+  @Test
+  public void testCanonicalizePathForMatching() {
+    assertThat(SourceFile.canonicalizePathForMatching("blaze-out/k8-opt/bin/foo/bar.js"))
+        .isEqualTo("foo/bar.js");
+    assertThat(SourceFile.canonicalizePathForMatching("bazel-out/k8-opt/bin/foo/bar.js"))
+        .isEqualTo("foo/bar.js");
+    assertThat(SourceFile.canonicalizePathForMatching("bin/foo/bar.js")).isEqualTo("foo/bar.js");
+    assertThat(SourceFile.canonicalizePathForMatching("foo/bar.js")).isEqualTo("foo/bar.js");
+  }
+
+  @Test
+  public void testRestoreCachedState_canonicalizedPathMatching() {
+    SourceFile sourceFile = SourceFile.fromCode("blaze-out/k8-opt/bin/foo/bar.js", "42");
+
+    // Restoring state succeeds when paths match after canonicalization.
+    sourceFile.restoreCachedStateFrom(
+        SourceFileProto.newBuilder()
+            .setFilename("foo/bar.js")
+            .setNumLinesPlusOne(10)
+            .setNumBytesPlusOne(20)
+            .build());
+
+    assertThat(sourceFile.getNumLines()).isEqualTo(9);
+    assertThat(sourceFile.getNumBytes()).isEqualTo(19);
+
+    // Also verify restoring with bare bin/ prefix in proto vs blaze-out in SourceFile.
+    sourceFile.restoreCachedStateFrom(
+        SourceFileProto.newBuilder()
+            .setFilename("bin/foo/bar.js")
+            .setNumLinesPlusOne(15)
+            .setNumBytesPlusOne(25)
+            .build());
+
+    assertThat(sourceFile.getNumLines()).isEqualTo(14);
+    assertThat(sourceFile.getNumBytes()).isEqualTo(24);
+
+    // Mismatched path should throw IllegalStateException.
+    SourceFileProto protoSourceFile =
+        SourceFileProto.newBuilder().setFilename("bazel-out/k8-opt/bin/other/bar.js").build();
+    assertThrows(
+        IllegalStateException.class, () -> sourceFile.restoreCachedStateFrom(protoSourceFile));
+  }
+
   private static String stringOfLength(int length) {
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < length; i++) {

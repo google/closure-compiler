@@ -58,6 +58,7 @@ public final class TypedAstDeserializer {
 
   private final Optional<ImmutableSet<SourceFile>> requiredInputFiles;
   private final LinkedHashMap<String, SourceFile> filePoolBuilder = new LinkedHashMap<>();
+  private final LinkedHashMap<String, SourceFile> canonicalFilePool = new LinkedHashMap<>();
   private final ConcurrentMap<SourceFile, Supplier<Node>> typedAstFilesystem =
       new ConcurrentHashMap<>();
   private final ImmutableSet.Builder<String> externProperties = ImmutableSet.builder();
@@ -169,8 +170,8 @@ public final class TypedAstDeserializer {
     TypedAstDeserializer deserializer =
         new TypedAstDeserializer(
             syntheticExterns, colorPool, requiredInputFiles, mode, includeTypeInformation);
-    deserializer.filePoolBuilder.put(syntheticExterns.getName(), syntheticExterns);
-    deserializer.filePoolBuilder.putAll(scriptSourceFiles);
+    deserializer.addToFilePool(syntheticExterns.getName(), syntheticExterns);
+    scriptSourceFiles.forEach(deserializer::addToFilePool);
 
     if (!mode.equals(Mode.RUNTIME_LIBRARY_ONLY)) {
       // skip this step if deserializing the runtime libraries to avoid an infinite loop
@@ -287,20 +288,41 @@ public final class TypedAstDeserializer {
     }
   }
 
+  private void addToFilePool(String filename, SourceFile file) {
+    filePoolBuilder.put(filename, file);
+    String canonicalPath = SourceFile.canonicalizePathForMatching(filename);
+    if (!canonicalPath.equals(filename)) {
+      canonicalFilePool.putIfAbsent(canonicalPath, file);
+    }
+  }
+
+  private SourceFile findExistingFile(String filename) {
+    SourceFile exact = filePoolBuilder.get(filename);
+    if (exact != null) {
+      return exact;
+    }
+    String canonicalPath = SourceFile.canonicalizePathForMatching(filename);
+    SourceFile canonical = canonicalFilePool.get(canonicalPath);
+    if (canonical != null) {
+      return canonical;
+    }
+    return filePoolBuilder.get(canonicalPath);
+  }
+
   private ImmutableList<SourceFile> toFileShard(TypedAst typedAstProto) {
     ImmutableList.Builder<SourceFile> fileShardBuilder = ImmutableList.builder();
     List<SourceFileProto> protos = typedAstProto.getSourceFilePool().getSourceFileList();
     for (int i = 0; i < protos.size(); i++) {
       SourceFileProto p = protos.get(i);
 
-      SourceFile existingFile = filePoolBuilder.get(p.getFilename());
+      SourceFile existingFile = findExistingFile(p.getFilename());
       if (existingFile != null) {
         // Merge the existing SourceFile with the information serialized in the TypedAST.
         existingFile.restoreCachedStateFrom(p);
         fileShardBuilder.add(existingFile);
       } else {
         SourceFile protoFile = SourceFile.fromProto(p);
-        filePoolBuilder.put(p.getFilename(), protoFile);
+        addToFilePool(p.getFilename(), protoFile);
         fileShardBuilder.add(protoFile);
       }
     }

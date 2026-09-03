@@ -538,6 +538,61 @@ public final class SourceFile implements StaticSourceFile {
   }
 
   /**
+   * Drops configuration-specific output root prefixes (such as {@code
+   * "blaze-out/<config>/{bin,genfiles,testlogs}/"}, {@code
+   * "bazel-out/<config>/{bin,genfiles,testlogs}/"}, or bare {@code "bin/"}, {@code "genfiles/"},
+   * {@code "testlogs/"}) from the given path.
+   *
+   * <p>This allows paths to be matched consistently regardless of whether path mapping is enabled
+   * (see go/path-mapping-guide).
+   */
+  public static String stripConfigSegment(String path) {
+    // Case 1: Starts with bare config segment (e.g. mapped paths or relative roots)
+    if (path.startsWith("bin/")) {
+      return path.substring(4);
+    }
+    if (path.startsWith("genfiles/")) {
+      return path.substring(9);
+    }
+    if (path.startsWith("testlogs/")) {
+      return path.substring(9);
+    }
+
+    // Case 2: Contains blaze-out/ or bazel-out/
+    int blazeOutIdx = path.indexOf("blaze-out/");
+    if (blazeOutIdx == -1) {
+      blazeOutIdx = path.indexOf("bazel-out/");
+    }
+
+    if (blazeOutIdx != -1) {
+      // Find the next slash after blaze-out/ or bazel-out/
+      int nextSlash = path.indexOf('/', blazeOutIdx + 10);
+      if (nextSlash != -1) {
+        if (path.startsWith("bin/", nextSlash + 1)) {
+          return path.substring(nextSlash + 5);
+        }
+        if (path.startsWith("genfiles/", nextSlash + 1)) {
+          return path.substring(nextSlash + 10);
+        }
+        if (path.startsWith("testlogs/", nextSlash + 1)) {
+          return path.substring(nextSlash + 10);
+        }
+      }
+    }
+
+    return path;
+  }
+
+  /**
+   * Canonicalizes a file path for matching across compilation stages and TypedAST protos by
+   * stripping configuration prefix segments (see {@link #stripConfigSegment(String)} and
+   * go/path-mapping-guide).
+   */
+  public static String canonicalizePathForMatching(String path) {
+    return stripConfigSegment(path);
+  }
+
+  /**
    * Reconciles serialized state in a {@link SourceFileProto} with the existing state in this file.
    *
    * <p>This should be called whenever initializing a compilation based on TypedAST protos. For
@@ -546,7 +601,9 @@ public final class SourceFile implements StaticSourceFile {
    */
   public void restoreCachedStateFrom(SourceFileProto protoSourceFile) {
     checkState(
-        protoSourceFile.getFilename().equals(this.getName()),
+        protoSourceFile.getFilename().equals(this.getName())
+            || canonicalizePathForMatching(protoSourceFile.getFilename())
+                .equals(canonicalizePathForMatching(this.getName())),
         "Cannot restore state for %s from %s",
         this.getName(),
         protoSourceFile.getFilename());
