@@ -2114,13 +2114,16 @@ public class CompilerOptions {
     ES5_WITH_SOME_PERFORMANT_ES2015_AND_ASYNC_FUNCTIONS,
     /**
      * If the output feature set is ES2015 or above, downgrade to ES5 output with all BROWSER_2019
-     * features enabled that are known not to have negative performance impact. Additionally allow
-     * ASYNC_GENERATORS output for better async stack traces.
+     * features enabled that are known not to have negative performance impact. Features currently
+     * excluded because of performance concerns are classes (pending confirmation of actual
+     * performance impact), and spread expressions (confirmed known performance impact for Firefox
+     * 147). Additional dependent features that can currently not be processed independently are
+     * also explicitly excluded.
      *
      * @deprecated Use setBrowserFeaturesetYear or setLanguageOut instead.
      */
     @Deprecated
-    BROWSER_2019_WITHOUT_CLASSES,
+    BROWSER_2019_WITHOUT_CLASSES_AND_SPREAD,
   }
 
   @Deprecated

@@ -358,13 +358,29 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                     Feature.CONST_DECLARATIONS,
                     Feature.GENERATORS,
                     Feature.LET_DECLARATIONS));
-        case BROWSER_2019_WITHOUT_CLASSES ->
+        case BROWSER_2019_WITHOUT_CLASSES_AND_SPREAD ->
             options.setOutputFeatureSet(
                 FeatureSet.BROWSER_2019.without(
                     Feature.CLASSES,
                     Feature.CLASS_GETTER_SETTER,
                     Feature.NEW_TARGET,
-                    Feature.SUPER));
+                    Feature.SUPER,
+                    Feature.SPREAD_EXPRESSIONS,
+                    // Explicitly excluded because REST_PARAMETERS are currently transpiled together
+                    // with SPREAD_EXPRESSIONS.
+                    Feature.REST_PARAMETERS,
+                    // Excluded because ARRAY_DESTRUCTURING is currently not supported without
+                    // SPREAD_EXPRESSIONS.
+                    Feature.ARRAY_DESTRUCTURING,
+                    // Excluded because ARRAY_PATTERN_REST is currently not supported without
+                    // SPREAD_EXPRESSIONS.
+                    Feature.ARRAY_PATTERN_REST,
+                    // Excluded because DEFAULT_PARAMETERS is currently transpiled together with
+                    // ARRAY_DESTRUCTURING.
+                    Feature.DEFAULT_PARAMETERS,
+                    // Excluded because OBJECT_DESTRUCTURING is currently transpiled together with
+                    // ARRAY_DESTRUCTURING.
+                    Feature.OBJECT_DESTRUCTURING));
       }
     }
   }

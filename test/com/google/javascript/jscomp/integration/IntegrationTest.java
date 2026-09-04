@@ -5421,7 +5421,7 @@ async function abc() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
     options.setExperimentalOutputFeatureSet(
-        ExperimentalOutputFeatureSet.BROWSER_2019_WITHOUT_CLASSES);
+        ExperimentalOutputFeatureSet.BROWSER_2019_WITHOUT_CLASSES_AND_SPREAD);
 
     test(
         options,
