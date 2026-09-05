@@ -380,7 +380,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                     Feature.DEFAULT_PARAMETERS,
                     // Excluded because OBJECT_DESTRUCTURING is currently transpiled together with
                     // ARRAY_DESTRUCTURING.
-                    Feature.OBJECT_DESTRUCTURING));
+                    Feature.OBJECT_DESTRUCTURING,
+                    // Transpilation of some of the above appears to cause incorrect arrow
+                    // functions.
+                    Feature.ARROW_FUNCTIONS));
       }
     }
   }
