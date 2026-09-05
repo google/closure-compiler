@@ -5662,6 +5662,27 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testUnsupportedJsDocSyntaxWithDelimiterDefaultValue() {
+    for (String defaultValue : ImmutableList.of("(", ")")) {
+      JSDocInfo info =
+          parse("@param {string} [accessLevel=" + defaultValue + "] The user level */", true);
+      assertThat(info.getParameterCount()).isEqualTo(1);
+      assertTypeEquals(
+          registry.createOptionalType(STRING_TYPE), info.getParameterType("accessLevel"));
+      assertThat(info.getDescriptionForParameter("accessLevel")).isEqualTo("The user level");
+    }
+  }
+
+  @Test
+  public void testUnsupportedJsDocSyntaxWithEmptyDefaultValue() {
+    JSDocInfo info = parse("@param {string} [accessLevel=] The user level */", true);
+    assertThat(info.getParameterCount()).isEqualTo(1);
+    assertTypeEquals(
+        registry.createOptionalType(STRING_TYPE), info.getParameterType("accessLevel"));
+    assertThat(info.getDescriptionForParameter("accessLevel")).isEqualTo("The user level");
+  }
+
+  @Test
   public void testUnsupportedJsDocSyntax2() {
     JSDocInfo info =
         parse(
