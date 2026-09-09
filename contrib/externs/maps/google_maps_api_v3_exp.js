@@ -18706,6 +18706,8 @@ google.maps.marker.AdvancedMarkerElement.prototype.content;
  * @param {string} eventName Observed event.
  * @param {!Function} handler Function to handle events.
  * @return {!google.maps.MapsEventListener} Resulting event listener.
+ * @deprecated Use the standard DOM <code>addEventListener()</code> method
+ *     instead.
  */
 google.maps.marker.AdvancedMarkerElement.prototype.addListener = function(
     eventName, handler) {};
