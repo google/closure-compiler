@@ -1862,7 +1862,7 @@ jQuery.prototype.submit = function(arg1, handler) {};
 
 /**
  * @override
- * @return {!Iterator<*>}
+ * @return {!IteratorLike<*>}
  */
 jQuery.prototype[Symbol.iterator] = function() {};
 

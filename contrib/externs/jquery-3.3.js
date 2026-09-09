@@ -1676,7 +1676,7 @@ jQuery.Promise.prototype.state = function() {};
 
 /**
  * @override
- * @return {!Iterator<*>}
+ * @return {!IteratorLike<*>}
  */
 jQuery.prototype[Symbol.iterator] = function() {};
 
