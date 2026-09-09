@@ -1027,9 +1027,6 @@ class InlineAndCollapseProperties implements CompilerPass {
 
     private static boolean isSimpleDestructuringPattern(Node objectPattern) {
       checkArgument(objectPattern.isObjectPattern());
-      if (!objectPattern.hasChildren()) {
-        return false;
-      }
       for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
         if (!key.isStringKey() || key.isQuotedStringKey()) {
           return false;
@@ -1057,15 +1054,6 @@ class InlineAndCollapseProperties implements CompilerPass {
       Node destructuringLhs = n.getFirstChild();
       Node objectPattern = destructuringLhs.getFirstChild();
       Node rhs = destructuringLhs.getLastChild();
-      if (!rhs.isName() && !objectPattern.hasOneChild()) {
-        String uniqueId = t.getCompiler().getUniqueIdSupplier().getUniqueId(t.getInput());
-        Node tempName = IR.name("destructuring$" + uniqueId).srcref(rhs);
-        tempName.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-        Node tempConstNode = IR.constNode(tempName, rhs.detach()).srcref(objectPattern);
-        tempConstNode.insertAfter(insertionPoint);
-        insertionPoint = tempConstNode;
-        rhs = tempName.cloneNode();
-      }
       Node unusedNewInsertionPoint = expandObjectPattern(t, insertionPoint, objectPattern, rhs);
       n.detach();
       t.reportCodeChange();
