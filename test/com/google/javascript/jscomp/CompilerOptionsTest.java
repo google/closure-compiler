@@ -224,4 +224,24 @@ public final class CompilerOptionsTest {
     assertThat(options.getTranspilePublicClassFields()).isFalse();
     assertThat(options.getOutputFeatureSet().has(Feature.PUBLIC_CLASS_FIELDS)).isTrue();
   }
+
+  @Test
+  public void testTranspileOptionalChaining() {
+    CompilerOptions options = new CompilerOptions();
+    options.setBrowserFeaturesetYear(2023);
+    assertThat(options.getTranspileOptionalChaining()).isFalse();
+    assertThat(options.getOutputFeatureSet().has(Feature.OPTIONAL_CHAINING)).isTrue();
+
+    options.setTranspileOptionalChaining(true);
+    assertThat(options.getTranspileOptionalChaining()).isTrue();
+    assertThat(options.getOutputFeatureSet().has(Feature.OPTIONAL_CHAINING)).isFalse();
+    assertThat(options.getOutputFeatureSet().has(Feature.NULL_COALESCE_OP)).isTrue();
+    assertThat(options.getOutputFeatureSet().has(Feature.OBJECT_LITERALS_WITH_SPREAD)).isTrue();
+
+    options.setTranspileOptionalChaining(false);
+    assertThat(options.getTranspileOptionalChaining()).isFalse();
+    assertThat(options.getOutputFeatureSet().has(Feature.OPTIONAL_CHAINING)).isTrue();
+    assertThat(options.getOutputFeatureSet().has(Feature.NULL_COALESCE_OP)).isTrue();
+    assertThat(options.getOutputFeatureSet().has(Feature.OBJECT_LITERALS_WITH_SPREAD)).isTrue();
+  }
 }

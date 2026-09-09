@@ -2100,6 +2100,21 @@ public class CompilerOptions {
     return !getOutputFeatureSet().has(FeatureSet.Feature.PUBLIC_CLASS_FIELDS);
   }
 
+  /**
+   * Disables emitting optional chaining natively, forcing it to be transpiled into ternary checks.
+   */
+  public void setTranspileOptionalChaining(boolean transpile) {
+    if (transpile) {
+      setOutputFeatureSet(getOutputFeatureSet().without(FeatureSet.Feature.OPTIONAL_CHAINING));
+    } else {
+      setOutputFeatureSet(getOutputFeatureSet().with(FeatureSet.Feature.OPTIONAL_CHAINING));
+    }
+  }
+
+  public boolean getTranspileOptionalChaining() {
+    return !getOutputFeatureSet().has(FeatureSet.Feature.OPTIONAL_CHAINING);
+  }
+
   /** Option to enable specific output features for performance experiments. */
   @Deprecated
   public enum ExperimentalOutputFeatureSet {
