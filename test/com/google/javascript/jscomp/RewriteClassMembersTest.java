@@ -4252,8 +4252,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538155997): Fix RewriteClassMembers to define __proto__ fields using
-  // Object.defineProperty
   @Test
   public void testProtoField_instance() {
     var src =
@@ -4270,9 +4268,24 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class C {
           constructor() {
-            this.__proto__ = {a: 1};
-            this["__proto__"] = {b: 2};
-            this["__proto__"] = {c: 3};
+            $jscomp.global.Object.defineProperty(this, "__proto__", {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: {a: 1}
+            });
+            $jscomp.global.Object.defineProperty(this, "__proto__", {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: {b: 2}
+            });
+            $jscomp.global.Object.defineProperty(this, "__proto__", {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: {c: 3}
+            });
           }
         }
         """);
@@ -4288,8 +4301,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538155997): Fix RewriteClassMembers to define __proto__ fields using
-  // Object.defineProperty
   @Test
   public void testProtoField_uninitializedInstance() {
     var src =
@@ -4305,8 +4316,18 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         class C {
           constructor() {
-            this.__proto__ = void 0;
-            this["__proto__"] = void 0;
+            $jscomp.global.Object.defineProperty(this, "__proto__", {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: void 0
+            });
+            $jscomp.global.Object.defineProperty(this, "__proto__", {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: void 0
+            });
           }
         }
         """);
@@ -4321,8 +4342,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538155997): Fix RewriteClassMembers to define __proto__ fields using
-  // Object.defineProperty
   @Test
   public void testProtoField_static() {
     var src =
@@ -4337,8 +4356,18 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         src,
         """
         class C {}
-        C.__proto__ = {a: 1};
-        C["__proto__"] = {b: 2};
+        $jscomp.global.Object.defineProperty(C, "__proto__", {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: {a: 1}
+        });
+        $jscomp.global.Object.defineProperty(C, "__proto__", {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: {b: 2}
+        });
         """);
     test(
         withOptions().useEs2022LanguageOut(),
@@ -4348,13 +4377,21 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           static __proto__;
           static ["__proto__"];
         }
-        C.__proto__ = {a: 1};
-        C["__proto__"] = {b: 2};
+        $jscomp.global.Object.defineProperty(C, "__proto__", {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: {a: 1}
+        });
+        $jscomp.global.Object.defineProperty(C, "__proto__", {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: {b: 2}
+        });
         """);
   }
 
-  // TODO(b/538155997): Fix RewriteClassMembers to define __proto__ fields using
-  // Object.defineProperty
   @Test
   public void testProtoField_uninitializedStatic() {
     var src =
@@ -4369,8 +4406,18 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         src,
         """
         class C {}
-        C.__proto__ = void 0;
-        C["__proto__"] = void 0;
+        $jscomp.global.Object.defineProperty(C, "__proto__", {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: void 0
+        });
+        $jscomp.global.Object.defineProperty(C, "__proto__", {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: void 0
+        });
         """);
     test(
         withOptions().useEs2022LanguageOut(),
@@ -4383,8 +4430,6 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """);
   }
 
-  // TODO(b/538155997): Fix RewriteClassMembers to define __proto__ fields using
-  // Object.defineProperty
   @Test
   public void testProtoField_interleavedWithNormalFields() {
     test(
@@ -4402,12 +4447,22 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         class C {
           constructor() {
             this.x = 1;
-            this.__proto__ = 2;
+            $jscomp.global.Object.defineProperty(this, "__proto__", {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: 2
+            });
             this.y = 3;
           }
         }
         C.a = 4;
-        C.__proto__ = 5;
+        $jscomp.global.Object.defineProperty(C, "__proto__", {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: 5
+        });
         C.b = 6;
         """);
   }

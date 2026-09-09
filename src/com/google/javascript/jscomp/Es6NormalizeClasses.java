@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
@@ -1424,9 +1425,17 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
   }
 
+  private Node createObjectDotDefineProperty() {
+    compiler.getRuntimeJsLibManager().injectLibForField("$jscomp.global");
+    var global = compiler.getRuntimeJsLibManager().getJsLibField("$jscomp.global");
+    Node jscompDotGlobal = astFactory.createQNameWithUnknownType(global);
+    Node objectNode = astFactory.createGetPropWithUnknownType(jscompDotGlobal, "Object");
+    return astFactory.createGetPropWithUnknownType(objectNode, "defineProperty");
+  }
+
   /**
    * Creates a node that represents receiver.key = value; where the key and value comes from the
-   * non-computed field
+   * non-computed field, or an Object.defineProperty call if the property is "__proto__".
    */
   private @Nullable Node convNonCompFieldToGetProp(
       Node receiver, Node noncomputedField, boolean isStatic) {
@@ -1439,17 +1448,21 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       fieldValue = noncomputedField.getFirstChild();
     }
 
+    String propName = noncomputedField.getString();
+    if (Objects.equals(propName, "__proto__")) {
+      return createFieldDefineProperty(
+          noncomputedField, fieldValue, receiver, astFactory.createString(propName));
+    }
+
     return createFieldAssignment(
         noncomputedField,
         fieldValue,
-        () ->
-            astFactory.createGetProp(
-                receiver, noncomputedField.getString(), type(noncomputedField)));
+        () -> astFactory.createGetProp(receiver, propName, type(noncomputedField)));
   }
 
   /**
    * Creates a node that represents receiver[key] = value; where the key and value comes from the
-   * computed field
+   * computed field, or an Object.defineProperty call if the property evaluates to "__proto__".
    */
   private @Nullable Node convCompFieldToGetElem(
       Node receiver, Node computedField, boolean isStatic) {
@@ -1461,27 +1474,60 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       fieldValue = computedField.getLastChild();
     }
 
+    Node compFieldNameExpr;
+    if (transpileClassFields) {
+      compFieldNameExpr = computedField.removeFirstChild();
+    } else {
+      compFieldNameExpr = computedField.getFirstChild().cloneTree();
+    }
+
+    if (Objects.equals(NodeUtil.getStringValue(compFieldNameExpr), "__proto__")) {
+      return createFieldDefineProperty(computedField, fieldValue, receiver, compFieldNameExpr);
+    }
+
     return createFieldAssignment(
-        computedField,
-        fieldValue,
-        () -> {
-          Node compFieldNameExpr;
-          if (transpileClassFields) {
-            compFieldNameExpr = computedField.removeFirstChild();
-          } else {
-            compFieldNameExpr = computedField.getFirstChild().cloneTree();
-          }
-          return astFactory.createGetElem(receiver, compFieldNameExpr);
-        });
+        computedField, fieldValue, () -> astFactory.createGetElem(receiver, compFieldNameExpr));
   }
 
   /**
-   * Shared helper to create an assignment statement for a class field. Handles logic for creating
-   * undefined values for uninitialized fields during transpilation, as well as JSDoc transfer and
-   * source reference mapping.
+   * Helper to create an Object.defineProperty statement for class fields whose property key is
+   * "__proto__", avoiding unsafe prototype mutation.
    */
+  private @Nullable Node createFieldDefineProperty(
+      Node field, @Nullable Node fieldValue, Node receiver, Node keyNode) {
+    return createFieldInitializationStatement(
+        field,
+        fieldValue,
+        val -> {
+          Node descriptor =
+              astFactory.createObjectLit(
+                  astFactory.createStringKey("configurable", astFactory.createBoolean(true)),
+                  astFactory.createStringKey("enumerable", astFactory.createBoolean(true)),
+                  astFactory.createStringKey("writable", astFactory.createBoolean(true)),
+                  astFactory.createStringKey("value", val));
+
+          Node definePropertyCall =
+              astFactory.createCallWithUnknownType(
+                  createObjectDotDefineProperty(), receiver, keyNode, descriptor);
+
+          return astFactory.exprResult(definePropertyCall);
+        });
+  }
+
+  /** Helper to create an assignment statement for a class field. */
   private @Nullable Node createFieldAssignment(
       Node field, @Nullable Node fieldValue, Supplier<Node> createAssignLhs) {
+    return createFieldInitializationStatement(
+        field, fieldValue, val -> astFactory.createAssignStatement(createAssignLhs.get(), val));
+  }
+
+  /**
+   * Shared helper to create an initialization statement for a class field. Handles logic for
+   * creating undefined values for uninitialized fields during transpilation, detaching fields, as
+   * well as JSDoc transfer and source reference mapping.
+   */
+  private @Nullable Node createFieldInitializationStatement(
+      Node field, @Nullable Node fieldValue, Function<Node, Node> createStatement) {
     // For public fields, we don't need to keep around the field declaration.
     // For private fields, we still need to keep them in the class body due to syntax requirements.
     if (transpileClassFields && !field.isPrivateIdentifier()) {
@@ -1505,7 +1551,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       fieldValue.detach();
     }
 
-    Node result = astFactory.createAssignStatement(createAssignLhs.get(), fieldValue);
+    Node result = createStatement.apply(fieldValue);
 
     if (transpileClassFields) {
       // Move any JSDoc from the field declaration to the child of the EXPR_RESULT, which represents
