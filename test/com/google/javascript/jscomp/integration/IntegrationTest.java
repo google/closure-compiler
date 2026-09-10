@@ -5434,6 +5434,76 @@ async function abc() {
   }
 
   @Test
+  public void
+      browser2019WithoutClassesAndSpread_transpilesSpreadButPreservesRestAndDestructuring() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    options.setExperimentalOutputFeatureSet(
+        ExperimentalOutputFeatureSet.BROWSER_2019_WITHOUT_CLASSES_AND_SPREAD);
+
+    test(
+        options,
+        """
+        function foo(a, ...rest) {
+          return bar(...rest);
+        }
+        const keyFn = ([that, ...args]) => serializer(uidF, args);
+        window['foo'] = foo;
+        window['keyFn'] = keyFn;
+        """,
+        """
+        var $jscomp = $jscomp || {};
+        $jscomp.scope = {};
+        $jscomp.arrayIteratorImpl = function(array) {
+          var index = 0;
+          return function() {
+            if (index < array.length) {
+              return {done: false, value: array[index++]};
+            } else {
+              return {done: true};
+            }
+          };
+        };
+        $jscomp.arrayIterator = function(array) {
+          return {next: $jscomp.arrayIteratorImpl(array)};
+        };
+        $jscomp.makeIterator = function(iterable) {
+          var iteratorFunction =
+              typeof Symbol != "undefined" && Symbol.iterator && iterable[Symbol.iterator];
+          if (iteratorFunction) {
+            return iteratorFunction.call(iterable);
+          }
+          if (typeof iterable["length"] == "number") {
+            return $jscomp.arrayIterator(iterable);
+          }
+          throw new Error(String(iterable) + " is not an iterable or ArrayLike");
+        };
+        $jscomp.arrayFromIterator = function(iterator) {
+          var i;
+          for (var arr = []; !(i = iterator.next()).done;) {
+            arr.push(i.value);
+          }
+          return arr;
+        };
+        $jscomp.arrayFromIterable = function(iterable) {
+          if (iterable instanceof Array) {
+            return iterable;
+          } else {
+            return $jscomp.arrayFromIterator($jscomp.makeIterator(iterable));
+          }
+        };
+        function foo(a, ...rest) {
+          return bar.apply(null, (0, $jscomp.arrayFromIterable)(rest));
+        }
+        const keyFn = ([that, ...args]) => {
+          return serializer(uidF, args);
+        };
+        window['foo'] = foo;
+        window['keyFn'] = keyFn;
+        """);
+  }
+
+  @Test
   public void testNoSideEffectsPropagationOnStaticMembers_withEs2018Out() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

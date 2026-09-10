@@ -365,25 +365,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                     Feature.CLASS_GETTER_SETTER,
                     Feature.NEW_TARGET,
                     Feature.SUPER,
-                    Feature.SPREAD_EXPRESSIONS,
-                    // Explicitly excluded because REST_PARAMETERS are currently transpiled together
-                    // with SPREAD_EXPRESSIONS.
-                    Feature.REST_PARAMETERS,
-                    // Excluded because ARRAY_DESTRUCTURING is currently not supported without
-                    // SPREAD_EXPRESSIONS.
-                    Feature.ARRAY_DESTRUCTURING,
-                    // Excluded because ARRAY_PATTERN_REST is currently not supported without
-                    // SPREAD_EXPRESSIONS.
-                    Feature.ARRAY_PATTERN_REST,
-                    // Excluded because DEFAULT_PARAMETERS is currently transpiled together with
-                    // ARRAY_DESTRUCTURING.
-                    Feature.DEFAULT_PARAMETERS,
-                    // Excluded because OBJECT_DESTRUCTURING is currently transpiled together with
-                    // ARRAY_DESTRUCTURING.
-                    Feature.OBJECT_DESTRUCTURING,
-                    // Transpilation of some of the above appears to cause incorrect arrow
-                    // functions.
-                    Feature.ARROW_FUNCTIONS));
+                    Feature.SPREAD_EXPRESSIONS));
       }
     }
   }

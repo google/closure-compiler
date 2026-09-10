@@ -2133,8 +2133,7 @@ public class CompilerOptions {
      * excluded because of performance concerns are classes (pending confirmation of actual
      * performance impact), and spread expressions (confirmed known performance impact for Firefox
      * 154 during static script evaluation, see
-     * https://bugzilla.mozilla.org/show_bug.cgi?id=2069741). Additional dependent features that can
-     * currently not be processed independently are also explicitly excluded.
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=2069741).
      *
      * @deprecated Use setBrowserFeaturesetYear or setLanguageOut instead.
      */
