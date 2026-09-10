@@ -150,9 +150,12 @@ public class TranspilationPasses {
       passes.maybeAdd(es6RewriteClass);
     }
 
-    if (options.needsTranspilationFrom(
-        FeatureSet.BARE_MINIMUM.with(Feature.REST_PARAMETERS, Feature.SPREAD_EXPRESSIONS))) {
-      passes.maybeAdd(es6RewriteRestAndSpread);
+    if (options.needsTranspilationOf(Feature.REST_PARAMETERS)) {
+      passes.maybeAdd(es6RewriteRestParameters);
+    }
+
+    if (options.needsTranspilationOf(Feature.SPREAD_EXPRESSIONS)) {
+      passes.maybeAdd(es6RewriteSpreadExpressions);
     }
 
     if (options.needsTranspilationFrom(
@@ -323,11 +326,18 @@ public class TranspilationPasses {
           .setInternalFactory(InjectTranspilationRuntimeLibraries::new)
           .build();
 
-  /** Transpiles REST parameters and SPREAD in both array literals and function calls. */
-  static final PassFactory es6RewriteRestAndSpread =
+  /** Transpiles REST parameters. */
+  static final PassFactory es6RewriteRestParameters =
       PassFactory.builder()
-          .setName("es6RewriteRestAndSpread")
-          .setInternalFactory(Es6RewriteRestAndSpread::new)
+          .setName("es6RewriteRestParameters")
+          .setInternalFactory(Es6RewriteRestParameters::new)
+          .build();
+
+  /** Transpiles SPREAD in both array literals, new and function calls. */
+  static final PassFactory es6RewriteSpreadExpressions =
+      PassFactory.builder()
+          .setName("es6RewriteSpreadExpressions")
+          .setInternalFactory(Es6RewriteSpreadExpressions::new)
           .build();
 
   /**

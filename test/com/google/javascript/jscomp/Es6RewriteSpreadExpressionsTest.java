@@ -26,15 +26,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
+public final class Es6RewriteSpreadExpressionsTest extends CompilerTestCase {
   private static final String EXTERNS_BASE =
-      new TestExternsBuilder()
-          .addFunction()
-          .addJSCompLibraries()
-          .addExtra("$jscomp.getRestArguments = function(argument) {};")
-          .build();
+      new TestExternsBuilder().addFunction().addJSCompLibraries().build();
 
-  public Es6RewriteRestAndSpreadTest() {
+  public Es6RewriteSpreadExpressionsTest() {
     super(EXTERNS_BASE);
   }
 
@@ -42,7 +38,7 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     return (externs, root) -> {
       new InjectTranspilationRuntimeLibraries(compiler).process(externs, root);
-      new Es6RewriteRestAndSpread(compiler).process(externs, root);
+      new Es6RewriteSpreadExpressions(compiler).process(externs, root);
     };
   }
 
@@ -364,7 +360,6 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
             """));
   }
 
-
   @Test
   public void
       testSpreadVariableIntoBracketAccessMethodParameterListOnAnonymousReceiverWithSideEffects() {
@@ -596,140 +591,21 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
             """));
   }
 
-  // Rest parameters
-
   @Test
-  public void testUnusedRestParameterAtPositionZero() {
-    test("function f(...zero) {}", "function f() {}");
-  }
-
-  @Test
-  public void testUnusedRestParameterAtPositionOne() {
-    test("function f(zero, ...one) {}", "function f(zero) {}");
-  }
-
-  @Test
-  public void testUnusedRestParameterAtPositionTwo() {
-    test("function f(zero, one, ...two) {}", "function f(zero, one) {}");
-  }
-
-  @Test
-  public void testUsedRestParameterAtPositionZero() {
+  public void testSpreadTranspiled_restParametersPreserved() {
     test(
-        "function f(...zero) { return zero; }",
-        """
-        function f() {
-          let zero = $jscomp.getRestArguments.apply(0, arguments)
-          return zero;
-        }
-        """);
+        "function f(a, ...rest) { return f(...rest); }",
+        "function f(a, ...rest) { return f.apply(null, (0, $jscomp.arrayFromIterable)(rest)); }");
   }
 
   @Test
-  public void testUsedRestParameterAtPositionTwo() {
+  public void testArrayDestructuringRestPreserved() {
     test(
-        "function f(zero, one, ...two) { return two; }",
+        "const keyFn = ([that, ...args]) => serializer(uidF, args);",
         """
-        function f(zero, one) {
-          let two = $jscomp.getRestArguments.apply(2, arguments);
-          return two;
-        }
-        """);
-  }
-
-  @Test
-  public void testUsedRestParameterAtPositionTwo_maintainsNormalization() {
-    test(
-        "function f(zero, one, ...two) { function inner() {} return two; }",
-        """
-        function f(zero, one) {
-          function inner() {} // stays hoisted
-          let two = $jscomp.getRestArguments.apply(2, arguments);
-          return two;
-        }
-        """);
-  }
-
-  @Test
-  public void testUsedRestParameterAtPositionTwo_maintainsNormalization_withoutReturn() {
-    test(
-        "function f(zero, one, ...two) { function inner() {} two; }",
-        """
-        function f(zero, one) {
-          function inner() {} // stays hoisted
-          let two = $jscomp.getRestArguments.apply(2, arguments);
-          two;
-        }
-        """);
-  }
-
-  @Test
-  public void testUnusedRestParameterAtPositionTwo_noGoodInsertionPoint() {
-    test(
-        "function f(zero, one, ...two) { function inner() {} }",
-        """
-        function f(zero, one) {
-          function inner() {} // stays hoisted
-          let two = $jscomp.getRestArguments.apply(2, arguments); // declaration inserted
-        }
-        """);
-  }
-
-  @Test
-  public void testUnusedRestParameterAtPositionZeroWithTypingOnFunction() {
-    test("/** @param {...number} zero */ function f(...zero) {}", "function f() {}");
-  }
-
-  @Test
-  public void testUnusedRestParameterAtPositionZeroWithInlineTyping() {
-    test("function f(/** ...number */ ...zero) {}", "function f() {}");
-  }
-
-  @Test
-  public void testUsedRestParameterAtPositionTwoWithTypingOnFunction() {
-    test(
-        "/** @param {...number} two */ function f(zero, one, ...two) { return two; }",
-        """
-        function f(zero, one) {
-         let two = $jscomp.getRestArguments.apply(2, arguments);
-         return two;
-        }
-        """);
-  }
-
-  @Test
-  public void testUsedRestParameterAtPositionTwoWithTypingOnFunctionVariable() {
-    test(
-        "/** @param {...number} two */ var f = function(zero, one, ...two) { return two; }",
-        """
-        var f = function(zero, one) {
-          let two = $jscomp.getRestArguments.apply(2, arguments);
-          return two;
-        }
-        """);
-  }
-
-  @Test
-  public void testUsedRestParameterAtPositionTwoWithTypingOnFunctionProperty() {
-    test(
-        "/** @param {...number} two */ ns.f = function(zero, one, ...two) { return two; }",
-        """
-        ns.f = function(zero, one) {
-          let two = $jscomp.getRestArguments.apply(2, arguments);
-          return two;
-        }
-        """);
-  }
-
-  @Test
-  public void testUnusedRestParameterAtPositionTwoWithUsedParameterAtPositionOne() {
-    test(
-        "function f(zero, one, ...two) {one = (one === undefined) ? 1 : one;}",
-        """
-        function f(zero, one) {
-          let two = $jscomp.getRestArguments.apply(2, arguments);
-          one = (one === undefined) ? 1 : one;
-        }
+        const keyFn = ([that, ...args]) => {
+          return serializer(uidF, args);
+        };
         """);
   }
 }

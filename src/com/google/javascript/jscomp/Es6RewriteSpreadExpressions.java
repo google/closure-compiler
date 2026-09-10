@@ -20,101 +20,54 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.colors.StandardColors;
-import com.google.javascript.jscomp.js.RuntimeJsLibManager.JsLibField;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Converts REST parameters and SPREAD expressions. */
-public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrderCallback
+/** Converts SPREAD expressions in array literals, new calls, and function calls. */
+public final class Es6RewriteSpreadExpressions extends NodeTraversal.AbstractPostOrderCallback
     implements CompilerPass {
 
+  private static final FeatureSet TRANSPILED_FEATURES =
+      FeatureSet.BARE_MINIMUM.with(Feature.SPREAD_EXPRESSIONS);
+
   private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
-  private static final FeatureSet transpiledFeatures =
-      FeatureSet.BARE_MINIMUM.with(Feature.REST_PARAMETERS, Feature.SPREAD_EXPRESSIONS);
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final StaticScope namespace;
-  private final JsLibField getRestArguments;
 
   private static final AstFactory.Type arrayType = type(StandardColors.ARRAY_ID);
   private static final AstFactory.Type concatFnType = type(StandardColors.TOP_OBJECT);
 
-  public Es6RewriteRestAndSpread(AbstractCompiler compiler) {
+  public Es6RewriteSpreadExpressions(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
     this.namespace = compiler.getTranspilationNamespace();
-    this.getRestArguments =
-        compiler.getRuntimeJsLibManager().getJsLibField("$jscomp.getRestArguments");
   }
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, transpiledFeatures);
+    TranspilationPasses.processTranspile(compiler, root, TRANSPILED_FEATURES, this);
+    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, TRANSPILED_FEATURES);
   }
 
   @Override
   public void visit(NodeTraversal traversal, Node current, Node parent) {
-    switch (current.getToken()) {
-      case ITER_REST -> visitRestParam(traversal, current, parent);
-      case ARRAYLIT, NEW, CALL -> {
-        for (Node child = current.getFirstChild(); child != null; child = child.getNext()) {
-          if (child.isSpread()) {
-            visitArrayLitOrCallWithSpread(traversal, current);
-            break;
-          }
+    Token token = current.getToken();
+    if (token == Token.ARRAYLIT || token == Token.NEW || token == Token.CALL) {
+      for (Node child = current.getFirstChild(); child != null; child = child.getNext()) {
+        if (child.isSpread()) {
+          visitArrayLitOrCallWithSpread(traversal, current);
+          break;
         }
       }
-      default -> {}
     }
-  }
-
-  /** Processes a rest parameter */
-  private void visitRestParam(NodeTraversal t, Node restParam, Node paramList) {
-    Node functionBody = paramList.getNext();
-    int restIndex = paramList.getIndexOfChild(restParam);
-    Node nameNode = restParam.getOnlyChild();
-    String paramName = nameNode.getString();
-
-    // Remove the existing param from the list, as it will be replaced with a declaration with the
-    // same name.
-    restParam.detach();
-
-    if (!functionBody.hasChildren()) {
-      // If function has no body, we are done!
-      t.reportCodeChange();
-      return;
-    }
-
-    // Now that the restParam is deleted, create a let declaration by making a new NAME node of the
-    // same name `paramName`
-    Node let =
-        astFactory
-            .createSingleLetNameDeclaration(
-                paramName, // creates a new NAME node with name `paramName`
-                astFactory.createCall(
-                    astFactory.createGetPropWithUnknownType(
-                        astFactory.createQName(this.namespace, getRestArguments), "apply"),
-                    type(nameNode),
-                    astFactory.createNumber(restIndex),
-                    astFactory.createArgumentsReference()))
-            .srcrefTreeIfMissing(functionBody);
-    Node insertBeforePoint =
-        NodeUtil.getInsertionPointAfterAllInnerFunctionDeclarations(functionBody);
-    if (insertBeforePoint != null) {
-      let.insertBefore(insertBeforePoint);
-    } else {
-      // functionBody only contains hoisted function declarations
-      functionBody.addChildToBack(let);
-    }
-    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
-    t.reportCodeChange();
   }
 
   /**
@@ -123,7 +76,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
    * <p>Examples:
    *
    * <ul>
-   *   <li>[1, 2, ...x, 4, 5] => [].concat([1, 2], $jscomp.arrayFromIterable(x), [4, 5])
+   *   <li>[1, 2, ...x, 4, 5] => [1, 2].concat($jscomp.arrayFromIterable(x), [4, 5])
    *   <li>f(1, ...arr) => f.apply(null, [1].concat($jscomp.arrayFromIterable(arr)))
    *   <li>new F(...args) => new Function.prototype.bind.apply(F,
    *       [null].concat($jscomp.arrayFromIterable(args)))
@@ -417,5 +370,4 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     spreadParent.replaceWith(result);
     compiler.reportChangeToEnclosingScope(result);
   }
-
 }
