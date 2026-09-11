@@ -82,6 +82,15 @@ class InlineObjectLiterals implements CompilerPass {
 
         ReferenceCollection referenceInfo = referenceMap.getReferences(v);
 
+        // referenceInfo is null when a Var was registered in the scope by SyntacticScopeCreator
+        // but never encountered as a NAME node during traversal (e.g., a hoist-scope binding for
+        // a block-scoped function declaration whose NAME always resolved to the closer block-scope
+        // binding, so addReference was never called for the hoist-scope Var). There is nothing to
+        // inline in that case, so skip it. See: https://github.com/google/closure-compiler/issues/4200
+        if (referenceInfo == null) {
+          continue;
+        }
+
         if (isInlinableObject(referenceInfo.references)) {
           // Skiplist the object itself, as well as any other values
           // that it refers to, since they will have been moved around.
