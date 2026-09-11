@@ -1,4 +1,4 @@
-File	Function name	Line	Type	Total executed	Reports occured
+File	Function name	Line	Type	Total executed	Reports occurred
 InstrumentCode.js	module$contents$instrument$code_instrumentCode	13	FUNCTION	1	1
 InstrumentCode.js	module$contents$instrument$code_instrumentCode	15	BRANCH	1	1
 InstrumentCode.js	<Anonymous>	57	FUNCTION	1	1
