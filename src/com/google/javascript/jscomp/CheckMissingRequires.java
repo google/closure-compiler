@@ -331,10 +331,6 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
         return;
       }
 
-      if (require == null) {
-        return;
-      }
-
       ModuleMetadata requiredFile = moduleByNamespace.get(require.namespace());
       if (requiredFile == null || !requiredFile.hasLegacyGoogNamespaces()) {
         // If we are importing from a non-legacy namespace than any property reference is valid,
