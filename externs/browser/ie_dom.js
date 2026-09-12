@@ -495,36 +495,43 @@ ControlRange.prototype.select;
 function TextRange() {}
 
 /**
+ * @type {number}
  * @see http://msdn.microsoft.com/en-us/library/ms533538(VS.85).aspx
  */
 TextRange.prototype.boundingHeight;
 
 /**
+ * @type {number}
  * @see http://msdn.microsoft.com/en-us/library/ms533539(VS.85).aspx
  */
 TextRange.prototype.boundingLeft;
 
 /**
+ * @type {number}
  * @see http://msdn.microsoft.com/en-us/library/ms533540(VS.85).aspx
  */
 TextRange.prototype.boundingTop;
 
 /**
+ * @type {number}
  * @see http://msdn.microsoft.com/en-us/library/ms533541(VS.85).aspx
  */
 TextRange.prototype.boundingWidth;
 
 /**
+ * @type {string}
  * @see http://msdn.microsoft.com/en-us/library/ms533874(VS.85).aspx
  */
 TextRange.prototype.htmlText;
 
 /**
+ * @type {number}
  * @see http://msdn.microsoft.com/en-us/library/ms534200(VS.85).aspx
  */
 TextRange.prototype.offsetLeft;
 
 /**
+ * @type {number}
  * @see http://msdn.microsoft.com/en-us/library/ms534303(VS.85).aspx
  */
 TextRange.prototype.offsetTop;
@@ -537,134 +544,182 @@ TextRange.prototype.text;
 
 /**
  * @param {boolean=} opt_toStart
+ * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms536371(VS.85).aspx
  */
-TextRange.prototype.collapse;
+TextRange.prototype.collapse = function(opt_toStart) {};
 
 /**
+ * @param {string} how
+ * @param {TextRange} sourceRange
+ * @return {number}
  * @see http://msdn.microsoft.com/en-us/library/ms536373(VS.85).aspx
  */
-TextRange.prototype.compareEndPoints;
+TextRange.prototype.compareEndPoints = function(how, sourceRange) {};
 
 /**
+ * @return {!TextRange}
  * @see http://msdn.microsoft.com/en-us/library/ms536416(VS.85).aspx
  */
-TextRange.prototype.duplicate;
+TextRange.prototype.duplicate = function() {};
 
 /**
+ * @param {string} cmdID
+ * @param {boolean=} opt_showUI
+ * @param {*=} opt_value
+ * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536419(VS.85).aspx
  */
-TextRange.prototype.execCommand;
+TextRange.prototype.execCommand = function(cmdID, opt_showUI, opt_value) {};
 
 /**
+ * @param {string} unit
+ * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536421(VS.85).aspx
  */
-TextRange.prototype.expand;
+TextRange.prototype.expand = function(unit) {};
 
 /**
+ * @param {string} string
+ * @param {number=} opt_count
+ * @param {number=} opt_flags
+ * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536422(VS.85).aspx
  */
-TextRange.prototype.findText;
+TextRange.prototype.findText = function(string, opt_count, opt_flags) {};
 
 /**
+ * @return {string}
  * @see http://msdn.microsoft.com/en-us/library/ms536432(VS.85).aspx
  */
-TextRange.prototype.getBookmark;
+TextRange.prototype.getBookmark = function() {};
 
 /**
+ * @return {!DOMRect}
  * @see http://msdn.microsoft.com/en-us/library/ms536433(VS.85).aspx
  */
-TextRange.prototype.getBoundingClientRect;
+TextRange.prototype.getBoundingClientRect = function() {};
 
 /**
+ * @return {!ClientRectList}
  * @see http://msdn.microsoft.com/en-us/library/ms536435(VS.85).aspx
  */
-TextRange.prototype.getClientRects;
+TextRange.prototype.getClientRects = function() {};
 
 /**
  * @param {TextRange|ControlRange} range
  * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536450(VS.85).aspx
  */
-TextRange.prototype.inRange;
+TextRange.prototype.inRange = function(range) {};
 
 /**
+ * @param {TextRange} other
+ * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536458(VS.85).aspx
  */
-TextRange.prototype.isEqual;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536616(VS.85).aspx
- */
-TextRange.prototype.move;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms536620(VS.85).aspx
- */
-TextRange.prototype.moveEnd;
+TextRange.prototype.isEqual = function(other) {};
 
 /**
  * @param {string} unit
  * @param {number=} opt_count
+ * @return {number}
+ * @see http://msdn.microsoft.com/en-us/library/ms536616(VS.85).aspx
+ */
+TextRange.prototype.move = function(unit, opt_count) {};
+
+/**
+ * @param {string} unit
+ * @param {number=} opt_count
+ * @return {number}
+ * @see http://msdn.microsoft.com/en-us/library/ms536620(VS.85).aspx
+ */
+TextRange.prototype.moveEnd = function(unit, opt_count) {};
+
+/**
+ * @param {string} unit
+ * @param {number=} opt_count
+ * @return {number}
  * @see http://msdn.microsoft.com/en-us/library/ms536623(VS.85).aspx
  */
-TextRange.prototype.moveStart;
+TextRange.prototype.moveStart = function(unit, opt_count) {};
 
 /**
+ * @param {string} bookmark
+ * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536628(VS.85).aspx
  */
-TextRange.prototype.moveToBookmark;
+TextRange.prototype.moveToBookmark = function(bookmark) {};
 
 /**
+ * @param {Element} element
+ * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms536630(VS.85).aspx
  */
-TextRange.prototype.moveToElementText;
+TextRange.prototype.moveToElementText = function(element) {};
 
 /**
+ * @param {number} x
+ * @param {number} y
+ * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms536632(VS.85).aspx
  */
-TextRange.prototype.moveToPoint;
+TextRange.prototype.moveToPoint = function(x, y) {};
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536654(VS.85).aspx
  * @return {?Element}
  */
-TextRange.prototype.parentElement;
+TextRange.prototype.parentElement = function() {};
 
 /**
+ * @param {!TrustedHTML|string} html
+ * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms536656(VS.85).aspx
  */
-TextRange.prototype.pasteHTML;
+TextRange.prototype.pasteHTML = function(html) {};
 
 /**
+ * @param {string} cmdID
+ * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536676(VS.85).aspx
  */
-TextRange.prototype.queryCommandEnabled;
+TextRange.prototype.queryCommandEnabled = function(cmdID) {};
 
 /**
+ * @param {string} cmdID
+ * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536678(VS.85).aspx
  */
-TextRange.prototype.queryCommandIndeterm;
+TextRange.prototype.queryCommandIndeterm = function(cmdID) {};
 
 /**
+ * @param {string} cmdID
+ * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536679(VS.85).aspx
  */
-TextRange.prototype.queryCommandState;
+TextRange.prototype.queryCommandState = function(cmdID) {};
 
 /**
+ * @param {string} cmdID
+ * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms536681(VS.85).aspx
  */
-TextRange.prototype.queryCommandSupported;
+TextRange.prototype.queryCommandSupported = function(cmdID) {};
 
 /**
+ * @param {string} cmdID
+ * @return {string}
  * @see http://msdn.microsoft.com/en-us/library/ms536683(VS.85).aspx
  */
-TextRange.prototype.queryCommandValue;
+TextRange.prototype.queryCommandValue = function(cmdID) {};
 
 /**
+ * @param {boolean=} opt_start
+ * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms536730(VS.85).aspx
  */
-TextRange.prototype.scrollIntoView;
+TextRange.prototype.scrollIntoView = function(opt_start) {};
 
 /**
  * @return {undefined}
@@ -675,9 +730,10 @@ TextRange.prototype.select = function() {};
 /**
  * @param {string} how
  * @param {TextRange|ControlRange} sourceRange
+ * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms536745(VS.85).aspx
  */
-TextRange.prototype.setEndPoint;
+TextRange.prototype.setEndPoint = function(how, sourceRange) {};
 
 /**
  * @constructor
