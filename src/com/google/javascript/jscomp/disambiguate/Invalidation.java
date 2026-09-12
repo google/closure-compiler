@@ -30,12 +30,12 @@ class Invalidation {
     return WELL_KNOWN_PROPERTY;
   }
 
-  static Invalidation invalidatingType(int recieverType) {
-    return new WithRecieverType(Reason.INVALIDATING_TYPE, recieverType);
+  static Invalidation invalidatingType(int receiverType) {
+    return new WithReceiverType(Reason.INVALIDATING_TYPE, receiverType);
   }
 
-  static Invalidation undeclaredAccess(int recieverType) {
-    return new WithRecieverType(Reason.UNDECLARED_ACCESS, recieverType);
+  static Invalidation undeclaredAccess(int receiverType) {
+    return new WithReceiverType(Reason.UNDECLARED_ACCESS, receiverType);
   }
 
   private enum Reason {
@@ -54,12 +54,12 @@ class Invalidation {
   }
 
   /** Anonymous classes are not serialized correctly by GSON. */
-  private static final class WithRecieverType extends Invalidation {
-    final int recieverType;
+  private static final class WithReceiverType extends Invalidation {
+    final int receiverType;
 
-    WithRecieverType(Reason reason, int recieverType) {
+    WithReceiverType(Reason reason, int receiverType) {
       super(reason);
-      this.recieverType = recieverType;
+      this.receiverType = receiverType;
     }
   }
 
