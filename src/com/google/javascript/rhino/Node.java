@@ -1768,7 +1768,7 @@ public class Node {
    * <p>Do not use original name to make optimization decisions. The original intent was to preserve
    * some naming for lightly optimized code to put into source maps. It is not rigorously defined
    * and is not a suitable replacement for a canonical identifier. "Original name" is not associated
-   * with any scope and easily transfers to unrelated values. Its existance and use beyond its
+   * with any scope and easily transfers to unrelated values. Its existence and use beyond its
    * original purpose has delayed creating useful more precise alternatives.
    *
    * @deprecated "original name" is poorly defined.
