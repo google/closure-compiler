@@ -101,7 +101,7 @@ final class ProfilingReport {
     // Header row.
     output.add(
         ImmutableList.of(
-            "File", "Function name", "Line", "Type", "Total executed", "Reports occured"));
+            "File", "Function name", "Line", "Type", "Total executed", "Reports occurred"));
     // Body rows.
     for (Map.Entry<InstrumentationPoint, InstrumentationPointMetrics> entry : result) {
       output.add(
