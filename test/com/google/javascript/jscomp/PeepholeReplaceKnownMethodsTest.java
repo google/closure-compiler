@@ -389,6 +389,107 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldStringAt() {
+    // Fold String.prototype.at with Constant Index
+    // Baseline current behavior and guards:
+    // Under ECMA-262 § 22.1.3.1, String.prototype.at evaluates relative indexing with negative
+    // index normalization and out-of-bounds undefined (void 0) return.
+    // Future optimization fold targets:
+    // - 'hello'.at() -> 'h'
+    // - 'hello'.at(undefined) -> 'h'
+    // - 'hello'.at(0) -> 'h'
+    // - 'hello'.at(1) -> 'e'
+    // - 'hello'.at(4) -> 'o'
+    // - 'hello'.at(-1) -> 'o'
+    // - 'hello'.at(-2) -> 'l'
+    // - 'hello'.at(-5) -> 'h'
+    // - 'hello'.at(5) -> void 0
+    // - 'hello'.at(10) -> void 0
+    // - 'hello'.at(-6) -> void 0
+    // - 'hello'.at(-10) -> void 0
+    // - ''.at(0) -> void 0
+    // - ''.at(-1) -> void 0
+    // - 'hello'.at(Infinity) -> void 0
+    // - 'hello'.at(-Infinity) -> void 0
+    // - 'hello'.at(1.9) -> 'e'
+    // - 'hello'.at(-1.9) -> 'o'
+    // - 'hello'.at(0.5) -> 'h'
+    // - 'hello'.at(-0.5) -> 'h'
+    // - 'hello'.at(4.1) -> 'o'
+    // - 'hello'.at(4.9) -> 'o'
+    // - '123'.at(0) -> '1'
+    // - 'hello'.at(null) -> 'h'
+    // - 'hello'.at(false) -> 'h'
+    // - 'hello'.at(true) -> 'e'
+    // - 'hello'.at(NaN) -> 'h'
+    // - 'hello'.at('1') -> 'e'
+    // - '\\ud834\udd1e'.at(0) -> '\\ud834'
+    // - '\\ud834\udd1e'.at(1) -> '\\udd1e'
+    // - '\\ud834\udd1e'.at(-1) -> '\\udd1e'
+    // - '\\ud834\udd1e'.at(-2) -> '\\ud834'
+    foldSame("x = 'hello'.at()");
+    foldSame("x = 'hello'.at(undefined)");
+    foldSame("x = 'hello'.at(0)");
+    foldSame("x = 'hello'.at(1)");
+    foldSame("x = 'hello'.at(4)");
+
+    // Negative relative indices
+    foldSame("x = 'hello'.at(-1)");
+    foldSame("x = 'hello'.at(-2)");
+    foldSame("x = 'hello'.at(-5)");
+
+    // Out-of-bounds (evaluates to void 0)
+    foldSame("x = 'hello'.at(5)");
+    foldSame("x = 'hello'.at(10)");
+    foldSame("x = 'hello'.at(-6)");
+    foldSame("x = 'hello'.at(-10)");
+    foldSame("x = ''.at(0)");
+    foldSame("x = ''.at(-1)");
+    foldSame("x = 'hello'.at(Infinity)");
+    foldSame("x = 'hello'.at(-Infinity)");
+
+    // Floating-point truncation
+    foldSame("x = 'hello'.at(1.9)");
+    foldSame("x = 'hello'.at(-1.9)");
+    foldSame("x = 'hello'.at(0.5)");
+    foldSame("x = 'hello'.at(-0.5)");
+    foldSame("x = 'hello'.at(4.1)");
+    foldSame("x = 'hello'.at(4.9)");
+    foldSame("x = 'hello'.at(-5.1)");
+    foldSame("x = 'hello'.at(-5.9)");
+    foldSame("x = 'a'.at(-1.5)");
+    foldSame("x = 'hello'.at(-6.0)");
+    foldSame("x = 'hello'.at(-6.1)");
+
+    // Coercions
+    foldSame("x = '123'.at(0)");
+    foldSame("x = 'hello'.at(null)");
+    foldSame("x = 'hello'.at(false)");
+    foldSame("x = 'hello'.at(true)");
+    foldSame("x = 'hello'.at(NaN)");
+    foldSame("x = 'hello'.at('1')");
+
+    // Surrogate pairs & code units
+    foldSame("x = '\\ud834\udd1e'.at(0)");
+    foldSame("x = '\\ud834\udd1e'.at(1)");
+    foldSame("x = '\\ud834\udd1e'.at(-1)");
+    foldSame("x = '\\ud834\udd1e'.at(-2)");
+
+    // Negative / Guard cases (Must NOT fold)
+    foldSame("x = str.at(0)"); // non-literal receiver
+    foldSame("x = 'hello'.at(y)"); // non-constant argument
+    foldSame("x = 'hello'.at((foo(), 1))"); // side-effecting argument
+    foldSame("x = 'hello'.at(foo())");
+    foldSame("x = 'hello'.at(0, 1)"); // unexpected extra arguments
+    foldSame("x = 'hello'.at(0, foo())");
+    foldSame("x = 'hello'.at({a: 1})");
+    foldSame("x = 'hello'.at([1])");
+    foldSame("x = `hello`.at(0)");
+    foldSame("x = `hello ${name}`.at(0)");
+    foldSame("x = tag `hello`.at(0)");
+  }
+
+  @Test
   public void testStringJoinAddSparse() {
     fold("x = [,,'a'].join(',')", "x = ',,a'");
   }
