@@ -1266,6 +1266,82 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldArrayIsArray() {
+    // Fold Array.isArray with Constant and Literal Arguments
+    // Baseline current behavior and guards:
+    // Under ECMA-262 § 23.1.2.2 and § 7.2.2 (IsArray), Array.isArray determines whether the
+    // argument is an Array exotic object.
+    // Future optimization fold targets:
+    // - Array literals:
+    //   - Array.isArray([]) -> true
+    //   - Array.isArray([1, 2, 3]) -> true
+    //   - Array.isArray(['a', 'b']) -> true
+    // - Non-array primitives:
+    //   - Array.isArray(123) -> false
+    //   - Array.isArray(0) -> false
+    //   - Array.isArray('hello') -> false
+    //   - Array.isArray('') -> false
+    //   - Array.isArray(true) -> false
+    //   - Array.isArray(false) -> false
+    //   - Array.isArray(null) -> false
+    //   - Array.isArray(undefined) -> false
+    //   - Array.isArray(void 0) -> false
+    //   - Array.isArray(NaN) -> false
+    //   - Array.isArray(Infinity) -> false
+    //   - Array.isArray(-Infinity) -> false
+    // - Object literals & other reference types:
+    //   - Array.isArray({}) -> false
+    //   - Array.isArray({0: 'a', length: 1}) -> false
+    //   - Array.isArray(/abc/) -> false
+    //   - Array.isArray(function() {}) -> false
+    //   - Array.isArray(() => {}) -> false
+    // - Omitted argument:
+    //   - Array.isArray() -> false (arg evaluates to undefined)
+
+    // Positive fold cases (Array literals)
+    foldSame("x = Array.isArray([])");
+    foldSame("x = Array.isArray([1, 2, 3])");
+    foldSame("x = Array.isArray(['a', 'b'])");
+
+    // Positive fold cases (Non-array primitives)
+    foldSame("x = Array.isArray(123)");
+    foldSame("x = Array.isArray(0)");
+    foldSame("x = Array.isArray('hello')");
+    foldSame("x = Array.isArray('')");
+    foldSame("x = Array.isArray(true)");
+    foldSame("x = Array.isArray(false)");
+    foldSame("x = Array.isArray(null)");
+    foldSame("x = Array.isArray(undefined)");
+    foldSame("x = Array.isArray(void 0)");
+    foldSame("x = Array.isArray(NaN)");
+    foldSame("x = Array.isArray(Infinity)");
+    foldSame("x = Array.isArray(-Infinity)");
+
+    // Positive fold cases (Object literals & other reference types)
+    foldSame("x = Array.isArray({})");
+    foldSame("x = Array.isArray({0: 'a', length: 1})");
+    foldSame("x = Array.isArray(/abc/)");
+    foldSame("x = Array.isArray(function() {})");
+    foldSame("x = Array.isArray(() => {})");
+
+    // Positive fold cases (Omitted argument -> evaluates as undefined)
+    foldSame("x = Array.isArray()");
+
+    // Negative / Guard cases (MUST NOT fold)
+    foldSame("x = Array.isArray(x)"); // unknown variable
+    foldSame("x = Array.isArray(foo())"); // side-effecting function call
+    foldSame("x = Array.isArray((foo(), []))"); // side-effecting sequence expression
+    foldSame("x = Array.isArray([foo()])"); // array literal containing side-effecting element
+    foldSame("x = Array.isArray([...x])"); // array literal with spread element
+    foldSame("x = Array.isArray([], 1)"); // unexpected extra arguments
+    foldSame("x = window.Array.isArray([])"); // non-standard qualified receiver
+    fold(
+        "function f(Array) { return Array.isArray([]); }",
+        "function f(Array$jscomp$1) { return Array$jscomp$1.isArray([]); }"); // shadowed Array
+    // identifier
+  }
+
+  @Test
   public void testBatchD_objectStaticMethods() {
     // OPP-016: Object.keys, Object.values, Object.entries guards and current behavior
     foldSame("x = Object.keys({a: 1, b: 2})");
