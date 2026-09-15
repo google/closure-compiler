@@ -303,6 +303,92 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldStringTrimStart() {
+    // Fold String.prototype.trimStart / trimLeft with Constant Arguments
+    // Baseline current behavior and guards:
+    // Under ECMA-262 § 22.1.3.34 (trimStart) and Annex § B.2.2.15 (trimLeft), leading WhiteSpace
+    // and LineTerminator characters are removed.
+    // Future optimization fold targets:
+    // - '   foo   '.trimStart() -> 'foo   '
+    // - '   foo   '.trimLeft() -> 'foo   '
+    // - 'foo   '.trimStart() -> 'foo   '
+    // - 'foo   '.trimLeft() -> 'foo   '
+    // - ''.trimStart() -> ''
+    // - ''.trimLeft() -> ''
+    // - '   '.trimStart() -> ''
+    // - '   '.trimLeft() -> ''
+    // - '\\uFEFF\\u00A0\\t\\n foo \\t\\n'.trimStart() -> 'foo \\t\\n'
+    // - '\\uFEFF\\u00A0\\t\\n foo \\t\\n'.trimLeft() -> 'foo \\t\\n'
+    // - '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo \\t'.trimStart() -> 'foo \\t'
+    // - '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo \\t'.trimLeft() -> 'foo \\t'
+    foldSame("x = '   foo   '.trimStart()");
+    foldSame("x = '   foo   '.trimLeft()");
+    foldSame("x = 'foo   '.trimStart()");
+    foldSame("x = 'foo   '.trimLeft()");
+    foldSame("x = ''.trimStart()");
+    foldSame("x = ''.trimLeft()");
+    foldSame("x = '   '.trimStart()");
+    foldSame("x = '   '.trimLeft()");
+    foldSame("x = '\\uFEFF\\u00A0\\t\\n foo \\t\\n'.trimStart()");
+    foldSame("x = '\\uFEFF\\u00A0\\t\\n foo \\t\\n'.trimLeft()");
+    foldSame("x = '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo \\t'.trimStart()");
+    foldSame("x = '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo \\t'.trimLeft()");
+
+    // Negative / Guard cases (Must NOT fold)
+    foldSame("x = str.trimStart()"); // non-literal receiver
+    foldSame("x = str.trimLeft()");
+    foldSame("x = '   foo   '.trimStart(1)"); // unexpected extra arguments
+    foldSame("x = '   foo   '.trimLeft(1)");
+    foldSame("x = '   foo   '.trimStart(foo())"); // side-effecting argument
+    foldSame("x = '   foo   '.trimLeft(foo())");
+    foldSame("x = tag `   foo   `.trimStart()");
+    foldSame("x = tag `   foo   `.trimLeft()");
+  }
+
+  @Test
+  public void testFoldStringTrimEnd() {
+    // Fold String.prototype.trimEnd / trimRight with Constant Arguments
+    // Baseline current behavior and guards:
+    // Under ECMA-262 § 22.1.3.33 (trimEnd) and Annex § B.2.2.16 (trimRight), trailing WhiteSpace
+    // and LineTerminator characters are removed.
+    // Future optimization fold targets:
+    // - '   foo   '.trimEnd() -> '   foo'
+    // - '   foo   '.trimRight() -> '   foo'
+    // - '   foo'.trimEnd() -> '   foo'
+    // - '   foo'.trimRight() -> '   foo'
+    // - ''.trimEnd() -> ''
+    // - ''.trimRight() -> ''
+    // - '   '.trimEnd() -> ''
+    // - '   '.trimRight() -> ''
+    // - '\\t\\n foo \\uFEFF\\u00A0\\t\\n'.trimEnd() -> '\\t\\n foo'
+    // - '\\t\\n foo \\uFEFF\\u00A0\\t\\n'.trimRight() -> '\\t\\n foo'
+    // - '\\t foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trimEnd() -> '\\t foo'
+    // - '\\t foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trimRight() -> '\\t foo'
+    foldSame("x = '   foo   '.trimEnd()");
+    foldSame("x = '   foo   '.trimRight()");
+    foldSame("x = '   foo'.trimEnd()");
+    foldSame("x = '   foo'.trimRight()");
+    foldSame("x = ''.trimEnd()");
+    foldSame("x = ''.trimRight()");
+    foldSame("x = '   '.trimEnd()");
+    foldSame("x = '   '.trimRight()");
+    foldSame("x = '\\t\\n foo \\uFEFF\\u00A0\\t\\n'.trimEnd()");
+    foldSame("x = '\\t\\n foo \\uFEFF\\u00A0\\t\\n'.trimRight()");
+    foldSame("x = '\\t foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trimEnd()");
+    foldSame("x = '\\t foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trimRight()");
+
+    // Negative / Guard cases (Must NOT fold)
+    foldSame("x = str.trimEnd()"); // non-literal receiver
+    foldSame("x = str.trimRight()");
+    foldSame("x = '   foo   '.trimEnd(1)"); // unexpected extra arguments
+    foldSame("x = '   foo   '.trimRight(1)");
+    foldSame("x = '   foo   '.trimEnd(foo())"); // side-effecting argument
+    foldSame("x = '   foo   '.trimRight(foo())");
+    foldSame("x = tag `   foo   `.trimEnd()");
+    foldSame("x = tag `   foo   `.trimRight()");
+  }
+
+  @Test
   public void testStringJoinAddSparse() {
     fold("x = [,,'a'].join(',')", "x = ',,a'");
   }
