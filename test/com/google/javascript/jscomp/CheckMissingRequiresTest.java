@@ -809,6 +809,41 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
+  public void testWarning_destructure_nonLegacyModule_fromLegacyModule() throws Exception {
+    checkNoWarning(
+        """
+        goog.module('foo.bar');
+        goog.module.declareLegacyNamespace();
+        """,
+        """
+        goog.module('foo.bar.Baz');
+        /** @constructor */ exports = function() {};
+        """,
+        // TODO(b/553485301): importing Baz off of foo.bar should not be allowed.
+        """
+        goog.module('test');
+        const {Baz} = goog.require('foo.bar');
+        function ref(a) {}
+        ref(Baz);
+        """);
+  }
+
+  @Test
+  public void testWarning_destructure_nestedProvide_whenChildAlsoImported() throws Exception {
+    checkNoWarning(
+        "goog.provide('foo.bar');",
+        "goog.provide('foo.bar.Baz');",
+        // TODO(b/553485301): importing Baz off of foo.bar should not be allowed.
+        """
+        goog.module('test');
+        const BarBaz = goog.require('foo.bar.Baz');
+        const {Baz} = goog.require('foo.bar');
+        function ref(a) {}
+        ref(Baz);
+        """);
+  }
+
+  @Test
   public void testWarning_missingRequire_nestedProvideIndirectRef() throws Exception {
     checkIndirectNamespaceRefRequireWarning(
         "foo.bar.Baz",
