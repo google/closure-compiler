@@ -343,7 +343,6 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       }
 
       String reference = require.namespace() + '.' + require.property();
-      QualifiedName qualifiedName = QualifiedName.of(reference);
 
       // Do not report references to a namespace provided in the same file, and do not recurse
       // into parent namespaces either.
@@ -352,22 +351,14 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
         // the destructured property name.
         ModuleMetadata alternateFile = moduleByNamespace.get(reference);
 
-        // If the alternate isn't a legacy namespace there there can't be accidental references
-        // through namespace destructuring, otherwise...
-        if (alternateFile != null && alternateFile.hasLegacyGoogNamespaces()) {
-          if (!hasAcceptableRequire(
-              currentFile,
-              qualifiedName,
-              alternateFile,
-              require.isStrongRequire() ? Strength.CODE : Strength.WEAK_TYPE)) {
-            // TODO: report on the node that needs to be removed, include the namespace that needs
-            // to be added.
-            final DiagnosticType toReport =
-                require.isStrongRequire()
-                    ? INCORRECT_NAMESPACE_ALIAS_REQUIRE
-                    : INCORRECT_NAMESPACE_ALIAS_REQUIRE_TYPE;
-            t.report(n, toReport, reference);
-          }
+        if (alternateFile != null && alternateFile != requiredFile) {
+          // TODO: report on the node that needs to be removed, include the namespace that needs
+          // to be added.
+          DiagnosticType toReport =
+              require.isStrongRequire()
+                  ? INCORRECT_NAMESPACE_ALIAS_REQUIRE
+                  : INCORRECT_NAMESPACE_ALIAS_REQUIRE_TYPE;
+          t.report(n, toReport, reference);
         }
       }
     }

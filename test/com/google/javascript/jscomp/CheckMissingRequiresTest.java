@@ -810,7 +810,8 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
 
   @Test
   public void testWarning_destructure_nonLegacyModule_fromLegacyModule() throws Exception {
-    checkNoWarning(
+    checkIncorrectNamespaceAliasRequireWarning(
+        "foo.bar.Baz",
         """
         goog.module('foo.bar');
         goog.module.declareLegacyNamespace();
@@ -819,7 +820,6 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
         goog.module('foo.bar.Baz');
         /** @constructor */ exports = function() {};
         """,
-        // TODO(b/553485301): importing Baz off of foo.bar should not be allowed.
         """
         goog.module('test');
         const {Baz} = goog.require('foo.bar');
@@ -830,10 +830,10 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
 
   @Test
   public void testWarning_destructure_nestedProvide_whenChildAlsoImported() throws Exception {
-    checkNoWarning(
+    checkIncorrectNamespaceAliasRequireWarning(
+        "foo.bar.Baz",
         "goog.provide('foo.bar');",
         "goog.provide('foo.bar.Baz');",
-        // TODO(b/553485301): importing Baz off of foo.bar should not be allowed.
         """
         goog.module('test');
         const BarBaz = goog.require('foo.bar.Baz');
