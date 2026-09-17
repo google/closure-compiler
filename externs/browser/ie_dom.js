@@ -763,6 +763,7 @@ Document.prototype.cookie;
 Document.prototype.dir;
 
 /**
+ * @type {number}
  * @see http://msdn.microsoft.com/en-us/library/cc196988(VS.85).aspx
  */
 Document.prototype.documentMode;
@@ -866,9 +867,10 @@ Document.prototype.mergeAttributes;
 Document.prototype.recalc;
 
 /**
+ * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/ms536689(VS.85).aspx
  */
-Document.prototype.releaseCapture;
+Document.prototype.releaseCapture = function() {};
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536738(VS.85).aspx
@@ -1068,6 +1070,7 @@ Element.prototype.releaseCapture = function() {};
 Element.prototype.removeBehavior = function(iID) {};
 
 /**
+ * @type {?CSSStyleDeclaration}
  * @see http://msdn.microsoft.com/en-us/library/aa703996(VS.85).aspx
  */
 Element.prototype.runtimeStyle;
@@ -1089,6 +1092,7 @@ Element.prototype.save = function(sStoreName) {};
 Element.prototype.setCapture = function(opt_bContainerCapture) {};
 
 /**
+ * @type {number}
  * @see http://msdn.microsoft.com/en-us/library/ms534635(VS.85).aspx
  */
 Element.prototype.sourceIndex;
