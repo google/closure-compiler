@@ -183,6 +183,22 @@ public class PolymerPassTest extends CompilerTestCase {
     setGenericNameReplacements(ImmutableMap.of("Interface$UID", "Interface$"));
   }
 
+/** Regression test for https://github.com/google/closure-compiler/issues/1950 */
+  @Test
+  public void testPropertiesNotObjLit() {
+    testError(
+        srcs(
+            """
+            Polymer({
+              is: 'x-y',
+              properties: (function() {
+                return {};
+              })(),
+            })
+            """),
+        error(PolymerPassErrors.POLYMER_PROPERTIES_INVALID));
+  }
+
   @Test
   public void testPolymerRewriterGeneratesDeclarationOutsideLoadModule() {
     test(
