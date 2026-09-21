@@ -42,6 +42,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
   public static final DiagnosticType MISPLACED_ANNOTATION =
       DiagnosticType.warning("JSC_MISPLACED_ANNOTATION", "Misplaced {0} annotation. {1}");
 
+  public static final DiagnosticType MISPLACED_TS_TYPE_ANNOTATION =
+      DiagnosticType.warning(
+          "JSC_MISPLACED_TS_TYPE_ANNOTATION", "Misplaced @tsType annotation. {0}");
+
   public static final DiagnosticType ANNOTATION_DEPRECATED =
       DiagnosticType.warning("JSC_ANNOTATION_DEPRECATED", "The {0} annotation is deprecated. {1}");
 
@@ -732,7 +736,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     }
 
     if (!isJSDocOnFunctionNode(n, info)) {
-      report(n, MISPLACED_ANNOTATION, "tsType", "must be on a function node");
+      report(n, MISPLACED_TS_TYPE_ANNOTATION, "must be on a function node");
     }
   }
 

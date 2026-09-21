@@ -26,6 +26,7 @@ import static com.google.javascript.jscomp.CheckJSDoc.JSDOC_ON_RETURN;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_MSG_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_SUPPRESS;
+import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_TS_TYPE_ANNOTATION;
 
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import org.junit.Before;
@@ -1323,5 +1324,32 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("var x = obj.method(/** @type {foo} */ (bar), baz);");
     testSame("var x = (/** @type {foo} */ (obj.method()), bar);");
     testSame("var x = (/** @type {foo} */ (bar), baz);");
+  }
+
+  @Test
+  public void testMisplacedTsTypeAnnotation_notOnFunction() {
+    testWarning(
+        srcs(
+            SourceFile.fromCode(
+                "javascript/closure/base.js",
+                """
+                /** @tsType {string} */
+                console.log(0);
+                """)),
+        warning(MISPLACED_TS_TYPE_ANNOTATION));
+  }
+
+  @Test
+  public void testMisplacedTsTypeAnnotation_allowlistWorks() {
+    SourceFile banned = SourceFile.fromCode("test.js", "/** @tsType {never} */ function f() {}");
+    SourceFile allowed =
+        SourceFile.fromCode("javascript/closure/base.js", "/** @tsType {never} */ function g() {}");
+
+    testWarning(
+        srcs(banned),
+        warning(MISPLACED_TS_TYPE_ANNOTATION)
+            .withMessageContaining(
+                "Misplaced @tsType annotation. may only be used in closure or jspb: test.js"));
+    testSame(srcs(allowed));
   }
 }
