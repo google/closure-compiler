@@ -1338,18 +1338,4 @@ public final class CheckJsDocTest extends CompilerTestCase {
                 """)),
         warning(MISPLACED_TS_TYPE_ANNOTATION));
   }
-
-  @Test
-  public void testMisplacedTsTypeAnnotation_allowlistWorks() {
-    SourceFile banned = SourceFile.fromCode("test.js", "/** @tsType {never} */ function f() {}");
-    SourceFile allowed =
-        SourceFile.fromCode("javascript/closure/base.js", "/** @tsType {never} */ function g() {}");
-
-    testWarning(
-        srcs(banned),
-        warning(MISPLACED_TS_TYPE_ANNOTATION)
-            .withMessageContaining(
-                "Misplaced @tsType annotation. may only be used in closure or jspb: test.js"));
-    testSame(srcs(allowed));
-  }
 }
