@@ -211,7 +211,7 @@ Iterator.prototype.next = function(opt_value) {};
  * Use this to indicate a type is both an Iterator and an Iterable.
  *
  * @interface
- * @extends {Iterator<T, ?, *>}
+ * @extends {IteratorLike<T, ?, *>}
  * @extends {Iterable<T, ?, *>}
  * @template T, TReturn, TNext
  */
