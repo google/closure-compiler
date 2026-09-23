@@ -23389,6 +23389,13 @@ google.maps.places.PlaceLinkElement.prototype.action;
 google.maps.places.PlaceLinkElement.prototype.actionAriaLabel;
 
 /**
+ * Whether the default icon is hidden for all link types except custom.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceLinkElement.prototype.defaultIconHidden;
+
+/**
  * The URL to open when the link is clicked. This is only used when the
  * <code>action</code> attribute is set to <code>custom</code>.
  * @default <code>undefined</code>
@@ -28905,17 +28912,6 @@ google.maps.routes.RouteModifiers.prototype.vehicleInfo;
  * @record
  */
 google.maps.routes.RoutePolyline3DOptions = function() {};
-
-/**
- * The color scheme to use for the 3D polyline. When specified as
- * <code>FOLLOW_SYSTEM</code> while the map <code>colorScheme</code> is also
- * <code>FOLLOW_SYSTEM</code>, the polylines will be drawn in the same
- * dark/light mode as the map. When not specified, {@link
- * google.maps.routes.Route.create3DPolylines} attempts to use the
- * <code>colorScheme</code> of the map or falls back to the system default.
- * @type {!google.maps.ColorScheme|undefined}
- */
-google.maps.routes.RoutePolyline3DOptions.prototype.colorScheme;
 
 /**
  * Options for customizing the style of a 3D polyline.
