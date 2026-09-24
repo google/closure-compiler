@@ -46,4 +46,43 @@ public final class EsModuleIntegrationTest extends IntegrationTestCase {
         new String[] {"console.log('one');", "console.log('two');"},
         new String[] {"console.log('one'); export {};", "import './m0.js'; console.log('two');"});
   }
+
+  // Reproduction test for b/563543213 (https://github.com/google/closure-compiler/issues/4344):
+  // Duplicate top-level `var` declarations in ES modules currently trigger a fatal
+  // JSC_ILLEGAL_MODULE_RENAMING_CONFLICT when type checking is enabled.
+  @Test
+  public void testDuplicateVarInEsModule_basic() {
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(true);
+    options.setChunkOutputType(CompilerOptions.ChunkOutputType.ES_MODULES);
+
+    test(
+        options,
+        """
+        import.meta.url;
+        var a = 1;
+        var a = 2;
+        use(a);
+        """,
+        DiagnosticGroups.forName("checkLevelOffDoNotUseDoNotUseDoNotUseDoNotUseDoNotUse"));
+  }
+
+  // Reproduction test for b/563543213 (https://github.com/google/closure-compiler/issues/4344):
+  // Repeated `for (var i = ...)` loops in ES modules currently trigger a fatal
+  // JSC_ILLEGAL_MODULE_RENAMING_CONFLICT when type checking is enabled.
+  @Test
+  public void testDuplicateVarInEsModule_forLoop() {
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(true);
+    options.setChunkOutputType(CompilerOptions.ChunkOutputType.ES_MODULES);
+
+    test(
+        options,
+        """
+        import.meta.url;
+        for (var i = 0; i < 10; ++i) { use(i); }
+        for (var i = 0; i < 10; ++i) { use(i); }
+        """,
+        DiagnosticGroups.forName("checkLevelOffDoNotUseDoNotUseDoNotUseDoNotUseDoNotUse"));
+  }
 }
