@@ -101,6 +101,7 @@ public class JsFileFullParser {
 
     /** Annotation name, e.g. "@fileoverview" or "@externs". */
     final String name;
+
     /**
      * Annotation value: either the bare identifier immediately after the annotation, or else string
      * in braces.
@@ -201,11 +202,7 @@ public class JsFileFullParser {
       info.loadFlags.put("lang", version);
     }
 
-    for (Comment comment : parsed.comments) {
-      if (comment.type == Comment.Type.JSDOC) {
-        parseComment(comment, info);
-      }
-    }
+    parseTopLevelJsDocComments(parsed.ast, parsed.comments, info);
     GatherModuleMetadata gatherModuleMetadata =
         new GatherModuleMetadata(
             compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER);
@@ -257,6 +254,36 @@ public class JsFileFullParser {
     // Traverse any nested modules (goog.loadModule calls).
     for (ModuleMetadata nested : module.nestedModules()) {
       recordModuleMetadata(info, nested);
+    }
+  }
+
+  /**
+   * Parses all top-level JSDoc comments (comments before or after top-level statements, or all
+   * comments if there are no statements), ignoring comments nested inside top-level statement
+   * bodies (functions, classes, methods, blocks).
+   */
+  private static void parseTopLevelJsDocComments(Node ast, List<Comment> comments, FileInfo info) {
+    Node statementContainer =
+        ast.getFirstChild() != null && ast.getFirstChild().isModuleBody()
+            ? ast.getFirstChild()
+            : ast;
+    Node statement = statementContainer.getFirstChild();
+    for (Comment comment : comments) {
+      if (comment.type != Comment.Type.JSDOC) {
+        continue;
+      }
+      int commentStart = comment.location.start.offset;
+      int commentEnd = comment.location.end.offset;
+      while (statement != null
+          && statement.getSourceOffset() + statement.getLength() <= commentStart) {
+        statement = statement.getNext();
+      }
+      if (statement != null
+          && commentStart >= statement.getSourceOffset()
+          && commentEnd <= statement.getSourceOffset() + statement.getLength()) {
+        continue;
+      }
+      parseComment(comment, info);
     }
   }
 

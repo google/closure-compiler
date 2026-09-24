@@ -266,6 +266,47 @@ public final class JsFileFullParserTest {
     assertThat(info.readToggles).containsExactly("foo_bar");
   }
 
+  @Test
+  public void testTopLevelJsDocComments_beforeBetweenAndAfterStatements() {
+    FileInfo info =
+        parse(
+            """
+            /** @fileoverview Header comment. */
+            /** @requirecss {css.before.module} */
+            goog.module('foo');
+            /** @requirecss {css.between.statements} */
+            class Foo {}
+            /** @requirecss {css.after.statements} */
+            """);
+    assertThat(info.requiresCss)
+        .containsExactly("css.before.module", "css.between.statements", "css.after.statements");
+  }
+
+  @Test
+  public void testNestedJsDocCommentsAreIgnored() {
+    FileInfo info =
+        parse(
+            """
+            goog.module('foo');
+            class Foo {
+              /** @requirecss {css.in.method} */
+              bar() {}
+            }
+            function baz() {
+              /** @requirecss {css.in.function} */
+              return 1;
+            }
+            goog.scope(function() {
+              /** @requirecss {css.in.goog_scope} */
+              const x = 1;
+            });
+            {
+              /** @requirecss {css.in.block} */
+            }
+            """);
+    assertThat(info.requiresCss).isEmpty();
+  }
+
   private static FileInfo parse(String content) {
     return JsFileFullParser.parse(
         content,
