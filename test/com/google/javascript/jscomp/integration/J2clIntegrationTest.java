@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp.integration;
 
-
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -139,6 +138,156 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
         """;
 
     test(createCompilerOptions(), code, "");
+  }
+
+  /**
+   * Demonstrates the interface marker renaming bug caused by goog.inherits clobbering
+   * Function.prototype (b/253690550).
+   *
+   * <p>When {@code inherits(childCtor, parentCtor)} with {@code @param {!Function}} is present,
+   * type inference clobbers {@code Function.prototype}, giving it a non-axiomatic, non-invalidating
+   * color (0x51e30d0a5d476004L). As a result, AmbiguateProperties ambiguates {@code
+   * $implements__FooInterface} with {@code AnotherClass.prototype.anotherMethod} to {@code $a$}.
+   * Without {@code inherits}, the marker is preserved as {@code $$implements__FooInterface$}.
+   */
+  @Test
+  public void testInterfaceMarkerRenamingBug_b253690550() {
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addObject()
+                .addFunction()
+                .addAlert()
+                .buildExternsFile("externs.js"));
+
+    CompilerOptions options = createCompilerOptions();
+    options.setAmbiguateProperties(true);
+    options.setDevirtualizeMethods(false);
+    options.setGeneratePseudoNames(true);
+    options.setPrettyPrint(true);
+
+    String baselineSource =
+        """
+        /** @interface */
+        class FooInterface {}
+        /** @type {boolean} */
+        FooInterface.prototype.$implements__FooInterface;
+
+        /**
+         * @noinline
+         * @param {!Function} ctor
+         */
+        function markImplementor(ctor) {
+          ctor.prototype.$implements__FooInterface = true;
+        }
+
+        /**
+         * @suppress {checkTypes}
+         * @implements {FooInterface}
+         */
+        class FooImpl {
+          /** @noinline */
+          realMethod(x) {
+            alert('real:' + x);
+            return x;
+          }
+        }
+        class AnotherClass {
+          /** @noinline */
+          anotherMethod(x) {
+            alert('another:' + x);
+            return x;
+          }
+        }
+        markImplementor(FooImpl);
+
+        /**
+         * @noinline
+         * @param {!FooInterface} instance
+         */
+        function isInstance(instance) {
+          return !!instance.$implements__FooInterface;
+        }
+
+        function run(/** !FooImpl */ f, /** !AnotherClass */ a, x) {
+          f.realMethod(x);
+          a.anotherMethod(x);
+          alert(isInstance(f));
+        }
+        alert(run);
+        run(new FooImpl(), new AnotherClass(), 1);
+        """;
+
+    String bugSource =
+        """
+        /**
+         * @param {!Function} childCtor
+         * @param {!Function} parentCtor
+         */
+        function inherits(childCtor, parentCtor) {
+          childCtor.prototype = Object.create(parentCtor.prototype);
+        }
+        """
+            + baselineSource;
+
+    // 1. Baseline: without inherits(), Function.prototype is axiomatic TOP_OBJECT (invalidating).
+    // AmbiguateProperties skips $implements__FooInterface, so RenameProperties preserves it
+    // as $$implements__FooInterface$, while realMethod and anotherMethod are ambiguated to $a$.
+    test(
+        options,
+        baselineSource,
+        """
+        function $markImplementor$$($ctor$$){
+          $ctor$$.prototype.$$implements__FooInterface$=!0
+        }
+        class $FooImpl$${
+          $a$($x$$){alert("real:"+$x$$)}
+        }
+        class $AnotherClass$${
+          $a$($x$jscomp$1$$){alert("another:"+$x$jscomp$1$$)}
+        }
+        $markImplementor$$($FooImpl$$);
+        function $isInstance$$($instance$$){
+          return!!$instance$$.$$implements__FooInterface$
+        }
+        function $run$$($f$$,$a$$,$x$jscomp$2$$){
+          $f$$.$a$($x$jscomp$2$$);
+          $a$$.$a$($x$jscomp$2$$);
+          alert($isInstance$$($f$$))
+        }
+        alert($run$$);
+        $run$$(new $FooImpl$$,new $AnotherClass$$,1)
+        """);
+
+    // 2. Bug: with inherits(), Function.prototype is clobbered by type inference,
+    // receiving a non-invalidating color. AmbiguateProperties no longer skips
+    // $implements__FooInterface and ambiguates it to $a$ (sharing the property name
+    // with AnotherClass.prototype.anotherMethod), instead of keeping it unrenamed.
+    test(
+        options,
+        bugSource,
+        """
+        function $markImplementor$$($ctor$$){
+          $ctor$$.prototype.$a$=!0
+        }
+        class $FooImpl$${
+          $b$($x$$){alert("real:"+$x$$)}
+        }
+        class $AnotherClass$${
+          $a$($x$jscomp$1$$){alert("another:"+$x$jscomp$1$$)}
+        }
+        $markImplementor$$($FooImpl$$);
+        function $isInstance$$($instance$$){
+          return!!$instance$$.$a$
+        }
+        function $run$$($f$$,$a$$,$x$jscomp$2$$){
+          $f$$.$b$($x$jscomp$2$$);
+          $a$$.$a$($x$jscomp$2$$);
+          alert($isInstance$$($f$$))
+        }
+        alert($run$$);
+        $run$$(new $FooImpl$$,new $AnotherClass$$,1)
+        """);
   }
 
   @Override

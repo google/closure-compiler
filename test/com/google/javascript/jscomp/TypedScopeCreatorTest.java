@@ -8953,6 +8953,58 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     }
   }
 
+  @Test
+  public void testFunctionPrototypeAssignmentType() {
+    testSame(
+        """
+        /**
+         * @param {!Function} ctor
+         */
+        function markImplementor(ctor) {
+          ctor.prototype.$implements__Foo = true;
+        }
+        """);
+
+    Node ctorPrototypeNode = findQualifiedNameNode("ctor.prototype", globalScope.getRootNode());
+    JSType ctorPrototypeType = checkNotNull(ctorPrototypeNode.getJSType());
+    ObjectType nativeFnInstancePrototype =
+        getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_PROTOTYPE);
+
+    assertThat(ctorPrototypeType.toObjectType().getReferenceName()).isEqualTo("?.prototype");
+    assertThat(ctorPrototypeType).isSameInstanceAs(nativeFnInstancePrototype);
+  }
+
+  @Test
+  public void testFunctionPrototypeAssignmentPreserved_b253690550() {
+    testSame(
+        """
+        /**
+         * @param {!Function} childCtor
+         * @param {!Function} parentCtor
+         */
+        function inherits(childCtor, parentCtor) {
+          // see b/253690550 - this clobbers Function.prototype
+          childCtor.prototype = Object.create(parentCtor.prototype);
+        }
+
+        /**
+         * @param {!Function} ctor
+         */
+        function markImplementor(ctor) {
+          ctor.prototype.$implements__Foo = true;
+        }
+        """);
+
+    Node ctorPrototypeNode = findQualifiedNameNode("ctor.prototype", globalScope.getRootNode());
+    JSType ctorPrototypeType = checkNotNull(ctorPrototypeNode.getJSType());
+    ObjectType nativeFnInstancePrototype =
+        getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_PROTOTYPE);
+
+    // TODO(b/253690550): ctorPrototypeType should equal nativeFnInstancePrototype.
+    assertThat(ctorPrototypeType.toObjectType().getReferenceName()).isEqualTo("Function.prototype");
+    assertThat(ctorPrototypeType).isNotEqualTo(nativeFnInstancePrototype);
+  }
+
   private static Node createEmptyRoot() {
     Node script = IR.script();
     Node root = IR.root(IR.root(), IR.root(script));
