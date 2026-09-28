@@ -17,7 +17,9 @@
 package com.google.javascript.jscomp.integration;
 
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.ClosureRewriteModule;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,7 +66,7 @@ public final class EsModuleIntegrationTest extends IntegrationTestCase {
         var a = 2;
         use(a);
         """,
-        DiagnosticGroups.forName("checkLevelOffDoNotUseDoNotUseDoNotUseDoNotUseDoNotUse"));
+        DiagnosticGroup.forType(ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT));
   }
 
   // Reproduction test for b/563543213 (https://github.com/google/closure-compiler/issues/4344):
@@ -83,6 +85,6 @@ public final class EsModuleIntegrationTest extends IntegrationTestCase {
         for (var i = 0; i < 10; ++i) { use(i); }
         for (var i = 0; i < 10; ++i) { use(i); }
         """,
-        DiagnosticGroups.forName("checkLevelOffDoNotUseDoNotUseDoNotUseDoNotUseDoNotUse"));
+        DiagnosticGroup.forType(ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT));
   }
 }

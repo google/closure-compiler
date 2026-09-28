@@ -26,6 +26,7 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIR
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_TYPE_NAMESPACE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
@@ -87,7 +88,7 @@ import org.jspecify.annotations.Nullable;
  * var module$exports$foo$Bar = module$contents$foo$Bar_Bar;
  * </pre>
  */
-final class ClosureRewriteModule implements CompilerPass {
+public final class ClosureRewriteModule implements CompilerPass {
 
   static final DiagnosticType INVALID_MODULE_ID_ARG =
       DiagnosticType.error(
@@ -137,7 +138,8 @@ final class ClosureRewriteModule implements CompilerPass {
           "JSC_LOAD_MODULE_FN_MISSING_RETURN",
           "goog.loadModule function should end with 'return exports;'");
 
-  static final DiagnosticType ILLEGAL_MODULE_RENAMING_CONFLICT =
+  @VisibleForTesting
+  public static final DiagnosticType ILLEGAL_MODULE_RENAMING_CONFLICT =
       DiagnosticType.error(
           "JSC_ILLEGAL_MODULE_RENAMING_CONFLICT",
           "Internal compiler error: rewritten module global name {0} is already in use.\n"
