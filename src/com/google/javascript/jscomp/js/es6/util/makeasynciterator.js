@@ -34,7 +34,7 @@ $jscomp.makeAsyncIterator = function(iterable) {
     return asyncIteratorFunction.call(iterable);
   }
   return new $jscomp.AsyncIteratorFromSyncWrapper($jscomp.makeIterator(
-      /** @type {string|!Iterable<T>|!Iterator<T>|!Arguments} */
+      /** @type {string|!Iterable<T>|!IteratorLike<T>|!Arguments} */
       (iterable)));
 };
 

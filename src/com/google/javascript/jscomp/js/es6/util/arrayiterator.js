@@ -42,10 +42,11 @@ $jscomp.arrayIteratorImpl = function(array) {
 /**
  * Returns an internal iterator from the given array.
  * @param {!Array<T>} array
- * @return {!Iterator<T>}
+ * @return {!IteratorLike<T>}
  * @template T
+ * @suppress {reportUnknownTypes}
  */
 $jscomp.arrayIterator = function(array) {
-  return /** @type {!Iterator<T>} */ ({next: $jscomp.arrayIteratorImpl(array)});
+  return {next: $jscomp.arrayIteratorImpl(array)};
 };
 
