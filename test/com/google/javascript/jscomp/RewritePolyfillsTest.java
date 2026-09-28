@@ -612,4 +612,14 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
     testDoesNotInject("");
   }
+
+  @Test
+  public void testIteratorPolyfill() {
+    addLibrary("Iterator", "es_next", "es3", "es6/iterator");
+
+    setLanguage(ES_2020, ES3);
+    testInjects("Iterator;", "es6/iterator");
+    testInjects("class MyIter extends Iterator {}", "es6/iterator");
+    testDoesNotInject("");
+  }
 }

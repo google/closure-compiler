@@ -735,6 +735,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
           "Int32Array",
           "Int8Array",
           "InternalError",
+          "Iterator",
           "Map",
           "Number",
           "Object",

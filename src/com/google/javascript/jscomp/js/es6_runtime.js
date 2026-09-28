@@ -23,6 +23,7 @@
 'require es6/dispose';
 'require es6/disposable_stack';
 'require es6/globalthis';
+'require es6/iterator';
 'require es6/map';
 'require es6/math';
 'require es6/number';
