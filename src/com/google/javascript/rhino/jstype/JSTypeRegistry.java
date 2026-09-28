@@ -708,8 +708,17 @@ public final class JSTypeRegistry {
     registerNativeType(JSTypeNative.ARRAY_TYPE, arrayType);
 
     // ITemplateArray extends !Array<string>
+    ObjectType arrayOfString = createTemplatizedType(arrayType, stringType);
     FunctionType iTemplateArrayFunctionType =
         nativeConstructorBuilder("ITemplateArray").withParameters().build();
+    ObjectType iTemplateArrayPrototype =
+        PrototypeObjectType.builder(this)
+            .setName("ITemplateArray.prototype")
+            .setNative(true)
+            .setImplicitPrototype(arrayOfString)
+            .build();
+    iTemplateArrayFunctionType.setPrototype(iTemplateArrayPrototype, null);
+    iTemplateArrayFunctionType.getInstanceType().mergeSupertypeTemplateTypes(arrayOfString);
     registerNativeType(
         JSTypeNative.I_TEMPLATE_ARRAY_TYPE, iTemplateArrayFunctionType.getInstanceType());
 

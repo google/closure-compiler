@@ -462,6 +462,9 @@ public class FunctionType extends PrototypeObjectType implements JSType.WithSour
   }
 
   private void setPrototypeBasedOn(ObjectType baseType, @Nullable Node propertyNode) {
+    if (isNativeObjectType()) {
+      return;
+    }
     // First handle class-side inheritance for ES6 classes, before reassigning baseType.
     if (source != null && source.isClass()) {
       FunctionType superCtor = baseType.getConstructor();

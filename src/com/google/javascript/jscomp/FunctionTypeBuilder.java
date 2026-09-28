@@ -1095,12 +1095,6 @@ final class FunctionTypeBuilder {
               TYPE_REDEFINITION, formatFnName(), fnType.toString(), existingFn.toString());
         }
 
-        // If the existing function is a built-in type, set its base type in case it @extends
-        // another function (since we don't set its prototype in JSTypeRegistry)
-        if (existingFn.isNativeObjectType()) {
-          maybeSetBaseType(existingFn);
-        }
-
         return existingFn;
       } else {
         // We fall through and return the created type, even though it will fail

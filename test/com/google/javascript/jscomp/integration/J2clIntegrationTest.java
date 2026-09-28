@@ -259,29 +259,30 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
         $run$$(new $FooImpl$$,new $AnotherClass$$,1)
         """);
 
-    // 2. Bug: with inherits(), Function.prototype is clobbered by type inference,
-    // receiving a non-invalidating color. AmbiguateProperties no longer skips
-    // $implements__FooInterface and ambiguates it to $a$ (sharing the property name
-    // with AnotherClass.prototype.anotherMethod), instead of keeping it unrenamed.
+    // 2. Fixed (b/253690550): with inherits(), Function.prototype is no longer clobbered by
+    // type inference, remaining axiomatic TOP_OBJECT (invalidating). AmbiguateProperties skips
+    // $implements__FooInterface just like in baseline, so RenameProperties preserves it
+    // as $$implements__FooInterface$, while realMethod and anotherMethod are ambiguated together to
+    // $a$.
     test(
         options,
         bugSource,
         """
         function $markImplementor$$($ctor$$){
-          $ctor$$.prototype.$a$=!0
+          $ctor$$.prototype.$$implements__FooInterface$=!0
         }
         class $FooImpl$${
-          $b$($x$$){alert("real:"+$x$$)}
+          $a$($x$$){alert("real:"+$x$$)}
         }
         class $AnotherClass$${
           $a$($x$jscomp$1$$){alert("another:"+$x$jscomp$1$$)}
         }
         $markImplementor$$($FooImpl$$);
         function $isInstance$$($instance$$){
-          return!!$instance$$.$a$
+          return!!$instance$$.$$implements__FooInterface$
         }
         function $run$$($f$$,$a$$,$x$jscomp$2$$){
-          $f$$.$b$($x$jscomp$2$$);
+          $f$$.$a$($x$jscomp$2$$);
           $a$$.$a$($x$jscomp$2$$);
           alert($isInstance$$($f$$))
         }

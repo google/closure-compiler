@@ -2248,8 +2248,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           FunctionType globalThisCtor =
               typeRegistry.getNativeObjectType(GLOBAL_THIS).getConstructor();
           globalThisCtor.getInstanceType().clearCachedValues();
-          globalThisCtor.getPrototype().clearCachedValues();
-          globalThisCtor.setPrototypeBasedOn((type.toMaybeFunctionType()).getInstanceType());
+          typeRegistry.resetImplicitPrototype(
+              globalThisCtor.getPrototype(), type.toMaybeFunctionType().getInstanceType());
         }
       }
     }

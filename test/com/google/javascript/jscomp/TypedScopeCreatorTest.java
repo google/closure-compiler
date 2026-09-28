@@ -8983,7 +8983,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
          * @param {!Function} parentCtor
          */
         function inherits(childCtor, parentCtor) {
-          // see b/253690550 - this clobbers Function.prototype
+          // see b/253690550 - this used to clobber Function.prototype. This is a regression test
+          // to make sure we preserve the native JSTypeRegistry prototype.
           childCtor.prototype = Object.create(parentCtor.prototype);
         }
 
@@ -9000,9 +9001,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType nativeFnInstancePrototype =
         getNativeObjectType(JSTypeNative.FUNCTION_INSTANCE_PROTOTYPE);
 
-    // TODO(b/253690550): ctorPrototypeType should equal nativeFnInstancePrototype.
-    assertThat(ctorPrototypeType.toObjectType().getReferenceName()).isEqualTo("Function.prototype");
-    assertThat(ctorPrototypeType).isNotEqualTo(nativeFnInstancePrototype);
+    assertThat(ctorPrototypeType.toObjectType().getReferenceName()).isEqualTo("?.prototype");
+    assertThat(ctorPrototypeType).isSameInstanceAs(nativeFnInstancePrototype);
   }
 
   private static Node createEmptyRoot() {
