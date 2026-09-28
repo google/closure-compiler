@@ -6159,4 +6159,33 @@ PtTestComponentElement.prototype._abc = function() {
         }
         """);
   }
+
+  @Test
+  public void testExportsMethodsFromClassBasedBehavior() {
+    test(
+        """
+        class PolymerBehavior {}
+        class TestBehavior extends PolymerBehavior {
+          method1() {}
+        }
+        class PolymerBehaviorWithoutHtml {}
+        class TestBehaviorWithoutHtml extends PolymerBehaviorWithoutHtml {
+          method2() {}
+        }
+        """,
+        """
+        class PolymerBehavior {}
+        /** @implements {PolymerTestBehaviorInterface$UID$0} */
+        class TestBehavior extends PolymerBehavior {
+          method1() {}
+        }
+        /** @export */ TestBehavior.prototype.method1;
+        class PolymerBehaviorWithoutHtml {}
+        /** @implements {PolymerTestBehaviorWithoutHtmlInterface$UID$1} */
+        class TestBehaviorWithoutHtml extends PolymerBehaviorWithoutHtml {
+          method2() {}
+        }
+        /** @export */ TestBehaviorWithoutHtml.prototype.method2;
+        """);
+  }
 }
