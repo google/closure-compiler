@@ -2161,28 +2161,6 @@ public final class TypeCheckNoTranspileTest {
   }
 
   @Test
-  public void testGenerator_returnsIterator1() {
-    newTest()
-        .addSource("/** @return {!Iterator<?>} */ function *gen() {}")
-        .includeDefaultExterns()
-        .run();
-  }
-
-  @Test
-  public void testGenerator_returnsIterator2() {
-    newTest()
-        .addSource("/** @return {!Iterator<string>} */ function* gen() {  yield 1; }")
-        .addDiagnostic(
-            """
-            Yielded type does not match declared return type.
-            found   : number
-            required: string
-            """)
-        .includeDefaultExterns()
-        .run();
-  }
-
-  @Test
   public void testGenerator_returnsIteratorLike1() {
     newTest()
         .addSource("/** @return {!IteratorLike<?>} */ function *gen() {}")
@@ -2332,20 +2310,6 @@ public final class TypeCheckNoTranspileTest {
   public void testGenerator_return_mismatch() {
     newTest()
         .addSource("/** @return {!Generator<number, string>} */ function *gen() { return 1; }")
-        .addDiagnostic(
-            """
-            inconsistent return type
-            found   : number
-            required: string
-            """)
-        .includeDefaultExterns()
-        .run();
-  }
-
-  @Test
-  public void testGenerator_returnIterator_mismatch() {
-    newTest()
-        .addSource("/** @return {!Iterator<number, string>} */ function *gen() { return 1; }")
         .addDiagnostic(
             """
             inconsistent return type

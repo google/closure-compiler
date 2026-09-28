@@ -5693,14 +5693,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     newTest()
         .addSource(
             """
-            function f(/** !Iterator<number> */ it) {
+            function f(/** !IteratorLike<number> */ it) {
               for (let x of it) {}
             }
             """)
         .addDiagnostic(
             """
             Can only iterate over a (non-null) Iterable type
-            found   : Iterator<number,?,?>
+            found   : IteratorLike<number,?,?>
             required: Iterable
             """)
         .includeDefaultExterns()
@@ -10561,26 +10561,34 @@ override: function(): string
         .run();
   }
 
-  // These test the template types in the built-in Iterator/Iterable/Generator are set up correctly
+  // These test the template types in the built-in IteratorLike/Iterator/Iterable/Generator are set
+  // up correctly
   @Test
   public void testIteratorAccess1() {
     newTest()
         .addSource(
             """
             /**
-             * @param {!Iterator<T>} x
+             * @param {!IteratorLike<T>} x
              * @return {T}
              * @template T
             */
             function f(x) { return x[0]; }
-            function g(/** !Generator<string> */ x) {
+            function g(/** !Generator<string> */ x, /** !Iterator<number> */ it) {
               var /** null */ y = f(x);
+              var /** null */ z = f(it);
             }
             """)
         .addDiagnostic(
             """
             initializing variable
             found   : string
+            required: null
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : number
             required: null
             """)
         .includeDefaultExterns()

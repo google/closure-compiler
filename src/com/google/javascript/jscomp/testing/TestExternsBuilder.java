@@ -219,39 +219,48 @@ public class TestExternsBuilder {
 
       /**
        * @interface
-       * @extends {IteratorLike<T, TReturn, TNext>}
-       * @template T, TReturn, TNext
-       */
-      function Iterator() {}
-      /**
-       * @param {T=} value
-       * @return {!IIterableResult<T>}
-       */
-      Iterator.prototype.next;
-
-      /**
-       * @interface
        * @template T, TReturn, TNext
        */
       function Iterable() {}
 
       /**
-       * @return {!Iterator<T, ?, *>}}
+       * @return {!IteratorLike<T, ?, *>}
        * @suppress {externsValidation}
        */
       Iterable.prototype[Symbol.iterator] = function() {};
 
       /**
        * @interface
-       * @extends {Iterator<T, ?, *>}}
-       * @extends {Iterable<T, ?, *>}}
+       * @extends {IteratorLike<T, ?, *>}
+       * @extends {Iterable<T, ?, *>}
        * @template T, TReturn, TNext
        */
       function IteratorIterable() {}
 
       /**
+       * @constructor
+       * @abstract
+       * @implements {IteratorIterable<T, TReturn, TNext>}
+       * @template T, TReturn, TNext
+       * @return {?}
+       */
+      function Iterator() {}
+      /**
+       * @override
+       * @param {?=} value
+       * @return {!IIterableResult<T>}
+       */
+      Iterator.prototype.next;
+      /**
+       * @override
+       * @return {!Iterator<T, TReturn, TNext>}
+       * @suppress {externsValidation}
+       */
+      Iterator.prototype[Symbol.iterator] = function() {};
+
+      /**
        * @interface
-       * @extends {IteratorIterable<T, ?, *>}}
+       * @extends {IteratorIterable<T, ?, *>}
        * @template T, TReturn, TNext
        */
       function Generator() {}

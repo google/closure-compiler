@@ -29,6 +29,107 @@
  * define them together in the es3 file.
  */
 
+/**
+ * The modern ES2024 global Iterator class.
+ * All built-in iterators and helper-equipped iterators inherit from this.
+ *
+ * @constructor
+ * @abstract
+ * @implements {IteratorIterable<T, TReturn, TNext>}
+ * @template T, TReturn, TNext
+ */
+function Iterator() {}
+
+/**
+ * @param {!Iterable<T>|!IteratorLike<T>} iterable
+ * @return {!Iterator<T>}
+ * @template T
+ */
+Iterator.from = function(iterable) {};
+
+/**
+ * @override
+ * @param {?=} opt_value
+ * @return {!IIterableResult<T>}
+ */
+Iterator.prototype.next = function(opt_value) {};
+
+/**
+ * @template U
+ * @param {function(T, number): U} mapperFn
+ * @return {!Iterator<U>}
+ */
+Iterator.prototype.map = function(mapperFn) {};
+
+/**
+ * @param {function(T, number): boolean} filtererFn
+ * @return {!Iterator<T>}
+ */
+Iterator.prototype.filter = function(filtererFn) {};
+
+/**
+ * @param {number} limit
+ * @return {!Iterator<T>}
+ */
+Iterator.prototype.take = function(limit) {};
+
+/**
+ * @param {number} limit
+ * @return {!Iterator<T>}
+ */
+Iterator.prototype.drop = function(limit) {};
+
+/**
+ * @template U
+ * @param {function(T, number): (!Iterable<U>|!IteratorLike<U>|!Iterator<U>)}
+ *     mapperFn
+ * @return {!Iterator<U>}
+ */
+Iterator.prototype.flatMap = function(mapperFn) {};
+
+/**
+ * @template U
+ * @param {function(U, T, number): U} reducerFn
+ * @param {U=} initialValue
+ * @return {U}
+ */
+Iterator.prototype.reduce = function(reducerFn, initialValue) {};
+
+/**
+ * @return {!Array<T>}
+ */
+Iterator.prototype.toArray = function() {};
+
+/**
+ * @param {function(T, number): void} callbackFn
+ * @return {void}
+ */
+Iterator.prototype.forEach = function(callbackFn) {};
+
+/**
+ * @param {function(T, number): boolean} predicate
+ * @return {boolean}
+ */
+Iterator.prototype.some = function(predicate) {};
+
+/**
+ * @param {function(T, number): boolean} predicate
+ * @return {boolean}
+ */
+Iterator.prototype.every = function(predicate) {};
+
+/**
+ * @param {function(T, number): boolean} predicate
+ * @return {T|undefined}
+ */
+Iterator.prototype.find = function(predicate) {};
+
+/**
+ * @override
+ * @return {!Iterator<T>}
+ */
+Iterator.prototype[Symbol.iterator] = function() {};
+
 /** @typedef {!IteratorIterable} */
 var ArrayIterator;
 

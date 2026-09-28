@@ -623,19 +623,6 @@ public final class JSTypeRegistry {
     iteratorValueTemplate = new TemplateType(this, "T");
     iteratorReturnTemplate = new TemplateType(this, "TReturn");
     TemplateType iteratorNextTemplate = new TemplateType(this, "TNext");
-    FunctionType iteratorFunctionType =
-        nativeInterface(
-            "Iterator", iteratorValueTemplate, iteratorReturnTemplate, iteratorNextTemplate);
-    registerNativeType(JSTypeNative.ITERATOR_FUNCTION_TYPE, iteratorFunctionType);
-    iteratorFunctionType.setExtendedInterfaces(
-        ImmutableList.of(
-            createTemplatizedType(
-                iteratorLikeType,
-                iteratorValueTemplate,
-                iteratorReturnTemplate,
-                iteratorNextTemplate)));
-    ObjectType iteratorType = iteratorFunctionType.getInstanceType();
-    registerNativeType(JSTypeNative.ITERATOR_TYPE, iteratorType);
 
     iteratorIterableValueTemplate = new TemplateType(this, "T");
     iteratorIterableReturnTemplate = new TemplateType(this, "TReturn");
@@ -655,12 +642,29 @@ public final class JSTypeRegistry {
                 iteratorIterableReturnTemplate,
                 iteratorIterableNextTemplate),
             createTemplatizedType(
-                iteratorType,
+                iteratorLikeType,
                 iteratorIterableValueTemplate,
                 iteratorIterableReturnTemplate,
                 iteratorIterableNextTemplate)));
     ObjectType iteratorIterableType = iteratorIterableFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.ITERATOR_ITERABLE_TYPE, iteratorIterableType);
+    FunctionType iteratorFunctionType =
+        nativeConstructorBuilder("Iterator")
+            .withParameters()
+            .withTemplateKeys(
+                iteratorValueTemplate, iteratorReturnTemplate, iteratorNextTemplate)
+            .build();
+    registerNativeType(JSTypeNative.ITERATOR_FUNCTION_TYPE, iteratorFunctionType);
+    iteratorFunctionType.getPrototype(); // Force initialization
+    iteratorFunctionType.setImplementedInterfaces(
+        ImmutableList.of(
+            createTemplatizedType(
+                iteratorIterableType,
+                iteratorValueTemplate,
+                iteratorReturnTemplate,
+                iteratorNextTemplate)));
+    ObjectType iteratorType = iteratorFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.ITERATOR_TYPE, iteratorType);
 
     iiterableResultValueTemplate = new TemplateType(this, "TYield");
     FunctionType iiterableResultFunctionType =

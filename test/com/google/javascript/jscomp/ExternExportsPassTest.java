@@ -1095,7 +1095,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
 
         /**
          * @param {number} a
-         * @return {!Iterator<number>}
+         * @return {!IteratorLike<number>}
          */
         internalName = function *(a) { yield a; };
         goog.exportSymbol('externalName', internalName)
@@ -1103,7 +1103,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         """
         /**
          * @param {number} a
-         * @return {!Iterator<number,?,?>}
+         * @return {!IteratorLike<number,?,?>}
          */
         var externalName = function(a) {
         };
