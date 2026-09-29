@@ -1229,9 +1229,14 @@ public class CodeGenerator {
       }
       case TEMPLATELIT -> {
         cc.beginTemplateLit();
+        // The raw text of a *tagged* template literal is observable by the tag function
+        // (e.g. `String.raw`, or any custom tag reading `strings.raw`), so applying the
+        // <script>/comment escaping there changes the program's behaviour. Keep the
+        // escaping only for untagged templates, where the cooked value is unchanged.
+        boolean tagged = node.getParent() != null && node.getParent().isTaggedTemplateLit();
         for (Node c = first; c != null; c = c.getNext()) {
           if (c.isTemplateLitString()) {
-            add(escapeUnrecognizedCharacters(c.getRawString()));
+            add(tagged ? c.getRawString() : escapeUnrecognizedCharacters(c.getRawString()));
           } else {
             cc.beginTemplateLitSub();
             add(c.getFirstChild(), Context.START_OF_EXPR);
