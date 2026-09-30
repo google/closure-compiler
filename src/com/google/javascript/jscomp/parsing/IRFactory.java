@@ -756,6 +756,9 @@ class IRFactory {
       if (newFileoverview.isNoCoverage()) {
         merged.recordNoCoverage();
       }
+      if (newFileoverview.isTypeSummary()) {
+        merged.recordTypeSummary();
+      }
       this.firstFileoverview = merged.build();
     }
 

@@ -228,6 +228,22 @@ public final class NodeUtilTest {
     }
   }
 
+  @RunWith(JUnit4.class)
+  public static final class IsFromTypeSummaryTests {
+    @Test
+    public void identifiesTypeSummaryJSDoc() {
+      Node script = parse("/** @fileoverview @typeSummary */ var x;");
+      assertThat(NodeUtil.isFromTypeSummary(script)).isTrue();
+
+      Node scriptWithExterns =
+          parse("// IJS\n/** @fileoverview @typeSummary */\n/** @externs */\n;");
+      assertThat(NodeUtil.isFromTypeSummary(scriptWithExterns)).isTrue();
+
+      Node regularScript = parse("var x;");
+      assertThat(NodeUtil.isFromTypeSummary(regularScript)).isFalse();
+    }
+  }
+
   /**
    * Test the forms of getting a boolean value for a node.
    *

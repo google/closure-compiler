@@ -4017,6 +4017,23 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testFileoverview_typeSummaryAccumulates_withExterns() {
+    isIdeMode = true;
+
+    Node n =
+        parse(
+            """
+            /** @fileoverview @typeSummary */
+            /** @externs */
+            ;
+            """);
+
+    assertThat(n.getJSDocInfo()).isNotNull();
+    assertThat(n.getJSDocInfo().isExterns()).isTrue();
+    assertThat(n.getJSDocInfo().isTypeSummary()).isTrue();
+  }
+
+  @Test
   public void testImportantComment() {
     isIdeMode = true;
 
