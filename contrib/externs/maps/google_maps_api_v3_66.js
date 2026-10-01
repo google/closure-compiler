@@ -6844,6 +6844,11 @@ google.maps.Maps3DLibrary.prototype.Label3DElement;
 google.maps.Maps3DLibrary.prototype.LocationClickEvent;
 
 /**
+ * @type {typeof google.maps.maps3d.LocationPointerEvent}
+ */
+google.maps.Maps3DLibrary.prototype.LocationPointerEvent;
+
+/**
  * @type {typeof google.maps.maps3d.Map3DElement}
  */
 google.maps.Maps3DLibrary.prototype.Map3DElement;
@@ -6912,6 +6917,12 @@ google.maps.Maps3DLibrary.prototype.Polyline3DInteractiveElement;
  * @type {typeof google.maps.maps3d.PopoverElement}
  */
 google.maps.Maps3DLibrary.prototype.PopoverElement;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.maps3d.QualityMode}
+ */
+google.maps.Maps3DLibrary.prototype.QualityMode;
 
 /**
  * @type {typeof google.maps.maps3d.SteadyChangeEvent}
@@ -16810,7 +16821,7 @@ google.maps.maps3d.CirclePathElement = function(options) {};
 
 /**
  * The center of the circle.
- * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.CirclePathElement.prototype.center;
 
@@ -16831,7 +16842,7 @@ google.maps.maps3d.CirclePathElementOptions = function() {};
 
 /**
  * See {@link google.maps.maps3d.CirclePathElement.center}.
- * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.CirclePathElementOptions.prototype.center;
 
@@ -16858,14 +16869,14 @@ google.maps.maps3d.FlattenerElement = function(options) {};
  * The ordered sequence of coordinates that designates a closed loop. These
  * paths define Exclusion Holes within the polygon&#39;s main path, which is the
  * Flattening Zone. Areas within an innerPath are exempt from flattening.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  */
 google.maps.maps3d.FlattenerElement.prototype.innerPaths;
 
 /**
  * The ordered sequence of coordinates that designates a closed loop. This loop
  * defines the Flattening Zone.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.FlattenerElement.prototype.path;
 
@@ -16878,13 +16889,13 @@ google.maps.maps3d.FlattenerElementOptions = function() {};
 
 /**
  * See {@link google.maps.maps3d.FlattenerElement.innerPaths}.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  */
 google.maps.maps3d.FlattenerElementOptions.prototype.innerPaths;
 
 /**
  * See {@link google.maps.maps3d.FlattenerElement.path}.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.FlattenerElementOptions.prototype.path;
 
@@ -17049,6 +17060,28 @@ google.maps.maps3d.LocationClickEvent = function() {};
 google.maps.maps3d.LocationClickEvent.prototype.position;
 
 /**
+ * This event is created when a pointer interaction occurs on an interactive
+ * Map3DElement.
+ *
+ * Access by calling `const {LocationPointerEvent} = await
+ * google.maps.importLibrary("maps3d");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.maps3d.LocationPointerEvent = function() {};
+
+/**
+ * The latitude/longitude/altitude that was below the cursor when the event
+ * occurred. Please note, that at coarser levels, less accurate data will be
+ * returned. Also, sea floor elevation may be returned for the altitude value
+ * when clicking at the water surface from higher camera positions. This event
+ * bubbles up through the DOM tree.
+ * @type {!google.maps.LatLngAltitude|null}
+ */
+google.maps.maps3d.LocationPointerEvent.prototype.position;
+
+/**
  * Map3DElement is an HTML interface for the 3D Map view. Note that the
  * <code>mode</code> must be set for the 3D Map to start rendering.
  *
@@ -17099,7 +17132,7 @@ google.maps.maps3d.Map3DElement.prototype.cameraPosition;
  * above the mean sea level. Note that this is not necessarily where the camera
  * is located, as the <code>range</code> field affects the camera&#39;s distance
  * from the map center. If not set, defaults to <code>{lat: 0, lng: 0, altitude:
- * 63170000}</code>. 63170000 meters is a maximum allowed altitude (Earth radius
+ * 63710000}</code>. 63710000 meters is a maximum allowed altitude (Earth radius
  * multiplied by 10).
  * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
  */
@@ -17172,7 +17205,7 @@ google.maps.maps3d.Map3DElement.prototype.mapId;
 
 /**
  * The maximum altitude above the ground which will be displayed on the map. A
- * valid value is between <code>0</code> and <code>63170000</code> meters (Earth
+ * valid value is between <code>0</code> and <code>63710000</code> meters (Earth
  * radius multiplied by 10).
  * @type {number|null|undefined}
  */
@@ -17192,6 +17225,18 @@ google.maps.maps3d.Map3DElement.prototype.maxAltitude;
 google.maps.maps3d.Map3DElement.prototype.maxHeading;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * The maximum amount of memory, in megabytes, the map may use for rendering.
+ * Lower values reduce memory usage at the cost of visual detail; higher values
+ * allow more detail to be kept in memory. Valid values range from 64 to 2048.
+ * If not set, a limit is chosen automatically based on the device and the size
+ * of the map. Must be set before the map is initialized; changes made
+ * afterwards are ignored.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.maxMemoryMegabytes;
+
+/**
  * The maximum angle of incidence of the map. A valid value is between
  * <code>0</code> and <code>90</code> degrees.
  * @type {number|null|undefined}
@@ -17200,7 +17245,7 @@ google.maps.maps3d.Map3DElement.prototype.maxTilt;
 
 /**
  * The minimum altitude above the ground which will be displayed on the map. A
- * valid value is between <code>0</code> and <code>63170000</code> meters (Earth
+ * valid value is between <code>0</code> and <code>63710000</code> meters (Earth
  * radius multiplied by 10).
  * @type {number|null|undefined}
  */
@@ -17232,6 +17277,16 @@ google.maps.maps3d.Map3DElement.prototype.minTilt;
  * @type {!google.maps.maps3d.MapMode|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.mode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Specifies the rendering quality of the map. Set to {@link
+ * google.maps.maps3d.QualityMode.PERFORMANCE} to render with reduced visual
+ * detail, which lowers memory usage.
+ * @default {@link google.maps.maps3d.QualityMode.FIDELITY}
+ * @type {!google.maps.maps3d.QualityMode|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.qualityMode;
 
 /**
  * The distance from camera to the center of the map, in meters.
@@ -17408,6 +17463,13 @@ google.maps.maps3d.Map3DElementOptions.prototype.maxAltitude;
 google.maps.maps3d.Map3DElementOptions.prototype.maxHeading;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * See {@link google.maps.maps3d.Map3DElement.maxMemoryMegabytes}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.maxMemoryMegabytes;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.maxTilt}.
  * @type {number|null|undefined}
  */
@@ -17436,6 +17498,13 @@ google.maps.maps3d.Map3DElementOptions.prototype.minTilt;
  * @type {!google.maps.maps3d.MapMode|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.mode;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * See {@link google.maps.maps3d.Map3DElement.qualityMode}.
+ * @type {!google.maps.maps3d.QualityMode|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.qualityMode;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.range}.
@@ -17566,7 +17635,7 @@ google.maps.maps3d.Marker3DElement.prototype.label;
 /**
  * The location of the tip of the marker. Altitude is ignored in certain modes
  * and thus optional.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.Marker3DElement.prototype.position;
 
@@ -17637,7 +17706,7 @@ google.maps.maps3d.Marker3DElementOptions.prototype.label;
 
 /**
  * See {@link google.maps.maps3d.Marker3DElement.position}.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.Marker3DElementOptions.prototype.position;
 
@@ -17784,7 +17853,7 @@ google.maps.maps3d.MarkerElement.prototype.collisionPriority;
 /**
  * The location of the tip of the marker. Altitude is ignored in certain modes
  * and thus optional.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.MarkerElement.prototype.position;
 
@@ -17842,7 +17911,7 @@ google.maps.maps3d.MarkerElementOptions.prototype.collisionPriority;
 
 /**
  * See {@link google.maps.maps3d.MarkerElement.position}.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.MarkerElementOptions.prototype.position;
 
@@ -17925,7 +17994,7 @@ google.maps.maps3d.Model3DElement.prototype.orientation;
 /**
  * Sets the <code>Model3DElement</code>&#39;s position. Altitude is ignored in
  * certain modes and thus optional.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.Model3DElement.prototype.position;
 
@@ -17970,7 +18039,7 @@ google.maps.maps3d.Model3DElementOptions.prototype.orientation;
 
 /**
  * See {@link google.maps.maps3d.Model3DElement.position}.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.Model3DElementOptions.prototype.position;
 
@@ -18110,14 +18179,14 @@ google.maps.maps3d.Polygon3DElement.prototype.geodesic;
  * The ordered sequence of coordinates that designates a closed loop. Unlike
  * polylines, a polygon may consist of one or more paths, which create multiple
  * cut-outs inside the polygon.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElement.prototype.innerPaths;
 
 /**
  * The ordered sequence of coordinates that designates a closed loop. Altitude
  * is ignored in certain modes and thus optional.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElement.prototype.path;
 
@@ -18142,7 +18211,7 @@ google.maps.maps3d.Polygon3DElement.prototype.zIndex;
 /**
  * The ordered sequence of coordinates that designates a closed loop. Altitude
  * is ignored in certain modes and thus optional.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  * @deprecated Use <code>path</code> instead. This property will be removed in a
  *     future release.
  */
@@ -18152,7 +18221,7 @@ google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
  * The ordered sequence of coordinates that designates a closed loop. Unlike
  * polylines, a polygon may consist of one or more paths, which create multiple
  * cut-outs inside the polygon.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  * @deprecated Use <code>innerPaths</code> instead. This property will be
  *     removed in a future release.
  */
@@ -18204,25 +18273,25 @@ google.maps.maps3d.Polygon3DElementOptions.prototype.geodesic;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.innerCoordinates}.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.innerCoordinates;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.innerPaths}.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.innerPaths;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.outerCoordinates}.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.outerCoordinates;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.path}.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.path;
 
@@ -18340,7 +18409,7 @@ google.maps.maps3d.Polyline3DElement.prototype.outerWidth;
 /**
  * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
  * certain modes and thus optional.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.path;
 
@@ -18365,7 +18434,7 @@ google.maps.maps3d.Polyline3DElement.prototype.zIndex;
 /**
  * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
  * certain modes and thus optional.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  * @deprecated Use <code>path</code> instead. This property will be removed in a
  *     future release.
  */
@@ -18393,7 +18462,7 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.autofitsCamera;
 
 /**
  * See {@link google.maps.maps3d.Polyline3DElement.coordinates}.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.coordinates;
 
@@ -18429,7 +18498,7 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.outerWidth;
 
 /**
  * See {@link google.maps.maps3d.Polyline3DElement.path}.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.path;
 
@@ -18526,7 +18595,7 @@ google.maps.maps3d.PopoverElement.prototype.open;
 /**
  * The position at which to display this popover. If the popover is anchored to
  * an interactive marker, the marker&#39;s position will be used instead.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.maps3d.Marker3DInteractiveElement|!google.maps.maps3d.MarkerInteractiveElement|string|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.maps3d.Marker3DInteractiveElement|!google.maps.maps3d.MarkerInteractiveElement|string|null|undefined}
  */
 google.maps.maps3d.PopoverElement.prototype.positionAnchor;
 
@@ -18563,9 +18632,32 @@ google.maps.maps3d.PopoverElementOptions.prototype.open;
 
 /**
  * See {@link google.maps.maps3d.PopoverElement.positionAnchor}.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|string|!google.maps.maps3d.Marker3DInteractiveElement|!google.maps.maps3d.MarkerInteractiveElement|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|string|!google.maps.maps3d.Marker3DInteractiveElement|!google.maps.maps3d.MarkerInteractiveElement|null|undefined}
  */
 google.maps.maps3d.PopoverElementOptions.prototype.positionAnchor;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Specifies the rendering quality of the 3D map.
+ *
+ * Access by calling `const {QualityMode} = await
+ * google.maps.importLibrary("maps3d");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.maps3d.QualityMode = {
+  /**
+   * Renders the map with standard visual detail.
+   */
+  FIDELITY: 'FIDELITY',
+  /**
+   * Renders the map with reduced visual detail to lower memory usage. Useful on
+   * memory-constrained devices or when the map shares the page with other
+   * memory-intensive content.
+   */
+  PERFORMANCE: 'PERFORMANCE',
+};
 
 /**
  * This event is created from monitoring a steady state of
@@ -28004,6 +28096,12 @@ google.maps.routes.Route.prototype.createWaypointAdvancedMarkers = function(
  * Intermediate waypoints are not currently supported. <br><br> Created markers
  * have their {@link google.maps.CollisionBehavior} set to {@link
  * google.maps.CollisionBehavior.REQUIRED_AND_HIDES_OPTIONAL} by default.
+ * Created markers have a localized <code>title</code> (&quot;Origin&quot; or
+ * &quot;Destination&quot;) by default, which can be overridden in
+ * <code>forEach</code>. For <code>Marker3DElement</code> and
+ * <code>Marker3DInteractiveElement</code> markers, <code>sizePreserved</code>
+ * is set to <code>true</code> by default, which can also be overridden in
+ * <code>forEach</code>.
  * @template T
  * @param {!google.maps.routes.CreateWaypointMarkersOptions<T>=} options
  * @return {!Promise<!Array<T>>}
