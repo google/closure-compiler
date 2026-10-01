@@ -157,6 +157,29 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPrivateFieldWithIdentifierInitializer() {
+    test(
+        """
+        const bar = {};
+        class Foo {
+          #field = bar;
+        }
+        """,
+        """
+        const bar = {};
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.field = bar;
+          }
+        }
+        """);
+  }
+
+
+  @Test
   public void testPrivateField_interleavedWithPublicFields() {
     test(
         """
