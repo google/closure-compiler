@@ -2016,15 +2016,12 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
     void recordPrivateMember(Node n) {
       checkArgument(n.isPrivateIdentifier());
-      String name =
-          n.hasChildren() && n.getFirstChild().isName()
-              ? n.getFirstChild().getString()
-              : n.getString();
+      String name = n.getString();
       checkArgument(name.startsWith("#"), name);
       boolean isStatic = n.isStaticMember();
 
       PrivateMemberKind kind;
-      if (n.isMemberFieldDef() || n.isComputedFieldDef()) {
+      if (n.isMemberFieldDef()) {
         kind = PrivateMemberKind.FIELD;
       } else if (n.isMemberFunctionDef()) {
         kind = PrivateMemberKind.METHOD;
