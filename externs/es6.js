@@ -477,6 +477,13 @@ String.prototype.endsWith = function(searchString, opt_position) {};
 String.prototype.includes = function(searchString, opt_position) {};
 
 /**
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/isWellFormed
+ */
+String.prototype.isWellFormed = function() {};
+
+/**
  * @this {String|string}
  * @return {string}
  * @nosideeffects
