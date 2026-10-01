@@ -183,6 +183,87 @@ public class TestExternsBuilder {
       BigInt.prototype.valueOf = function() {};
       """;
 
+  private static final String NUMBER_EXTERNS =
+      """
+      /**
+       * @constructor
+       * @param {*=} arg
+       * @return {number}
+       */
+      function Number(arg) {}
+
+      /**
+       * @this {Number|number}
+       * @param {number=} radix
+       * @return {string}
+       */
+      Number.prototype.toString = function(radix) {};
+
+      /**
+       * @return {number}
+       */
+      Number.prototype.valueOf = function() {};
+      """;
+
+  private static final String UINT8ARRAY_EXTERNS =
+      """
+      /**
+       * @constructor
+       * @implements {IArrayLike<number>}
+       * @param {*=} arg
+       * @param {number=} opt_byteOffset
+       * @param {number=} opt_length
+       */
+      function Uint8Array(arg, opt_byteOffset, opt_length) {}
+
+      /** @type {number} */
+      Uint8Array.prototype.length;
+
+      /**
+       * @param {number=} begin
+       * @param {number=} end
+       * @return {!Uint8Array}
+       * @nosideeffects
+       */
+      Uint8Array.prototype.slice = function(begin, end) {};
+
+      /**
+       * @param {number} searchElement
+       * @param {number=} opt_fromIndex
+       * @return {number}
+       * @nosideeffects
+       */
+      Uint8Array.prototype.indexOf = function(searchElement, opt_fromIndex) {};
+
+      /**
+       * @param {number} searchElement
+       * @param {number=} opt_fromIndex
+       * @return {boolean}
+       * @nosideeffects
+       */
+      Uint8Array.prototype.includes = function(searchElement, opt_fromIndex) {};
+      """;
+
+  private static final String ARRAYBUFFER_EXTERNS =
+      """
+      /**
+       * @constructor
+       * @param {number} length
+       */
+      function ArrayBuffer(length) {}
+
+      /** @type {number} */
+      ArrayBuffer.prototype.byteLength;
+
+      /**
+       * @param {number=} begin
+       * @param {number=} end
+       * @return {!ArrayBuffer}
+       * @nosideeffects
+       */
+      ArrayBuffer.prototype.slice = function(begin, end) {};
+      """;
+
   private static final String ITERABLE_EXTERNS =
       """
       // Symbol is needed for Symbol.iterator
@@ -295,17 +376,22 @@ public class TestExternsBuilder {
       String.prototype[Symbol.iterator] = function() {};
       /** @type {number} */
       String.prototype.length;
-      /** @param {number} sliceArg */
-      String.prototype.slice = function(sliceArg) {};
       /**
-       * @this {string|!String}
+       * @this {!String|string}
+       * @param {number=} begin
+       * @param {number=} end
+       * @return {string}
+       */
+      String.prototype.slice = function(begin, end) {};
+      /**
+       * @this {!String|string}
        * @param {*=} opt_separator
        * @param {number=} opt_limit
        * @return {!Array<string>}
        */
       String.prototype.split = function(opt_separator, opt_limit) {};
       /**
-       * @this {string|!String}
+       * @this {!String|string}
        * @param {string} search_string
        * @param {number=} opt_position
        * @return {boolean}
@@ -328,6 +414,12 @@ public class TestExternsBuilder {
       String.prototype.charAt = function(index) {};
       /**
        * @this {!String|string}
+       * @param {...*} var_args
+       * @return {string}
+       */
+      String.prototype.concat = function(var_args) {};
+      /**
+       * @this {!String|string}
        * @param {*} regexp
        * @return {!Array<string>}
        */
@@ -337,7 +429,6 @@ public class TestExternsBuilder {
        * @return {string}
        */
       String.prototype.toLowerCase = function() {};
-
       /**
        * @param {number} count
        * @this {!String|string}
@@ -345,7 +436,6 @@ public class TestExternsBuilder {
        * @nosideeffects
        */
       String.prototype.repeat = function(count) {};
-
       /**
        * @param {string} searchString
        * @param {number=} position
@@ -353,6 +443,13 @@ public class TestExternsBuilder {
        * @nosideeffects
        */
       String.prototype.includes = function(searchString, position) {};
+      /**
+       * @this {!String|string}
+       * @param {string|null} searchValue
+       * @param {(number|null)=} fromIndex
+       * @return {number}
+       */
+      String.prototype.indexOf = function(searchValue, fromIndex) {};
       """;
   private static final String FUNCTION_EXTERNS =
       """
@@ -542,8 +639,8 @@ public class TestExternsBuilder {
        */
       ReadonlyArray.prototype.concat;
       /**
-       * @param {?number=} begin Zero-based index at which to begin extraction.
-       * @param {?number=} end Zero-based index at which to end extraction.  slice
+       * @param {number=} begin Zero-based index at which to begin extraction.
+       * @param {number=} end Zero-based index at which to end extraction.  slice
        * extracts up to but not including end.
        * @return {!Array<T>}
        * @this {!IArrayLike<T>|string}
@@ -551,12 +648,18 @@ public class TestExternsBuilder {
        * @nosideeffects
        */
       ReadonlyArray.prototype.slice;
-
+      /**
+       * @param {T} elem
+       * @param {number=} fromIndex
+       * @return {number}
+       * @this {!IArrayLike<T>|string}
+       * @template T
+       */
+      ReadonlyArray.prototype.indexOf = function(elem, fromIndex) {};
       /**
        * @return {!IteratorIterable<T>}
        */
       ReadonlyArray.prototype.values;
-
       /**
        * @param {T} searchElement
        * @param {number=} fromIndex
@@ -635,8 +738,8 @@ public class TestExternsBuilder {
       Array.prototype.concat = function(var_args) {};
       /**
        * @override
-       * @param {?number=} begin Zero-based index at which to begin extraction.
-       * @param {?number=} end Zero-based index at which to end extraction.  slice
+       * @param {number=} begin Zero-based index at which to begin extraction.
+       * @param {number=} end Zero-based index at which to end extraction.  slice
        * extracts up to but not including end.
        * @return {!Array<T>}
        * @this {!IArrayLike<T>|string}
@@ -661,6 +764,16 @@ public class TestExternsBuilder {
        * @nosideeffects
        */
       Array.prototype.includes = function(searchElement, fromIndex) {};
+
+      /**
+       * @param {T} elem
+       * @param {number=} fromIndex
+       * @return {number}
+       * @this {!IArrayLike<T>|string}
+       * @template T
+       * @override
+       */
+      Array.prototype.indexOf = function(elem, fromIndex) {};
       """;
   private static final String MAP_EXTERNS =
       """
@@ -1081,6 +1194,9 @@ public class TestExternsBuilder {
       """;
 
   private boolean includeBigIntExterns = false;
+  private boolean includeNumberExterns = false;
+  private boolean includeUint8ArrayExterns = false;
+  private boolean includeArrayBufferExterns = false;
   private boolean includeIterableExterns = false;
   private boolean includeStringExterns = false;
   private boolean includeFunctionExterns = false;
@@ -1109,6 +1225,25 @@ public class TestExternsBuilder {
   @CanIgnoreReturnValue
   public TestExternsBuilder addBigInt() {
     includeBigIntExterns = true;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public TestExternsBuilder addNumber() {
+    includeNumberExterns = true;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public TestExternsBuilder addUint8Array() {
+    includeUint8ArrayExterns = true;
+    addArray(); // Uint8Array implements IArrayLike<number>
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public TestExternsBuilder addArrayBuffer() {
+    includeArrayBufferExterns = true;
     return this;
   }
 
@@ -1294,6 +1429,9 @@ public class TestExternsBuilder {
     if (includeBigIntExterns) {
       externSections.add(BIGINT_EXTERNS);
     }
+    if (includeNumberExterns) {
+      externSections.add(NUMBER_EXTERNS);
+    }
     if (includeIterableExterns) {
       externSections.add(ITERABLE_EXTERNS);
     }
@@ -1308,6 +1446,12 @@ public class TestExternsBuilder {
     }
     if (includeArrayExterns) {
       externSections.add(ARRAY_EXTERNS);
+    }
+    if (includeUint8ArrayExterns) {
+      externSections.add(UINT8ARRAY_EXTERNS);
+    }
+    if (includeArrayBufferExterns) {
+      externSections.add(ARRAYBUFFER_EXTERNS);
     }
     if (includeMapExterns) {
       externSections.add(MAP_EXTERNS);
