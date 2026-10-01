@@ -307,6 +307,65 @@ public final class JsFileFullParserTest {
     assertThat(info.requiresCss).isEmpty();
   }
 
+  @Test
+  public void testTopLevelJsDocComments_moreLinesThanNodeCanRepresent() {
+    // Node encodes line numbers in 20 bits, so a statement on line 2^20 wraps to line 0.
+    String code =
+        """
+        /** @requirecss {css.before} */
+        goog.module('foo');
+        """
+            + "\n".repeat((1 << 20) - 3)
+            + """
+            const x = 1;
+            function f() {
+              /** @requirecss {css.nested} */
+            }
+            /** @requirecss {css.after} */
+            """;
+    FileInfo info = parse(code);
+    assertThat(info.requiresCss).containsExactly("css.before", "css.after");
+  }
+
+  @Test
+  public void testTopLevelJsDocComments_loneCarriageReturns() {
+    // The parser counts each lone \r as a line break, but rhino's SourceFile doesn't.
+    FileInfo info =
+        parse(
+            """
+            a();\r\r\rfoo();
+            function f() {
+              /** @requirecss {css.nested} */
+            }
+            /** @requirecss {css.after} */
+            """);
+    assertThat(info.requiresCss).containsExactly("css.after");
+  }
+
+  @Test
+  public void testTopLevelJsDocComments_unicodeLineSeparators() {
+    // The parser counts U+2028 and U+2029 as line breaks, even inside strings, but rhino's
+    // SourceFile doesn't.
+    FileInfo info =
+        parse(
+            "a();\n'\u2028\u2029';\nfoo();\nfunction f() {\n/** @requirecss {css.nested} */\n}\n"
+                + "/** @requirecss {css.after} */");
+    assertThat(info.requiresCss).containsExactly("css.after");
+  }
+
+  @Test
+  public void testTopLevelJsDocComments_statementPastMaxColumn() {
+    // Node clamps column numbers at 4095, so Node-based offsets for `var b` and `f` are wrong.
+    String code =
+        "var a = 1;"
+            + " ".repeat(4100)
+            + "/** @requirecss {css.before.b} */ var b = '"
+            + "x".repeat(5000)
+            + "'; function f() { /** @requirecss {css.nested} */ }";
+    FileInfo info = parse(code);
+    assertThat(info.requiresCss).containsExactly("css.before.b");
+  }
+
   private static FileInfo parse(String content) {
     return JsFileFullParser.parse(
         content,

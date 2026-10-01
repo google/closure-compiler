@@ -38,6 +38,7 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
+import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -202,7 +203,7 @@ public class JsFileFullParser {
       info.loadFlags.put("lang", version);
     }
 
-    parseTopLevelJsDocComments(parsed.ast, parsed.comments, info);
+    parseTopLevelJsDocComments(parsed.topLevelStatementRanges, parsed.comments, info);
     GatherModuleMetadata gatherModuleMetadata =
         new GatherModuleMetadata(
             compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER);
@@ -261,26 +262,27 @@ public class JsFileFullParser {
    * Parses all top-level JSDoc comments (comments before or after top-level statements, or all
    * comments if there are no statements), ignoring comments nested inside top-level statement
    * bodies (functions, classes, methods, blocks).
+   *
+   * <p>Uses the parser's statement ranges rather than {@link Node#getSourceOffset}, which is lossy:
+   * {@code Node} wraps line numbers past 2^20, clamps columns past {@link Node#MAX_COLUMN_NUMBER},
+   * and resolves lines via {@code SourceFile}, which disagrees with the parser on line terminators
+   * other than {@code \n}.
    */
-  private static void parseTopLevelJsDocComments(Node ast, List<Comment> comments, FileInfo info) {
-    Node statementContainer =
-        ast.getFirstChild() != null && ast.getFirstChild().isModuleBody()
-            ? ast.getFirstChild()
-            : ast;
-    Node statement = statementContainer.getFirstChild();
+  private static void parseTopLevelJsDocComments(
+      List<SourceRange> statementRanges, List<Comment> comments, FileInfo info) {
+    int i = 0;
     for (Comment comment : comments) {
       if (comment.type != Comment.Type.JSDOC) {
         continue;
       }
       int commentStart = comment.location.start.offset;
       int commentEnd = comment.location.end.offset;
-      while (statement != null
-          && statement.getSourceOffset() + statement.getLength() <= commentStart) {
-        statement = statement.getNext();
+      while (i < statementRanges.size() && statementRanges.get(i).end.offset <= commentStart) {
+        i++;
       }
-      if (statement != null
-          && commentStart >= statement.getSourceOffset()
-          && commentEnd <= statement.getSourceOffset() + statement.getLength()) {
+      if (i < statementRanges.size()
+          && commentStart >= statementRanges.get(i).start.offset
+          && commentEnd <= statementRanges.get(i).end.offset) {
         continue;
       }
       parseComment(comment, info);
