@@ -494,6 +494,53 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testUnionWithUnresolvedAlternate_isNotRebuilt_ifNoAlternateHasResolved() {
+    try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
+      NamedType numberProxy =
+          NamedType.builder(registry, "NumberProxy")
+              .setResolutionKind(NamedType.ResolutionKind.NONE)
+              .setReferencedType(NUMBER_TYPE)
+              .build();
+      assertType(numberProxy).isUnresolved();
+
+      UnionType union = (UnionType) registry.createUnionType(STRING_TYPE, numberProxy);
+      assertType(union).isUnresolved();
+
+      // The first read is allowed to rebuild, but the second cannot: no alternate has resolved in
+      // between, so a rebuild could not reach a different answer. Rebuilding runs subtype checks
+      // that read this same union, so rebuilding on every read is unbounded recursion for types
+      // that participate in a cycle.
+      ImmutableList<JSType> firstRead = union.getAlternates();
+      ImmutableList<JSType> secondRead = union.getAlternates();
+
+      assertThat(secondRead).isSameInstanceAs(firstRead);
+    }
+  }
+
+  @Test
+  public void testUnionWithAlternateThatResolvesToUnion_isStillFlattened() {
+    final UnionType union;
+    try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
+      NamedType unionProxy =
+          NamedType.builder(registry, "UnionProxy")
+              .setResolutionKind(NamedType.ResolutionKind.NONE)
+              .setReferencedType(registry.createUnionType(NUMBER_TYPE, BOOLEAN_TYPE))
+              .build();
+
+      union = (UnionType) registry.createUnionType(STRING_TYPE, unionProxy);
+
+      // Reading while unresolved must not stop the later flattening. Skipping a rebuild has to be
+      // driven by a baseline that tracks the *current* alternates: a rebuild can replace them, and
+      // flattening an alternate that resolved to a union can even lower the resolved count.
+      ImmutableList<JSType> firstRead = union.getAlternates();
+      assertThat(union.getAlternates()).isSameInstanceAs(firstRead);
+    }
+
+    assertType(union).isResolved();
+    assertThat(union.getAlternates()).containsExactly(STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE);
+  }
+
+  @Test
   public void testToStringNameConflict() {
     assertThat(createUnionType(base, baseNameConflict).toString()).isEqualTo("(Base|Base)");
   }

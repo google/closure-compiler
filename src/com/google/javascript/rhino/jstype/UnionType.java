@@ -102,6 +102,14 @@ public final class UnionType extends JSType {
   private boolean alternatesResolvedBeforeBuild;
 
   /**
+   * How many alternates were resolved the last time this union was (re)built?
+   *
+   * <p>Used to skip rebuilds that cannot change anything. {@code -1} means "never rebuilt since
+   * construction".
+   */
+  private int resolvedAlternatesAtLastBuild = -1;
+
+  /**
    * Creates a union.
    *
    * <p>This ctor is private because all instances are created using a {@link Builder}. The builder
@@ -131,13 +139,52 @@ public final class UnionType extends JSType {
    */
   public ImmutableList<JSType> getAlternates() {
     if (!this.isResolved() && !this.alternatesResolvedBeforeBuild) {
-      Builder b = new Builder(this).addAlternates(this.alternates);
-      // Double checked rebuilds, in case the union is involved in a cycle.
-      if (!this.isResolved() && !this.alternatesResolvedBeforeBuild) {
-        b.build();
+      /*
+       * Only rebuild if something could actually have changed since the last rebuild.
+       *
+       * `alternates` is only ever replaced by a rebuild, and an individual alternate only ever
+       * goes from unresolved to resolved. So for as long as the list is stable the resolved count
+       * can only rise, and a rise is exactly the signal that a rebuild could now reach a
+       * different answer.
+       *
+       * Recording the count *before* rebuilding is what makes this re-entrant-safe: the rebuild
+       * runs subtype checks that can read this same union, and `alternates` is not replaced until
+       * the rebuild finishes, so the nested read sees no change and returns instead of starting
+       * another rebuild.
+       */
+      int resolvedAlternates = this.countResolvedAlternates();
+
+      if (resolvedAlternates != this.resolvedAlternatesAtLastBuild) {
+        this.resolvedAlternatesAtLastBuild = resolvedAlternates;
+
+        Builder b = new Builder(this).addAlternates(this.alternates);
+        // Double checked rebuilds, in case the union is involved in a cycle.
+        if (!this.isResolved() && !this.alternatesResolvedBeforeBuild) {
+          b.build();
+
+          /*
+           * The rebuild may have replaced `alternates` with a different list, so the count taken
+           * above no longer describes this union. Notably the count can go *down*: an alternate
+           * that resolved to a union is flattened into its members, and those members may
+           * themselves be unresolved. Re-baseline against the list we actually have now, so the
+           * next read compares like with like.
+           */
+          this.resolvedAlternatesAtLastBuild = this.countResolvedAlternates();
+        }
       }
     }
     return this.alternates;
+  }
+
+  /** How many of the current alternates are resolved? */
+  private int countResolvedAlternates() {
+    int count = 0;
+    for (int i = 0; i < this.alternates.size(); i++) {
+      if (this.alternates.get(i).isResolved()) {
+        count++;
+      }
+    }
+    return count;
   }
 
   private void fillFromBuilder(Builder builder) {
