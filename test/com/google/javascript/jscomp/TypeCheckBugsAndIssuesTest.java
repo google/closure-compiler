@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY_EXPLANATION;
 import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
+import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
@@ -1347,5 +1348,33 @@ public final class TypeCheckBugsAndIssuesTest {
             required: null
             """)
         .run();
+  }
+
+  @Test
+  public void testRecursiveTemplatizedRecordUnion_b563430551() {
+    // TODO(b/563430551): This case should not throw.
+    // The union `Node` contains a subtype of `Container`, and `Container`'s own @extends
+    // instantiates `Container<Node>`, so resolving the union re-enters
+    // UnionType.getAlternates() on the same unresolved union during its own rebuild.
+    String src =
+        """
+        /** @record @template P */
+        class Base {}
+
+        /** @typedef {(!Attribute|!Container)} */
+        var Node;
+
+        /**
+         * @record
+         * @extends {Base<!Container<!Node>>}
+         * @template C
+         */
+        class Container {}
+
+        /** @record @extends {Container<!Node>} */
+        class Attribute {}
+        """;
+
+    assertThrows(StackOverflowError.class, newTest().addSource(src)::run);
   }
 }
