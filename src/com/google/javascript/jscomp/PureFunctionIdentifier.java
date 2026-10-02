@@ -1117,7 +1117,13 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         // e.g. `delete obj?.prop` <==> `obj == null ?  true : delete obj.prop;`
         // Hence the enclosing function's side effects must be recorded.
         if (lhs.getFirstChild().isThis()) {
-          encloserSummary.setMutatesThis(lhs);
+          if (this.functionScopeStack.getLast().root.isArrowFunction()) {
+            // `this` in an arrow function is the `this` of the enclosing function, which is not
+            // the receiver the arrow function is called with.
+            encloserSummary.setMutatesGlobalStateAndAllOtherFlags(lhs);
+          } else {
+            encloserSummary.setMutatesThis(lhs);
+          }
         } else {
           Node objectNode = lhs.getFirstChild();
           if (objectNode.isName()) {
@@ -1169,10 +1175,12 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         return;
       }
 
-      boolean propatesThrows = this.functionScopeStack.getLast().catchDepth == 0;
+      FunctionStackEntry enclosingFunction = this.functionScopeStack.getLast();
+      boolean propatesThrows = enclosingFunction.catchDepth == 0;
+      boolean callerIsArrowFunction = enclosingFunction.root.isArrowFunction();
       for (AmbiguatedFunctionSummary calleeInfo : calleeSummaries) {
         SideEffectPropagation edge =
-            SideEffectPropagation.forInvocation(invocation, propatesThrows);
+            SideEffectPropagation.forInvocation(invocation, callerIsArrowFunction, propatesThrows);
         reverseCallGraph.connect(calleeInfo.graphNode, edge, callerInfo.graphNode);
       }
     }
@@ -1275,13 +1283,16 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       return new SideEffectPropagation(true, false, false, true, null);
     }
 
-    static SideEffectPropagation forInvocation(Node invocation, boolean propagateThrows) {
+    static SideEffectPropagation forInvocation(
+        Node invocation, boolean callerIsArrowFunction, boolean propagateThrows) {
       checkArgument(NodeUtil.isInvocation(invocation), invocation);
 
       return new SideEffectPropagation(
           false,
           NodeUtil.allArgsUnescapedLocal(invocation),
-          calleeAndCallerShareThis(invocation),
+          // `this` in an arrow function is the `this` of the enclosing function, which is not
+          // tracked.
+          calleeAndCallerShareThis(invocation) && !callerIsArrowFunction,
           propagateThrows,
           invocation);
     }

@@ -3015,6 +3015,35 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMutatesThis_inArrowFunction_newReceiver() {
+    disableTypeCheck();
+    // An arrow function's `this` is not its receiver, here it is the global `this`.
+    assertPureCallsMarked(
+        """
+        /** @constructor */ function Foo() {}
+        Foo.prototype.f = () => { this.x = 1; };
+        new Foo().f();
+        """,
+        ImmutableList.of("Foo"));
+    assertPureCallsMarked(
+        """
+        function setX() { this.x = 1; }
+        /** @constructor */ function Foo() {}
+        Foo.prototype.f = () => { setX.call(this); };
+        new Foo().f();
+        """,
+        ImmutableList.of("Foo"));
+    assertPureCallsMarked(
+        """
+        /** @constructor */ function Foo() {}
+        Foo.prototype.f = () => { this.x = 1; };
+        Foo.prototype.run = function() { this.f(); };
+        new Foo().run();
+        """,
+        ImmutableList.of("Foo"));
+  }
+
+  @Test
   public void testGlobalScopeTaintedByWayOfThisPropertyAndForOfLoop() {
     String source =
         """
