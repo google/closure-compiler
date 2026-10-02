@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.DUPLICATE_MODULE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.DUPLICATE_NAMESPACE_AND_MODULE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.GOOG_MODULE_GET_OF_WEAK_MODULE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT;
@@ -34,6 +35,7 @@ import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,6 +83,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     options.setPreserveClosurePrimitives(this.preserveClosurePrimitives);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.WEAK_MODULE_GET, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     if (allowMissingSources) {
       options.setWarningLevel(DiagnosticGroups.MISSING_SOURCES_WARNINGS, CheckLevel.OFF);
@@ -2142,6 +2145,208 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             goog.provide('x.y.z');
             x.y.z = module$exports$a$b$c$D;
             """));
+  }
+
+  @Test
+  public void testWeakGoogModuleGet_error() {
+    testError(
+        srcs(
+            SourceFile.fromCode("b.js", "goog.module('b'); exports = class {};", SourceKind.WEAK),
+            SourceFile.fromCode(
+                "a.js",
+                """
+                goog.module('a');
+                function f() {
+                  const b = goog.module.get('b');
+                }
+                """)),
+        GOOG_MODULE_GET_OF_WEAK_MODULE);
+  }
+
+  @Test
+  public void testWeakGoogModuleGet_suppressWeakModuleGet() {
+    test(
+        srcs(
+            SourceFile.fromCode("b.js", "goog.module('b'); exports = class {};", SourceKind.WEAK),
+            SourceFile.fromCode(
+                "a.js",
+                """
+                goog.module('a');
+                function f() {
+                  /** @suppress {weakModuleGet} */
+                  const b = goog.module.get('b');
+                }
+                """)),
+        expected(
+            """
+            /** @const */ var module$exports$a = {};
+            function module$contents$a_f() {
+              /** @suppress {weakModuleGet} */
+              const b = null;
+            }
+            """,
+            "/** @const */ var module$exports$b = class {};"));
+  }
+
+  @Test
+  public void testWeakGoogModuleGet_reverseFileOrder() {
+    testError(
+        srcs(
+            SourceFile.fromCode(
+                "a.js",
+                """
+                goog.module('a');
+                function f() {
+                  const b = goog.module.get('b');
+                }
+                """),
+            SourceFile.fromCode("b.js", "goog.module('b'); exports = class {};", SourceKind.WEAK)),
+        GOOG_MODULE_GET_OF_WEAK_MODULE);
+  }
+
+  @Test
+  public void testWeakGoogProvideGet_error() {
+    testError(
+        srcs(
+            SourceFile.fromCode("b.js", "goog.provide('b'); b = class {};", SourceKind.WEAK),
+            SourceFile.fromCode(
+                "a.js",
+                """
+                goog.module('a');
+                function f() {
+                  const b = goog.module.get('b');
+                }
+                """)),
+        GOOG_MODULE_GET_OF_WEAK_MODULE);
+  }
+
+  @Test
+  public void testWeakAliasedGoogModuleGet_error() {
+    testError(
+        srcs(
+            SourceFile.fromCode("b.js", "goog.module('b'); exports = class {};", SourceKind.WEAK),
+            SourceFile.fromCode(
+                "a.js",
+                """
+                goog.module('a');
+                var x = goog.forwardDeclare('b');
+                function f() {
+                  x = goog.module.get('b');
+                  new x;
+                }
+                """)),
+        GOOG_MODULE_GET_OF_WEAK_MODULE);
+  }
+
+  @Test
+  public void testWeakAliasedGoogModuleGet_suppress() {
+    test(
+        srcs(
+            SourceFile.fromCode("b.js", "goog.module('b'); exports = class {};", SourceKind.WEAK),
+            SourceFile.fromCode(
+                "a.js",
+                """
+                goog.module('a');
+                var x = goog.forwardDeclare('b');
+                function f() {
+                  /** @suppress {weakModuleGet} */
+                  x = goog.module.get('b');
+                  new x;
+                }
+                """)),
+        expected(
+            """
+            /** @const */ var module$exports$a = {};
+            var module$contents$a_x = null;
+            function module$contents$a_f() {
+              /** @suppress {weakModuleGet} */
+              module$contents$a_x = null;
+              new module$contents$a_x();
+            }
+            """,
+            "/** @const */ var module$exports$b = class {};"));
+  }
+
+  @Test
+  public void testWeakGoogModuleGet_inExpression() {
+    test(
+        srcs(
+            SourceFile.fromCode("b.js", "goog.module('b'); exports = class {};", SourceKind.WEAK),
+            SourceFile.fromCode(
+                "a.js",
+                """
+                goog.module('a');
+                /** @suppress {weakModuleGet} */
+                function f() {
+                  if (goog.module.get('b')) {
+                    return goog.module.get('b');
+                  }
+                  return null;
+                }
+                """)),
+        expected(
+            """
+            /** @const */ var module$exports$a = {};
+            /** @suppress {weakModuleGet} */
+            function module$contents$a_f() {
+              if (null) {
+                return null;
+              }
+              return null;
+            }
+            """,
+            "/** @const */ var module$exports$b = class {};"));
+  }
+
+  @Test
+  public void testWeakCallingFile_doesNotReportError() {
+    test(
+        srcs(
+            SourceFile.fromCode("main.js", "goog.requireType('a');"),
+            SourceFile.fromCode("b.js", "goog.module('b'); exports = class {};", SourceKind.WEAK),
+            SourceFile.fromCode(
+                "a.js",
+                """
+                goog.provide('a');
+                goog.require('b');
+                function f() {
+                  const b = goog.module.get('b');
+                }
+                """,
+                SourceKind.WEAK)),
+        expected(
+            "goog.requireType('a');",
+            "/** @const */ var module$exports$b = class {};",
+            """
+            goog.provide('a');
+            function f() {
+              const b = module$exports$b;
+            }
+            """));
+  }
+
+  @Test
+  public void testWeakGoogModuleGet_withGoogRequire_doesNotReportError() {
+    test(
+        srcs(
+            SourceFile.fromCode("b.js", "goog.module('b'); exports = class {};", SourceKind.WEAK),
+            SourceFile.fromCode(
+                "a.js",
+                """
+                goog.provide('a');
+                goog.require('b');
+                function f() {
+                  const b = goog.module.get('b');
+                }
+                """)),
+        expected(
+            """
+            goog.provide('a');
+            function f() {
+              const b = module$exports$b;
+            }
+            """,
+            "/** @const */ var module$exports$b = class {};"));
   }
 
   @Test

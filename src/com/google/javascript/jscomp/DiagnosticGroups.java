@@ -166,7 +166,8 @@ public class DiagnosticGroups {
           + "unusedLocalVariables, "
           + "uselessCode, "
           + "untranspilableFeatures,"
-          + "visibility";
+          + "visibility, "
+          + "weakModuleGet";
 
   // TODO(b/123768968) remove this diagnostic group, do not allow this suppression. Instead the only
   // work around should be to raise the output language to a high enough level. We need to suppress
@@ -408,6 +409,10 @@ public class DiagnosticGroups {
           StrictModeCheck.FUNCTION_ARGUMENTS_PROP_FORBIDDEN,
           StrictModeCheck.FUNCTION_CALLER_FORBIDDEN,
           StrictModeCheck.USE_OF_WITH);
+
+  public static final DiagnosticGroup WEAK_MODULE_GET =
+      DiagnosticGroups.registerGroup(
+          "weakModuleGet", ClosurePrimitiveErrors.GOOG_MODULE_GET_OF_WEAK_MODULE);
 
   public static final DiagnosticGroup MISSING_PROVIDE =
       DiagnosticGroups.registerGroup(

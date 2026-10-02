@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.javascript.jscomp.AstFactory.type;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.GOOG_MODULE_GET_OF_WEAK_MODULE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_DYNAMIC;
@@ -35,6 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -694,6 +696,22 @@ public final class ClosureRewriteModule implements CompilerPass {
     this.globalTypedScope = globalTypedScope;
   }
 
+  private boolean isWeakNamespace(String namespaceId) {
+    ModuleMetadata metadata =
+        compiler.getModuleMetadataMap().getModulesByGoogNamespace().get(namespaceId);
+    return metadata != null && metadata.rootNode().getStaticSourceFile().isWeak();
+  }
+
+  private boolean isUnrequiredWeakNamespace(Node call, String namespaceId) {
+    if (call.getStaticSourceFile().isWeak() || !isWeakNamespace(namespaceId)) {
+      return false;
+    }
+    ModuleMetadata callerMetadata =
+        compiler.getModuleMetadataMap().getModulesByPath().get(call.getSourceFileName());
+    return callerMetadata == null
+        || !callerMetadata.stronglyRequiredGoogNamespaces().contains(namespaceId);
+  }
+
   private class UnwrapGoogLoadModule extends NodeTraversal.AbstractPreOrderCallback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -736,6 +754,7 @@ public final class ClosureRewriteModule implements CompilerPass {
       for (Node script = parent.getFirstChild(); script != null; script = script.getNext()) {
         checkState(script.isScript(), script);
         NodeTraversal.traverse(compiler, script, new UnwrapGoogLoadModule());
+
         pushScript(new ScriptDescription()); // sets currentScript
 
         currentScript.rootNode = script;
@@ -982,6 +1001,10 @@ public final class ClosureRewriteModule implements CompilerPass {
       return;
     }
 
+    if (isUnrequiredWeakNamespace(call, namespaceId)) {
+      return;
+    }
+
     // Each goog.module.get() calling filling an alias will have the alias importing logic
     // handled at the goog.forwardDeclare call, and the corresponding goog.module.get can simply
     // be removed.
@@ -1190,8 +1213,20 @@ public final class ClosureRewriteModule implements CompilerPass {
   }
 
   private void updateGoogForwardDeclare(NodeTraversal t, Node call) {
-    // For import rewriting purposes and when taking into account previous moduleAlias versus
-    // namespaceId import categorization, goog.forwardDeclare is much the same as goog.require.
+    String namespaceId = call.getLastChild().getString();
+    if (isUnrequiredWeakNamespace(call, namespaceId)) {
+      // For the delayed goog.module.get pattern where an alias variable is initialized by
+      // goog.forwardDeclare('b') and later assigned by goog.module.get('b'):
+      // When 'b' is in a weak chunk, the goog.module.get call is not inlined and is rewritten
+      // to null. Therefore, the alias declaration must be initialized to null rather than
+      // registered for inlining into references of the alias.
+      compiler.reportChangeToEnclosingScope(call);
+      call.replaceWith(astFactory.createNull().srcref(call));
+      return;
+    }
+
+    // For non-weak imports, goog.forwardDeclare is handled the same as goog.require:
+    // the alias is recorded for inlining and the declaration statement is detached.
     updateGoogRequire(t, call);
   }
 
@@ -1385,6 +1420,14 @@ public final class ClosureRewriteModule implements CompilerPass {
   private void updateGoogModuleGetCall(Node call) {
     Node namespaceIdNode = call.getSecondChild();
     String namespaceId = namespaceIdNode.getString();
+
+    if (isUnrequiredWeakNamespace(call, namespaceId)) {
+      compiler.report(JSError.make(call, GOOG_MODULE_GET_OF_WEAK_MODULE, namespaceId));
+      compiler.reportChangeToEnclosingScope(call);
+      Node nullNode = this.astFactory.createNull().srcref(call);
+      call.replaceWith(nullNode);
+      return;
+    }
 
     // Remaining calls to goog.module.get() are not alias updates,
     // and should be replaced by a reference to the proper name.
