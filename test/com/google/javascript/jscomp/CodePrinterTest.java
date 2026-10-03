@@ -863,6 +863,24 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testTaggedTemplateLiteralRawTextIsNotEscaped() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+
+    // A tagged template literal's raw text is observable by the tag function
+    // (String.raw and custom tags read `strings.raw`), so the escaping applied for
+    // untagged templates must not be applied here: it would change the behaviour of
+    // the compiled program. Untagged templates keep the escaping because there the
+    // cooked value is unchanged.
+    assertPrint("tag`</script>`", "tag`</script>`");
+    assertPrint("tag`</style>`", "tag`</style>`");
+    assertPrint("tag`<!--`", "tag`<!--`");
+    assertPrint("tag`-->`", "tag`-->`");
+    assertPrint("tag`]]>`", "tag`]]>`");
+    assertPrint("String.raw`</script>`", "String.raw`</script>`");
+    assertPrint("tag`a</script>b${x}c-->d`", "tag`a</script>b${x}c-->d`");
+  }
+
+  @Test
   public void testBreakUntrustedTemplateLiterals() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     trustedStrings = false;
