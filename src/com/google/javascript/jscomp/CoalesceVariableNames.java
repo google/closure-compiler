@@ -204,6 +204,9 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       return;
     }
     Var coalescedVar = colorings.peek().getPartitionSuperNode(var);
+    // Only the declaration can be removed. A later use may see that declaration already detached.
+    boolean resetEachIteration =
+        parent.isLet() && isUninitializedLetReadBeforeAssigned(var);
 
     if (!usePseudoNames) {
       if (vNode.getValue().equals(coalescedVar)) {
@@ -214,7 +217,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       // Rename.
       n.setString(coalescedVar.getName());
       compiler.reportChangeToEnclosingScope(n);
-      updateDeclarationsPostCoalescing(n, coalescedVar, parent);
+      updateDeclarationsPostCoalescing(n, coalescedVar, parent, resetEachIteration);
     } else {
       // This code block is slow but since usePseudoName is for debugging,
       // we should not sacrifice performance for non-debugging compilation to
@@ -247,7 +250,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       if (vNode.getValue().equals(coalescedVar)) {
         return;
       }
-      updateDeclarationsPostCoalescing(n, coalescedVar, parent);
+      updateDeclarationsPostCoalescing(n, coalescedVar, parent, resetEachIteration);
     }
   }
 
@@ -277,8 +280,10 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
    * @param n The name node which is getting coalesced with the coalescedVar
    * @param coalescedVar the first declared variable of a group that is being coalesced
    * @param parent The parent node of the name node n
+   * @param resetEachIteration whether removing this declaration must leave an undefined assignment
    */
-  private void updateDeclarationsPostCoalescing(Node n, Var coalescedVar, Node parent) {
+  private void updateDeclarationsPostCoalescing(
+      Node n, Var coalescedVar, Node parent, boolean resetEachIteration) {
     checkState(n.isName(), "trying to update the declaration of a non-name node");
     if (NodeUtil.isNameDeclaration(parent)
         || (NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null
@@ -288,8 +293,12 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
             && !isNameInsideDestructuringAssignment(n))) {
       // convert the coalesced variable's declaration into a `var` if it is a `const` or a `let`
       makeDeclarationVar(coalescedVar);
-      // remove the declaration of the given name node as it has been coalesced with coalescedVar
-      removeVarDeclaration(n);
+      if (resetEachIteration) {
+        replaceUninitializedLetWithUndefinedAssignment(n);
+      } else {
+        // remove the declaration of the given name node as it has been coalesced with coalescedVar
+        removeVarDeclaration(n);
+      }
     }
   }
 
@@ -572,6 +581,53 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
     }
     // Inside a loop body, but not the loop control node itself
     return NodeUtil.isWithinLoop(letParent);
+  }
+
+  /**
+   * An uninitialized {@code let} in a loop body is undefined at the start of each iteration. If
+   * that binding is read before it is assigned, it must not share storage with another variable.
+   */
+  private static boolean isUninitializedLetReadBeforeAssigned(Var v) {
+    Node nameNode = v.getNameNode();
+    if (nameNode == null || !isUninitializedLetNameInLoopBody(nameNode)) {
+      return false;
+    }
+    String name = nameNode.getString();
+    Node loop = NodeUtil.getEnclosingNode(nameNode, NodeUtil::isLoopStructure);
+    if (loop == null) {
+      return false;
+    }
+    boolean[] sawAssignment = {false};
+    boolean[] readBeforeAssignment = {false};
+    NodeUtil.visitPreOrder(
+        loop,
+        (node) -> {
+          if (readBeforeAssignment[0]
+              || node == nameNode
+              || !node.isName()
+              || !node.getString().equals(name)) {
+            return;
+          }
+          if (NodeUtil.isNameDeclOrSimpleAssignLhs(node, node.getParent())) {
+            sawAssignment[0] = true;
+          } else if (!sawAssignment[0]) {
+            readBeforeAssignment[0] = true;
+          }
+        });
+    return readBeforeAssignment[0];
+  }
+
+  /**
+   * Replaces {@code let name;} with {@code name = void 0;}. {@code name} has already been renamed
+   * to the coalesced variable, so the shared name is undefined at the start of each iteration.
+   */
+  private void replaceUninitializedLetWithUndefinedAssignment(Node name) {
+    Node letNode = name.getParent();
+    checkState(letNode.isLet(), letNode);
+    name.detach();
+    Node undefinedValue = astFactory.createUndefinedValue().srcrefTree(name);
+    Node assign = IR.assign(name, undefinedValue).srcref(letNode);
+    letNode.replaceWith(NodeUtil.newExpr(assign));
   }
 
   /**

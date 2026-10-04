@@ -427,6 +427,33 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUninitializedLetInLoopResetsWhenCoalescedIntoEarlierVar() {
+    // Reading the let before it is assigned must not reuse an earlier variable.
+    // Otherwise the next iteration sees the previous assignment.
+    inFunction(
+        """
+        var y;
+        while (n--) {
+          let x;
+          alert(x);
+          x = n;
+        }
+        y = 1;
+        return y;
+        """,
+        """
+        var y;
+        for (; n--;) {
+          y = void 0;
+          alert(y);
+          y = n;
+        }
+        y = 1;
+        return y;
+        """);
+  }
+
+  @Test
   public void test_doesNotCoalesceOverlappingLiveRange() {
     usePseudoName = false;
     String src =
