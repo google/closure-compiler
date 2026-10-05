@@ -246,6 +246,12 @@ public class TestExternsBuilder {
        */
       function Iterator() {}
       /**
+       * @param {string|!Iterable<T>|!IteratorLike<T>} iterable
+       * @return {!Iterator<T>}
+       * @template T
+       */
+      Iterator.from = function(iterable) {};
+      /**
        * @override
        * @param {?=} value
        * @return {!IIterableResult<T>}
@@ -257,6 +263,64 @@ public class TestExternsBuilder {
        * @suppress {externsValidation}
        */
       Iterator.prototype[Symbol.iterator] = function() {};
+      /**
+       * @template U
+       * @param {function(T, number): U} mapperFn
+       * @return {!Iterator<U>}
+       */
+      Iterator.prototype.map;
+      /**
+       * @param {function(T, number): *} filtererFn
+       * @return {!Iterator<T>}
+       */
+      Iterator.prototype.filter;
+      /**
+       * @param {number} limit
+       * @return {!Iterator<T>}
+       */
+      Iterator.prototype.take;
+      /**
+       * @param {number} limit
+       * @return {!Iterator<T>}
+       */
+      Iterator.prototype.drop;
+      /**
+       * @template U
+       * @param {function(T, number): (!Iterable<U>|!IteratorLike<U>|!Iterator<U>)} mapperFn
+       * @return {!Iterator<U>}
+       */
+      Iterator.prototype.flatMap;
+      /**
+       * @template U
+       * @param {function(U, T, number): U} reducerFn
+       * @param {U=} initialValue
+       * @return {U}
+       */
+      Iterator.prototype.reduce;
+      /**
+       * @return {!Array<T>}
+       */
+      Iterator.prototype.toArray;
+      /**
+       * @param {function(T, number): *} callbackFn
+       * @return {void}
+       */
+      Iterator.prototype.forEach;
+      /**
+       * @param {function(T, number): *} predicate
+       * @return {boolean}
+       */
+      Iterator.prototype.some;
+      /**
+       * @param {function(T, number): *} predicate
+       * @return {boolean}
+       */
+      Iterator.prototype.every;
+      /**
+       * @param {function(T, number): *} predicate
+       * @return {T|undefined}
+       */
+      Iterator.prototype.find;
 
       /**
        * @interface

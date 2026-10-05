@@ -41,7 +41,7 @@
 function Iterator() {}
 
 /**
- * @param {!Iterable<T>|!IteratorLike<T>} iterable
+ * @param {string|!Iterable<T>|!IteratorLike<T>} iterable
  * @return {!Iterator<T>}
  * @template T
  */
@@ -62,7 +62,7 @@ Iterator.prototype.next = function(opt_value) {};
 Iterator.prototype.map = function(mapperFn) {};
 
 /**
- * @param {function(T, number): boolean} filtererFn
+ * @param {function(T, number): *} filtererFn
  * @return {!Iterator<T>}
  */
 Iterator.prototype.filter = function(filtererFn) {};
@@ -101,25 +101,25 @@ Iterator.prototype.reduce = function(reducerFn, initialValue) {};
 Iterator.prototype.toArray = function() {};
 
 /**
- * @param {function(T, number): void} callbackFn
+ * @param {function(T, number): *} callbackFn
  * @return {void}
  */
 Iterator.prototype.forEach = function(callbackFn) {};
 
 /**
- * @param {function(T, number): boolean} predicate
+ * @param {function(T, number): *} predicate
  * @return {boolean}
  */
 Iterator.prototype.some = function(predicate) {};
 
 /**
- * @param {function(T, number): boolean} predicate
+ * @param {function(T, number): *} predicate
  * @return {boolean}
  */
 Iterator.prototype.every = function(predicate) {};
 
 /**
- * @param {function(T, number): boolean} predicate
+ * @param {function(T, number): *} predicate
  * @return {T|undefined}
  */
 Iterator.prototype.find = function(predicate) {};

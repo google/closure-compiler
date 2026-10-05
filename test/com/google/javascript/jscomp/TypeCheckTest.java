@@ -10671,6 +10671,112 @@ override: function(): string
   }
 
   @Test
+  public void testIteratorFrom_acceptsString() {
+    newTest()
+        .addSource(
+            """
+            var /** !Iterator<string> */ it = Iterator.from('abc');
+            var /** !Iterator<number> */ it2 = Iterator.from([1, 2]);
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testIteratorFrom_rejectsNumber() {
+    newTest()
+        .addSource(
+            """
+            Iterator.from(123);
+            """)
+        .addDiagnostic(
+            """
+            actual parameter 1 of Iterator.from does not match formal parameter
+            found   : number
+            required: (Iterable<?,?,?>|IteratorLike<?,?,?>|string)
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testIteratorHelperMethods_callbacksAcceptNonBooleanAndNonVoid() {
+    newTest()
+        .addSource(
+            """
+            /**
+             * @param {!Iterator<?string>} it
+             * @param {!Array<number>} arr
+             */
+            function f(it, arr) {
+              var /** !Iterator<?string> */ filtered = it.filter((x) => x);
+              var /** boolean */ someres = it.some((s) => s ? s.length : 0);
+              var /** boolean */ everyres = it.every((s) => s);
+              var /** ?string|undefined */ found = it.find((s) => s);
+              it.forEach((x) => arr.push(1));
+            }
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testIteratorHelperMethods_chainingAndReturnTypes() {
+    newTest()
+        .addSource(
+            """
+            /** @param {!Iterator<number>} it */
+            function f(it) {
+              var /** !Iterator<string> */ mapped = it.map((x) => String(x));
+              var /** !Iterator<number> */ taken = it.take(5);
+              var /** !Iterator<number> */ dropped = it.drop(2);
+              var /** !Iterator<string> */ flatMapped = it.flatMap((x) => [String(x)]);
+              var /** number */ reduced = it.reduce((acc, x) => acc + x, 0);
+              var /** !Array<number> */ arr = it.toArray();
+            }
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testIteratorFlatMap_rejectsStringReturn() {
+    newTest()
+        .addSource(
+            """
+            /** @param {!Iterator<number>} it */
+            function f(it) {
+              it.flatMap((x) => 'hello');
+            }
+            """)
+        .addDiagnostic(
+            """
+            inconsistent return type
+            found   : string
+            required: (Iterable<?,?,?>|Iterator<?,?,?>|IteratorLike<?,?,?>)
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testTestExternsBuilder_iteratorHelpers() {
+    newTest()
+        .addExterns(new TestExternsBuilder().addIterable().build())
+        .addSource(
+            """
+            /** @param {!Iterator<number>} it */
+            function f(it) {
+              var /** !Iterator<number> */ filtered = it.filter((x) => x);
+              var /** boolean */ s = it.some((x) => x);
+              it.forEach((x) => 42);
+              var /** !Iterator<string> */ fromStr = Iterator.from('abc');
+            }
+            """)
+        .run();
+  }
+
+  @Test
   public void testArrayAccess1() {
     newTest()
         .addSource("var a = []; var b = a['hi'];")
