@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Polyfill for the ES2024 Iterator base class.
+ * @fileoverview Polyfill for the ES2025 Iterator base class.
  */
 'require es6/symbol';
 'require util/defineproperty';

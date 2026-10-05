@@ -30,7 +30,7 @@
  */
 
 /**
- * The modern ES2024 global Iterator class.
+ * The modern ES2025 global Iterator class.
  * All built-in iterators and helper-equipped iterators inherit from this.
  *
  * @constructor
