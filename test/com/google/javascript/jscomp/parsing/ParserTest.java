@@ -4668,6 +4668,27 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testOctalEscapeWithLeadingDigitFourToSeven() {
+    mode = LanguageMode.ECMASCRIPT5;
+    strictMode = SLOPPY;
+    // When the leading octal digit is 4-7 only two digits are part of the escape, so "\777" is
+    // "\77" (U+003F '?') followed by a literal '7' (ECMAScript Annex B.1.2). It was previously read
+    // as a single three digit escape that overflowed past \377 into U+01FF.
+    Node n = parseWarning("var x = '\\777'", "Unnecessary escape: '\\7' is equivalent to just '7'");
+    assertNode(n.getFirstFirstChild().getFirstChild()).isString("?7");
+
+    n = parseWarning("var x = '\\500'", "Unnecessary escape: '\\5' is equivalent to just '5'");
+    assertNode(n.getFirstFirstChild().getFirstChild()).isString("(0");
+
+    n = parseWarning("var x = '\\400'", "Unnecessary escape: '\\4' is equivalent to just '4'");
+    assertNode(n.getFirstFirstChild().getFirstChild()).isString(" 0");
+
+    // A leading digit of 0-3 still consumes up to three octal digits.
+    n = parseWarning("var x = '\\251'", "Unnecessary escape: '\\2' is equivalent to just '2'");
+    assertNode(n.getFirstFirstChild().getFirstChild()).isString("©");
+  }
+
+  @Test
   public void testOldStyleOctalLiterals() {
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
