@@ -1889,6 +1889,138 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
         """);
   }
 
+  @Test
+  public void testClassNonStaticFieldInitializer_preservesWrites() {
+    test(
+        """
+        function foo() {
+          class C {
+            y = (obj.x = 1);
+          }
+          obj.x = 2;
+          return C;
+        }
+        """,
+        // TODO: b/568780982 - don't remove the write "obj.x = 1;", as it's possible it will run
+        // after 'obj.x = 2;'
+        """
+        function foo() {
+          class C {
+            y = 1;
+          }
+          obj.x = 2;
+          return C;
+        }
+        """);
+
+    test(
+        """
+        function foo() {
+          obj.x = 1;
+          class C {
+            y = (obj.x = 2);
+          }
+        }
+        """,
+        // TODO: b/568780982 - don't remove the write "obj.x = 1;", as it's possible that obj.x is
+        // read before C is instantiated and obj.x = 2; is executed.
+        """
+        function foo() {
+          1;
+          class C {
+            y = (obj.x = 2);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testClassNonStaticComputedFieldInitializer_preservesWrites() {
+    test(
+        """
+        function foo() {
+          class C {
+            ['y'] = (obj.x = 1);
+          }
+          obj.x = 2;
+          return C;
+        }
+        """,
+        // TODO: b/568780982 - don't remove the write "obj.x = 1;", as it's possible it will run
+        // after 'obj.x = 2;'
+        """
+        function foo() {
+          class C {
+            ['y'] = 1;
+          }
+          obj.x = 2;
+          return C;
+        }
+        """);
+
+    test(
+        """
+        function foo() {
+          obj.x = 1;
+          class C {
+            ['y'] = (obj.x = 2);
+          }
+          return C;
+        }
+        """,
+        // TODO: b/568780982 - don't remove the write "obj.x = 1;", as it's possible that obj.x is
+        // read before C is instantiated and obj.x = 2; is executed.
+        """
+        function foo() {
+          1;
+          class C {
+            ['y'] = (obj.x = 2);
+          }
+          return C;
+        }
+        """);
+  }
+
+  @Test
+  public void testClassStaticFieldAndComputedKey_eliminatesDeadWrites() {
+    test(
+        """
+        function foo() {
+          class C {
+            static y = (obj.x = 1);
+          }
+          obj.x = 2;
+        }
+        """,
+        """
+        function foo() {
+          class C {
+            static y = 1;
+          }
+          obj.x = 2;
+        }
+        """);
+
+    // Computed keys are evaluated eagerly when the class is defined, even for non-static fields.
+    test(
+        """
+        function foo() {
+          class C {
+            [obj.x = 1];
+          }
+          obj.x = 2;
+        }
+        """,
+        """
+        function foo() {
+          class C {
+            [1];
+          }
+          obj.x = 2;
+        }
+        """);
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new DeadPropertyAssignmentElimination(compiler);

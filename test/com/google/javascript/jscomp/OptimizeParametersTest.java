@@ -1868,7 +1868,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRewriteUsedClassConstructorWithClassNonstaticField() {
+  public void testNoRewriteUsedClassConstructorWithClassNonstaticField_sideEffect() {
     testSame(
         """
         class C {
@@ -1889,6 +1889,32 @@ public final class OptimizeParametersTest extends CompilerTestCase {
           }
         }
         var c = new C(alert());
+        """);
+  }
+
+  @Test
+  public void testNoRewriteUsedClassConstructorWithClassNonstaticComputedField_sideEffect() {
+    test(
+        """
+        class C {
+          ['field2'] = alert(2);
+          constructor(a) {
+            use(a);
+          }
+        }
+        var c = new C(alert(1)); // alerts in order 1, 2
+        """,
+        // TODO(b/568780982): Don't move alert(2) into the constructor, as that changes the order of
+        // execution with the class field initializer.
+        """
+        class C {
+          ['field2'] = alert(2);
+          constructor() {
+            var a = alert(1);
+            use(a);
+          }
+        }
+        var c = new C(); // incorrectly alerts in order 2, 1
         """);
   }
 

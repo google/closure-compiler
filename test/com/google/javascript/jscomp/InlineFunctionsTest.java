@@ -5388,6 +5388,94 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassField_paramCapturedByInstanceFieldInitializer_notInlined() {
+    test(
+        """
+        function f(a) {
+          return class { x = a; };
+        }
+        let y = 1;
+        const C = f(y);
+        y = 2;
+        alert(new C().x);
+        """,
+        // TODO(b/568780982): `new C().x` incorrectly evaluates to `2`, but should be `1`
+        """
+        let y = 1;
+        const C = class { x = y; };
+        y = 2;
+        alert(new C().x);
+        """);
+  }
+
+  @Test
+  public void testClassField_paramCapturedByInstanceFieldInitializer_assumeMinimumCapture() {
+    this.assumeMinimumCapture = true;
+    test(
+        """
+        function f(a) {
+          return class { x = a; };
+        }
+        let y = 1;
+        const C = f(y);
+        y = 2;
+        alert(new C().x);
+        """,
+        // TODO(b/568780982): `new C().x` incorrectly evaluates to `2`, but should be `1`.
+        // with 'assumeMinimumCapture' we should evaluate assign an alias of y at the call site.
+        """
+        let y = 1;
+        const C = class { x = y; };
+        y = 2;
+        alert(new C().x);
+        """);
+  }
+
+  @Test
+  public void
+      testClassField_paramCapturedByComputedInstanceFieldInitializer_assumeMinimumCapture() {
+    this.assumeMinimumCapture = true;
+    test(
+        """
+        function f(a) {
+          return class { ['x'] = a; };
+        }
+        let y = 1;
+        const C = f(y);
+        y = 2;
+        alert(new C()['x']);
+        """,
+        // TODO(b/568780982): `new C()['x']` incorrectly evaluates to `2`, but should be `1`.
+        // with 'assumeMinimumCapture' we should evaluate assign an alias of y at the call site.
+        """
+        let y = 1;
+        const C = class { ['x'] = y; };
+        y = 2;
+        alert(new C()['x']);
+        """);
+  }
+
+  @Test
+  public void testClassField_paramUsedByStaticFieldInitializer_isSubstitutedDirectly() {
+    test(
+        """
+        function f(a) {
+          return class { static x = a; };
+        }
+        let y = 1;
+        const C = f(y);
+        y = 2;
+        alert(C.x);
+        """,
+        """
+        let y = 1;
+        const C = class { static x = y; };
+        y = 2;
+        alert(C.x);
+        """);
+  }
+
+  @Test
   public void testVariableUsedAsArgumentAndReassignedInFollowingArgument() {
     // See https://github.com/google/closure-compiler/issues/4115.
     test(
