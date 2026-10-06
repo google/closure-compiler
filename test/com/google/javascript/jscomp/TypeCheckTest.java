@@ -10777,6 +10777,64 @@ override: function(): string
   }
 
   @Test
+  public void testIteratorLike_optionalReturnAndThrow() {
+    newTest()
+        .addSource(
+            """
+            // Object with only next() satisfies IteratorLike record
+            var /** !IteratorLike<number> */ it1 = {
+              next: function() { return {done: true, value: 1}; }
+            };
+            // Object with next(), return(), and throw() satisfies IteratorLike record
+            var /** !IteratorLike<number> */ it2 = {
+              next: function() { return {done: true, value: 1}; },
+              return: function(opt_val) { return {done: true, value: 1}; },
+              throw: function(opt_err) { return {done: true, value: 1}; }
+            };
+            // Calling return() on IteratorLike is permitted without cast
+            function close(/** !IteratorLike<number> */ it) {
+              if (it.return) {
+                var /** !IIterableResult<number> */ res = it.return();
+              }
+            }
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testIterator_returnMethod() {
+    newTest()
+        .addSource(
+            """
+            function closeIterator(/** !Iterator<number> */ it) {
+              if (it.return) {
+                var /** !IIterableResult<number> */ res = it.return();
+                var /** !IIterableResult<number> */ res2 = it.return(42);
+              }
+            }
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
+  public void testIterator_throwMethod() {
+    newTest()
+        .addSource(
+            """
+            function throwIterator(/** !Iterator<number> */ it) {
+              if (it.throw) {
+                var /** !IIterableResult<number> */ res = it.throw();
+                var /** !IIterableResult<number> */ res2 = it.throw(new Error('err'));
+              }
+            }
+            """)
+        .includeDefaultExterns()
+        .run();
+  }
+
+  @Test
   public void testArrayAccess1() {
     newTest()
         .addSource("var a = []; var b = a['hi'];")

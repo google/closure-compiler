@@ -188,6 +188,16 @@ function IteratorLike() {}
  */
 IteratorLike.prototype.next = function(opt_value) {};
 
+/**
+ * @type {((function(T=): !IIterableResult<T>)|undefined)}
+ */
+IteratorLike.prototype.return;
+
+/**
+ * @type {((function(?=): !IIterableResult<T>)|undefined)}
+ */
+IteratorLike.prototype.throw;
+
 
 
 /**

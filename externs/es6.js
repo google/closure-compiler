@@ -55,6 +55,16 @@ Iterator.from = function(iterable) {};
 Iterator.prototype.next = function(opt_value) {};
 
 /**
+ * @type {((function(T=): !IIterableResult<T>)|undefined)}
+ */
+Iterator.prototype.return;
+
+/**
+ * @type {((function(?=): !IIterableResult<T>)|undefined)}
+ */
+Iterator.prototype.throw;
+
+/**
  * @template U
  * @param {function(T, number): U} mapperFn
  * @return {!Iterator<U>}
@@ -163,16 +173,16 @@ function Generator() {}
 Generator.prototype.next = function(opt_value) {};
 
 /**
- * @param {T} value
+ * @param {T=} opt_value
  * @return {!IIterableResult<T>}
  */
-Generator.prototype.return = function(value) {};
+Generator.prototype.return = function(opt_value) {};
 
 /**
- * @param {?} exception
+ * @param {?=} opt_exception
  * @return {!IIterableResult<T>}
  */
-Generator.prototype.throw = function(exception) {};
+Generator.prototype.throw = function(opt_exception) {};
 
 
 
