@@ -15,6 +15,7 @@
  */
 
 'require base';
+'require es6/util/getiteratorprototype';
 'require es6/util/setprototypeof';
 'require es6/util/makeiterator';
 
@@ -949,17 +950,41 @@ $jscomp.generator.Generator_ = function(engine) {
 $jscomp.generator.createGenerator = function(generator, program) {
   /** @const */ var result =
       new $jscomp.generator.Generator_(new $jscomp.generator.Engine_(program));
-  // The spec says that `myGenFunc() instanceof myGenFunc` must be true.
-  // We'll make this work by setting the prototype before calling the
-  // constructor every time. All of the methods of the object are defined on the
-  // instance by the constructor, so this does no harm.
-  // We also cast Generator_ to Object to hide dynamic inheritance from
-  // jscompiler, it makes ConformanceRules$BanUnknownThis happy.
-  // In some transpiled cases there may not be an explicit prototype, in which
-  // case we skip this step.
-  if ($jscomp.setPrototypeOf && generator.prototype) {
-    /** @type {function(!Object, ?Object): !Object} */ ($jscomp.setPrototypeOf)(
-        result, generator.prototype);
+  // The spec says that `myGenFunc() instanceof myGenFunc` and
+  // `myGenFunc() instanceof Iterator` must both be true. We make this work by
+  // linking `generator.prototype` to `Iterator.prototype` (when available) and
+  // `result` to `generator.prototype`. All of `Generator_`'s own methods are
+  // defined on the instance by the constructor, so replacing `result`'s
+  // prototype does not lose them.
+  // In some transpiled cases `generator.prototype` may not exist, in which case
+  // we skip linking through `generator.prototype` and link `result` directly to
+  // `Iterator.prototype`.
+  var setPrototypeOf = $jscomp.setPrototypeOf;
+  if (setPrototypeOf) {
+    var iteratorProto = $jscomp.getIteratorPrototype();
+    if (iteratorProto) {
+      if (generator.prototype) {
+        var proto = generator.prototype;
+        var isObject = (typeof proto === 'object' && proto !== null) ||
+            typeof proto === 'function';
+        var getPrototypeOf = Object.getPrototypeOf;
+        var protoParent = isObject && getPrototypeOf ?
+            getPrototypeOf(proto) :
+            proto.__proto__;
+        if (!iteratorProto.isPrototypeOf(proto) && protoParent === Object.prototype) {
+          try {
+            setPrototypeOf(proto, iteratorProto);
+          } catch (e) {
+            // Non-extensible prototype; leave the chain as is.
+          }
+        }
+      } else {
+        setPrototypeOf(result, iteratorProto);
+      }
+    }
+    if (generator.prototype) {
+      setPrototypeOf(result, generator.prototype);
+    }
   }
   return result;
 };

@@ -38,18 +38,14 @@ $jscomp.iteratorFromArray = function(array, transform) {
   if (array instanceof String) array = array + '';
   var i = 0;
   var done = false;
-  var iter = {
-    next: function() {
-      // Once we return done, we must always return done, even if the array
-      // grows later.
-      if (!done && i < array.length) {
-        var index = i++;
-        return {value: transform(index, array[index]), done: false};
-      }
-      done = true;
-      return {done: true, value: void 0};
+  return $jscomp.iteratorPrototype(function() {
+    // Once we return done, we must always return done, even if the array
+    // grows later.
+    if (!done && i < array.length) {
+      var index = i++;
+      return {value: transform(index, array[index]), done: false};
     }
-  };
-  iter[Symbol.iterator] = function() { return iter; };
-  return iter;
+    done = true;
+    return {done: true, value: void 0};
+  });
 };

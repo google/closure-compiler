@@ -41,7 +41,7 @@ $jscomp.polyfill('Iterator', function(localIterator) {
   // 2. Define abstract constructor (ES3-safe check)
   var Iterator = function() {
     if (!(this instanceof Iterator) || this.constructor === Iterator) {
-      throw new TypeError("Abstract class Iterator not directly constructable");
+      throw new TypeError("Abstract Iterator not directly constructable");
     }
   };
 
