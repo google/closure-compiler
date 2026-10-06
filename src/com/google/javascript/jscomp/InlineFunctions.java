@@ -117,7 +117,7 @@ class InlineFunctions implements CompilerPass {
             .build();
   }
 
-  FunctionState getOrCreateFunctionState(String fnName) {
+  private FunctionState getOrCreateFunctionState(String fnName) {
     return fns.computeIfAbsent(fnName, (String k) -> new FunctionState());
   }
 
@@ -259,10 +259,10 @@ class InlineFunctions implements CompilerPass {
    * Updates the FunctionState object for the given function. Checks if the given function matches
    * the criteria for an inlinable function.
    */
-  void maybeAddFunction(Function fn, JSChunk chunk) {
+  private void maybeAddFunction(Function fn, JSChunk chunk) {
     String name = fn.getName();
     FunctionState functionState = getOrCreateFunctionState(name);
-    updateFunctionStateForInlining(fn, chunk, name, functionState);
+    updateFunctionStateForInlining(fn, chunk, functionState);
     checkState(!(hasRequireInliningAnnotation(fn.getFunctionNode()) && !functionState.canInline()));
   }
 
@@ -270,8 +270,8 @@ class InlineFunctions implements CompilerPass {
    * Updates the FunctionState object for the given function. Checks if the given function matches
    * the criteria for an inlinable function.
    */
-  void updateFunctionStateForInlining(
-      Function fn, JSChunk chunk, String name, FunctionState functionState) {
+  private void updateFunctionStateForInlining(
+      Function fn, JSChunk chunk, FunctionState functionState) {
     // TODO(johnlenz): Maybe "smarten" FunctionState by adding this logic to it?
 
     // If the function has multiple definitions, don't inline it.
@@ -475,7 +475,7 @@ class InlineFunctions implements CompilerPass {
   /**
    * @return Whether the name is used in a way that might be a candidate for inlining.
    */
-  static boolean isCandidateUsage(Node name) {
+  private static boolean isCandidateUsage(Node name) {
     Node parent = name.getParent();
     checkState(name.isName());
     if (NodeUtil.isNameDeclaration(parent) || parent.isFunction()) {
@@ -863,7 +863,7 @@ class InlineFunctions implements CompilerPass {
   }
 
   /** Removed inlined functions that no longer have any references. */
-  void removeInlinedFunctions() {
+  private void removeInlinedFunctions() {
     for (Map.Entry<String, FunctionState> entry : fns.entrySet()) {
       String name = entry.getKey();
       FunctionState functionState = entry.getValue();
@@ -879,7 +879,7 @@ class InlineFunctions implements CompilerPass {
   }
 
   /** Check to verify that expression rewriting didn't make a call inaccessible. */
-  void verifyAllReferencesInlined(String name, FunctionState functionState) {
+  private void verifyAllReferencesInlined(String name, FunctionState functionState) {
     for (Reference ref : functionState.getReferences()) {
       if (!ref.inlined) {
         Node parent = ref.callNode.getParent();
