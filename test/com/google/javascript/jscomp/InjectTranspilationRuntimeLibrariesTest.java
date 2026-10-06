@@ -86,7 +86,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
   public void testForOf_injectsMakeIterator() {
     ImmutableSet<String> injected = parseAndRunInjectionPass("for (x of []) {}");
 
-    assertThat(injected).containsExactly("es6/util/makeiterator");
+    assertThat(injected).containsExactly("es6/util/makeiterator", "es6/util/iteratorclose");
   }
 
   @Test

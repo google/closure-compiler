@@ -108,6 +108,12 @@ public class TestExternsBuilder {
       $jscomp.makeIterator = function(iterable) {};
       $jscomp.makeAsyncIterator = function(asyncIterable) {};
       /**
+       * @param {?} iterator
+       * @param {?} iterResult
+       * @return {void}
+       */
+      $jscomp.iteratorClose = function(iterator, iterResult) {};
+      /**
        * @param {!IteratorLike<T>} iterator
        * @return {!Array<T>}
        * @template T

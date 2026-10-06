@@ -42,8 +42,6 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
 
   private static final String ITER_RESULT = "$jscomp$key$";
 
-  private static final String RET_FN = "$jscomp$retFn$";
-
   public Es6ForOfConverter(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.namer = new DefaultNameGenerator();
@@ -98,10 +96,6 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     Node iterResult = astFactory.createNameWithUnknownType(iteratorResultName);
     iterResult.makeNonIndexable();
 
-    String returnFuncName = RET_FN + compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
-    Node retFn = astFactory.createNameWithUnknownType(returnFuncName);
-    retFn.makeNonIndexable();
-
     // `$jscomp.makeIterator(iterable)`
     Node callMakeIterator =
         astFactory
@@ -112,8 +106,6 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     // var $jscomp$key$extraName = $jscomp$iter$0.next();
     Node initIterResult =
         IR.var(iterResult.cloneTree(), getNext.cloneTree()).srcrefTreeIfMissing(iterable);
-    // var $jscomp$retFn$0;
-    Node initRetFn = IR.var(retFn.cloneTree()).srcrefTreeIfMissing(iterable);
 
     // !$jscomp$key$extraName.done
     Node cond =
@@ -156,26 +148,13 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     Node newFor = IR.forNode(empty, cond, incr, newBody).srcrefTreeIfMissing(node);
 
     // Build finally block:
-    // if ($jscomp$key$extraName && !$jscomp$key$extraName.done && ($jscomp$retFn$0 =
-    // $jscomp$iter$0.return)) {
-    //   $jscomp$retFn$0.call($jscomp$iter$0);
-    // }
-    Node notDone =
-        astFactory.createNot(
-            astFactory.createGetProp(iterResult.cloneTree(), "done", type(StandardColors.BOOLEAN)));
-    Node and1 = astFactory.createAnd(iterResult.cloneTree(), notDone);
-    Node getReturn = astFactory.createGetPropWithUnknownType(iterName.cloneTree(), "return");
-    Node assignRetFn = astFactory.createAssign(retFn.cloneTree(), getReturn);
-    Node ifCond = astFactory.createAnd(and1, assignRetFn);
-
-    Node callRetFn =
-        astFactory.createCall(
-            astFactory.createGetPropWithUnknownType(retFn.cloneTree(), "call"),
-            type(StandardColors.UNKNOWN),
-            iterName.cloneTree());
-    Node ifBody = astFactory.createBlock(astFactory.exprResult(callRetFn));
-    Node ifStmt = astFactory.createIf(ifCond, ifBody);
-    Node finallyBlock = astFactory.createBlock(ifStmt);
+    // (0, $jscomp.iteratorClose)($jscomp$iter$0, $jscomp$key$extraName);
+    Node callIteratorClose =
+        astFactory
+            .createJscompIteratorCloseCall(
+                iterName.cloneTree(), iterResult.cloneTree(), this.namespace)
+            .srcrefTreeIfMissing(node);
+    Node finallyBlock = astFactory.createBlock(astFactory.exprResult(callIteratorClose));
 
     // Check if the for loop has a parent that is a label i.e. `loop1: for(...of ...)`
     List<Node> labelNames = new ArrayList<>();
@@ -196,7 +175,6 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
 
     initIter.insertBefore(tryFinally);
     initIterResult.insertAfter(initIter);
-    initRetFn.insertAfter(initIterResult);
     compiler.reportChangeToEnclosingScope(tryFinally);
   }
 }

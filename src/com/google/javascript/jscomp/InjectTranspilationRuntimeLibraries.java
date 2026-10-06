@@ -86,6 +86,10 @@ public final class InjectTranspilationRuntimeLibraries implements CompilerPass {
       runtimeLibs.injectLibForField("$jscomp.makeIterator");
     }
 
+    if (mustBeCompiledAway.contains(Feature.FOR_OF)) {
+      runtimeLibs.injectLibForField("$jscomp.iteratorClose");
+    }
+
     if (mustBeCompiledAway.contains(Feature.ARRAY_PATTERN_REST)) {
       runtimeLibs.injectLibForField("$jscomp.arrayFromIterator");
     }

@@ -1413,6 +1413,16 @@ final class AstFactory {
     return call;
   }
 
+  Node createJscompIteratorCloseCall(Node iterator, Node iterResult, StaticScope scope) {
+    var iteratorClose = runtimeJsLibManager.getJsLibField("$jscomp.iteratorClose");
+    Node iteratorCloseName = createQName(scope, iteratorClose);
+    return createCall(
+        iteratorCloseName,
+        type(JSTypeNative.VOID_TYPE, StandardColors.NULL_OR_VOID),
+        iterator,
+        iterResult);
+  }
+
   Node createJscompArrayFromIteratorCall(Node iterator, StaticScope scope) {
     var arrayFromIterator = runtimeJsLibManager.getJsLibField("$jscomp.arrayFromIterator");
     Node makeIteratorName = createQName(scope, arrayFromIterator);

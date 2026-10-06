@@ -31,6 +31,7 @@
 'require es6/util/arrayfromiterable';
 'require es6/util/arrayfromiterator';
 'require es6/util/inherits';
+'require es6/util/iteratorclose';
 'require es6/util/iteratorfromarray';
 'require es6/util/makeiterator';
 'require es6/util/restarguments';

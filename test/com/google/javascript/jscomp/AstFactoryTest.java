@@ -2138,6 +2138,39 @@ public class AstFactoryTest {
     assertNode(result).hasLastChildThat().isEqualTo(iterable);
   }
 
+  @Test
+  public void testCreateJscompIteratorCloseCall_throwsIfJscompIteratorCloseNotInjected() {
+    // Given
+    AstFactory astFactory = createTestAstFactoryWithoutTypes();
+    Node iter = IR.name("iter");
+    Node iterResult = IR.name("res");
+    StaticScope scope = new MapBasedScope(ImmutableMap.of());
+
+    // When
+    assertThrows(
+        IllegalStateException.class,
+        () -> astFactory.createJscompIteratorCloseCall(iter, iterResult, scope));
+  }
+
+  @Test
+  public void testCreateJscompIteratorCloseCall_succeeds() {
+    // Given
+    AstFactory astFactory = createTestAstFactoryWithoutTypes();
+    Node iter = IR.name("iter");
+    Node iterResult = IR.name("res");
+    runtimeJsLibManager.injectLibForField("$jscomp.iteratorClose");
+
+    // When
+    Node result =
+        astFactory.createJscompIteratorCloseCall(iter, iterResult, MapBasedScope.emptyScope());
+
+    // Then
+    assertNode(result).isCall();
+    assertNode(result).hasFirstChildThat().matchesQualifiedName("$jscomp.iteratorClose");
+    assertNode(result).hasSecondChildThat().isEqualTo(iter);
+    assertNode(result).hasLastChildThat().isEqualTo(iterResult);
+  }
+
   private static ImmutableList<Node> childList(Node parent) {
     ImmutableList.Builder<Node> list = ImmutableList.builder();
     for (Node child = parent.getFirstChild(); child != null; child = child.getNext()) {
