@@ -3829,6 +3829,10 @@ public class Node {
     return this.token == Token.PARAM_LIST;
   }
 
+  public final boolean isPos() {
+    return this.token == Token.POS;
+  }
+
   public final boolean isRegExp() {
     return this.token == Token.REGEXP;
   }

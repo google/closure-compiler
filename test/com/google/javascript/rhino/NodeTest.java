@@ -1062,4 +1062,11 @@ public class NodeTest {
     assertThat(Node.validateMemorySensitivePropertyGuarantees(b1, false, b2, false)).isTrue();
     assertThat(Node.validateMemorySensitivePropertyGuarantees(b1, false, other, false)).isFalse();
   }
+
+  @Test
+  public void testIsPos() {
+    assertThat(new Node(Token.POS).isPos()).isTrue();
+    assertThat(new Node(Token.NEG).isPos()).isFalse();
+    assertThat(Node.newNumber(1.0).isPos()).isFalse();
+  }
 }

@@ -1931,6 +1931,144 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testIsNumericLiteral() {
+      // True cases
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("1"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("0"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("0.0"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("1.5"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("1e5"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("0x10"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("0b10"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("0o10"))).isTrue();
+
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-1"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-0"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-0.0"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-1.5"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-1e5"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-0x10"))).isTrue();
+
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+1"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+0"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+0.0"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+1.5"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+1e5"))).isTrue();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+0x10"))).isTrue();
+
+      // False cases
+      assertThat(NodeUtil.isNumericLiteral(null)).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("null"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("undefined"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("void 0"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("NaN"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("Infinity"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-Infinity"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+Infinity"))).isFalse();
+
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("1n"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-1n"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(new Node(Token.POS, Node.newBigInt(BigInteger.ONE))))
+          .isFalse();
+
+      assertThat(NodeUtil.isNumericLiteral(new Node(Token.NEG))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(new Node(Token.POS))).isFalse();
+
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("\"1\""))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-\"1\""))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+\"1\""))).isFalse();
+
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("true"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-true"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+true"))).isFalse();
+
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("false"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-false"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+false"))).isFalse();
+
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("{}"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("[]"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("[1]"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-[1]"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+[1]"))).isFalse();
+
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("1 + 2"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-(1 + 2)"))).isFalse();
+
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-(-1)"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+(+1)"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("+(-1)"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("-(+1)"))).isFalse();
+
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("~1"))).isFalse();
+      assertThat(NodeUtil.isNumericLiteral(parseExpr("!1"))).isFalse();
+    }
+
+    @Test
+    public void testGetNumericLiteralValue() {
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("1"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("0.0"))).isEqualTo(0.0);
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("-5.0"))).isEqualTo(-5.0);
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("+5.0"))).isEqualTo(5.0);
+
+      double negZero = NodeUtil.getNumericLiteralValue(parseExpr("-0.0"));
+      assertThat(negZero).isEqualTo(-0.0);
+      assertThat(1.0 / negZero).isEqualTo(Double.NEGATIVE_INFINITY);
+
+      double posZero = NodeUtil.getNumericLiteralValue(parseExpr("+0.0"));
+      assertThat(posZero).isEqualTo(0.0);
+      assertThat(1.0 / posZero).isEqualTo(Double.POSITIVE_INFINITY);
+
+      double negIntZero = NodeUtil.getNumericLiteralValue(parseExpr("-0"));
+      assertThat(negIntZero).isEqualTo(-0.0);
+      assertThat(1.0 / negIntZero).isEqualTo(Double.NEGATIVE_INFINITY);
+
+      double posIntZero = NodeUtil.getNumericLiteralValue(parseExpr("+0"));
+      assertThat(posIntZero).isEqualTo(0.0);
+      assertThat(1.0 / posIntZero).isEqualTo(Double.POSITIVE_INFINITY);
+
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("0x10"))).isEqualTo(16.0);
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("-0x10"))).isEqualTo(-16.0);
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("+0x10"))).isEqualTo(16.0);
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("0b10"))).isEqualTo(2.0);
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("0o10"))).isEqualTo(8.0);
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("1e5"))).isEqualTo(100000.0);
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("-1e5"))).isEqualTo(-100000.0);
+      assertThat(NodeUtil.getNumericLiteralValue(parseExpr("+1e5"))).isEqualTo(100000.0);
+
+      assertThrows(IllegalArgumentException.class, () -> NodeUtil.getNumericLiteralValue(null));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> NodeUtil.getNumericLiteralValue(parseExpr("\"1\"")));
+      assertThrows(
+          IllegalArgumentException.class, () -> NodeUtil.getNumericLiteralValue(parseExpr("null")));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> NodeUtil.getNumericLiteralValue(parseExpr("undefined")));
+      assertThrows(
+          IllegalArgumentException.class, () -> NodeUtil.getNumericLiteralValue(parseExpr("NaN")));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> NodeUtil.getNumericLiteralValue(parseExpr("Infinity")));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> NodeUtil.getNumericLiteralValue(parseExpr("-(1 + 2)")));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> NodeUtil.getNumericLiteralValue(parseExpr("-(-1)")));
+      assertThrows(
+          IllegalArgumentException.class, () -> NodeUtil.getNumericLiteralValue(parseExpr("1n")));
+      assertThrows(
+          IllegalArgumentException.class, () -> NodeUtil.getNumericLiteralValue(parseExpr("-1n")));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> NodeUtil.getNumericLiteralValue(new Node(Token.NEG)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> NodeUtil.getNumericLiteralValue(new Node(Token.POS)));
+    }
+
+    @Test
     public void testGetBigIntValue() {
       // Strings
       // NOTE: Strings with the 'n' literal syntax can't be converted to BigInt

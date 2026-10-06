@@ -683,6 +683,33 @@ public final class NodeUtil {
     };
   }
 
+  /**
+   * Returns true if {@code n} is a numeric literal or a unary +/- applied directly to a numeric
+   * literal (e.g. {@code 12.3}, {@code -12.3}, {@code +12.3}).
+   */
+  public static boolean isNumericLiteral(Node n) {
+    if (n == null) {
+      return false;
+    }
+    return n.isNumber()
+        || ((n.isNeg() || n.isPos()) && n.hasOneChild() && n.getFirstChild().isNumber());
+  }
+
+  /**
+   * Returns the numeric value of {@code n}, which must satisfy {@link #isNumericLiteral(Node)}.
+   *
+   * @throws IllegalArgumentException if {@code n} does not satisfy {@link #isNumericLiteral(Node)}
+   */
+  public static double getNumericLiteralValue(Node n) {
+    checkArgument(isNumericLiteral(n), n);
+    return switch (n.getToken()) {
+      case NUMBER -> n.getDouble();
+      case POS -> n.getFirstChild().getDouble();
+      case NEG -> -n.getFirstChild().getDouble();
+      default -> throw new AssertionError("Unreachable: " + n);
+    };
+  }
+
   /** Returns true if the operator on this node is symmetric */
   static boolean isSymmetricOperation(Node n) {
     return switch (n.getToken()) {
