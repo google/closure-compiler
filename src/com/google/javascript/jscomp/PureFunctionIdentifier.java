@@ -315,16 +315,10 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           Node members = expr.getLastChild();
           if (members != null && members.isClassMembers()) {
             for (Node member = members.getFirstChild(); member != null; member = member.getNext()) {
-              if (member.isStaticMember()) {
-                continue;
-              }
-              Node initializer = null;
-              if (member.isMemberFieldDef() && member.hasChildren()) {
-                initializer = member.getFirstChild();
-              } else if (member.isComputedFieldDef() && member.getSecondChild() != null) {
-                initializer = member.getSecondChild();
-              }
-              if (initializer != null && astAnalyzer.mayHaveSideEffects(initializer)) {
+              Node initializer = member.getLastChild();
+              if (initializer != null
+                  && NodeUtil.isNonStaticClassFieldInitializer(initializer)
+                  && astAnalyzer.mayHaveSideEffects(initializer)) {
                 return false;
               }
             }
