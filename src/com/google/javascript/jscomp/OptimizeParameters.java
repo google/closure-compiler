@@ -642,11 +642,13 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
    */
   private boolean classContainsClassFieldWithRHSSideEffects(Node classNode) {
     Node classMembersNode = NodeUtil.getClassMembers(classNode);
-    for (Node child = classMembersNode.getFirstChild(); child != null; child = child.getNext()) {
-      if (child.isMemberFieldDef()
-          && !child.isStaticMember()
-          && child.hasChildren()
-          && astAnalyzer.mayHaveSideEffects(child.getFirstChild())) {
+    for (Node member = classMembersNode.getFirstChild();
+        member != null;
+        member = member.getNext()) {
+      Node initializer = member.getLastChild();
+      if (initializer != null
+          && NodeUtil.isNonStaticClassFieldInitializer(initializer)
+          && astAnalyzer.mayHaveSideEffects(initializer)) {
         return true;
       }
     }

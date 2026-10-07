@@ -43,7 +43,7 @@ import org.jspecify.annotations.Nullable;
  * <p>This pass does not currently use the control-flow graph. It makes the following assumptions:
  *
  * <ul>
- *   <li>Functions with inner functions are not processed.
+ *   <li>Functions with inner functions or non-static class field initializers are not processed.
  *   <li>All properties are read whenever entering a block node. Dead assignments within a block are
  *       processed.
  *   <li>Hook nodes are not processed (it's assumed they read everything)
@@ -94,7 +94,9 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       }
 
       Node body = NodeUtil.getFunctionBody(root);
-      if (!body.hasChildren() || NodeUtil.has(body, Node::isFunction, alwaysTrue())) {
+      if (!body.hasChildren()
+          || NodeUtil.has(
+              body, NodeUtil::isFunctionOrNonStaticClassFieldInitializer, alwaysTrue())) {
         return;
       }
 

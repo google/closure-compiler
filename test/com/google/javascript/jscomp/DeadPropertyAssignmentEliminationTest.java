@@ -1891,7 +1891,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Test
   public void testClassNonStaticFieldInitializer_preservesWrites() {
-    test(
+    testSame(
         """
         function foo() {
           class C {
@@ -1900,33 +1900,12 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
           obj.x = 2;
           return C;
         }
-        """,
-        // TODO: b/568780982 - don't remove the write "obj.x = 1;", as it's possible it will run
-        // after 'obj.x = 2;'
-        """
-        function foo() {
-          class C {
-            y = 1;
-          }
-          obj.x = 2;
-          return C;
-        }
         """);
 
-    test(
+    testSame(
         """
         function foo() {
           obj.x = 1;
-          class C {
-            y = (obj.x = 2);
-          }
-        }
-        """,
-        // TODO: b/568780982 - don't remove the write "obj.x = 1;", as it's possible that obj.x is
-        // read before C is instantiated and obj.x = 2; is executed.
-        """
-        function foo() {
-          1;
           class C {
             y = (obj.x = 2);
           }
@@ -1936,7 +1915,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Test
   public void testClassNonStaticComputedFieldInitializer_preservesWrites() {
-    test(
+    testSame(
         """
         function foo() {
           class C {
@@ -1945,34 +1924,12 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
           obj.x = 2;
           return C;
         }
-        """,
-        // TODO: b/568780982 - don't remove the write "obj.x = 1;", as it's possible it will run
-        // after 'obj.x = 2;'
-        """
-        function foo() {
-          class C {
-            ['y'] = 1;
-          }
-          obj.x = 2;
-          return C;
-        }
         """);
 
-    test(
+    testSame(
         """
         function foo() {
           obj.x = 1;
-          class C {
-            ['y'] = (obj.x = 2);
-          }
-          return C;
-        }
-        """,
-        // TODO: b/568780982 - don't remove the write "obj.x = 1;", as it's possible that obj.x is
-        // read before C is instantiated and obj.x = 2; is executed.
-        """
-        function foo() {
-          1;
           class C {
             ['y'] = (obj.x = 2);
           }
