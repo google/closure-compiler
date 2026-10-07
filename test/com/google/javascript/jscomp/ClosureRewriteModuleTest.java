@@ -47,6 +47,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   private boolean preserveClosurePrimitives = false;
   private boolean allowMissingSources = false;
+  private boolean runTypeCheck = true;
 
   public ClosureRewriteModuleTest() {
     super(new TestExternsBuilder().addClosureExterns().addPromise().addConsole().build());
@@ -55,13 +56,16 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return (externs, main) -> {
-      ReverseAbstractInterpreter rai =
-          new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
-      TypedScope globalTypedScope =
-          checkNotNull(
-              new TypeCheck(compiler, rai, compiler.getTypeRegistry())
-                  .processForTesting(externs, main));
-      compiler.setTypeCheckingHasRun(true);
+      TypedScope globalTypedScope = null;
+      if (runTypeCheck) {
+        ReverseAbstractInterpreter rai =
+            new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
+        globalTypedScope =
+            checkNotNull(
+                new TypeCheck(compiler, rai, compiler.getTypeRegistry())
+                    .processForTesting(externs, main));
+        compiler.setTypeCheckingHasRun(true);
+      }
 
       new ClosureRewriteModule(compiler, null, globalTypedScope).process(externs, main);
     };
@@ -71,6 +75,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    runTypeCheck = true;
     preserveClosurePrimitives = false;
     allowMissingSources = false;
     enableCreateModuleMap();
@@ -4245,5 +4250,123 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         /** @type {!module$exports$Foo.Foo} */
         const module$contents$Foo_z = module$exports$Foo.Foo.A;
         """);
+  }
+
+  @Test
+  public void testLegacyNamespace_referenceToExports() {
+    test(
+        """
+        goog.module('a.b.c');
+        goog.module.declareLegacyNamespace();
+        exports = class Foo {};
+        function useExports() {
+          return exports;
+        }
+        """,
+        """
+        goog.provide('a.b.c');
+        /** @const */
+        a.b.c = class Foo {};
+        function module$contents$a$b$c_useExports() {
+          return a.b.c;
+        }
+        """);
+  }
+
+  @Test
+  public void testLegacyNamespace_referenceToExportProperty() {
+    test(
+        """
+        goog.module('a.b.c');
+        goog.module.declareLegacyNamespace();
+        exports.Foo = class Foo {};
+        function useExports() {
+          return exports.Foo;
+        }
+        """,
+        """
+        goog.provide('a.b.c');
+        /** @const */
+        a.b.c.Foo = class Foo {};
+        function module$contents$a$b$c_useExports() {
+          return a.b.c.Foo;
+        }
+        """);
+  }
+
+  @Test
+  public void testUntypedLegacyNamespace_referenceToExports() {
+    runTypeCheck = false;
+    disableTypeInfoValidation();
+    test(
+        """
+        goog.module('a.b.c');
+        goog.module.declareLegacyNamespace();
+        exports = class Foo {};
+        function useExports() {
+          return exports;
+        }
+        """,
+        """
+        goog.provide('a.b.c');
+        /** @const */
+        a.b.c = class Foo {};
+        function module$contents$a$b$c_useExports() {
+          return a.b.c;
+        }
+        """);
+  }
+
+  @Test
+  public void testUntypedLegacyNamespace_referenceToExportProperty() {
+    runTypeCheck = false;
+    disableTypeInfoValidation();
+    test(
+        """
+        goog.module('a.b.c');
+        goog.module.declareLegacyNamespace();
+        exports.Foo = class Foo {};
+        function useExports() {
+          return exports.Foo;
+        }
+        """,
+        """
+        goog.provide('a.b.c');
+        /** @const */
+        a.b.c.Foo = class Foo {};
+        function module$contents$a$b$c_useExports() {
+          return a.b.c.Foo;
+        }
+        """);
+  }
+
+  @Test
+  public void testUntypedGoogRequireDynamicInAwait_legacyNamespace() {
+    runTypeCheck = false;
+    disableTypeInfoValidation();
+    test(
+        srcs(
+            """
+            goog.module('a.b.c');
+            goog.module.declareLegacyNamespace();
+            exports = class Foo {};
+            """,
+            """
+            async function f() {
+              const {Foo} = await goog.requireDynamic('a.b.c');
+            }
+            """),
+        expected(
+            """
+            goog.provide('a.b.c');
+            /** @const */
+            a.b.c = class Foo {};
+            """,
+            """
+            async function f() {
+              await goog.importHandler_('sG5M4c');
+              const {Foo} = a.b.c;
+            }
+            """));
   }
 }
