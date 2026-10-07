@@ -335,6 +335,26 @@ public final class FunctionArgumentInjectorTest {
   }
 
   @Test
+  public void testFindModifiedParameters_classFields() {
+    assertThat(
+            functionArgumentInjector.findModifiedParameters(
+                parseFunction(
+                    """
+                    function f(a, b, c, d, e, g) {
+                      return class {
+                        x = a;
+                        [b] = c;
+                        static y = d;
+                        static [d] = e;
+                        uninitialized;
+                        [g];
+                      };
+                    }
+                    """)))
+        .containsExactly("a", "c");
+  }
+
+  @Test
   public void testGatherCallArgumentsNeedingTemps1() {
     // Parameters with side-effects must be executed
     // even if they aren't referenced.

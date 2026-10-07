@@ -236,26 +236,29 @@ class FunctionArgumentInjector {
    *
    * @param n The node in question.
    * @param names The set of names to check.
-   * @param inInnerFunction Whether the inspection is occurring on a inner function.
+   * @param inInnerClosure Whether the inspection is occurring inside an inner function or
+   *     non-static class field initializer.
    */
   private static Set<String> findModifiedParameters(
-      Node n, ImmutableSet<String> names, boolean inInnerFunction) {
+      Node n, ImmutableSet<String> names, boolean inInnerClosure) {
     LinkedHashSet<String> unsafe = new LinkedHashSet<>();
+    if (NodeUtil.isFunctionOrNonStaticClassFieldInitializer(n)) {
+      // A function parameter can not be replaced with a direct inlined value
+      // if it is referred to by an inner function or a non-static class field
+      // initializer. The inner function or field initializer can out live the
+      // call we are replacing, so it must capture a unique name.  This approach
+      // does not work within loop bodies so those are forbidden elsewhere.
+      inInnerClosure = true;
+    }
+
     if (n.isName()) {
-      if (names.contains(n.getString()) && (inInnerFunction || canNameValueChange(n))) {
+      if (names.contains(n.getString()) && (inInnerClosure || canNameValueChange(n))) {
         unsafe.add(n.getString());
       }
-    } else if (n.isFunction()) {
-      // A function parameter can not be replaced with a direct inlined value
-      // if it is referred to by an inner function. The inner function
-      // can out live the call we are replacing, so inner function must
-      // capture a unique name.  This approach does not work within loop
-      // bodies so those are forbidden elsewhere.
-      inInnerFunction = true;
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      unsafe.addAll(findModifiedParameters(c, names, inInnerFunction));
+      unsafe.addAll(findModifiedParameters(c, names, inInnerClosure));
     }
 
     return unsafe;
@@ -447,8 +450,8 @@ class FunctionArgumentInjector {
   }
 
   /**
-   * We consider a return or expression trivial if it doesn't contain a conditional expression or a
-   * function.
+   * We consider a return or expression trivial if it doesn't contain a conditional expression, a
+   * function, or a non-static class field initializer.
    */
   boolean bodyMayHaveConditionalCode(Node n) {
     if (!n.isReturn() && !n.isExprResult()) {
@@ -458,7 +461,8 @@ class FunctionArgumentInjector {
   }
 
   /**
-   * We consider an expression trivial if it doesn't contain a conditional expression or a function.
+   * We consider an expression trivial if it doesn't contain a conditional expression, a function,
+   * or a non-static class field initializer.
    */
   boolean mayHaveConditionalCode(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
@@ -473,7 +477,11 @@ class FunctionArgumentInjector {
             OPTCHAIN_GETPROP -> {
           return true;
         }
-        default -> {}
+        default -> {
+          if (NodeUtil.isNonStaticClassFieldInitializer(c)) {
+            return true;
+          }
+        }
       }
       if (mayHaveConditionalCode(c)) {
         return true;

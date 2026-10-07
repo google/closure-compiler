@@ -329,8 +329,9 @@ class InlineFunctions implements CompilerPass {
           functionState.setReferencesThis(true);
         }
 
-        if (NodeUtil.has(block, Node::isFunction, alwaysTrue())) {
-          functionState.setHasInnerFunctions(true);
+        if (NodeUtil.has(
+            block, NodeUtil::isFunctionOrNonStaticClassFieldInitializer, alwaysTrue())) {
+          functionState.setHasInnerClosures(true);
           // If there are inner functions, we can inline into global scope
           // if there are no local vars or named functions.
           // TODO(johnlenz): this can be improved by looking at the possible
@@ -583,7 +584,7 @@ class InlineFunctions implements CompilerPass {
               functionState.getFn().getFunctionNode(),
               functionState.getNamesToAlias(),
               functionState.getReferencesThis(),
-              functionState.hasInnerFunctions());
+              functionState.hasInnerClosures());
       if (result != CanInlineResult.NO) {
         // Yeah!
         candidate.setRequiresDecomposition(result == CanInlineResult.AFTER_PREPARATION);
@@ -902,7 +903,7 @@ class InlineFunctions implements CompilerPass {
     private boolean remove = true;
     private boolean inlineDirectly = false;
     private boolean referencesThis = false;
-    private boolean hasInnerFunctions = false;
+    private boolean hasInnerClosures = false;
     private @Nullable Map<Node, Reference> references = null;
     private @Nullable JSChunk chunk = null;
     private @Nullable Set<String> namesToAlias = null;
@@ -925,12 +926,13 @@ class InlineFunctions implements CompilerPass {
       return this.referencesThis;
     }
 
-    void setHasInnerFunctions(boolean hasInnerFunctions) {
-      this.hasInnerFunctions = hasInnerFunctions;
+    /** Whether the function contains inner functions or non-static class field initializers. */
+    void setHasInnerClosures(boolean hasInnerClosures) {
+      this.hasInnerClosures = hasInnerClosures;
     }
 
-    boolean hasInnerFunctions() {
-      return hasInnerFunctions;
+    boolean hasInnerClosures() {
+      return hasInnerClosures;
     }
 
     void removeBlockInliningReferences() {

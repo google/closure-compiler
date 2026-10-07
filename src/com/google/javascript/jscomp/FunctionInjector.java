@@ -246,7 +246,8 @@ class FunctionInjector {
    * @param needAliases A set of function parameter names that can not be used without aliasing.
    *     Returned by getUnsafeParameterNames().
    * @param referencesThis Whether fnNode contains references to its this object.
-   * @param containsFunctions Whether fnNode contains inner functions.
+   * @param containsClosures Whether fnNode contains inner functions or non-static class field
+   *     initializers.
    * @return Whether the inlining can occur.
    */
   CanInlineResult canInlineReferenceToFunction(
@@ -254,7 +255,7 @@ class FunctionInjector {
       Node fnNode,
       ImmutableSet<String> needAliases,
       boolean referencesThis,
-      boolean containsFunctions) {
+      boolean containsClosures) {
     // TODO(johnlenz): This function takes too many parameter, without
     // context.  Modify the API to take a structure describing the function.
 
@@ -272,7 +273,7 @@ class FunctionInjector {
     // an inner function into another function can capture a variable and cause
     // a memory leak.  This isn't a problem in the global scope as those values
     // last until explicitly cleared.
-    if (containsFunctions) {
+    if (containsClosures) {
       if (!assumeMinimumCapture && !ref.scope.isGlobal()) {
         // TODO(johnlenz): Allow inlining into any scope without local names or inner functions.
         return CanInlineResult.NO;
@@ -736,7 +737,10 @@ class FunctionInjector {
   }
 
   /**
-   * Returns any inner function of {@code containerFn}.
+   * Returns any inner function or non-static class field initializer of {@code containerFn}.
+   *
+   * <p>Non-static class field initializers are treated like inner functions because they are
+   * evaluated later, once per instantiation, and may capture locals.
    *
    * <p>If there are no inner functions, or multilple inner functions, the sentinel values {@link
    * #NO_FUNCTIONS}, {@link #MULTIPLE_FUNCTIONS} are returned respectively.
@@ -757,7 +761,7 @@ class FunctionInjector {
             return;
           }
 
-          if (n.isFunction()) {
+          if (NodeUtil.isFunctionOrNonStaticClassFieldInitializer(n)) {
             innerFns.add(n);
           }
         });

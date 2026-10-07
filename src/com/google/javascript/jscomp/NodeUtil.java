@@ -2732,6 +2732,33 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns whether {@code n} is the initializer expression of a non-static class field (e.g.
+   * {@code a} in {@code class { x = a; }} or {@code class { [k] = a; }}).
+   *
+   * <p>Unlike static field initializers and computed field keys, which are evaluated eagerly when
+   * the class definition is evaluated, non-static field initializers are evaluated once per {@code
+   * new} call (like an inner function body).
+   */
+  static boolean isNonStaticClassFieldInitializer(Node n) {
+    Node parent = n.getParent();
+    // Note: COMPUTED_FIELD_DEF has only one child (the key) if there is no initializer.
+    if (parent.isMemberFieldDef()
+        || (parent.isComputedFieldDef() && n == parent.getSecondChild())) {
+      return !parent.isStaticMember();
+    }
+    return false;
+  }
+
+  /**
+   * Returns whether {@code n} is a function or a non-static class field initializer: both are code
+   * whose evaluation is deferred until later (and possibly repeated), and which may capture
+   * variables from the enclosing scope.
+   */
+  static boolean isFunctionOrNonStaticClassFieldInitializer(Node n) {
+    return n.isFunction() || isNonStaticClassFieldInitializer(n);
+  }
+
+  /**
    * Is a FUNCTION node a function expression?
    *
    * <p>A function expression is a function that:

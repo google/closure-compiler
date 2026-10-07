@@ -5305,9 +5305,9 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testClassField_inlinedFunctionCalledWithReceiver_paramSubstitution() {
+  public void testClassField_functionCalledWithReceiver_notInlined() {
     assumeStrictThis = true;
-    test(
+    testSame(
         """
         function f(val) {
           return class {
@@ -5317,24 +5317,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
         }
         const x = {};
         const C = f.call(x, 42);
-        """,
-        """
-        const x = {};
-        var JSCompiler_inline_result$jscomp$v0;
-        {
-          JSCompiler_inline_result$jscomp$v0 = class {
-            prop = 42;
-            owner = this;
-          };
-        }
-        const C = JSCompiler_inline_result$jscomp$v0;
         """);
   }
 
   @Test
-  public void testClassField_inlinedFunctionCalledWithThis_directInlining() {
+  public void testClassField_functionCalledWithThis_notInlined() {
     assumeStrictThis = true;
-    test(
+    testSame(
         """
         function f() {
           return class {
@@ -5343,13 +5332,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
         }
         function _g() {
           return f.call(this);
-        }
-        """,
-        """
-        function _g() {
-          return class {
-            owner = this;
-          };
         }
         """);
   }
@@ -5389,20 +5371,13 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   @Test
   public void testClassField_paramCapturedByInstanceFieldInitializer_notInlined() {
-    test(
+    testSame(
         """
         function f(a) {
           return class { x = a; };
         }
         let y = 1;
         const C = f(y);
-        y = 2;
-        alert(new C().x);
-        """,
-        // TODO(b/568780982): `new C().x` incorrectly evaluates to `2`, but should be `1`
-        """
-        let y = 1;
-        const C = class { x = y; };
         y = 2;
         alert(new C().x);
         """);
@@ -5421,11 +5396,16 @@ public class InlineFunctionsTest extends CompilerTestCase {
         y = 2;
         alert(new C().x);
         """,
-        // TODO(b/568780982): `new C().x` incorrectly evaluates to `2`, but should be `1`.
-        // with 'assumeMinimumCapture' we should evaluate assign an alias of y at the call site.
         """
         let y = 1;
-        const C = class { x = y; };
+        var JSCompiler_inline_result$jscomp$v0;
+        {
+          var a$jscomp$inline_0 = y;
+          JSCompiler_inline_result$jscomp$v0 = class {
+            x = a$jscomp$inline_0;
+          };
+        }
+        const C = JSCompiler_inline_result$jscomp$v0;
         y = 2;
         alert(new C().x);
         """);
@@ -5445,11 +5425,16 @@ public class InlineFunctionsTest extends CompilerTestCase {
         y = 2;
         alert(new C()['x']);
         """,
-        // TODO(b/568780982): `new C()['x']` incorrectly evaluates to `2`, but should be `1`.
-        // with 'assumeMinimumCapture' we should evaluate assign an alias of y at the call site.
         """
         let y = 1;
-        const C = class { ['x'] = y; };
+        var JSCompiler_inline_result$jscomp$v0;
+        {
+          var a$jscomp$inline_0 = y;
+          JSCompiler_inline_result$jscomp$v0 = class {
+            ["x"] = a$jscomp$inline_0;
+          };
+        }
+        const C = JSCompiler_inline_result$jscomp$v0;
         y = 2;
         alert(new C()['x']);
         """);
