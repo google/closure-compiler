@@ -167,6 +167,17 @@ public final class SourceFile implements StaticSourceFile {
     return numBytes;
   }
 
+  static boolean isLineTerminator(char ch) {
+    return switch (ch) {
+      case '\n', // Line Feed
+          '\r', // Carriage Return
+          '\u2028', // Line Separator
+          '\u2029' -> // Paragraph Separator
+          true;
+      default -> false;
+    };
+  }
+
   private void findLineOffsets() {
     if (this.lineOffsets != null) {
       return;
@@ -186,11 +197,14 @@ public final class SourceFile implements StaticSourceFile {
     // getCode() updates numLines, so this is always in sync with the code.
     int[] offsets = new int[this.numLines];
     int index = 1; // start at 1 since the offset for line 0 is always at byte 0
-    int offset = 0;
-    while ((offset = localCode.indexOf('\n', offset)) != -1) {
-      // +1 because this is the offset of the next line which is one past the newline
-      offset++;
-      offsets[index++] = offset;
+    for (int i = 0; i < localCode.length(); i++) {
+      char ch = localCode.charAt(i);
+      if (isLineTerminator(ch)) {
+        if (ch == '\r' && i + 1 < localCode.length() && localCode.charAt(i + 1) == '\n') {
+          i++;
+        }
+        offsets[index++] = i + 1;
+      }
     }
     checkState(index == offsets.length);
     this.lineOffsets = offsets;
@@ -253,10 +267,14 @@ public final class SourceFile implements StaticSourceFile {
       // not the same as number of bytes.
       this.numBytes = sourceCode.length();
       int numLines = 1; // there is always at least one line
-      int index = 0;
-      while ((index = sourceCode.indexOf('\n', index)) != -1) {
-        index++;
-        numLines++;
+      for (int i = 0; i < sourceCode.length(); i++) {
+        char ch = sourceCode.charAt(i);
+        if (isLineTerminator(ch)) {
+          if (ch == '\r' && i + 1 < sourceCode.length() && sourceCode.charAt(i + 1) == '\n') {
+            i++;
+          }
+          numLines++;
+        }
       }
       this.numLines = numLines;
     }
@@ -360,7 +378,14 @@ public final class SourceFile implements StaticSourceFile {
 
     int pos = lineOffsets[lineNumber - 1];
 
-    if (js.indexOf('\n', pos) == -1) {
+    if (lineNumber < lineOffsets.length) {
+      int nextPos = lineOffsets[lineNumber];
+      int endPos = nextPos - 1;
+      if (js.charAt(endPos) == '\n' && endPos > pos && js.charAt(endPos - 1) == '\r') {
+        endPos--;
+      }
+      return js.substring(pos, endPos);
+    } else {
       // If next new line cannot be found, there are two cases
       // 1. pos already reaches the end of file, then null should be returned
       // 2. otherwise, return the contents between pos and the end of file.
@@ -369,8 +394,6 @@ public final class SourceFile implements StaticSourceFile {
       } else {
         return js.substring(pos);
       }
-    } else {
-      return js.substring(pos, js.indexOf('\n', pos));
     }
   }
 
@@ -415,8 +438,15 @@ public final class SourceFile implements StaticSourceFile {
       endChar = (endLine < lineOffsets.length) ? lineOffsets[endLine] : js.length();
     }
 
-    if (js.charAt(endChar - 1) == '\n') {
-      return new SimpleRegion(lineNumber, endLine, js.substring(pos, endChar - 1));
+    if (endChar > pos) {
+      if (js.charAt(endChar - 1) == '\n') {
+        if (endChar - 1 > pos && js.charAt(endChar - 2) == '\r') {
+          return new SimpleRegion(lineNumber, endLine, js.substring(pos, endChar - 2));
+        }
+        return new SimpleRegion(lineNumber, endLine, js.substring(pos, endChar - 1));
+      } else if (isLineTerminator(js.charAt(endChar - 1))) {
+        return new SimpleRegion(lineNumber, endLine, js.substring(pos, endChar - 1));
+      }
     }
     return new SimpleRegion(lineNumber, endLine, js.substring(pos, endChar));
   }

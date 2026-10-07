@@ -125,6 +125,75 @@ public final class SourceFileTest {
     assertThat(startsWithNewline.getLineOffset(3)).isEqualTo(5);
     assertThat(startsWithNewline.getNumBytes()).isEqualTo(8);
     assertThat(startsWithNewline.getNumLines()).isEqualTo(3);
+
+    SourceFile fCr = factory.apply("'1';\r'2';\r'3'\r");
+    assertThat(fCr.getLineOffset(1)).isEqualTo(0);
+    assertThat(fCr.getLineOffset(2)).isEqualTo(5);
+    assertThat(fCr.getLineOffset(3)).isEqualTo(10);
+    assertThat(fCr.getNumBytes()).isEqualTo(14);
+    assertThat(fCr.getNumLines()).isEqualTo(4);
+    assertThat(fCr.getLine(1)).isEqualTo("'1';");
+    assertThat(fCr.getLine(2)).isEqualTo("'2';");
+    assertThat(fCr.getLine(3)).isEqualTo("'3'");
+
+    SourceFile fLs = factory.apply("'1';\u2028'2';\u2028'3'\u2028");
+    assertThat(fLs.getLineOffset(1)).isEqualTo(0);
+    assertThat(fLs.getLineOffset(2)).isEqualTo(5);
+    assertThat(fLs.getLineOffset(3)).isEqualTo(10);
+    assertThat(fLs.getNumBytes()).isEqualTo(14);
+    assertThat(fLs.getNumLines()).isEqualTo(4);
+    assertThat(fLs.getLine(1)).isEqualTo("'1';");
+    assertThat(fLs.getLine(2)).isEqualTo("'2';");
+    assertThat(fLs.getLine(3)).isEqualTo("'3'");
+
+    SourceFile fPs = factory.apply("'1';\u2029'2';\u2029'3'\u2029");
+    assertThat(fPs.getLineOffset(1)).isEqualTo(0);
+    assertThat(fPs.getLineOffset(2)).isEqualTo(5);
+    assertThat(fPs.getLineOffset(3)).isEqualTo(10);
+    assertThat(fPs.getNumBytes()).isEqualTo(14);
+    assertThat(fPs.getNumLines()).isEqualTo(4);
+    assertThat(fPs.getLine(1)).isEqualTo("'1';");
+    assertThat(fPs.getLine(2)).isEqualTo("'2';");
+    assertThat(fPs.getLine(3)).isEqualTo("'3'");
+
+    SourceFile fCrLf = factory.apply("'1';\r\n'2';\r\n'3'\r\n");
+    assertThat(fCrLf.getLineOffset(1)).isEqualTo(0);
+    assertThat(fCrLf.getLineOffset(2)).isEqualTo(6);
+    assertThat(fCrLf.getLineOffset(3)).isEqualTo(12);
+    assertThat(fCrLf.getNumBytes()).isEqualTo(17);
+    assertThat(fCrLf.getNumLines()).isEqualTo(4);
+    assertThat(fCrLf.getLine(1)).isEqualTo("'1';");
+    assertThat(fCrLf.getLine(2)).isEqualTo("'2';");
+    assertThat(fCrLf.getLine(3)).isEqualTo("'3'");
+
+    SourceFile fMixed = factory.apply("'1';\r\n'2';\r'3'\u2028'4'\u2029'5'\n");
+    assertThat(fMixed.getLineOffset(1)).isEqualTo(0);
+    assertThat(fMixed.getLineOffset(2)).isEqualTo(6);
+    assertThat(fMixed.getLineOffset(3)).isEqualTo(11);
+    assertThat(fMixed.getLineOffset(4)).isEqualTo(15);
+    assertThat(fMixed.getLineOffset(5)).isEqualTo(19);
+    assertThat(fMixed.getNumLines()).isEqualTo(6);
+    assertThat(fMixed.getLine(1)).isEqualTo("'1';");
+    assertThat(fMixed.getLine(2)).isEqualTo("'2';");
+    assertThat(fMixed.getLine(3)).isEqualTo("'3'");
+    assertThat(fMixed.getLine(4)).isEqualTo("'4'");
+    assertThat(fMixed.getLine(5)).isEqualTo("'5'");
+    assertThat(fMixed.getLine(6)).isNull();
+
+    assertThat(fMixed.getLineOfOffset(0)).isEqualTo(1);
+    assertThat(fMixed.getColumnOfOffset(0)).isEqualTo(0);
+    assertThat(fMixed.getLineOfOffset(5)).isEqualTo(1);
+    assertThat(fMixed.getColumnOfOffset(5)).isEqualTo(5);
+    assertThat(fMixed.getLineOfOffset(6)).isEqualTo(2);
+    assertThat(fMixed.getColumnOfOffset(6)).isEqualTo(0);
+    assertThat(fMixed.getLineOfOffset(11)).isEqualTo(3);
+    assertThat(fMixed.getColumnOfOffset(11)).isEqualTo(0);
+    assertThat(fMixed.getLineOfOffset(15)).isEqualTo(4);
+    assertThat(fMixed.getColumnOfOffset(15)).isEqualTo(0);
+    assertThat(fMixed.getLineOfOffset(19)).isEqualTo(5);
+    assertThat(fMixed.getColumnOfOffset(19)).isEqualTo(0);
+    assertThat(fMixed.getLineOfOffset(23)).isEqualTo(6);
+    assertThat(fMixed.getColumnOfOffset(23)).isEqualTo(0);
   }
 
   @Test
