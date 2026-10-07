@@ -416,6 +416,86 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBleedingFunctionNameShadowedByObjectPatternParam() {
+    // Older versions of Safari incorrectly treat a function expression's own name as one of its
+    // parameters, so they reject a function whose non-simple parameter list binds that same name:
+    // "SyntaxError: Duplicate parameter 'a' not allowed in function with destructuring
+    // parameters". The function name and the parameter are separate bindings, so they must not be
+    // renamed to the same name. See https://bugs.webkit.org/show_bug.cgi?id=220517.
+    test(
+        """
+        var foo = function bar({bar}) { return bar; };
+        """,
+        """
+        var c = function b({bar: a}) { return a; };
+        """);
+  }
+
+  @Test
+  public void testBleedingFunctionNameShadowedByArrayPatternParam() {
+    test(
+        """
+        var foo = function bar([bar]) { return bar; };
+        """,
+        """
+        var c = function b([a]) { return a; };
+        """);
+  }
+
+  @Test
+  public void testBleedingFunctionNameShadowedByDefaultValueParam() {
+    // The same Safari bug applies to default values:
+    // "Duplicate parameter 'a' not allowed in function with default parameter values".
+    test(
+        """
+        var foo = function bar(bar = 1) { return bar; };
+        """,
+        """
+        var c = function b(a = 1) { return a; };
+        """);
+  }
+
+  @Test
+  public void testBleedingFunctionNameShadowedByNestedPatternParam() {
+    test(
+        """
+        var foo = function bar({baz: {bar = 1, qux}}, ...quux) {
+          return bar + qux + quux;
+        };
+        """,
+        """
+        var e = function d({baz: {bar: a = 1, qux: b}}, ...c) {
+          return a + b + c;
+        };
+        """);
+  }
+
+  @Test
+  public void testBleedingFunctionNameShadowedByPatternParamWithPseudoNames() {
+    generatePseudoNames = true;
+    test(
+        """
+        var foo = function bar({bar}) { return bar; };
+        """,
+        """
+        var $foo$$ = function $bar$fn$$({bar: $bar$$}) { return $bar$$; };
+        """);
+  }
+
+  @Test
+  public void testBleedingFunctionNameShadowedBySimpleParam() {
+    // A simple parameter list does not trigger the Safari bug, so the function name and the
+    // parameter may still share a name.
+    test(
+        """
+        var foo = function bar(bar) { return bar; };
+        """,
+        """
+        var b = function a(a) { return a; };
+        """);
+  }
+
+  @Test
   public void testRenameWithExterns1() {
     String externs = "var foo;";
     test(
