@@ -582,6 +582,26 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getStringValue(parseExpr("'0'"))).isEqualTo("0");
       assertThat(NodeUtil.getStringValue(parseExpr("/a/"))).isNull();
       assertThat(NodeUtil.getStringValue(parseExpr("{}"))).isEqualTo("[object Object]");
+      assertThat(NodeUtil.getStringValue(parseExpr("{a: 1}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{'a': 1, 2: 3}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{foo() {}}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{get foo() { return 1; }}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{set foo(x) {}}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{toString: 1}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{'toString': 1}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{toString() { return 'foo'; }}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{get toString() { return 'foo'; }}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{set toString(x) {}}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{valueOf: 1}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{'valueOf': 1}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{valueOf() { return 1; }}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{get valueOf() { return 1; }}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{set valueOf(x) {}}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{__proto__: null}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{'__proto__': null}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{__proto__: p}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{[key]: 'val'}"))).isNull();
+      assertThat(NodeUtil.getStringValue(parseExpr("{...spread}"))).isNull();
       assertThat(NodeUtil.getStringValue(parseExpr("[]"))).isEmpty();
       assertThat(NodeUtil.getStringValue(parseExpr("false"))).isEqualTo("false");
       assertThat(NodeUtil.getStringValue(parseExpr("null"))).isEqualTo("null");
@@ -1894,6 +1914,21 @@ public final class NodeUtilTest {
 
       assertThat(NodeUtil.getNumberValue(parseExpr("[1]"))).isEqualTo(1.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("{}"))).isNaN();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{a: 1}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{'a': 1, 2: 3}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{foo() {}}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{get foo() { return 1; }}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{set foo(x) {}}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{valueOf: 1}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{toString: 1}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{valueOf() { return 1; }}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{toString() { return '1'; }}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{get valueOf() { return 1; }}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{set valueOf(x) {}}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{__proto__: null}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{'__proto__': null}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{[key]: 1}"))).isNull();
+      assertThat(NodeUtil.getNumberValue(parseExpr("{...spread}"))).isNull();
     }
 
     @Test

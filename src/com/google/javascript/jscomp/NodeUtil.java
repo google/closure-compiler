@@ -246,7 +246,7 @@ public final class NodeUtil {
         yield null;
       }
       case ARRAYLIT -> arrayToString(n);
-      case OBJECTLIT -> "[object Object]";
+      case OBJECTLIT -> n.hasChildren() ? null : "[object Object]";
       default -> null;
     };
   }
@@ -278,6 +278,7 @@ public final class NodeUtil {
     }
     return result.toString();
   }
+
 
   /**
    * Gets the value of a node as a Number, or null if it cannot be converted. When it returns a
