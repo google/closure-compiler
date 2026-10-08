@@ -1820,6 +1820,106 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testGetStringNumberValue() {
+      // Whitespace and empty
+      assertThat(NodeUtil.getStringNumberValue("")).isEqualTo(0.0);
+      assertThat(NodeUtil.getStringNumberValue("  ")).isEqualTo(0.0);
+      assertThat(NodeUtil.getStringNumberValue("\t\n\r ")).isEqualTo(0.0);
+      assertThat(NodeUtil.getStringNumberValue(" \t 42 \n ")).isEqualTo(42.0);
+
+      // Standard decimals
+      assertThat(NodeUtil.getStringNumberValue("0")).isEqualTo(0.0);
+      assertThat(NodeUtil.getStringNumberValue("-0")).isEqualTo(-0.0);
+      assertThat(NodeUtil.getStringNumberValue("1")).isEqualTo(1.0);
+      assertThat(NodeUtil.getStringNumberValue("-1")).isEqualTo(-1.0);
+      assertThat(NodeUtil.getStringNumberValue("+1")).isEqualTo(1.0);
+      assertThat(NodeUtil.getStringNumberValue("1.5")).isEqualTo(1.5);
+      assertThat(NodeUtil.getStringNumberValue("-1.5")).isEqualTo(-1.5);
+      assertThat(NodeUtil.getStringNumberValue(".5")).isEqualTo(0.5);
+      assertThat(NodeUtil.getStringNumberValue("-.5")).isEqualTo(-0.5);
+      assertThat(NodeUtil.getStringNumberValue("1e5")).isEqualTo(100000.0);
+      assertThat(NodeUtil.getStringNumberValue("1e-2")).isEqualTo(0.01);
+
+      // Binary literals
+      assertThat(NodeUtil.getStringNumberValue("0b10")).isEqualTo(2.0);
+      assertThat(NodeUtil.getStringNumberValue("0B11")).isEqualTo(3.0);
+      assertThat(NodeUtil.getStringNumberValue("0b0")).isEqualTo(0.0);
+      assertThat(NodeUtil.getStringNumberValue("  0b1010  ")).isEqualTo(10.0);
+
+      // Binary invalid
+      assertThat(NodeUtil.getStringNumberValue("0b")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("0b2")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("0b1a")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("+0b1")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("-0b1")).isNaN();
+
+      // Octal literals
+      assertThat(NodeUtil.getStringNumberValue("0o10")).isEqualTo(8.0);
+      assertThat(NodeUtil.getStringNumberValue("0O77")).isEqualTo(63.0);
+      assertThat(NodeUtil.getStringNumberValue("0o0")).isEqualTo(0.0);
+      assertThat(NodeUtil.getStringNumberValue("  0o12  ")).isEqualTo(10.0);
+
+      // Octal invalid
+      assertThat(NodeUtil.getStringNumberValue("0o")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("0o8")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("0o7a")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("+0o1")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("-0o1")).isNaN();
+
+      // Hexadecimal
+      assertThat(NodeUtil.getStringNumberValue("0x10")).isEqualTo(16.0);
+      assertThat(NodeUtil.getStringNumberValue("0X1f")).isEqualTo(31.0);
+      assertThat(NodeUtil.getStringNumberValue("0xffffffff")).isEqualTo(4294967295.0);
+      assertThat(NodeUtil.getStringNumberValue("0x0")).isEqualTo(0.0);
+
+      // Large non-decimal literals (> 14 digits exercising BigInteger path)
+      assertThat(NodeUtil.getStringNumberValue("0b10000000000000000000")).isEqualTo(524288.0);
+      assertThat(NodeUtil.getStringNumberValue("0o100000000000000")).isEqualTo(4398046511104.0);
+      assertThat(NodeUtil.getStringNumberValue("0x100000000000000")).isEqualTo(72057594037927936.0);
+      assertThat(NodeUtil.getStringNumberValue("0x" + "f".repeat(300))).isPositiveInfinity();
+
+      // Hex invalid
+      assertThat(NodeUtil.getStringNumberValue("0x")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("0xg")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("0x1.0p0")).isNaN();
+
+      // Hex with signs
+      assertThat(NodeUtil.getStringNumberValue("+0x10")).isNull();
+      assertThat(NodeUtil.getStringNumberValue("-0x10")).isNull();
+
+      // Java suffixes rejected
+      assertThat(NodeUtil.getStringNumberValue("1d")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("1D")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("1f")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("1F")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("1.0d")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("1.0f")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("1e2d")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("1e2f")).isNaN();
+
+      // Infinity
+      assertThat(NodeUtil.getStringNumberValue("Infinity")).isPositiveInfinity();
+      assertThat(NodeUtil.getStringNumberValue("+Infinity")).isPositiveInfinity();
+      assertThat(NodeUtil.getStringNumberValue("-Infinity")).isNegativeInfinity();
+
+      // Case-insensitive infinity
+      assertThat(NodeUtil.getStringNumberValue("infinity")).isNull();
+      assertThat(NodeUtil.getStringNumberValue("-infinity")).isNull();
+      assertThat(NodeUtil.getStringNumberValue("+infinity")).isNull();
+
+      // Vertical tab
+      assertThat(NodeUtil.getStringNumberValue("\u000b")).isNull();
+      assertThat(NodeUtil.getStringNumberValue("\u000b1")).isNull();
+
+      // General invalid
+      assertThat(NodeUtil.getStringNumberValue("abc")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("1.2.3")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("--1")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("+")).isNaN();
+      assertThat(NodeUtil.getStringNumberValue("-")).isNaN();
+    }
+
+    @Test
     public void testGetNumberValue() {
       // Strings
       assertThat(NodeUtil.getNumberValue(parseExpr("'\\uFEFF1'"))).isEqualTo(1.0);
@@ -1861,6 +1961,7 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValue(parseExpr("'-Infinity'"))).isNegativeInfinity();
       assertThat(NodeUtil.getNumberValue(parseExpr("'Infinity'"))).isPositiveInfinity();
       assertThat(NodeUtil.getNumberValue(parseExpr("'+Infinity'"))).isPositiveInfinity();
+
       // Firefox treats "infinity" as "Infinity", IE treats it as NaN
       assertThat(NodeUtil.getNumberValue(parseExpr("'-infinity'"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("'infinity'"))).isNull();
@@ -1869,6 +1970,10 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValue(parseExpr("'NaN'"))).isNaN();
       assertThat(NodeUtil.getNumberValue(parseExpr("'some unknown string'"))).isNaN();
       assertThat(NodeUtil.getNumberValue(parseExpr("'123 blah'"))).isNaN();
+      assertThat(NodeUtil.getNumberValue(parseExpr("\"0b10\""))).isEqualTo(2.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("\"0o10\""))).isEqualTo(8.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("\"1d\""))).isNaN();
+      assertThat(NodeUtil.getNumberValue(parseExpr("\"1f\""))).isNaN();
 
       // Literals
       assertThat(NodeUtil.getNumberValue(parseExpr("1"))).isEqualTo(1.0);

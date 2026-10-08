@@ -396,12 +396,35 @@ public final class NodeUtil {
       return 0.0;
     }
 
-    if (s.length() > 2 && s.charAt(0) == '0' && (s.charAt(1) == 'x' || s.charAt(1) == 'X')) {
-      // Attempt to convert hex numbers.
-      try {
-        return Double.valueOf(Integer.parseInt(s.substring(2), 16));
-      } catch (NumberFormatException e) {
-        return Double.NaN;
+    if (s.length() >= 2 && s.charAt(0) == '0') {
+      int radix = 0;
+      char prefix = s.charAt(1);
+      if (prefix == 'x' || prefix == 'X') {
+        radix = 16;
+      } else if (prefix == 'b' || prefix == 'B') {
+        radix = 2;
+      } else if (prefix == 'o' || prefix == 'O') {
+        radix = 8;
+      }
+      if (radix != 0) {
+        String digits = s.substring(2);
+        if (digits.isEmpty()) {
+          return Double.NaN;
+        }
+        for (int i = 0; i < digits.length(); i++) {
+          if (!isValidDigit(digits.charAt(i), radix)) {
+            return Double.NaN;
+          }
+        }
+        try {
+          if (digits.length() <= 14) {
+            return (double) Long.parseLong(digits, radix);
+          } else {
+            return new BigInteger(digits, radix).doubleValue();
+          }
+        } catch (NumberFormatException e) {
+          return Double.NaN;
+        }
       }
     }
 
@@ -419,11 +442,36 @@ public final class NodeUtil {
       return null;
     }
 
+    if (s.equals("Infinity") || s.equals("+Infinity")) {
+      return Double.POSITIVE_INFINITY;
+    }
+
+    if (s.equals("-Infinity")) {
+      return Double.NEGATIVE_INFINITY;
+    }
+
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      if (('0' <= c && c <= '9') || c == '.' || c == 'e' || c == 'E' || c == '+' || c == '-') {
+        continue;
+      }
+      return Double.NaN;
+    }
+
     try {
       return Double.parseDouble(s);
     } catch (NumberFormatException e) {
       return Double.NaN;
     }
+  }
+
+  private static boolean isValidDigit(char c, int radix) {
+    return switch (radix) {
+      case 2 -> c == '0' || c == '1';
+      case 8 -> '0' <= c && c <= '7';
+      case 16 -> ('0' <= c && c <= '9') || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F');
+      default -> false;
+    };
   }
 
   /**
