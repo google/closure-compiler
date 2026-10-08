@@ -334,15 +334,15 @@ public final class NodeUtil {
         };
       }
       case POS -> {
-        // unary plus triggers numeric conversions
-        return doGetNumberValue(n.getOnlyChild(), /* numberConversions= */ true);
+        // unary plus triggers numeric conversions only when numberConversions is true
+        return doGetNumberValue(n.getOnlyChild(), numberConversions);
       }
       case NEG -> {
-        Double val = doGetNumberValue(n.getOnlyChild(), /* numberConversions= */ true);
+        Double val = doGetNumberValue(n.getOnlyChild(), numberConversions);
         return (val == null) ? null : -val;
       }
       case BITNOT -> {
-        Double val = doGetNumberValue(n.getOnlyChild(), /* numberConversions= */ true);
+        Double val = doGetNumberValue(n.getOnlyChild(), numberConversions);
         return (val == null) ? null : (double) ~ecmascriptToInt32(val);
       }
       case FALSE, NOT, NULL, TRUE -> {

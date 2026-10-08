@@ -2034,6 +2034,33 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValue(parseExpr("{'__proto__': null}"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("{[key]: 1}"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("{...spread}"))).isNull();
+
+      // Unary with conversions
+      assertThat(NodeUtil.getNumberValue(parseExpr("-\"1\""))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("+\"1\""))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~\"1\""))).isEqualTo(-2.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("-true"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("+true"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~true"))).isEqualTo(-2.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("-false"))).isEqualTo(-0.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("+false"))).isEqualTo(0.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~false"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("-[1]"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("+[1]"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~[1]"))).isEqualTo(-2.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("-{}"))).isNaN();
+      assertThat(NodeUtil.getNumberValue(parseExpr("+{}"))).isNaN();
+      assertThat(NodeUtil.getNumberValue(parseExpr("~{}"))).isEqualTo(-1.0);
+
+      // Nested unaries with conversions
+      assertThat(NodeUtil.getNumberValue(parseExpr("- -\"1\""))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("+ +\"1\""))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("+ -\"1\""))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~ ~\"1\""))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("- -1"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("+ +1"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("+ -1"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("~ ~1"))).isEqualTo(1.0);
     }
 
     @Test
@@ -2047,6 +2074,37 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("void 0"))).isNull();
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("[1]"))).isNull();
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("{}"))).isNull();
+
+      // Unary operators without conversions should return null for non-numeric operands
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-\"1\""))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-\"1d\""))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-true"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-false"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-[1]"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("-{}"))).isNull();
+
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+\"1\""))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+\"1d\""))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+true"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+false"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+[1]"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+{}"))).isNull();
+
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~\"1\""))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~true"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~false"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~[1]"))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~{}"))).isNull();
+
+      // Nested unaries without conversions
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("- -\"1\""))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+ +\"1\""))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+ -\"1\""))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~ ~\"1\""))).isNull();
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("- -1"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+ +1"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("+ -1"))).isEqualTo(-1.0);
+      assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("~ ~1"))).isEqualTo(1.0);
 
       // Literals
       assertThat(NodeUtil.getNumberValueNoConversions(parseExpr("1"))).isEqualTo(1.0);
