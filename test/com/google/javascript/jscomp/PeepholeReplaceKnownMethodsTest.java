@@ -105,60 +105,49 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   @Test
   public void testFoldStringIncludes() {
     // Fold String.prototype.includes with Constant Arguments
-    // Baseline current behavior and guards:
     // Under ECMA-262 § 22.1.3.8, String.prototype.includes evaluates substring search with position
     // clamping.
-    // Future optimization fold targets:
-    // - 'hello world'.includes('world') -> true
-    // - 'foo'.includes('bar') -> false
-    // - 'abcdef'.includes('bc') -> true
-    // - 'abcdef'.includes('xyz') -> false
-    // - 'abc'.includes('') -> true
-    // - ''.includes('') -> true
-    // - 'abc'.includes('a', 1) -> false
-    // - 'abc'.includes('b', 1) -> true
-    // - 'abc'.includes('c', 2) -> true
-    // - 'abcdef'.includes('bc', 1) -> true
-    // - 'abcdef'.includes('bc', 2) -> false
-    // - 'abc'.includes('a', -5) -> true
-    // - 'abc'.includes('a', 10) -> false
-    // - 'abcdef'.includes('bc', -5) -> true
-    // - 'abcdef'.includes('bc', 100) -> false
-    // - '123'.includes(2) -> true
-    // - 'true'.includes(true) -> true
-    // - 'abc1def'.includes(1) -> true
-    // - 'abctruedef'.includes(true) -> true
-    // - 'abcnulldef'.includes(null) -> true
-    // - 'abcundefineddef'.includes(undefined) -> true
-    // - 'abcNaNdef'.includes(NaN) -> true
-    foldSame("x = 'hello world'.includes('world')");
-    foldSame("x = 'foo'.includes('bar')");
-    foldSame("x = 'abcdef'.includes('bc')");
-    foldSame("x = 'abcdef'.includes('xyz')");
-    foldSame("x = 'abc'.includes('')");
-    foldSame("x = ''.includes('')");
+    fold("x = 'hello world'.includes('world')", "x = true");
+    fold("x = 'foo'.includes('bar')", "x = false");
+    fold("x = 'abcdef'.includes('bc')", "x = true");
+    fold("x = 'abcdef'.includes('xyz')", "x = false");
+    fold("x = 'abc'.includes('')", "x = true");
+    fold("x = ''.includes('')", "x = true");
 
     // Positional search & clamping
-    foldSame("x = 'abc'.includes('a', 1)");
-    foldSame("x = 'abc'.includes('b', 1)");
-    foldSame("x = 'abc'.includes('c', 2)");
-    foldSame("x = 'abcdef'.includes('bc', 1)");
-    foldSame("x = 'abcdef'.includes('bc', 2)");
-    foldSame("x = 'abc'.includes('a', -5)");
-    foldSame("x = 'abc'.includes('a', 10)");
-    foldSame("x = 'abcdef'.includes('bc', -5)");
-    foldSame("x = 'abcdef'.includes('bc', 100)");
+    fold("x = 'abc'.includes('a', 1)", "x = false");
+    fold("x = 'abc'.includes('b', 1)", "x = true");
+    fold("x = 'abc'.includes('c', 2)", "x = true");
+    fold("x = 'abcdef'.includes('bc', 1)", "x = true");
+    fold("x = 'abcdef'.includes('bc', 2)", "x = false");
+    fold("x = 'abc'.includes('a', -5)", "x = true");
+    fold("x = 'abc'.includes('a', 10)", "x = false");
+    fold("x = 'abcdef'.includes('bc', -5)", "x = true");
+    fold("x = 'abcdef'.includes('bc', 100)", "x = false");
+    fold("x = 'abc'.includes('', 100)", "x = true");
+    foldSame("x = 'abc'.includes('a', NaN)");
+    foldSame("x = 'abc'.includes('a', Infinity)");
+    foldSame("x = 'abc'.includes('a', -Infinity)");
+    fold("x = 'abc'.includes('a', 0.9)", "x = true");
+    fold("x = 'abc'.includes('a', 1.1)", "x = false");
+    fold("x = 'abc'.includes('a', null)", "x = true");
+    fold("x = 'abc'.includes('a', undefined)", "x = true");
+    fold("x = 'abc'.includes('a', void 0)", "x = true");
+    fold("x = 'abc'.includes('a', -0)", "x = true");
+    fold("x = 'abc'.includes('a', +0)", "x = true");
+    fold("x = 'abc'.includes('a', +1)", "x = false");
 
     // Coercions
-    foldSame("x = '123'.includes(2)");
-    foldSame("x = 'true'.includes(true)");
-    foldSame("x = 'abc1def'.includes(1)");
-    foldSame("x = 'abctruedef'.includes(true)");
-    foldSame("x = 'abcnulldef'.includes(null)");
-    foldSame("x = 'abcundefineddef'.includes(undefined)");
-    foldSame("x = 'abcNaNdef'.includes(NaN)");
+    fold("x = '123'.includes(2)", "x = true");
+    fold("x = 'true'.includes(true)", "x = true");
+    fold("x = 'abc1def'.includes(1)", "x = true");
+    fold("x = 'abctruedef'.includes(true)", "x = true");
+    fold("x = 'abcnulldef'.includes(null)", "x = true");
+    fold("x = 'abcundefineddef'.includes(undefined)", "x = true");
+    fold("x = 'abcNaNdef'.includes(NaN)", "x = true");
 
     // Negative / Guard cases (Must NOT fold)
+    foldSame("x = 'abc'.includes()"); // zero arguments
     foldSame("x = str.includes('a')"); // non-literal receiver
     foldSame("x = 'abc'.includes(y)"); // non-constant argument
     foldSame("x = 'abc'.includes((foo(), 'a'))"); // side-effecting argument
@@ -169,6 +158,10 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'abcdef'.includes('bc', 1, 2)"); // unexpected extra arguments
     foldSame("x = 'abcdef'.includes({a: 2})");
     foldSame("x = 'abcdef'.includes([1, 2])");
+    foldSame("x = 'abc'.includes('a', {valueOf() { return 1; }})");
+    foldSame("x = 'abc'.includes('a', '0b1')");
+    foldSame("x = 'abc'.includes('a', '1d')");
+    foldSame("x = 'abc'.includes('a', {})");
     foldSame("x = tag `Hello ${name}`.includes('a')");
   }
 

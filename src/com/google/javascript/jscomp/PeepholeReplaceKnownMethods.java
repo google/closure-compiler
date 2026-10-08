@@ -130,7 +130,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     switch (methodName) {
       case "parseInt", "parseFloat" -> {
         Node firstArg = callTarget.getNext();
-        if ((firstArg != null && firstArg.isStringLit()) || isNumericLiteral(firstArg)) {
+        if ((firstArg != null && firstArg.isStringLit()) || NodeUtil.isNumericLiteral(firstArg)) {
           return tryFoldParseNumber(subtree, methodName, firstArg);
         }
         return subtree;
@@ -314,6 +314,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             case "indexOf", "lastIndexOf" -> {
               return tryFoldStringIndexOf(subtree, functionNameString, stringNode, firstArg);
             }
+            case "includes" -> {
+              return tryFoldStringIncludes(subtree, stringNode, firstArg);
+            }
             case "substr" -> {
               return tryFoldStringSubstr(subtree, stringNode, firstArg);
             }
@@ -379,7 +382,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       String functionNameString = callTarget.getString();
       Node firstArgument = callTarget.getNext();
       if ((firstArgument != null)
-          && (firstArgument.isStringLit() || isNumericLiteral(firstArgument))
+          && (firstArgument.isStringLit() || NodeUtil.isNumericLiteral(firstArgument))
           && (functionNameString.equals("parseInt") || functionNameString.equals("parseFloat"))) {
         subtree = tryFoldParseNumber(subtree, functionNameString, firstArgument);
       }
@@ -387,10 +390,6 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     return subtree;
   }
 
-  /** Returns true both for number literals and their negations (e.g. `-12.3`). */
-  private boolean isNumericLiteral(Node n) {
-    return n.isNumber() || (n.isNeg() && n.getOnlyChild().isNumber());
-  }
 
   /**
    * Returns The lowered string Node.
@@ -519,7 +518,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (!isParseInt) {
       // parseFloat logic
       String stringVal;
-      if (isNumericLiteral(firstArg)) {
+      if (NodeUtil.isNumericLiteral(firstArg)) {
         Double checkVal = getSideEffectFreeNumberValue(firstArg);
         Node numericNode = NodeUtil.numberNode(checkVal, n);
         n.replaceWith(numericNode);
@@ -677,6 +676,49 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     n.replaceWith(newNode);
     reportChangeToEnclosingScope(newNode);
 
+    return newNode;
+  }
+
+  /**
+   * Try to evaluate String.prototype.includes:
+   *
+   * <pre><code>
+   *     "abcdef".includes("bc") -> true
+   *     "abcdef".includes("bc", 2) -> false
+   * </code></pre>
+   */
+  private Node tryFoldStringIncludes(Node n, Node lstringNode, Node firstArg) {
+    checkArgument(n.isCall());
+    checkArgument(lstringNode.isStringLit());
+
+    if (firstArg.isRegExp()) {
+      return n;
+    }
+
+    String lstring = lstringNode.getString();
+    String searchValue = getSideEffectFreeStringValue(firstArg);
+    if (searchValue == null) {
+      return n;
+    }
+
+    Node secondArg = firstArg.getNext();
+    int fromIndex = 0;
+    if (secondArg != null) {
+      if (secondArg.getNext() != null || mayHaveSideEffects(secondArg)) {
+        return n;
+      }
+      if (NodeUtil.isNumericLiteral(secondArg)) {
+        double posVal = NodeUtil.getNumericLiteralValue(secondArg);
+        fromIndex = (int) Math.min(Math.max(posVal, 0), lstring.length());
+      } else if (!NodeUtil.isNullOrUndefined(secondArg)) {
+        return n;
+      }
+    }
+
+    boolean contains = lstring.indexOf(searchValue, fromIndex) != -1;
+    Node newNode = NodeUtil.booleanNode(contains).srcref(n);
+    n.replaceWith(newNode);
+    reportChangeToEnclosingScope(newNode);
     return newNode;
   }
 
