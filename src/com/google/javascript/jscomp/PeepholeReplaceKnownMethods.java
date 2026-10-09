@@ -119,17 +119,78 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     // Method node might not be a string if callTarget is a GETELEM.
     // e.g. Array[something]()
-    if (!callTarget.getString().equals("of")) {
+    String methodName = callTarget.getString();
+    switch (methodName) {
+      case "of" -> {
+        subtree.removeFirstChild();
+
+        Node arraylit = new Node(Token.ARRAYLIT);
+        arraylit.addChildrenToBack(subtree.removeChildren());
+        subtree.replaceWith(arraylit);
+        reportChangeToEnclosingScope(arraylit);
+        return arraylit;
+      }
+      case "isArray" -> {
+        return tryFoldArrayIsArray(subtree, callTarget);
+      }
+      default -> {
+        return subtree;
+      }
+    }
+  }
+
+  /**
+   * Try to evaluate Array.isArray:
+   *
+   * <pre><code>
+   *     Array.isArray([]) -> true
+   *     Array.isArray([1, 2, 3]) -> true
+   *     Array.isArray({}) -> false
+   *     Array.isArray(123) -> false
+   *     Array.isArray('hello') -> false
+   *     Array.isArray(null) -> false
+   *     Array.isArray() -> false
+   * </code></pre>
+   */
+  private Node tryFoldArrayIsArray(Node subtree, Node callTarget) {
+    checkArgument(subtree.isCall() && callTarget.isGetProp());
+
+    Node firstArg = callTarget.getNext();
+    if (firstArg == null) {
+      // Array.isArray() with 0 arguments evaluates to Array.isArray(undefined) -> false.
+      Node newNode = NodeUtil.booleanNode(false).srcref(subtree);
+      subtree.replaceWith(newNode);
+      reportChangeToEnclosingScope(newNode);
+      return newNode;
+    }
+
+    if (firstArg.getNext() != null) {
+      // 2 or more arguments: preserve call to avoid dropping potential side effects or arguments.
       return subtree;
     }
 
-    subtree.removeFirstChild();
+    if (mayHaveSideEffects(firstArg)) {
+      return subtree;
+    }
 
-    Node arraylit = new Node(Token.ARRAYLIT);
-    arraylit.addChildrenToBack(subtree.removeChildren());
-    subtree.replaceWith(arraylit);
-    reportChangeToEnclosingScope(arraylit);
-    return arraylit;
+    boolean isArray;
+    if (firstArg.isArrayLit()) {
+      isArray = true;
+    } else if (NodeUtil.isImmutableValue(firstArg)
+        || firstArg.isObjectLit()
+        || firstArg.isRegExp()
+        || firstArg.isFunction()
+        || firstArg.isClass()) {
+      isArray = false;
+    } else {
+      return subtree;
+    }
+
+    markFunctionsDeleted(subtree);
+    Node newNode = NodeUtil.booleanNode(isArray).srcref(subtree);
+    subtree.replaceWith(newNode);
+    reportChangeToEnclosingScope(newNode);
+    return newNode;
   }
 
   private Node tryFoldKnownNumberMethods(Node subtree, Node callTarget) {

@@ -1258,65 +1258,41 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   @Test
   public void testFoldArrayIsArray() {
-    // Fold Array.isArray with Constant and Literal Arguments
-    // Baseline current behavior and guards:
     // Under ECMA-262 § 23.1.2.2 and § 7.2.2 (IsArray), Array.isArray determines whether the
     // argument is an Array exotic object.
-    // Future optimization fold targets:
-    // - Array literals:
-    //   - Array.isArray([]) -> true
-    //   - Array.isArray([1, 2, 3]) -> true
-    //   - Array.isArray(['a', 'b']) -> true
-    // - Non-array primitives:
-    //   - Array.isArray(123) -> false
-    //   - Array.isArray(0) -> false
-    //   - Array.isArray('hello') -> false
-    //   - Array.isArray('') -> false
-    //   - Array.isArray(true) -> false
-    //   - Array.isArray(false) -> false
-    //   - Array.isArray(null) -> false
-    //   - Array.isArray(undefined) -> false
-    //   - Array.isArray(void 0) -> false
-    //   - Array.isArray(NaN) -> false
-    //   - Array.isArray(Infinity) -> false
-    //   - Array.isArray(-Infinity) -> false
-    // - Object literals & other reference types:
-    //   - Array.isArray({}) -> false
-    //   - Array.isArray({0: 'a', length: 1}) -> false
-    //   - Array.isArray(/abc/) -> false
-    //   - Array.isArray(function() {}) -> false
-    //   - Array.isArray(() => {}) -> false
-    // - Omitted argument:
-    //   - Array.isArray() -> false (arg evaluates to undefined)
 
     // Positive fold cases (Array literals)
-    foldSame("x = Array.isArray([])");
-    foldSame("x = Array.isArray([1, 2, 3])");
-    foldSame("x = Array.isArray(['a', 'b'])");
+    fold("x = Array.isArray([])", "x = true");
+    fold("x = Array.isArray([,])", "x = true");
+    fold("x = Array.isArray([1, 2, 3])", "x = true");
+    fold("x = Array.isArray(['a', 'b'])", "x = true");
 
     // Positive fold cases (Non-array primitives)
-    foldSame("x = Array.isArray(123)");
-    foldSame("x = Array.isArray(0)");
-    foldSame("x = Array.isArray('hello')");
-    foldSame("x = Array.isArray('')");
-    foldSame("x = Array.isArray(true)");
-    foldSame("x = Array.isArray(false)");
-    foldSame("x = Array.isArray(null)");
-    foldSame("x = Array.isArray(undefined)");
-    foldSame("x = Array.isArray(void 0)");
-    foldSame("x = Array.isArray(NaN)");
-    foldSame("x = Array.isArray(Infinity)");
-    foldSame("x = Array.isArray(-Infinity)");
+    fold("x = Array.isArray(123)", "x = false");
+    fold("x = Array.isArray(1n)", "x = false");
+    fold("x = Array.isArray(0)", "x = false");
+    fold("x = Array.isArray('hello')", "x = false");
+    fold("x = Array.isArray('')", "x = false");
+    fold("x = Array.isArray(`abc`)", "x = false");
+    fold("x = Array.isArray(true)", "x = false");
+    fold("x = Array.isArray(false)", "x = false");
+    fold("x = Array.isArray(null)", "x = false");
+    fold("x = Array.isArray(undefined)", "x = false");
+    fold("x = Array.isArray(void 0)", "x = false");
+    fold("x = Array.isArray(NaN)", "x = false");
+    fold("x = Array.isArray(Infinity)", "x = false");
+    fold("x = Array.isArray(-Infinity)", "x = false");
 
     // Positive fold cases (Object literals & other reference types)
-    foldSame("x = Array.isArray({})");
-    foldSame("x = Array.isArray({0: 'a', length: 1})");
-    foldSame("x = Array.isArray(/abc/)");
-    foldSame("x = Array.isArray(function() {})");
-    foldSame("x = Array.isArray(() => {})");
+    fold("x = Array.isArray({})", "x = false");
+    fold("x = Array.isArray({0: 'a', length: 1})", "x = false");
+    fold("x = Array.isArray(/abc/)", "x = false");
+    fold("x = Array.isArray(function() {})", "x = false");
+    fold("x = Array.isArray(() => {})", "x = false");
+    fold("x = Array.isArray(class {})", "x = false");
 
     // Positive fold cases (Omitted argument -> evaluates as undefined)
-    foldSame("x = Array.isArray()");
+    fold("x = Array.isArray()", "x = false");
 
     // Negative / Guard cases (MUST NOT fold)
     foldSame("x = Array.isArray(x)"); // unknown variable
@@ -1324,6 +1300,9 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = Array.isArray((foo(), []))"); // side-effecting sequence expression
     foldSame("x = Array.isArray([foo()])"); // array literal containing side-effecting element
     foldSame("x = Array.isArray([...x])"); // array literal with spread element
+    foldSame("x = Array.isArray(class extends foo() {})");
+    foldSame("x = Array.isArray(class { static { foo(); } })");
+    foldSame("x = Array.isArray(class { [foo()]() {} })");
     foldSame("x = Array.isArray([], 1)"); // unexpected extra arguments
     foldSame("x = window.Array.isArray([])"); // non-standard qualified receiver
     fold(
