@@ -457,9 +457,9 @@ public final class JSTypeRegistry {
     SymbolType symbolType = new SymbolType(this);
     registerNativeType(JSTypeNative.SYMBOL_TYPE, symbolType);
 
-    UnknownType unknownType = new UnknownType(this, false);
+    UnknownType unknownType = new UnknownType(this, /* isChecked= */ false);
     registerNativeType(JSTypeNative.UNKNOWN_TYPE, unknownType);
-    UnknownType checkedUnknownType = new UnknownType(this, true);
+    UnknownType checkedUnknownType = new UnknownType(this, /* isChecked= */ true);
     registerNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE, checkedUnknownType);
 
     VoidType voidType = new VoidType(this);
@@ -1564,11 +1564,11 @@ public final class JSTypeRegistry {
    * First dereferences the JSType to remove null/undefined then returns a human-readable type name
    */
   public String getReadableTypeName(Node n) {
-    return getReadableJSTypeName(n, true);
+    return getReadableJSTypeName(n, /* dereference= */ true);
   }
 
   public String getReadableTypeNameNoDeref(Node n) {
-    return getReadableJSTypeName(n, false);
+    return getReadableJSTypeName(n, /* dereference= */ false);
   }
 
   private static @Nullable String getSimpleReadableJSTypeName(JSType type) {
@@ -1904,7 +1904,7 @@ public final class JSTypeRegistry {
    * @return a tree hierarchy representing a typed argument list.
    */
   public ImmutableList<FunctionType.Parameter> createParameters(JSType... parameterTypes) {
-    return createParameters(false, parameterTypes);
+    return createParameters(/* lastVarArgs= */ false, parameterTypes);
   }
 
   /**
@@ -1939,7 +1939,7 @@ public final class JSTypeRegistry {
    */
   public ImmutableList<FunctionType.Parameter> createParametersWithVarArgs(
       JSType... parameterTypes) {
-    return createParameters(true, parameterTypes);
+    return createParameters(/* lastVarArgs= */ true, parameterTypes);
   }
 
   /**
