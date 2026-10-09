@@ -168,52 +168,40 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   @Test
   public void testFoldStringStartsWith() {
     // Fold String.prototype.startsWith with Constant Arguments
-    // Baseline current behavior and guards:
     // Under ECMA-262 § 22.1.3.24, String.prototype.startsWith evaluates substring prefix matching
     // with position clamping.
-    // Future optimization fold targets:
-    // - 'abcdef'.startsWith('abc') -> true
-    // - 'abcdef'.startsWith('def') -> false
-    // - 'abcdef'.startsWith('bc') -> false
-    // - 'abcdef'.startsWith('bc', 1) -> true
-    // - 'abcdef'.startsWith('bc', 2) -> false
-    // - 'abcdef'.startsWith('abc', -5) -> true
-    // - 'abcdef'.startsWith('', 2) -> true
-    // - 'abcdef'.startsWith('') -> true
-    // - ''.startsWith('') -> true
-    // - 'abcdef'.startsWith('bc', 100) -> false
-    // - '12345'.startsWith(1) -> true
-    // - 'true'.startsWith(true) -> true
-    // - '1abcdef'.startsWith(1) -> true
-    // - 'abc1def'.startsWith(1) -> false
-    // - 'trueabcdef'.startsWith(true) -> true
-    // - 'abctruedef'.startsWith(true) -> false
-    // - 'nullabcdef'.startsWith(null) -> true
-    // - 'undefinedabcdef'.startsWith(undefined) -> true
-    // - 'NaNabcdef'.startsWith(NaN) -> true
-    foldSame("x = 'abcdef'.startsWith('abc')");
-    foldSame("x = 'abcdef'.startsWith('def')");
-    foldSame("x = 'abcdef'.startsWith('bc')");
-    foldSame("x = 'abcdef'.startsWith('')");
-    foldSame("x = ''.startsWith('')");
+    fold("x = 'abcdef'.startsWith('abc')", "x = true");
+    fold("x = 'abcdef'.startsWith('def')", "x = false");
+    fold("x = 'abcdef'.startsWith('bc')", "x = false");
+    fold("x = 'abcdef'.startsWith('')", "x = true");
+    fold("x = ''.startsWith('')", "x = true");
 
     // Positional search & clamping
-    foldSame("x = 'abcdef'.startsWith('bc', 1)");
-    foldSame("x = 'abcdef'.startsWith('bc', 2)");
-    foldSame("x = 'abcdef'.startsWith('abc', -5)");
-    foldSame("x = 'abcdef'.startsWith('', 2)");
-    foldSame("x = 'abcdef'.startsWith('bc', 100)");
+    fold("x = 'abcdef'.startsWith('bc', 1)", "x = true");
+    fold("x = 'abcdef'.startsWith('bc', 2)", "x = false");
+    fold("x = 'abcdef'.startsWith('abc', -5)", "x = true");
+    fold("x = 'abcdef'.startsWith('', 2)", "x = true");
+    fold("x = 'abcdef'.startsWith('bc', 100)", "x = false");
+    fold("x = 'abcdef'.startsWith('bc', null)", "x = false");
+    fold("x = 'abcdef'.startsWith('abc', null)", "x = true");
+    fold("x = 'abcdef'.startsWith('bc', undefined)", "x = false");
+    fold("x = 'abcdef'.startsWith('abc', undefined)", "x = true");
+    fold("x = 'abcdef'.startsWith('abc', void 0)", "x = true");
+    fold("x = 'abcdef'.startsWith('bc', -0)", "x = false");
+    fold("x = 'abcdef'.startsWith('abc', -0)", "x = true");
+    fold("x = 'abcdef'.startsWith('abc', +0)", "x = true");
+    fold("x = 'abcdef'.startsWith('bc', +1)", "x = true");
 
     // Coercions
-    foldSame("x = '12345'.startsWith(1)");
-    foldSame("x = 'true'.startsWith(true)");
-    foldSame("x = '1abcdef'.startsWith(1)");
-    foldSame("x = 'abc1def'.startsWith(1)");
-    foldSame("x = 'trueabcdef'.startsWith(true)");
-    foldSame("x = 'abctruedef'.startsWith(true)");
-    foldSame("x = 'nullabcdef'.startsWith(null)");
-    foldSame("x = 'undefinedabcdef'.startsWith(undefined)");
-    foldSame("x = 'NaNabcdef'.startsWith(NaN)");
+    fold("x = '12345'.startsWith(1)", "x = true");
+    fold("x = 'true'.startsWith(true)", "x = true");
+    fold("x = '1abcdef'.startsWith(1)", "x = true");
+    fold("x = 'abc1def'.startsWith(1)", "x = false");
+    fold("x = 'trueabcdef'.startsWith(true)", "x = true");
+    fold("x = 'abctruedef'.startsWith(true)", "x = false");
+    fold("x = 'nullabcdef'.startsWith(null)", "x = true");
+    fold("x = 'undefinedabcdef'.startsWith(undefined)", "x = true");
+    fold("x = 'NaNabcdef'.startsWith(NaN)", "x = true");
 
     // Negative / Guard cases (Must NOT fold)
     foldSame("x = str.startsWith('a')"); // non-literal receiver
@@ -222,64 +210,58 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'abc'.startsWith(/a/)"); // regex argument throws TypeError at runtime (ECMA-262 §
     // 22.1.3.24)
     foldSame("x = 'abcdef'.startsWith(/abc/)");
+    foldSame("x = 'abcdef'.startsWith(foo)");
     foldSame("x = 'abcdef'.startsWith('bc', pos)"); // non-constant position
     foldSame("x = 'abcdef'.startsWith('bc', 1, 2)"); // unexpected extra arguments
     foldSame("x = 'abcdef'.startsWith({a: 2})");
     foldSame("x = 'abcdef'.startsWith([1, 2])");
+    foldSame("x = 'abcdef'.startsWith('bc', {valueOf() { return 1; }})");
+    foldSame("x = 'abcdef'.startsWith('bc', '0b1')");
+    foldSame("x = 'abcdef'.startsWith('bc', '1d')");
+    foldSame("x = 'abcdef'.startsWith('bc', {})");
+    foldSame("x = 'abcdef'.startsWith('abc', NaN)");
+    foldSame("x = 'abcdef'.startsWith('abc', Infinity)");
+    foldSame("x = 'abcdef'.startsWith('abc', -Infinity)");
     foldSame("x = tag `Hello ${name}`.startsWith('a')");
   }
 
   @Test
   public void testFoldStringEndsWith() {
     // Fold String.prototype.endsWith with Constant Arguments
-    // Baseline current behavior and guards:
     // Under ECMA-262 § 22.1.3.7, String.prototype.endsWith evaluates substring suffix matching with
     // endPosition clamping.
-    // Future optimization fold targets:
-    // - 'abcdef'.endsWith('def') -> true
-    // - 'abcdef'.endsWith('abc') -> false
-    // - 'abcdef'.endsWith('de') -> false
-    // - 'abcdef'.endsWith('abc', 3) -> true
-    // - 'abcdef'.endsWith('bcd', 4) -> true
-    // - 'abcdef'.endsWith('de', 5) -> true
-    // - 'abcdef'.endsWith('def', 100) -> true
-    // - 'abcdef'.endsWith('', -5) -> true
-    // - 'abcdef'.endsWith('a', -5) -> false
-    // - 'abcdef'.endsWith('') -> true
-    // - ''.endsWith('') -> true
-    // - '12345'.endsWith(5) -> true
-    // - 'true'.endsWith(true) -> true
-    // - 'abcdef1'.endsWith(1) -> true
-    // - '1abcdef'.endsWith(1) -> false
-    // - 'abcdeftrue'.endsWith(true) -> true
-    // - 'trueabcdef'.endsWith(true) -> false
-    // - 'abcdefnull'.endsWith(null) -> true
-    // - 'abcdefundefined'.endsWith(undefined) -> true
-    // - 'abcdefNaN'.endsWith(NaN) -> true
-    foldSame("x = 'abcdef'.endsWith('def')");
-    foldSame("x = 'abcdef'.endsWith('abc')");
-    foldSame("x = 'abcdef'.endsWith('de')");
-    foldSame("x = 'abcdef'.endsWith('')");
-    foldSame("x = ''.endsWith('')");
+    fold("x = 'abcdef'.endsWith('def')", "x = true");
+    fold("x = 'abcdef'.endsWith('abc')", "x = false");
+    fold("x = 'abcdef'.endsWith('de')", "x = false");
+    fold("x = 'abcdef'.endsWith('')", "x = true");
+    fold("x = ''.endsWith('')", "x = true");
 
     // Positional search & clamping
-    foldSame("x = 'abcdef'.endsWith('abc', 3)");
-    foldSame("x = 'abcdef'.endsWith('bcd', 4)");
-    foldSame("x = 'abcdef'.endsWith('de', 5)");
-    foldSame("x = 'abcdef'.endsWith('def', 100)");
-    foldSame("x = 'abcdef'.endsWith('', -5)");
-    foldSame("x = 'abcdef'.endsWith('a', -5)");
+    fold("x = 'abcdef'.endsWith('abc', 3)", "x = true");
+    fold("x = 'abcdef'.endsWith('bcd', 4)", "x = true");
+    fold("x = 'abcdef'.endsWith('de', 5)", "x = true");
+    fold("x = 'abcdef'.endsWith('def', 100)", "x = true");
+    fold("x = 'abcdef'.endsWith('', -5)", "x = true");
+    fold("x = 'abcdef'.endsWith('a', -5)", "x = false");
+    fold("x = 'abcdef'.endsWith('def', undefined)", "x = true");
+    fold("x = 'abcdef'.endsWith('def', void 0)", "x = true");
+    fold("x = 'abcdef'.endsWith('def', null)", "x = false");
+    fold("x = 'abcdef'.endsWith('', null)", "x = true");
+    fold("x = 'abcdef'.endsWith('def', -0)", "x = false");
+    fold("x = 'abcdef'.endsWith('', -0)", "x = true");
+    fold("x = 'abcdef'.endsWith('def', +0)", "x = false");
+    fold("x = 'abcdef'.endsWith('de', +5)", "x = true");
 
     // Coercions
-    foldSame("x = '12345'.endsWith(5)");
-    foldSame("x = 'true'.endsWith(true)");
-    foldSame("x = 'abcdef1'.endsWith(1)");
-    foldSame("x = '1abcdef'.endsWith(1)");
-    foldSame("x = 'abcdeftrue'.endsWith(true)");
-    foldSame("x = 'trueabcdef'.endsWith(true)");
-    foldSame("x = 'abcdefnull'.endsWith(null)");
-    foldSame("x = 'abcdefundefined'.endsWith(undefined)");
-    foldSame("x = 'abcdefNaN'.endsWith(NaN)");
+    fold("x = '12345'.endsWith(5)", "x = true");
+    fold("x = 'true'.endsWith(true)", "x = true");
+    fold("x = 'abcdef1'.endsWith(1)", "x = true");
+    fold("x = '1abcdef'.endsWith(1)", "x = false");
+    fold("x = 'abcdeftrue'.endsWith(true)", "x = true");
+    fold("x = 'trueabcdef'.endsWith(true)", "x = false");
+    fold("x = 'abcdefnull'.endsWith(null)", "x = true");
+    fold("x = 'abcdefundefined'.endsWith(undefined)", "x = true");
+    fold("x = 'abcdefNaN'.endsWith(NaN)", "x = true");
 
     // Negative / Guard cases (Must NOT fold)
     foldSame("x = str.endsWith('a')"); // non-literal receiver
@@ -288,10 +270,18 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'abc'.endsWith(/def/)"); // regex argument throws TypeError at runtime (ECMA-262 §
     // 22.1.3.7)
     foldSame("x = 'abcdef'.endsWith(/def/)");
+    foldSame("x = 'abcdef'.endsWith(foo)");
     foldSame("x = 'abcdef'.endsWith('de', pos)"); // non-constant endPosition
     foldSame("x = 'abcdef'.endsWith('de', 5, 2)"); // unexpected extra arguments
     foldSame("x = 'abcdef'.endsWith({a: 2})");
     foldSame("x = 'abcdef'.endsWith([1, 2])");
+    foldSame("x = 'abcdef'.endsWith('de', {valueOf() { return 5; }})");
+    foldSame("x = 'abcdef'.endsWith('de', '0b101')");
+    foldSame("x = 'abcdef'.endsWith('de', '5d')");
+    foldSame("x = 'abcdef'.endsWith('de', {})");
+    foldSame("x = 'abcdef'.endsWith('def', NaN)");
+    foldSame("x = 'abcdef'.endsWith('def', Infinity)");
+    foldSame("x = 'abcdef'.endsWith('def', -Infinity)");
     foldSame("x = tag `Hello ${name}`.endsWith('a')");
   }
 

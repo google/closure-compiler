@@ -317,6 +317,12 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             case "includes" -> {
               return tryFoldStringIncludes(subtree, stringNode, firstArg);
             }
+            case "startsWith" -> {
+              return tryFoldStringStartsWith(subtree, stringNode, firstArg);
+            }
+            case "endsWith" -> {
+              return tryFoldStringEndsWith(subtree, stringNode, firstArg);
+            }
             case "substr" -> {
               return tryFoldStringSubstr(subtree, stringNode, firstArg);
             }
@@ -717,6 +723,98 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     boolean contains = lstring.indexOf(searchValue, fromIndex) != -1;
     Node newNode = NodeUtil.booleanNode(contains).srcref(n);
+    n.replaceWith(newNode);
+    reportChangeToEnclosingScope(newNode);
+    return newNode;
+  }
+
+  /**
+   * Try to evaluate String.prototype.startsWith:
+   *
+   * <pre><code>
+   *     "abcdef".startsWith("abc") -> true
+   *     "abcdef".startsWith("bc", 1) -> true
+   * </code></pre>
+   */
+  private Node tryFoldStringStartsWith(Node n, Node lstringNode, Node firstArg) {
+    checkArgument(n.isCall());
+    checkArgument(lstringNode.isStringLit());
+
+    if (firstArg.isRegExp()) {
+      return n;
+    }
+
+    String lstring = lstringNode.getString();
+    String searchValue = getSideEffectFreeStringValue(firstArg);
+    if (searchValue == null) {
+      return n;
+    }
+
+    Node secondArg = firstArg.getNext();
+    int start = 0;
+    if (secondArg != null) {
+      if (secondArg.getNext() != null || mayHaveSideEffects(secondArg)) {
+        return n;
+      }
+      if (NodeUtil.isNumericLiteral(secondArg)) {
+        double posVal = NodeUtil.getNumericLiteralValue(secondArg);
+        start = (int) Math.min(Math.max(posVal, 0), lstring.length());
+      } else if (!NodeUtil.isNullOrUndefined(secondArg)) {
+        return n;
+      }
+    }
+
+    boolean result = lstring.startsWith(searchValue, start);
+    Node newNode = NodeUtil.booleanNode(result).srcref(n);
+    n.replaceWith(newNode);
+    reportChangeToEnclosingScope(newNode);
+    return newNode;
+  }
+
+  /**
+   * Try to evaluate String.prototype.endsWith:
+   *
+   * <pre><code>
+   *     "abcdef".endsWith("def") -> true
+   *     "abcdef".endsWith("de", 5) -> true
+   * </code></pre>
+   */
+  private Node tryFoldStringEndsWith(Node n, Node lstringNode, Node firstArg) {
+    checkArgument(n.isCall());
+    checkArgument(lstringNode.isStringLit());
+
+    if (firstArg.isRegExp()) {
+      return n;
+    }
+
+    String lstring = lstringNode.getString();
+    String searchValue = getSideEffectFreeStringValue(firstArg);
+    if (searchValue == null) {
+      return n;
+    }
+
+    Node secondArg = firstArg.getNext();
+    int end = lstring.length();
+    if (secondArg != null) {
+      if (secondArg.getNext() != null || mayHaveSideEffects(secondArg)) {
+        return n;
+      }
+      if (NodeUtil.isNumericLiteral(secondArg)) {
+        double posVal = NodeUtil.getNumericLiteralValue(secondArg);
+        end = (int) Math.min(Math.max(posVal, 0), lstring.length());
+      } else if (secondArg.isNull()) {
+        end = 0;
+      } else if (NodeUtil.isUndefined(secondArg)) {
+        end = lstring.length();
+      } else {
+        return n;
+      }
+    }
+
+    int searchLength = searchValue.length();
+    int start = end - searchLength;
+    boolean result = start >= 0 && lstring.startsWith(searchValue, start);
+    Node newNode = NodeUtil.booleanNode(result).srcref(n);
     n.replaceWith(newNode);
     reportChangeToEnclosingScope(newNode);
     return newNode;
