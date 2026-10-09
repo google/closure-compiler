@@ -314,6 +314,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
           case "trim", "trimStart", "trimEnd", "trimLeft", "trimRight" -> {
             return tryFoldStringTrim(subtree, stringNode, functionNameString);
           }
+          case "at" -> {
+            return tryFoldStringAt(subtree, stringNode, null);
+          }
           default -> {}
         }
       } else {
@@ -330,6 +333,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             }
             case "endsWith" -> {
               return tryFoldStringEndsWith(subtree, stringNode, firstArg);
+            }
+            case "at" -> {
+              return tryFoldStringAt(subtree, stringNode, firstArg);
             }
             case "substr" -> {
               return tryFoldStringSubstr(subtree, stringNode, firstArg);
@@ -837,6 +843,54 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     n.replaceWith(newNode);
     reportChangeToEnclosingScope(newNode);
     return newNode;
+  }
+
+  /**
+   * Try to evaluate String.prototype.at:
+   *
+   * <pre><code>
+   *     "abcdef".at(0) -> "a"
+   *     "abcdef".at(-1) -> "f"
+   *     "abcdef".at(10) -> void 0
+   * </code></pre>
+   */
+  private Node tryFoldStringAt(Node n, Node stringNode, Node firstArg) {
+    checkArgument(n.isCall());
+    checkArgument(stringNode.isStringLit());
+
+    double posVal;
+    if (firstArg == null) {
+      posVal = 0.0;
+    } else {
+      if (firstArg.getNext() != null) {
+        return n;
+      }
+      Double maybePos = getSideEffectFreeNumberValue(firstArg);
+      if (maybePos == null) {
+        return n;
+      }
+      posVal = maybePos.isNaN() ? 0.0 : maybePos;
+    }
+
+    String stringVal = stringNode.getString();
+    int len = stringVal.length();
+
+    Node replacement;
+    if (Double.isInfinite(posVal) || posVal >= len || posVal <= -(len + 1)) {
+      replacement = NodeUtil.newUndefinedNode(n);
+    } else {
+      long intPos = (long) posVal;
+      long k = (intPos >= 0) ? intPos : len + intPos;
+      if (k < 0 || k >= len) {
+        replacement = NodeUtil.newUndefinedNode(n);
+      } else {
+        replacement = IR.string(String.valueOf(stringVal.charAt((int) k))).srcref(n);
+      }
+    }
+
+    n.replaceWith(replacement);
+    reportChangeToEnclosingScope(replacement);
+    return replacement;
   }
 
   /** Try to fold an array join: ['a', 'b', 'c'].join('') -> 'abc'; */

@@ -417,53 +417,54 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     // - '\\ud834\udd1e'.at(1) -> '\\udd1e'
     // - '\\ud834\udd1e'.at(-1) -> '\\udd1e'
     // - '\\ud834\udd1e'.at(-2) -> '\\ud834'
-    foldSame("x = 'hello'.at()");
-    foldSame("x = 'hello'.at(undefined)");
-    foldSame("x = 'hello'.at(0)");
-    foldSame("x = 'hello'.at(1)");
-    foldSame("x = 'hello'.at(4)");
+    fold("x = 'hello'.at()", "x = 'h'");
+    fold("x = 'hello'.at(undefined)", "x = 'h'");
+    fold("x = 'hello'.at(0)", "x = 'h'");
+    fold("x = 'hello'.at(1)", "x = 'e'");
+    fold("x = 'hello'.at(4)", "x = 'o'");
 
     // Negative relative indices
-    foldSame("x = 'hello'.at(-1)");
-    foldSame("x = 'hello'.at(-2)");
-    foldSame("x = 'hello'.at(-5)");
+    fold("x = 'hello'.at(-1)", "x = 'o'");
+    fold("x = 'hello'.at(-2)", "x = 'l'");
+    fold("x = 'hello'.at(-5)", "x = 'h'");
 
     // Out-of-bounds (evaluates to void 0)
-    foldSame("x = 'hello'.at(5)");
-    foldSame("x = 'hello'.at(10)");
-    foldSame("x = 'hello'.at(-6)");
-    foldSame("x = 'hello'.at(-10)");
-    foldSame("x = ''.at(0)");
-    foldSame("x = ''.at(-1)");
-    foldSame("x = 'hello'.at(Infinity)");
-    foldSame("x = 'hello'.at(-Infinity)");
+    fold("x = 'hello'.at(5)", "x = void 0");
+    fold("x = 'hello'.at(10)", "x = void 0");
+    fold("x = 'hello'.at(-6)", "x = void 0");
+    fold("x = 'hello'.at(-10)", "x = void 0");
+    fold("x = ''.at(0)", "x = void 0");
+    fold("x = ''.at(-1)", "x = void 0");
+    fold("x = ''.at(-0.5)", "x = void 0");
+    fold("x = 'hello'.at(Infinity)", "x = void 0");
+    fold("x = 'hello'.at(-Infinity)", "x = void 0");
 
     // Floating-point truncation
-    foldSame("x = 'hello'.at(1.9)");
-    foldSame("x = 'hello'.at(-1.9)");
-    foldSame("x = 'hello'.at(0.5)");
-    foldSame("x = 'hello'.at(-0.5)");
-    foldSame("x = 'hello'.at(4.1)");
-    foldSame("x = 'hello'.at(4.9)");
-    foldSame("x = 'hello'.at(-5.1)");
-    foldSame("x = 'hello'.at(-5.9)");
-    foldSame("x = 'a'.at(-1.5)");
-    foldSame("x = 'hello'.at(-6.0)");
-    foldSame("x = 'hello'.at(-6.1)");
+    fold("x = 'hello'.at(1.9)", "x = 'e'");
+    fold("x = 'hello'.at(-1.9)", "x = 'o'");
+    fold("x = 'hello'.at(0.5)", "x = 'h'");
+    fold("x = 'hello'.at(-0.5)", "x = 'h'");
+    fold("x = 'hello'.at(4.1)", "x = 'o'");
+    fold("x = 'hello'.at(4.9)", "x = 'o'");
+    fold("x = 'hello'.at(-5.1)", "x = 'h'");
+    fold("x = 'hello'.at(-5.9)", "x = 'h'");
+    fold("x = 'a'.at(-1.5)", "x = 'a'");
+    fold("x = 'hello'.at(-6.0)", "x = void 0");
+    fold("x = 'hello'.at(-6.1)", "x = void 0");
 
     // Coercions
-    foldSame("x = '123'.at(0)");
-    foldSame("x = 'hello'.at(null)");
-    foldSame("x = 'hello'.at(false)");
-    foldSame("x = 'hello'.at(true)");
-    foldSame("x = 'hello'.at(NaN)");
-    foldSame("x = 'hello'.at('1')");
+    fold("x = '123'.at(0)", "x = '1'");
+    fold("x = 'hello'.at(null)", "x = 'h'");
+    fold("x = 'hello'.at(false)", "x = 'h'");
+    fold("x = 'hello'.at(true)", "x = 'e'");
+    fold("x = 'hello'.at(NaN)", "x = 'h'");
+    fold("x = 'hello'.at('1')", "x = 'e'");
 
     // Surrogate pairs & code units
-    foldSame("x = '\\ud834\udd1e'.at(0)");
-    foldSame("x = '\\ud834\udd1e'.at(1)");
-    foldSame("x = '\\ud834\udd1e'.at(-1)");
-    foldSame("x = '\\ud834\udd1e'.at(-2)");
+    fold("x = '\\ud834\udd1e'.at(0)", "x = '\\ud834'");
+    fold("x = '\\ud834\udd1e'.at(1)", "x = '\\udd1e'");
+    fold("x = '\\ud834\udd1e'.at(-1)", "x = '\\udd1e'");
+    fold("x = '\\ud834\udd1e'.at(-2)", "x = '\\ud834'");
 
     // Negative / Guard cases (Must NOT fold)
     foldSame("x = str.at(0)"); // non-literal receiver
