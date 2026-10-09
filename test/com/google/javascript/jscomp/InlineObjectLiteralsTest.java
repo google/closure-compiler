@@ -937,6 +937,29 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         """);
   }
 
+  // Regression test for https://github.com/google/closure-compiler/issues/4200
+  @Test
+  public void testNoCrash_issue4200_blockScopedFunctionDeclarationShadowsHoistedVar() {
+    // Root cause: SyntacticScopeCreator registers a block-scoped function declaration (inside a
+    // for-loop body) ONLY in the block scope as "x_block", and separately registers "x_hoist" in
+    // the enclosing function's hoist scope (from the `var x` declaration). Because `var x` lives
+    // inside the for-loop block, all NAME "x" visits while inside the loop resolve to x_block
+    // (the closer binding). x_hoist is therefore never passed to addReference() and is absent
+    // from the referenceMap. Without the null-check, afterExitScope would NPE when iterating
+    // x_hoist from t.getScope().getVarIterable() and calling referenceInfo.references.
+    disableNormalize();
+    testSame(
+        """
+        function f() {
+          for (;;) {
+            var x;
+            function x() {}
+            break;
+          }
+        }
+        """);
+  }
+
   private static final String LOCAL_PREFIX = "function local(){";
   private static final String LOCAL_POSTFIX = "}";
 
