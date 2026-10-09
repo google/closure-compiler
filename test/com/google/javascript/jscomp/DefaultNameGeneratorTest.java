@@ -20,6 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -194,5 +197,30 @@ public final class DefaultNameGeneratorTest {
     ng.reset(RESERVED_NAMES, "", ImmutableSet.of());
     result = generate(ng, "", 106);
     assertThat(result[0]).isEqualTo("a");
+  }
+
+  @Test
+  public void testDeterministicNameGeneration() throws Exception {
+    Set<Character> reservedChars1 = new LinkedHashSet<>(Arrays.asList('a', 'b', 'c'));
+    Set<Character> reservedChars2 = new LinkedHashSet<>(Arrays.asList('c', 'b', 'a'));
+
+    DefaultNameGenerator ng1 = new DefaultNameGenerator(ImmutableSet.of(), "", reservedChars1);
+    DefaultNameGenerator ng2 = new DefaultNameGenerator(ImmutableSet.of(), "", reservedChars2);
+
+    String[] result1 = generate(ng1, "", 10);
+    String[] result2 = generate(ng2, "", 10);
+
+    assertThat(result1).isEqualTo(result2);
+
+    Set<String> reservedNames1 = new LinkedHashSet<>(Arrays.asList("a", "b", "c"));
+    Set<String> reservedNames2 = new LinkedHashSet<>(Arrays.asList("c", "b", "a"));
+
+    ng1 = new DefaultNameGenerator(reservedNames1, "", ImmutableSet.of());
+    ng2 = new DefaultNameGenerator(reservedNames2, "", ImmutableSet.of());
+
+    result1 = generate(ng1, "", 10);
+    result2 = generate(ng2, "", 10);
+
+    assertThat(result1).isEqualTo(result2);
   }
 }

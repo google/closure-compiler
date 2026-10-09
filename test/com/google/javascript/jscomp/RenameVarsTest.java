@@ -29,7 +29,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
@@ -865,7 +865,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   @Test
   public void testBias() {
     nameGenerator =
-        new DefaultNameGenerator(new HashSet<String>(), "", ImmutableSet.<Character>of());
+        new DefaultNameGenerator(new LinkedHashSet<String>(), "", ImmutableSet.<Character>of());
     nameGenerator.favors("AAAAAAAAHH");
     test("var x, y", "var A, H");
   }
