@@ -288,34 +288,26 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   @Test
   public void testFoldStringTrimStart() {
     // Fold String.prototype.trimStart / trimLeft with Constant Arguments
-    // Baseline current behavior and guards:
     // Under ECMA-262 § 22.1.3.34 (trimStart) and Annex § B.2.2.15 (trimLeft), leading WhiteSpace
     // and LineTerminator characters are removed.
-    // Future optimization fold targets:
-    // - '   foo   '.trimStart() -> 'foo   '
-    // - '   foo   '.trimLeft() -> 'foo   '
-    // - 'foo   '.trimStart() -> 'foo   '
-    // - 'foo   '.trimLeft() -> 'foo   '
-    // - ''.trimStart() -> ''
-    // - ''.trimLeft() -> ''
-    // - '   '.trimStart() -> ''
-    // - '   '.trimLeft() -> ''
-    // - '\\uFEFF\\u00A0\\t\\n foo \\t\\n'.trimStart() -> 'foo \\t\\n'
-    // - '\\uFEFF\\u00A0\\t\\n foo \\t\\n'.trimLeft() -> 'foo \\t\\n'
-    // - '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo \\t'.trimStart() -> 'foo \\t'
-    // - '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo \\t'.trimLeft() -> 'foo \\t'
-    foldSame("x = '   foo   '.trimStart()");
-    foldSame("x = '   foo   '.trimLeft()");
-    foldSame("x = 'foo   '.trimStart()");
-    foldSame("x = 'foo   '.trimLeft()");
-    foldSame("x = ''.trimStart()");
-    foldSame("x = ''.trimLeft()");
-    foldSame("x = '   '.trimStart()");
-    foldSame("x = '   '.trimLeft()");
-    foldSame("x = '\\uFEFF\\u00A0\\t\\n foo \\t\\n'.trimStart()");
-    foldSame("x = '\\uFEFF\\u00A0\\t\\n foo \\t\\n'.trimLeft()");
-    foldSame("x = '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo \\t'.trimStart()");
-    foldSame("x = '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo \\t'.trimLeft()");
+    fold("x = '   foo   '.trimStart()", "x = 'foo   '");
+    fold("x = '   foo   '.trimLeft()", "x = 'foo   '");
+    fold("x = 'foo   '.trimStart()", "x = 'foo   '");
+    fold("x = 'foo   '.trimLeft()", "x = 'foo   '");
+    fold("x = ''.trimStart()", "x = ''");
+    fold("x = ''.trimLeft()", "x = ''");
+    fold("x = '   '.trimStart()", "x = ''");
+    fold("x = '   '.trimLeft()", "x = ''");
+    fold("x = '\\uFEFF\\u00A0\\t\\n foo \\t\\n'.trimStart()", "x = 'foo \\t\\n'");
+    fold("x = '\\uFEFF\\u00A0\\t\\n foo \\t\\n'.trimLeft()", "x = 'foo \\t\\n'");
+    fold(
+        "x = '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo \\t'.trimStart()",
+        "x = 'foo \\t'");
+    fold(
+        "x = '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo \\t'.trimLeft()",
+        "x = 'foo \\t'");
+    fold("x = '\\u0085x'.trimStart()", "x = '\\u0085x'");
+    fold("x = '\\u0085x'.trimLeft()", "x = '\\u0085x'");
 
     // Negative / Guard cases (Must NOT fold)
     foldSame("x = str.trimStart()"); // non-literal receiver
@@ -331,34 +323,28 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   @Test
   public void testFoldStringTrimEnd() {
     // Fold String.prototype.trimEnd / trimRight with Constant Arguments
-    // Baseline current behavior and guards:
     // Under ECMA-262 § 22.1.3.33 (trimEnd) and Annex § B.2.2.16 (trimRight), trailing WhiteSpace
     // and LineTerminator characters are removed.
-    // Future optimization fold targets:
-    // - '   foo   '.trimEnd() -> '   foo'
-    // - '   foo   '.trimRight() -> '   foo'
-    // - '   foo'.trimEnd() -> '   foo'
-    // - '   foo'.trimRight() -> '   foo'
-    // - ''.trimEnd() -> ''
-    // - ''.trimRight() -> ''
-    // - '   '.trimEnd() -> ''
-    // - '   '.trimRight() -> ''
-    // - '\\t\\n foo \\uFEFF\\u00A0\\t\\n'.trimEnd() -> '\\t\\n foo'
-    // - '\\t\\n foo \\uFEFF\\u00A0\\t\\n'.trimRight() -> '\\t\\n foo'
-    // - '\\t foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trimEnd() -> '\\t foo'
-    // - '\\t foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trimRight() -> '\\t foo'
-    foldSame("x = '   foo   '.trimEnd()");
-    foldSame("x = '   foo   '.trimRight()");
-    foldSame("x = '   foo'.trimEnd()");
-    foldSame("x = '   foo'.trimRight()");
-    foldSame("x = ''.trimEnd()");
-    foldSame("x = ''.trimRight()");
-    foldSame("x = '   '.trimEnd()");
-    foldSame("x = '   '.trimRight()");
-    foldSame("x = '\\t\\n foo \\uFEFF\\u00A0\\t\\n'.trimEnd()");
-    foldSame("x = '\\t\\n foo \\uFEFF\\u00A0\\t\\n'.trimRight()");
-    foldSame("x = '\\t foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trimEnd()");
-    foldSame("x = '\\t foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trimRight()");
+    fold("x = '   foo   '.trimEnd()", "x = '   foo'");
+    fold("x = '   foo   '.trimRight()", "x = '   foo'");
+    fold("x = '   foo'.trimEnd()", "x = '   foo'");
+    fold("x = '   foo'.trimRight()", "x = '   foo'");
+    fold("x = ''.trimEnd()", "x = ''");
+    fold("x = ''.trimRight()", "x = ''");
+    fold("x = '   '.trimEnd()", "x = ''");
+    fold("x = '   '.trimRight()", "x = ''");
+    fold("x = '\\t\\n foo \\uFEFF\\u00A0\\t\\n'.trimEnd()", "x = '\\t\\n foo'");
+    fold("x = '\\t\\n foo \\uFEFF\\u00A0\\t\\n'.trimRight()", "x = '\\t\\n foo'");
+    fold(
+        "x = '\\t foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trimEnd()",
+        "x = '\\t foo'");
+    fold(
+        "x = '\\t foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trimRight()",
+        "x = '\\t foo'");
+    fold("x = 'x\\u0085'.trimEnd()", "x = 'x\\u0085'");
+    fold("x = 'x\\u0085'.trimRight()", "x = 'x\\u0085'");
+    fold("x = 'abc \\u0085'.trimEnd()", "x = 'abc \\u0085'");
+    fold("x = 'abc \\u0085'.trimRight()", "x = 'abc \\u0085'");
 
     // Negative / Guard cases (Must NOT fold)
     foldSame("x = str.trimEnd()"); // non-literal receiver
@@ -369,6 +355,27 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = '   foo   '.trimRight(foo())");
     foldSame("x = tag `   foo   `.trimEnd()");
     foldSame("x = tag `   foo   `.trimRight()");
+  }
+
+  @Test
+  public void testFoldStringTrim() {
+    fold("x = '   foo   '.trim()", "x = 'foo'");
+    fold("x = 'foo   '.trim()", "x = 'foo'");
+    fold("x = '   foo'.trim()", "x = 'foo'");
+    fold("x = ''.trim()", "x = ''");
+    fold("x = '   '.trim()", "x = ''");
+    fold("x = '\\uFEFF\\u00A0\\t\\n foo \\t\\n\\uFEFF\\u00A0'.trim()", "x = 'foo'");
+    fold(
+        "x = '\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000foo\\u1680\\u2000\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000'.trim()",
+        "x = 'foo'");
+    fold("x = '\\u0085x\\u0085'.trim()", "x = '\\u0085x\\u0085'");
+    fold("x = '\\u0085'.trim()", "x = '\\u0085'");
+
+    // Negative / Guard cases (Must NOT fold)
+    foldSame("x = str.trim()");
+    foldSame("x = '   foo   '.trim(1)");
+    foldSame("x = '   foo   '.trim(foo())");
+    foldSame("x = tag `   foo   `.trim()");
   }
 
   @Test

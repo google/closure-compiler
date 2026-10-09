@@ -35,10 +35,18 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
 /** Just to fold known methods when they are called with constants. */
 class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
+
+  private static final String ECMA_WHITESPACE =
+      "[ \t\n-\r\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]+";
+  private static final Pattern TRIM_BOTH_PATTERN =
+      Pattern.compile("^" + ECMA_WHITESPACE + "|" + ECMA_WHITESPACE + "\\z");
+  private static final Pattern TRIM_START_PATTERN = Pattern.compile("^" + ECMA_WHITESPACE);
+  private static final Pattern TRIM_END_PATTERN = Pattern.compile(ECMA_WHITESPACE + "\\z");
 
   private final boolean late;
   private final boolean useTypes;
@@ -303,8 +311,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
           case "toUpperCase" -> {
             return tryFoldStringToUpperCase(subtree, stringNode);
           }
-          case "trim" -> {
-            return tryFoldStringTrim(subtree, stringNode);
+          case "trim", "trimStart", "trimEnd", "trimLeft", "trimRight" -> {
+            return tryFoldStringTrim(subtree, stringNode, functionNameString);
           }
           default -> {}
         }
@@ -435,15 +443,26 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     return replacement;
   }
 
-  /** @return The trimmed string Node. */
-  private Node tryFoldStringTrim(Node subtree, Node stringNode) {
-    // See ECMA 15.5.4.20, 7.2, and 7.3
-    // All Unicode 10.0 whitespace + BOM
-    String whitespace =
-        "[ \t\n-\r\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]+";
-    String trimmed =
-        stringNode.getString().replaceAll("^" + whitespace + "|" + whitespace + "$", "");
-    Node replacement = IR.string(trimmed);
+  /**
+   * @return The trimmed string Node.
+   */
+  private Node tryFoldStringTrim(Node subtree, Node stringNode, String functionName) {
+    // See ECMA-262 § 22.1.3.32 (trim), § 22.1.3.34 (trimStart), § 22.1.3.33 (trimEnd),
+    // Annex B.2.2.15 (trimLeft), Annex B.2.2.16 (trimRight), § 12.2, and § 12.3
+    // All Unicode whitespace + LineTerminator + BOM
+    String result =
+        switch (functionName) {
+          case "trim" -> TRIM_BOTH_PATTERN.matcher(stringNode.getString()).replaceAll("");
+          case "trimStart", "trimLeft" ->
+              TRIM_START_PATTERN.matcher(stringNode.getString()).replaceAll("");
+          case "trimEnd", "trimRight" ->
+              TRIM_END_PATTERN.matcher(stringNode.getString()).replaceAll("");
+          default -> null;
+        };
+    if (result == null) {
+      return subtree;
+    }
+    Node replacement = IR.string(result).srcref(subtree);
     subtree.replaceWith(replacement);
     reportChangeToEnclosingScope(replacement);
     return replacement;
