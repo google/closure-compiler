@@ -6833,7 +6833,7 @@ google.maps.Maps3DLibrary.prototype.FlattenerElement;
 google.maps.Maps3DLibrary.prototype.GestureHandling;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.maps3d.Label3DElement}
  */
 google.maps.Maps3DLibrary.prototype.Label3DElement;
@@ -16987,7 +16987,7 @@ google.maps.maps3d.GestureHandling = {
 };
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * Represents a text label associated with a 3D marker on a map, allowing
  * independent configuration of properties such as collision behavior.
@@ -17017,7 +17017,7 @@ google.maps.maps3d.Label3DElement.prototype.collisionBehavior;
 google.maps.maps3d.Label3DElement.prototype.for;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
  * Label3DElementOptions object used to define the properties that can be set on
  * a Label3DElement.
@@ -17137,6 +17137,15 @@ google.maps.maps3d.Map3DElement.prototype.cameraPosition;
  * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.center;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Specifies the color scheme for the map. If not set, defaults to {@link
+ * google.maps.ColorScheme.FOLLOW_SYSTEM}.
+ * @default {@link google.maps.ColorScheme.FOLLOW_SYSTEM}
+ * @type {!google.maps.ColorScheme|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.colorScheme;
 
 /**
  * When <code>true</code>, all default UI buttons are hidden.
@@ -17403,6 +17412,13 @@ google.maps.maps3d.Map3DElementOptions.prototype.cameraPosition;
 google.maps.maps3d.Map3DElementOptions.prototype.center;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * See {@link google.maps.maps3d.Map3DElement.colorScheme}.
+ * @type {!google.maps.ColorScheme|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.colorScheme;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.defaultUIHidden}.
  * @type {boolean|null|undefined}
  */
@@ -17554,7 +17570,7 @@ google.maps.maps3d.MapMode = {
    */
   HYBRID: 'HYBRID',
   /**
-   * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+   * Available only in the v=beta channel: https://goo.gle/3oAthT3.
    * This map mode displays a normal street map.
    */
   ROADMAP: 'ROADMAP',
