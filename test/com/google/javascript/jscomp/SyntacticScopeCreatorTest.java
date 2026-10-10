@@ -30,6 +30,8 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1831,5 +1833,35 @@ public final class SyntacticScopeCreatorTest {
     Scope globalScope = scopeCreator.createScope(root, null);
     assertThat(globalScope.getVar("foo").getImplicitGoogNamespaceStrength())
         .isEqualTo(SourceKind.STRONG);
+  }
+
+  @Test
+  public void testAbstractScopeHierarchyAndSlotOrder() {
+    Scope scope = getScope("function f(a, b) { var c = 1; var d = 2; }");
+    Scope fScope = scopeCreator.createScope(scope.getRootNode().getFirstChild(), scope);
+    scopeCreator.createScope(fScope.getRootNode().getLastChild(), fScope);
+
+    // Test parent/depth
+    assertThat(fScope.getParent()).isEqualTo(scope);
+    assertThat(fScope.getDepth()).isEqualTo(1);
+
+    // Test hoist/container scope resolution
+    assertThat(fScope.getClosestHoistScope()).isNotNull();
+
+    // Test deterministic getVarIterable insertion order
+    List<String> vars = new ArrayList<>();
+    for (Var v : fScope.getVarIterable()) {
+      vars.add(v.getName());
+    }
+    assertThat(vars).containsExactly("a", "b").inOrder();
+
+    // Test getSlot / getOwnSlot
+    assertThat(fScope.getOwnSlot("a")).isNotNull();
+    assertThat(fScope.getSlot("f")).isNotNull(); // From parent scope
+
+    // Test Arguments var equality
+    Var argsVar = fScope.getArgumentsVar();
+    assertThat(argsVar).isNotNull();
+    assertThat(argsVar).isEqualTo(fScope.getOwnSlot("arguments"));
   }
 }
