@@ -121,4 +121,31 @@ public final class ValidityCheckTest extends CompilerTestCase {
           .contains("The name x is not consistently annotated as constant.");
     }
   }
+
+  @Test
+  public void testSourceInfoCheck() {
+    Compiler compiler = new Compiler();
+    Node script = compiler.parseTestCode("var x = 3;");
+    Node n = new Node(Token.EXPR_RESULT, Node.newString("foo")); // Child missing source info
+    n.srcref(script.getFirstChild());
+    script.addChildToBack(n);
+
+    SourceInfoCheck check = new SourceInfoCheck(compiler);
+    check.process(null, new Node(Token.ROOT, script));
+
+    assertThat(compiler.getErrors()).hasSize(1);
+    assertThat(compiler.getErrors().get(0).getDescription())
+        .contains("No source location information associated with");
+  }
+
+  @Test
+  public void testErrorPass() {
+    Compiler compiler = new Compiler();
+    DiagnosticType testError = DiagnosticType.error("TEST_ERROR", "Test error description");
+    ErrorPass pass = new ErrorPass(compiler, testError);
+    Node script = compiler.parseTestCode("var x = 1;");
+    pass.process(null, script);
+    assertThat(compiler.getErrors()).hasSize(1);
+    assertThat(compiler.getErrors().get(0).getType()).isEqualTo(testError);
+  }
 }
