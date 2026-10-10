@@ -3981,7 +3981,11 @@ class IRFactory {
           int numDigits;
 
           if (cur + 1 < value.length() && isOctalDigit(value.charAt(cur + 1))) {
-            if (cur + 2 < value.length() && isOctalDigit(value.charAt(cur + 2))) {
+            // A three digit escape is only legal when the leading digit is 0-3; with a leading
+            // digit of 4-7 the value would exceed \377, so only two digits are consumed and the
+            // third octal digit is a literal character (ECMAScript Annex B.1.2
+            // LegacyOctalEscapeSequence).
+            if (c <= '3' && cur + 2 < value.length() && isOctalDigit(value.charAt(cur + 2))) {
               numDigits = 3;
             } else {
               numDigits = 2;
