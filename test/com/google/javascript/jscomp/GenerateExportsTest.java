@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import com.google.javascript.rhino.Node;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
@@ -777,5 +780,14 @@ public final class GenerateExportsTest extends CompilerTestCase {
     this.exportSymbolFunction = null;
 
     testSame(srcs("function Foo() {}"));
+  }
+
+  @Test
+  public void testFindExportableNodes() {
+    Compiler compiler = new Compiler();
+    Node root = compiler.parseTestCode("/** @export */ function Foo() {}");
+    FindExportableNodes pass = new FindExportableNodes(compiler, true);
+    NodeTraversal.traverse(compiler, root, pass);
+    assertThat(pass.getExports()).isNotEmpty();
   }
 }

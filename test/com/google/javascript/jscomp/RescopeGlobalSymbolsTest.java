@@ -50,6 +50,14 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRescopeGlobalSymbolsRewriteCallback() {
+    // RescopeGlobalSymbolsRewriteCallback is the callback used under the hood
+    // by RescopeGlobalSymbols. We can test it implicitly by checking that
+    // global symbols are rewritten to be properties of the namespace.
+    test("var a = 1; a + 1;", "_.a = 1; _.a + 1;");
+  }
+
+  @Test
   public void testLocalAccessOptimization() {
     optimizeLocalAccess = CompilerOptions.OptimizeLocalAccess.DEFINING_CHUNK_ONLY;
     assumeCrossChunkNames = false;

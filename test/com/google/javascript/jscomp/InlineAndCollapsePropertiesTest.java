@@ -4222,4 +4222,16 @@ use(Foo$Bar$baz$A);
             }
             """));
   }
+
+  @Test
+  public void testDestructuringGlobalNameExtractor() {
+    test("var ns = {}; ns.foo = 1; const {foo} = ns;", "var ns$foo = 1; const foo = null;");
+  }
+
+  @Test
+  public void testConcretizeStaticInheritanceForInlining() {
+    test(
+        "class A {} class B extends A {} B.foo = 1;",
+        "class A {} class B extends A {} var B$foo = 1;");
+  }
 }
