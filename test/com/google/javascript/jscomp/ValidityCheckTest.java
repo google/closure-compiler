@@ -134,7 +134,7 @@ public final class ValidityCheckTest extends CompilerTestCase {
     check.process(null, new Node(Token.ROOT, script));
 
     assertThat(compiler.getErrors()).hasSize(1);
-    assertThat(compiler.getErrors().get(0).getDescription())
+    assertThat(compiler.getErrors().get(0).description())
         .contains("No source location information associated with");
   }
 
@@ -146,6 +146,6 @@ public final class ValidityCheckTest extends CompilerTestCase {
     Node script = compiler.parseTestCode("var x = 1;");
     pass.process(null, script);
     assertThat(compiler.getErrors()).hasSize(1);
-    assertThat(compiler.getErrors().get(0).getType()).isEqualTo(testError);
+    assertThat(compiler.getErrors().get(0).type()).isEqualTo(testError);
   }
 }
