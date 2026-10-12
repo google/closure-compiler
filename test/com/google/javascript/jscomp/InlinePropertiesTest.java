@@ -950,4 +950,54 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         (new RawGuard()).escaped;
         """);
   }
+
+  @Test
+  public void testFieldInitializerReadsLaterField() {
+    // TODO(b/571953100): inlines property read in field initializer before field is initialized
+    test(
+        """
+        class C {
+          y = this.x;
+          x = 1;
+        }
+        use((new C()).y);
+        """,
+        """
+        class C {
+          y = 1;
+          x = 1;
+        }
+        use((new C()).y);
+        """);
+  }
+
+  @Test
+  public void testFieldInitializerAssigningThisPropInsideOuterConstructor() {
+    // TODO(b/571953100): inlines this.x in inner class field initializer from outer constructor
+    test(
+        """
+        class Outer {
+          constructor() {
+            /** @unrestricted */
+            class Inner {
+              f = (use(this.x), this.x = 1);
+            }
+            new Inner();
+          }
+        }
+        new Outer();
+        """,
+        """
+        class Outer {
+          constructor() {
+            class Inner {
+              f = (use(1), this.x = 1);
+            }
+            new Inner();
+          }
+        }
+        new Outer();
+        """);
+  }
 }
+
