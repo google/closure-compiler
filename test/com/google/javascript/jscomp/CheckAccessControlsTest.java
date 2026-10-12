@@ -80,6 +80,14 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPrivateConstructor_propertyAccess() {
+    // AccessControlUtils handles visibility modifiers.
+    testError(
+        srcs("class Foo { /** @private */ constructor() { this.x = 5; } }", "(new Foo()).x;"),
+        BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  @Test
   public void testOverrideAllowed() {
     testSame(
         """
