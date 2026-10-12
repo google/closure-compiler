@@ -315,8 +315,19 @@ FileError.prototype.code;
 /**
  * @see http://www.w3.org/TR/file-writer-api/#idl-def-FileSaver
  * @constructor
+ * @implements {EventTarget}
  */
 function FileSaver() {};
+
+/** @override */
+FileSaver.prototype.addEventListener = function(type, listener, opt_options) {};
+
+/** @override */
+FileSaver.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
+
+/** @override */
+FileSaver.prototype.dispatchEvent = function(evt) {};
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-abort
