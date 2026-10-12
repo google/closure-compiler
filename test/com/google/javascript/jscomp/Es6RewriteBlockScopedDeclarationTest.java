@@ -2519,5 +2519,12 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             """);
     loopClosureTest(externs("var policy;"), srcs, expected);
   }
+
+  @Test
+  public void testTopLevelLet_shadowedInBareBlock() {
+    test(
+        srcs("let a = 1; { let a = 2; a; } a;"),
+        expected("var a = 1; { var a$jscomp$1 = 2; a$jscomp$1; } a;"));
+  }
 }
 

@@ -31,6 +31,8 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_P
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.POSSIBLE_BASE_CLASS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.WEAK_NAMESPACE_TYPE;
 
+import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.Node;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -526,5 +528,14 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test(
         srcs("const p = JSCompiler_renameProperty('a.b')"),
         error(INVALID_RENAME_FUNCTION).withMessageContaining("property path"));
+  }
+
+  @Test
+  public void testPreprocessorSymbolTable() {
+    Node root = IR.root();
+    PreprocessorSymbolTable table = new PreprocessorSymbolTable(root);
+    Node n = IR.name("test");
+    table.addReference(n, "test");
+    assertThat(table.getReferences(table.getSlot("test"))).isNotNull();
   }
 }

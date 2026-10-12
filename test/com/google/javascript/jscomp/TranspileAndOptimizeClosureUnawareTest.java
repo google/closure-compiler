@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -728,4 +729,22 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
   }
 
   // TODO: b/421971366 - add a greater variety of test cases.
+
+  @Test
+  public void testInjectClosureUnawareRuntimeLibraries() {
+    Compiler mainCompiler = new Compiler();
+    Compiler shadowCompiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    mainCompiler.init(ImmutableList.of(), ImmutableList.of(), options);
+    shadowCompiler.init(ImmutableList.of(), ImmutableList.of(), options);
+    Node call = IR.call(IR.name("fn"));
+    Node fn = IR.function(IR.name("fn"), IR.paramList(), IR.block());
+    InjectClosureUnawareRuntimeLibraries.ClosureUnawareCallSite callSite =
+        new InjectClosureUnawareRuntimeLibraries.ClosureUnawareCallSite(call, fn);
+    InjectClosureUnawareRuntimeLibraries pass =
+        new InjectClosureUnawareRuntimeLibraries(
+            mainCompiler, shadowCompiler, ImmutableList.of(callSite));
+    pass.process(null, IR.root());
+    assertThat(callSite.callNode()).isEqualTo(call);
+  }
 }

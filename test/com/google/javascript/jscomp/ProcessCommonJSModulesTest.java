@@ -16,9 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.rhino.Node;
 import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1893,5 +1896,25 @@ var __WEBPACK_AMD_DEFINE_RESULT__$$module$test;
                 var name = module$mod$index.default;
                 (function() { let foo = module$mod$index.default; foo(); })();
                 """)));
+  }
+
+  @Test
+  public void testFindModuleDependencies() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setProcessCommonJSModules(true);
+    options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
+    compiler.init(
+        ImmutableList.of(SourceFile.fromCode("externs.js", "")),
+        ImmutableList.of(SourceFile.fromCode("mod.js", "var x = 1;")),
+        options);
+    Node root = compiler.parseInputs();
+    Node script = root.getSecondChild().getFirstChild();
+    FindModuleDependencies pass =
+        new FindModuleDependencies(compiler, true, true, ImmutableMap.of());
+    pass.process(script);
+    CompilerInput input = compiler.getInput(script.getInputId());
+    assertThat(input).isNotNull();
+    assertThat(input.getKnownProvides()).isNotNull();
   }
 }

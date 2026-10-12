@@ -144,4 +144,25 @@ public class InjectTranspilationRuntimeLibrariesTest {
     ImmutableSet<String> injected = parseAndRunInjectionPass("class A {}");
     assertThat(injected).isEmpty();
   }
+
+  @Test
+  public void testInjectRuntimeLibraries_forceInject() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
+
+    compiler.init(
+        ImmutableList.of(SourceFile.fromCode("externs", "")),
+        ImmutableList.of(SourceFile.fromCode("testcode", "")),
+        options);
+    compiler.parse();
+
+    InjectRuntimeLibraries pass =
+        new InjectRuntimeLibraries(compiler, ImmutableSet.of("es6/util/makeiterator"));
+    pass.process(compiler.getExternsRoot(), compiler.getJsRoot());
+
+    assertThat(compiler.getRuntimeJsLibManager().getInjectedLibraries())
+        .contains("es6/util/makeiterator");
+  }
 }

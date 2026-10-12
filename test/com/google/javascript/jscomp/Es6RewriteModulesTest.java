@@ -1507,4 +1507,50 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
                 /** @const */ var module$mod$sub$sub = {};
                 """)));
   }
+
+  @Test
+  public void testEs6RenameTypeReferences() {
+    test(
+        srcs(
+            SourceFile.fromCode("mod/other.js", "export class Foo {}"),
+            SourceFile.fromCode(
+                "mod/app.js", "import {Foo} from './other.js'; /** @type {Foo} */ var x;")),
+        expected(
+            SourceFile.fromCode(
+                "mod/other.js",
+                """
+                class Foo$$module$mod$other {}
+                /** @const */ var module$mod$other = {};
+                /** @const */ module$mod$other.Foo = Foo$$module$mod$other;
+                """),
+            SourceFile.fromCode(
+                "mod/app.js",
+                """
+                /** @type {Foo$$module$mod$other} */
+                var x$$module$mod$app;
+                /** @const */ var module$mod$app = {};
+                """)));
+  }
+
+  @Test
+  public void testModuleRenaming() {
+    test(
+        srcs(
+            SourceFile.fromCode("mod/other.js", "export class Foo {}"),
+            SourceFile.fromCode("mod/app.js", "import {Foo} from './other.js'; use(Foo);")),
+        expected(
+            SourceFile.fromCode(
+                "mod/other.js",
+                """
+                class Foo$$module$mod$other {}
+                /** @const */ var module$mod$other = {};
+                /** @const */ module$mod$other.Foo = Foo$$module$mod$other;
+                """),
+            SourceFile.fromCode(
+                "mod/app.js",
+                """
+                use(Foo$$module$mod$other);
+                /** @const */ var module$mod$app = {};
+                """)));
+  }
 }
