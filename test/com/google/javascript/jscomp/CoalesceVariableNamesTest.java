@@ -552,6 +552,89 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void
+      test_doesNotUsePseudoName_coalesces_uninitializedDeclInLoopRetainsDirtyValueWhenLive() {
+    usePseudoName = false;
+    String src =
+        """
+        var y;
+        while (someExtern) {
+          let x;
+          x;
+          x = 1;
+        }
+        y = 2;
+        y;
+        """;
+    String expected =
+        """
+        var y;
+        for (; someExtern;) {
+          y;
+          y = 1;
+        }
+        y = 2;
+        y;
+        """;
+    inFunction(src, expected);
+  }
+
+  @Test
+  public void test_usePseudoName_coalesces_uninitializedDeclInLoopRetainsDirtyValueWhenLive() {
+    usePseudoName = true;
+    String src =
+        """
+        var y;
+        while (someExtern) {
+          let x;
+          x;
+          x = 1;
+        }
+        y = 2;
+        y;
+        """;
+    String expected =
+        """
+        var x_y;
+        for (; someExtern;) {
+          x_y;
+          x_y = 1;
+        }
+        x_y = 2;
+        x_y;
+        """;
+    inFunction(src, expected);
+  }
+
+  @Test
+  public void
+      test_doesNotUsePseudoName_coalesces_uninitializedDeclInDoWhileRetainsDirtyValueWhenLive() {
+    usePseudoName = false;
+    String src =
+        """
+        var y;
+        do {
+          let x;
+          x;
+          x = 1;
+        } while (someExtern);
+        y = 2;
+        y;
+        """;
+    String expected =
+        """
+        var y;
+        do {
+          y;
+          y = 1;
+        } while (someExtern);
+        y = 2;
+        y;
+        """;
+    inFunction(src, expected);
+  }
+
+  @Test
   public void testUsePseudoName_forWithUninitializedLetInside2() {
     usePseudoName = true;
     String src =
