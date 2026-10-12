@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
+import com.google.common.base.Throwables;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -255,5 +259,33 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
   @Test
   public void testClassPrivateProp_notPrivateProp_getelem() {
     testSame("x['#notAPrivateProp']");
+  }
+
+  @Test
+  public void testUninitializedComputedField() {
+    // TODO(b/571953575): uninitialized computed field crashes with NPE on null rightElem.
+    RuntimeException e = assertThrows(RuntimeException.class, () -> testSame("class C { ['x']; }"));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(NullPointerException.class);
+    assertThat(root).hasMessageThat().contains("because \"rightElem\" is null");
+  }
+
+  @Test
+  public void testUninitializedQuotedField() {
+    // TODO(b/571953575): uninitialized quoted field crashes with NPE on null rightElem.
+    RuntimeException e = assertThrows(RuntimeException.class, () -> testSame("class C { 'x'; }"));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(NullPointerException.class);
+    assertThat(root).hasMessageThat().contains("because \"rightElem\" is null");
+  }
+
+  @Test
+  public void testUninitializedStaticComputedField() {
+    // TODO(b/571953575): uninitialized static computed field crashes with NPE on null rightElem.
+    RuntimeException e =
+        assertThrows(RuntimeException.class, () -> testSame("class C { static ['x']; }"));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(NullPointerException.class);
+    assertThat(root).hasMessageThat().contains("because \"rightElem\" is null");
   }
 }
