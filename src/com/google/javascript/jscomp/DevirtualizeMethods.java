@@ -163,7 +163,14 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
           yield false; // Constructors aren't methods.
         }
 
-        yield true;
+        if (parent.isObjectLit()) {
+          // Case: `Foo.prototype = {
+          //          bar() { },
+          //        }`
+          yield isPrototypeObjectLit(parent);
+        }
+
+        yield true; // Case: `class Foo { bar() { } }`
       }
       case GETPROP -> {
         // Case: `Foo.prototype.bar = function() { };
@@ -189,16 +196,24 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
         //        }`
         checkArgument(parent.isObjectLit(), parent);
 
-        if (!parent.isSecondChildOf(grandparent)
-            || !NodeUtil.isPrototypeAssignment(grandparent.getFirstChild())
-            || !node.getFirstChild().isFunction()) {
-          yield false;
-        }
-
-        yield true;
+        yield isPrototypeObjectLit(parent) && node.getFirstChild().isFunction();
       }
       default -> false;
     };
+  }
+
+  /**
+   * Returns whether {@code objectLit} is the value assigned in {@code Foo.prototype = {...}}.
+   *
+   * <p>Methods on other object literals are not eligible: plain objects are routinely enumerated,
+   * copied, or mixed in, so removing a method from one is unsafe without the escape analysis that
+   * {@link InlineAndCollapseProperties} performs.
+   */
+  private static boolean isPrototypeObjectLit(Node objectLit) {
+    checkArgument(objectLit.isObjectLit(), objectLit);
+    Node parent = objectLit.getParent();
+    return objectLit.isSecondChildOf(parent)
+        && NodeUtil.isPrototypeAssignment(parent.getFirstChild());
   }
 
   private boolean isDefinitelyCtorOrInterface(Node receiver) {

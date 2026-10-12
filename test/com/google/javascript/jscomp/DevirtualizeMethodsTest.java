@@ -608,6 +608,66 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRewrite_definedUsingProtoObjectLit_shorthandMethod() {
+    test(
+        "a.prototype = {foo() { return 2; }}; o.foo()",
+        """
+        var JSCompiler_StaticMethods_foo = function(JSCompiler_StaticMethods_foo$self) {
+          return 2;
+        };
+        a.prototype={};
+        JSCompiler_StaticMethods_foo(o)
+        """);
+  }
+
+  // Methods on plain object literals are left to CollapseProperties, which (unlike this pass)
+  // checks whether the object escapes. Plain objects are routinely enumerated, copied, or
+  // mixed in (e.g. Polymer behaviors), so removing a method from one is unsafe in general.
+
+  @Test
+  public void testNoRewrite_definedUsingPlainObjectLit() {
+    testSame(
+        """
+        const obj = {
+          x: 1,
+          foo: function() {
+            return this.x;
+          },
+        };
+        use(obj);
+        obj.foo();
+        """);
+  }
+
+  @Test
+  public void testNoRewrite_definedUsingPlainObjectLit_shorthandMethod() {
+    // Regression test for b/571987051: shorthand methods were devirtualized even though the
+    // equivalent `foo: function() {}` above was not. This went unnoticed in ES5 output because
+    // shorthand methods were transpiled to `foo: function() {}` before this pass ran.
+    testSame(
+        """
+        const obj = {
+          x: 1,
+          foo() {
+            return this.x;
+          },
+        };
+        use(obj);
+        obj.foo();
+        """);
+  }
+
+  @Test
+  public void testNoRewrite_definedUsingAnonymousObjectLit_shorthandMethod() {
+    testSame("use({foo() { return 1; }}); o.foo();");
+  }
+
+  @Test
+  public void testNoRewrite_definedUsingObjectLitNestedInProtoObjectLit_shorthandMethod() {
+    testSame("a.prototype = {bar: {foo() { return 1; }}}; o.foo();");
+  }
+
+  @Test
   public void testNoRewrite_multipleDefinitions_definedUsingProtoObjectLit_definedUsingGetProp() {
     testSame(
         semicolonJoin(
