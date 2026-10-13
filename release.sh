@@ -131,7 +131,14 @@ package_and_deploy() {
 
   if [[ "${deploy_to_sonatype}" == true ]]; then
     echo "Deploying Maven artifacts to Sonatype..."
-    mvn -f closure-compiler-parent.pom.xml deploy "-DautoPublish=${sonatype_auto_publish}"
+    # Maven 3.10+ uses Resolver's EnhancedLocalRepositoryManager for staging repos,
+    # writing maven-metadata-local.xml, _remote.repositories, and .locks/ into
+    # target/central-staging, which central-publishing-maven-plugin rejects.
+    mvn -f closure-compiler-parent.pom.xml deploy \
+      "-DautoPublish=${sonatype_auto_publish}" \
+      -Daether.priority.VersionsMetadataGeneratorFactory=NaN \
+      -Daether.priority.EnhancedLocalRepositoryManagerFactory=NaN \
+      -Daether.syncContext.named.factory=rwlock-local
     rm -rf "${mvn_temp_wd}"
   else
     echo "Packaging Maven artifacts..."

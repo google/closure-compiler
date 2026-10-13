@@ -94,7 +94,7 @@ main() {
 
     echo "Tagging commit $COMMIT with version $version_id"
     git tag -a "$version_id" -m "Release $version_id" "$COMMIT"
-    git push origin master "$version_id"
+    git push origin "refs/tags/$version_id"
 }
 
 (( $# == 2 )) || usage_exit 'incorrect argument count\n' "$@"
