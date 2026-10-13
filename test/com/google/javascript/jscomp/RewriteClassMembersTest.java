@@ -6676,4 +6676,27 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """);
   }
+
+  @Test
+  public void testBaseClassParameterDefaultsOrder() {
+    // TODO(b/572052294): lowered base-class instance fields execute after constructor parameter
+    // default initializers
+    test(
+        """
+        class A {
+          x = alert(1);
+          constructor(a = alert(2), b = this.x) {
+            alert(a, b);
+          }
+        }
+        """,
+        """
+        class A {
+          constructor(a = alert(2), b = this.x) {
+            this.x = alert(1);
+            alert(a, b);
+          }
+        }
+        """);
+  }
 }
