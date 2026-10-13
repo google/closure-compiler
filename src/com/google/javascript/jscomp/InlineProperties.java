@@ -135,6 +135,15 @@ final class InlineProperties implements CompilerPass {
           // class field with no initialization
           invalidatingPropRef = true;
         }
+      } else if (n.isCall()
+          && compiler.getCodingConvention().isPropertyRenameFunction(n.getFirstChild())
+          && n.hasMoreThanOneChild()
+          && n.getSecondChild().isStringLit()) {
+        // JSCompiler_renameProperty('foo', obj) and goog.reflect.objectProperty name `foo` for
+        // reflective access, so `foo` may be written without a GETPROP, e.g. by
+        // `obj[JSCompiler_renameProperty('foo', obj)] = value`.
+        propName = n.getSecondChild().getString();
+        invalidatingPropRef = true;
       } else {
         return;
       }
