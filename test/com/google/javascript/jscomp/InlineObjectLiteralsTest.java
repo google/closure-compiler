@@ -965,4 +965,47 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         .hasMessageThat()
         .contains("Start of optional chain node OPTCHAIN_GETPROP is not marked as the start");
   }
+
+  @Test
+  public void testClassField_perIterationLetCapture() {
+    // TODO(b/572003863): let/const object literal in a loop body is split into function-scoped vars
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
+    testLocal(
+        """
+        for (let i = 0; i < 2; i++) {
+          let o = {a: i};
+          arr.push(class { x = o.a; });
+        }
+        """,
+        """
+        for (let i = 0; i < 2; i++) {
+          var JSCompiler_object_inline_a_0 = i;
+          arr.push(class {
+            x = JSCompiler_object_inline_a_0;
+          });
+        }
+        """);
+  }
+
+  @Test
+  public void testClassField_perIterationLetCapture_arrowControl() {
+    // TODO(b/572003863): let/const object literal in a loop body is split into function-scoped vars
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
+    testLocal(
+        """
+        for (let i = 0; i < 2; i++) {
+          let o = {a: i};
+          arr.push(() => o.a);
+        }
+        """,
+        """
+        for (let i = 0; i < 2; i++) {
+          var JSCompiler_object_inline_a_0 = i;
+          arr.push(() => {
+            return JSCompiler_object_inline_a_0;
+          });
+        }
+        """);
+  }
 }
+
