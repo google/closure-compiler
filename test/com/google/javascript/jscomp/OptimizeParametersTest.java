@@ -2246,4 +2246,35 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         f();
         """);
   }
+
+  @Test
+  public void testPublicClassFields_propertyReadInInitializerCanBeSideEffected() {
+    // TODO(b/572053067): side-effectful constructor argument moved into constructor body after
+    // non-static field initializer that reads modified state
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
+    test(
+        """
+        function use(val) {}
+        const obj = {p: 1};
+        class C {
+          x = obj.p;
+          constructor(a) {
+            use(this.x + a);
+          }
+        }
+        new C(obj.p = 2);
+        """,
+        """
+        function use(val) {}
+        const obj = {p: 1};
+        class C {
+          x = obj.p;
+          constructor() {
+            var a = obj.p = 2; // <----- this is wrong, obj.p = 2 *should* execute before x = obj.p
+            use(this.x + a);
+          }
+        }
+        new C();
+        """);
+  }
 }
