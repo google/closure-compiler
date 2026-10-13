@@ -17,7 +17,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
+import com.google.common.base.Throwables;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
@@ -1907,4 +1909,15 @@ public final class NormalizeTest extends CompilerTestCase {
     testSame("export default class Bar {}");
     testSame("export default class {}");
   }
+
+  @Test
+  public void testLogicalAssignInLabeledLoop() {
+    // TODO(b/571641723): Property logical assignment in labeled loop crashes AstValidator.
+    RuntimeException e =
+        assertThrows(RuntimeException.class, () -> testSame("label: while (o.p ??= 1) {}"));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(IllegalStateException.class);
+    assertThat(root).hasMessageThat().contains("Expected 2 children, but was 3");
+  }
 }
+
