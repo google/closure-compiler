@@ -999,5 +999,46 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         new Outer();
         """);
   }
+
+  @Test
+  public void testPropertyNamedByRenameFunction() {
+    // TODO(b/573220892): inlines `foo` although `JSCompiler_renameProperty('foo', C)` names it for
+    // reflective access, so the unknown function may write `C.prototype.foo`.
+    test(
+        """
+        /** @constructor */
+        function C() {}
+        C.prototype.foo = 1;
+        externUnknownVar(C.prototype, JSCompiler_renameProperty('foo', C), 2);
+        new C().foo;
+        """,
+        """
+        /** @constructor */
+        function C() {}
+        C.prototype.foo = 1;
+        externUnknownVar(C.prototype, JSCompiler_renameProperty('foo', C), 2);
+        new C(), 1;
+        """);
+  }
+
+  @Test
+  public void testPropertyWrittenThroughRenamedName() {
+    // TODO(b/573220892): inlines `foo` although it is written through its renamed name.
+    test(
+        """
+        /** @constructor */
+        function C() {}
+        C.prototype.foo = 1;
+        C.prototype[JSCompiler_renameProperty('foo', C)] = 2;
+        new C().foo;
+        """,
+        """
+        /** @constructor */
+        function C() {}
+        C.prototype.foo = 1;
+        C.prototype[JSCompiler_renameProperty('foo', C)] = 2;
+        new C(), 1;
+        """);
+  }
 }
 
