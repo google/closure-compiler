@@ -1875,7 +1875,8 @@ public final class NodeUtilTest {
       // Large non-decimal literals (> 14 digits exercising BigInteger path)
       assertThat(NodeUtil.getStringNumberValue("0b10000000000000000000")).isEqualTo(524288.0);
       assertThat(NodeUtil.getStringNumberValue("0o100000000000000")).isEqualTo(4398046511104.0);
-      assertThat(NodeUtil.getStringNumberValue("0x100000000000000")).isEqualTo(72057594037927936.0);
+      assertThat(NodeUtil.getStringNumberValue("0x100000000000000"))
+          .isEqualTo(7.205759403792794E+16);
       assertThat(NodeUtil.getStringNumberValue("0x" + "f".repeat(300))).isPositiveInfinity();
 
       // Hex invalid
