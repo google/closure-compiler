@@ -579,4 +579,102 @@ public class J2clPropertyInlinerPassTest extends CompilerTestCase {
         {(A.$clinit(), A.$y = 5)}
         """);
   }
+
+  @Test
+  public void testOptChainReadLeavesAccessorRemoved() {
+    // TODO(b/571560495): Object.defineProperties accessor removed while A?.x read remains uninlined
+    test(
+        """
+        var A = function() {};
+        A.$clinit = function() {
+          A.$x = 2;
+        };
+        Object.defineProperties(A, {x: {
+          configurable:true,
+          enumerable:true,
+          get:function() {
+            return A.$clinit(), A.$x;
+          },
+          set: function(value) {
+            A.$clinit(), A.$x = value;
+          }
+        }});
+        A.$x = 3;
+        var r = A?.x;
+        """,
+        """
+        var A = function() {};
+        A.$clinit = function() {
+          A.$x = 2;
+        };
+        A.$x = 3;
+        var r = A?.x;
+        """);
+  }
+
+  @Test
+  public void testOptChainReadLeavesEs6AccessorRemoved() {
+    // TODO(b/571560495): ES6 class static getter/setter removed while A?.x read remains uninlined
+    test(
+        """
+        class A {
+          static $clinit() {
+            A.$clinit = function() {};
+            A.$x = 2;
+          }
+          static get x() {
+            return A.$clinit(), A.$x
+          }
+          static set x(value) {
+            A.$clinit(), A.$x = value;
+          }
+        }
+        A.$x = 3;
+        var xx = A?.x;
+        """,
+        """
+        class A {
+          static $clinit() {
+            A.$clinit = function() {};
+            A.$x = 2;
+          }
+        }
+        A.$x = 3;
+        var xx = A?.x;
+        """);
+  }
+
+  @Test
+  public void testOptChainReadMixedWithPlainRead() {
+    // TODO(b/571560495): Object.defineProperties accessor removed while A?.x read remains uninlined
+    test(
+        """
+        var A = function() {};
+        A.$clinit = function() {
+          A.$x = 2;
+        };
+        Object.defineProperties(A, {x: {
+          configurable:true,
+          enumerable:true,
+          get:function() {
+            return A.$clinit(), A.$x;
+          },
+          set: function(value) {
+            A.$clinit(), A.$x = value;
+          }
+        }});
+        A.$x = 3;
+        var r = A?.x;
+        var s = A.x;
+        """,
+        """
+        var A = function() {};
+        A.$clinit = function() {
+          A.$x = 2;
+        };
+        A.$x = 3;
+        var r = A?.x;
+        var s = (A.$clinit(), A.$x);
+        """);
+  }
 }
