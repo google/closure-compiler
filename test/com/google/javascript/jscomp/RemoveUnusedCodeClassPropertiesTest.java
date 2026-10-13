@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
+import com.google.common.base.Throwables;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1091,5 +1095,29 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
         alert(two.field);
         alert(two.field.field);
         """);
+  }
+
+  @Test
+  public void testClosureInFieldInitializerDoubleTraversalCrash() {
+    // TODO(b/571953140): traverses field initializers twice, crashing on removal
+    this.keepLocals = false;
+
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                testSame(
+                    """
+                    class C {
+                      fn = () => {
+                        function unused() {}
+                        return 1;
+                      };
+                    }
+                    alert(new C().fn());
+                    """));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(IllegalStateException.class);
+    assertThat(root).hasMessageThat().contains("Has no parent");
   }
 }
