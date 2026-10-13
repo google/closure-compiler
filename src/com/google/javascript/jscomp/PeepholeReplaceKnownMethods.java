@@ -120,7 +120,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     // Method node might not be a string if callTarget is a GETELEM.
     // e.g. Array[something]()
     String methodName = callTarget.getString();
-    switch (methodName) {
+    return switch (methodName) {
       case "of" -> {
         subtree.removeFirstChild();
 
@@ -128,15 +128,11 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         arraylit.addChildrenToBack(subtree.removeChildren());
         subtree.replaceWith(arraylit);
         reportChangeToEnclosingScope(arraylit);
-        return arraylit;
+        yield arraylit;
       }
-      case "isArray" -> {
-        return tryFoldArrayIsArray(subtree, callTarget);
-      }
-      default -> {
-        return subtree;
-      }
-    }
+      case "isArray" -> tryFoldArrayIsArray(subtree, callTarget);
+      default -> subtree;
+    };
   }
 
   /**
