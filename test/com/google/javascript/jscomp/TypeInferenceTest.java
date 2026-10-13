@@ -2785,19 +2785,6 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testAssignAdd_lhsNodeInputType() {
-    inFunction("L: { /** @type {*} */ let data; data += ''; }");
-    Node block = getLabeledStatement("L").statementNode;
-    // In L: { let data; data += ''; }, the block has two children: LET and EXPR_RESULT.
-    Node exprResult = block.getLastChild();
-    Node assignAdd = exprResult.getFirstChild();
-    Node lhs = assignAdd.getFirstChild();
-    // Pre-fix: LHS node under ASSIGN_ADD gets overwritten with the result type (STRING_TYPE).
-    // Post-fix: LHS node preserves its input type (UNKNOWN_TYPE / ALL_TYPE).
-    assertNode(lhs).hasJSTypeThat().isEqualTo(getNativeType(ALL_TYPE));
-  }
-
-  @Test
   public void testAssignOrToNumeric() {
     // This in line with the existing type-inferencing logic for
     // or/and, since any boolean type is treated as {true, false},

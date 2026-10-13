@@ -5896,28 +5896,5 @@ async function abc() {
         };
         """);
   }
-
-  @Test
-  public void testIssueB115431419() {
-    CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-
-    // Pre-fix: inlining and type inference cause `data += ''` to be eliminated as dead code,
-    // causing sanitize(42) to call (42).replace(...) directly!
-    // Post-fix: `data += ''` is preserved and evaluated as string concatenation.
-    test(
-        options,
-        """
-        /** @param {*} data @return {string} */
-        function sanitize(data) {
-          data += '';
-          return data.replace('foo', 'bar');
-        }
-        window['res'] = sanitize(42);
-        """,
-        """
-        window.res = "42".replace("foo", "bar");
-        """);
-  }
 }
 

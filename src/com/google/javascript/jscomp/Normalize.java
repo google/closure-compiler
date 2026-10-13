@@ -706,7 +706,6 @@ final class Normalize implements CompilerPass {
 
       // Change the original ASSIGN_X to an ASSIGN.
       shorthand.setToken(Token.ASSIGN);
-      lhs.copyTypeFrom(shorthand);
       shorthand.addChildToBack(lhs);
       shorthand.addChildToBack(opNode);
 
