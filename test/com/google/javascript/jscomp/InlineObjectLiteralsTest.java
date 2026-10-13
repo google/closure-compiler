@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
+import com.google.common.base.Throwables;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -946,5 +950,19 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
   private void testSameLocal(String code) {
     testSame(LOCAL_PREFIX + code + LOCAL_POSTFIX);
+  }
+
+  @Test
+  public void testObject1_optChainContinues() {
+    // TODO(b/571220152): inlining an opt-chain segment start orphans the continuation
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class,
+            () -> testSame("function local(){var a = {x:x(), y:y()}; f(a?.x.toString(), a?.y);}"));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(IllegalStateException.class);
+    assertThat(root)
+        .hasMessageThat()
+        .contains("Start of optional chain node OPTCHAIN_GETPROP is not marked as the start");
   }
 }

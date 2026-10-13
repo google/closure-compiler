@@ -18,8 +18,10 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -2946,5 +2948,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
       getProcessor(compiler).process(externsRoot, mainRoot);
     }
     return compiler.toSource(mainRoot);
+  }
+
+  @Test
+  public void testFoldOptChain_nonNullReceiver_chainContinues() {
+    // TODO(b/571220152): folding an opt-chain segment start orphans the continuation
+    RuntimeException e =
+        assertThrows(RuntimeException.class, () -> testSame("x = [1, 2, 3]?.length.toString()"));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(IllegalStateException.class);
+    assertThat(root)
+        .hasMessageThat()
+        .contains("Start of optional chain node OPTCHAIN_GETPROP is not marked as the start");
   }
 }
