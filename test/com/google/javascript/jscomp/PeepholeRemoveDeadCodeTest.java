@@ -2395,4 +2395,11 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     foldSame("function f() { return 3; }");
     foldSame("for (let x = 1; x < 10; x++) {}");
   }
+
+  @Test
+  public void testUnusedClassWithInstanceFieldSideEffects() {
+    // TODO(b/573195636): Hoists side effects out of non-static class field initializers on unused
+    // class expressions.
+    test("(class { x = alert(1); });", "alert(1);");
+  }
 }
