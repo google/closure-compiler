@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 /**
  * Converts property accesses from quoted string or bracket access syntax to dot or unquoted string
@@ -55,7 +56,10 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback implements Com
             && !leftElem.getString().equals("constructor")
             && !(parent.isObjectLit() && leftElem.getString().equals("__proto__"))) {
           leftElem.detach();
-          rightElem.detach();
+          if (rightElem != null) {
+            // A COMPUTED_FIELD_DEF has no second child when the field has no initializer.
+            rightElem.detach();
+          }
           Node temp;
           if (n.isComputedProp()) {
             if (rightElem.isFunction()) {
@@ -80,6 +84,10 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback implements Com
             } else {
               temp = IR.stringKey(leftElem.getString(), rightElem);
             }
+          } else if (rightElem == null) {
+            // An uninitialized field, e.g. `class C { ['x']; }`, becomes a 0-child
+            // MEMBER_FIELD_DEF, matching how the parser represents `class C { x; }`.
+            temp = Node.newString(Token.MEMBER_FIELD_DEF, leftElem.getString());
           } else {
             temp = IR.memberFieldDef(leftElem.getString(), rightElem);
           }
