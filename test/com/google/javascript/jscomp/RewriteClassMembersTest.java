@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.base.Throwables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -1706,6 +1707,29 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         """);
+  }
+
+  @Test
+  public void testPrivateOptionalChaining_bothOptional_chainContinues() {
+    // TODO(b/571219920): trailing segment left outside nullish hook
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                testSame(
+                    """
+                    class Foo {
+                      #method(a) { return {x: a}; }
+                      call(obj, a) {
+                        return obj?.#method?.(a).x;
+                      }
+                    }
+                    """));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(IllegalStateException.class);
+    assertThat(root)
+        .hasMessageThat()
+        .contains("Start of optional chain node OPTCHAIN_GETPROP is not marked as the start.");
   }
 
   // Verifies optional invocation on a private field holding a function (this.#field?.(a)).
