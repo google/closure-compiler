@@ -757,6 +757,19 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         this.root = root;
         this.isArtificiallyPure = isArtificiallyPure;
       }
+
+      /**
+       * Whether {@code v}, as seen from {@code scope}, is a variable of this function that only
+       * holds values local to the current invocation, so that mutating them is invisible to the
+       * callers.
+       */
+      boolean isLocalVar(@Nullable Var v, Scope scope) {
+        return isVarDeclaredInSameContainerScope(v, scope)
+            && !skiplistedVars.contains(v)
+            // Parameters and catch values can come from other scopes.
+            && !v.isParam()
+            && !v.isCatch();
+      }
     }
 
     @Override
@@ -1065,16 +1078,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
             continue;
           }
 
-          boolean localVar = false;
-          // Parameters and catch values can come from other scopes.
-          if (!v.isParam() && !v.isCatch()) {
-            // TODO(johnlenz): create a useful parameter list
-            // sideEffectInfo.addKnownLocal(v.getName());
-            localVar = true;
-          }
-
           // Take care of locals that might have been tainted.
-          if (!localVar || functionEntry.skiplistedVars.contains(v)) {
+          if (!functionEntry.isLocalVar(v, t.getScope())) {
             if (functionEntry.taintedVars.contains(v)) {
               // If the function has global side-effects
               // don't bother with the local side-effects.
@@ -1086,7 +1091,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       }
     }
 
-    private boolean isVarDeclaredInSameContainerScope(@Nullable Var v, Scope scope) {
+    private static boolean isVarDeclaredInSameContainerScope(@Nullable Var v, Scope scope) {
       return v != null && v.getScope().hasSameContainerScope(scope);
     }
 
@@ -1336,29 +1341,27 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       if (callerIsAlias) {
         caller.setMask(callee.bitmask);
-        return caller.bitmask != initialCallerFlags;
-      }
-
-      if (callee.mutatesGlobalState()) {
+      } else if (callee.mutatesGlobalState()) {
         // If the callee modifies global state then so does that caller.
         caller.setMutatesGlobalStateAndAllOtherFlags(invocation);
-      }
-      if (this.propagateThrows && callee.functionThrows()) {
-        // If the callee throws an exception then so does the caller.
-        caller.setThrows(invocation);
-      }
-      if (callee.mutatesArguments() && !allArgsUnescapedLocal) {
-        // If the callee mutates its input arguments and the arguments escape the caller then it has
-        // unbounded side effects.
-        caller.setMutatesGlobalStateAndAllOtherFlags(invocation);
-      }
-      if (callee.mutatesThis()) {
-        if (invocation.isNew()) {
-          // NEWing a constructor provide a unescaped "this" making side-effects impossible.
-        } else if (calleeThisEqualsCallerThis) {
-          caller.setMutatesThis(invocation);
-        } else {
+      } else {
+        if (this.propagateThrows && callee.functionThrows()) {
+          // If the callee throws an exception then so does the caller.
+          caller.setThrows(invocation);
+        }
+        if (callee.mutatesArguments() && !allArgsUnescapedLocal) {
+          // If the callee mutates its input arguments and the arguments escape the caller then it
+          // has unbounded side effects.
           caller.setMutatesGlobalStateAndAllOtherFlags(invocation);
+        }
+        if (callee.mutatesThis()) {
+          if (invocation.isNew()) {
+            // NEWing a constructor provide a unescaped "this" making side-effects impossible.
+          } else if (calleeThisEqualsCallerThis) {
+            caller.setMutatesThis(invocation);
+          } else {
+            caller.setMutatesGlobalStateAndAllOtherFlags(invocation);
+          }
         }
       }
 
