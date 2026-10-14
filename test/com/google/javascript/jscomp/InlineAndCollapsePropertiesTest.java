@@ -16,12 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.InlineAndCollapseProperties.PARTIAL_NAMESPACE_WARNING;
 import static com.google.javascript.jscomp.InlineAndCollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
@@ -4234,4 +4238,27 @@ use(Foo$Bar$baz$A);
         "class A {} class B extends A {} B.foo = 1;",
         "class A {} class B extends A {} var B$foo = 1;");
   }
+
+  @Test
+  public void testStaticFieldOnClassInAliasedNamespace() {
+    // TODO(b/571958823): Inlining alias crashes on static MEMBER_FIELD_DEF.
+    setLanguageOut(LanguageMode.ECMASCRIPT_2022);
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                testSame(
+                    """
+                    const b = {};
+                    const a = b;
+                    a.Foo = class {
+                      static bar = 1;
+                    };
+                    alert(b.Foo.bar);
+                    """));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(IllegalStateException.class);
+    assertThat(root).hasMessageThat().contains("unexpected node: MEMBER_FIELD_DEF");
+  }
 }
+
