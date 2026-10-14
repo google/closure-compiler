@@ -18,7 +18,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.CodeSubTree.findClassDefinition;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static org.junit.Assert.assertThrows;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -962,5 +964,93 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
               }
             }
             """));
+  }
+
+  @Test
+  public void testDefaultParamArrowUsingThisArgumentsNewTarget() {
+    // TODO(b/572972833): Default-param arrow functions rewrite this/arguments/new.target to
+    // out-of-scope body temporaries.
+    test(
+        """
+        async function f(a = () => this, b = () => arguments, c = () => new.target) {
+          return a();
+        }
+        """,
+        """
+        function f(a = () => {
+          return ASYNC_THIS$1;
+        }, b = () => {
+          return ASYNC_ARGUMENTS$1;
+        }, c = () => {
+          return ASYNC_NEW_TARGET$1;
+        }) {
+          const ASYNC_THIS$1 = this;
+          const ASYNC_ARGUMENTS$1 = arguments;
+          const ASYNC_NEW_TARGET$1 = new.target;
+          return (0,$jscomp.asyncExecutePromiseGeneratorFunction)(function*() {
+            return a();
+          });
+        }
+        """);
+  }
+
+  @Test
+  public void testDefaultParamArrowUsingSuperProp() {
+    // TODO(b/572972833): Default-param arrow functions rewrite super.prop to out-of-scope body
+    // temporaries.
+    test(
+        """
+        class A {
+          prop() {
+            return 1;
+          }
+        }
+        class B extends A {
+          async m(a = () => super.prop()) {
+            return a();
+          }
+        }
+        """,
+        """
+        class A {
+          prop() {
+            return 1;
+          }
+        }
+        class B extends A {
+          m(a = () => {
+            return ASYNC_SUPER_GET$7$prop().call(ASYNC_THIS$3);
+          }) {
+            const ASYNC_THIS$3 = this;
+            const ASYNC_SUPER_GET$7$prop = () => {
+              return super.prop;
+            };
+            return (0,$jscomp.asyncExecutePromiseGeneratorFunction)(function*() {
+              return a();
+            });
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testObjectLiteralAsyncMethodSuperCall() {
+    // TODO(b/572972833): Object-literal async method super.m() passes null enclosing class to
+    // AstFactory, causing NPE.
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                testSame(
+                    """
+                    const obj = {
+                      async m() {
+                        return super.toString();
+                      }
+                    };
+                    """));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(NullPointerException.class);
+    assertThat(root).hasMessageThat().contains("Node.isClass()");
   }
 }
