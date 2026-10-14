@@ -1114,4 +1114,24 @@ public final class RenamePropertiesTest extends CompilerTestCase {
             new DefaultNameGenerator(),
             propertyNameFilter);
   }
+
+  @Test
+  public void testAvoidingConflictsBetweenQuotedAndUnquotedClassFields() {
+    // TODO(b/571953710): COMPUTED_FIELD_DEF string keys not reserved
+    test(
+        """
+        class C {
+          foo = 1;
+          'a' = alert(2);
+        }
+        new C().foo;
+        """,
+        """
+        class C {
+          a = 1;
+          ["a"] = alert(2);
+        }
+        (new C()).a;
+        """);
+  }
 }
