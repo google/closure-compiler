@@ -171,6 +171,9 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     test("x?void 0:y()", "x||y()");
     test("!x?void 0:y()", "x&&y()");
     test("x?y():void 0", "x&&y()");
+
+    testSame("window.f = x => x ? true : false;");
+    testSame("window.f = x => x ? false : true;");
   }
 
   @Test

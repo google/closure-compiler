@@ -297,6 +297,8 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("x = !(y() && true)", "x = !y()");
     // This will be further optimized by PeepholeFoldConstants.
     fold("x = !true", "x = !1");
+    foldSame("x = !!(a < b)");
+    foldSame("x = !!a");
   }
 
   @Test
@@ -412,6 +414,30 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("!x ? foo() : bar()", "x ? bar() : foo()");
     fold("while(!(x ? y : z)) foo();", "while(x ? !y : !z) foo();");
     fold("(x ? !y : !z) ? foo() : bar()", "(x ? y : z) ? bar() : foo()");
+
+    foldSame("y = x ? true : false");
+    foldSame("y = x ? !0 : !1");
+    foldSame("y = x ? false : true");
+    foldSame("y = x ? !1 : !0");
+    fold("y = !x ? true : false", "y = x ? false : true");
+    fold("y = !x ? false : true", "y = x ? true : false");
+    foldSame("y = (a === b) ? true : false");
+    foldSame("y = (a === b) ? false : true");
+    fold("y = !(a === b) ? true : false", "y = a !== b ? true : false");
+    foldSame("y = (a < b) ? true : false");
+    foldSame("y = (a < b) ? false : true");
+    fold("y = !(a < b) ? true : false", "y = a < b ? false : true");
+    fold("y = !(a < b) ? false : true", "y = a < b ? true : false");
+    fold("y = !!(a < b) ? true : false", "y = a < b ? true : false");
+    fold("y = (!a || !b) ? true : false", "y = a && b ? false : true");
+    fold("y = !(a && !b) ? true : false", "y = !a || b ? true : false");
+    fold("y = !(a && !b) ? false : true", "y = !a || b ? false : true");
+    fold("y = !(a === 1 && !b) ? false : true", "y = a !== 1 || b ? false : true");
+    fold("y = (inc(), !test()) ? true : false", "y = (inc(), test()) ? false : true");
+    foldSame("y = x ? (function(){}, true) : false");
+    foldSame("y = (a === b) ? (function(){}, true) : false");
+    foldSame("y = x ? 1 : 0");
+    foldSame("y = x ? 'a' : ''");
   }
 
   @Test
