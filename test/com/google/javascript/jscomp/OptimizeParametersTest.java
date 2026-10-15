@@ -2277,4 +2277,251 @@ public final class OptimizeParametersTest extends CompilerTestCase {
         new C();
         """);
   }
+
+  @Test
+  public void testAsyncGenerator_doNotMoveSideEffectfulCallArgIntoBody() {
+    // TODO(b/573183650): side-effectful call argument moved into async generator body
+    test(
+        """
+        async function* g(p) {
+          yield await p;
+        }
+        g(alert(1));
+        """,
+        """
+        async function* g() {
+          var p = alert(1);
+          yield await p;
+        }
+        g();
+        """);
+  }
+
+  @Test
+  public void testAsyncGeneratorMethod_doNotMoveSideEffectfulCallArgIntoBody() {
+    // TODO(b/573183650): side-effectful call argument moved into async generator method body
+    test(
+        """
+        class C {
+          async *g(p) {
+            yield await p;
+          }
+        }
+        new C().g(alert(1));
+        """,
+        """
+        class C {
+          async *g() {
+            var p = alert(1);
+            yield await p;
+          }
+        }
+        (new C()).g();
+        """);
+  }
+
+  @Test
+  public void testAsyncGenerator_doNotMoveMutableCallArgAcrossAwait() {
+    // TODO(b/573183650): mutable call argument moved into async generator body across suspension
+    // point
+    test(
+        """
+        var x = 1;
+        async function* g(a) {
+          yield a;
+        }
+        async function run() {
+          const it = g(x);
+          await alert();
+          x = 2;
+          return (await it.next()).value;
+        }
+        run();
+        """,
+        """
+        var x = 1;
+        async function* g() {
+          var a = x;
+          yield a;
+        }
+        async function run() {
+          const it = g();
+          await alert();
+          x = 2;
+          return (await it.next()).value;
+        }
+        run();
+        """);
+  }
+
+  @Test
+  public void testAsyncGenerator_doNotMoveDefaultOrDestructuringParamIntoBody() {
+    // TODO(b/573183650): default or destructuring parameter moved into async generator body
+    test(
+        """
+        async function* g(a = alert(1)) {
+          yield a;
+        }
+        g();
+        """,
+        """
+        async function* g() {
+          var a = alert(1);
+          yield a;
+        }
+        g();
+        """);
+    test(
+        """
+        async function* g({a} = {a: alert(1)}) {
+          yield a;
+        }
+        g();
+        """,
+        """
+        async function* g() {
+          ({a} = {a: alert(1)});
+          var a;
+          yield a;
+        }
+        g();
+        """);
+    test(
+        """
+        async function* g({a}) {
+          yield a;
+        }
+        g();
+        """,
+        """
+        async function* g() {
+          ({a} = void 0);
+          var a;
+          yield a;
+        }
+        g();
+        """);
+  }
+
+  @Test
+  public void testGenerator_doNotMoveSideEffectfulCallArgIntoBody() {
+    // TODO(b/573183650): side-effectful call argument moved into generator body
+    test(
+        """
+        function* g(p) {
+          yield p;
+        }
+        g(alert(1));
+        """,
+        """
+        function* g() {
+          var p = alert(1);
+          yield p;
+        }
+        g();
+        """);
+  }
+
+  @Test
+  public void testGeneratorMethod_doNotMoveSideEffectfulCallArgIntoBody() {
+    // TODO(b/573183650): side-effectful call argument moved into generator method body
+    test(
+        """
+        class C {
+          *g(p) {
+            yield p;
+          }
+        }
+        new C().g(alert(1));
+        """,
+        """
+        class C {
+          *g() {
+            var p = alert(1);
+            yield p;
+          }
+        }
+        (new C()).g();
+        """);
+  }
+
+  @Test
+  public void testGenerator_doNotMoveMutableCallArgAcrossNext() {
+    // TODO(b/573183650): mutable call argument moved into generator body across suspension point
+    test(
+        """
+        var x = 1;
+        function* g(a) {
+          yield a;
+        }
+        function run() {
+          const it = g(x);
+          x = 2;
+          return it.next().value;
+        }
+        run();
+        """,
+        """
+        var x = 1;
+        function* g() {
+          var a = x;
+          yield a;
+        }
+        function run() {
+          const it = g();
+          x = 2;
+          return it.next().value;
+        }
+        run();
+        """);
+  }
+
+  @Test
+  public void testGenerator_doNotMoveDefaultOrDestructuringParamIntoBody() {
+    // TODO(b/573183650): default or destructuring parameter moved into generator body
+    test(
+        """
+        function* g(a = alert(1)) {
+          yield a;
+        }
+        g();
+        """,
+        """
+        function* g() {
+          var a = alert(1);
+          yield a;
+        }
+        g();
+        """);
+    test(
+        """
+        function* g({a} = {a: alert(1)}) {
+          yield a;
+        }
+        g();
+        """,
+        """
+        function* g() {
+          ({a} = {a: alert(1)});
+          var a;
+          yield a;
+        }
+        g();
+        """);
+    test(
+        """
+        function* g({a}) {
+          yield a;
+        }
+        g();
+        """,
+        """
+        function* g() {
+          ({a} = void 0);
+          var a;
+          yield a;
+        }
+        g();
+        """);
+  }
 }
