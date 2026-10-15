@@ -3258,6 +3258,34 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testSuppressMultiline() {
+    String jsDocComment =
+        """
+        @suppress {
+         *   x, y,
+         *   z
+         * } Auto-added to unblock migration
+         */
+        """;
+    JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true, "malformed @suppress tag");
+    assertThat(info.getSuppressions()).isEmpty();
+    assertThat(info.getSuppressionsAndTheirDescription()).isEmpty();
+  }
+
+  @Test
+  public void testSuppressMultilineWithPipesAndLeadingSeparator() {
+    String jsDocComment =
+        """
+        @suppress {x
+         *   | y
+         *   , z}
+         */
+        """;
+    JSDocInfo info = parse(jsDocComment, "malformed @suppress tag");
+    assertThat(info).isNull();
+  }
+
+  @Test
   public void testJsDocAfterSuppress() {
     JSDocInfo info = parse("@suppress {x,y} @const {string} */");
     assertTypeEquals(STRING_TYPE, info.getType());
@@ -3297,6 +3325,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testBadSuppress8() {
     parse("@suppress */", "malformed @suppress tag");
+  }
+
+  @Test
+  public void testBadSuppressMultilineTrailingComma() {
+    parse("@suppress {x,\n * } */", "malformed @suppress tag");
   }
 
   @Test
