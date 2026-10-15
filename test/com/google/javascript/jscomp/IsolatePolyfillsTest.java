@@ -16,8 +16,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
@@ -517,5 +520,33 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
               $jscomp$lookupPolyfilledValue($jscomp$polyfillTmp, 'endsWith'))
                   .call($jscomp$polyfillTmp, y);
             """));
+  }
+
+  @Test
+  public void testOptChainMethodCallOnPlainGetProp() {
+    // TODO(b/571890155): silent miscompile for x.includes?.(y)
+    addLibrary("String.prototype.includes", "es6", "es5", "es6/string/includes");
+    testWithPolyfills(
+        "x.includes?.(y);", "$jscomp$lookupPolyfilledValue(x, 'includes').call?.(x, y);");
+  }
+
+  @Test
+  public void testOptChainNonCallContinuation() {
+    // TODO(b/571890155): semantic bug caught by AstValidator.validateFirstNodeOfOptChain
+    addLibrary("String.prototype.includes", "es6", "es5", "es6/string/includes");
+    RuntimeException e =
+        assertThrows(RuntimeException.class, () -> testSameWithPolyfills("x?.includes.bind(x);"));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(IllegalStateException.class);
+    assertThat(root)
+        .hasMessageThat()
+        .contains("Start of optional chain node OPTCHAIN_GETPROP is not marked as the start");
+  }
+
+  @Test
+  public void testOptChainOnGlobalPolyfill() {
+    // TODO(b/571890155): replaces window?.Map with $jscomp.polyfills['Map'] instead of preserving ?.
+    addLibrary("Map", "es6", "es5", "es6/map");
+    testWithPolyfills("alert(window?.Map);", "alert($jscomp.polyfills['Map']);");
   }
 }
