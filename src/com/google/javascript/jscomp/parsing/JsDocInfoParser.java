@@ -1415,6 +1415,7 @@ public final class JsDocInfoParser {
     } else {
       Set<String> suppressions = new LinkedHashSet<>();
       while (true) {
+        skipEOLs();
         if (match(JsDocToken.STRING)) {
           String name = stream.getString();
           if (!suppressionNames.contains(name)) {
@@ -1428,6 +1429,7 @@ public final class JsDocInfoParser {
           return token;
         }
 
+        skipEOLs();
         if (match(JsDocToken.PIPE, JsDocToken.COMMA)) {
           token = next();
         } else {

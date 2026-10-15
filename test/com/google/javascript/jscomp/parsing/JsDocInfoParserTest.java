@@ -3267,9 +3267,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
          * } Auto-added to unblock migration
          */
         """;
-    JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true, "malformed @suppress tag");
-    assertThat(info.getSuppressions()).isEmpty();
-    assertThat(info.getSuppressionsAndTheirDescription()).isEmpty();
+    JSDocInfo info = parse(jsDocComment, /* parseDocumentation= */ true);
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));
+    assertThat(info.getSuppressionsAndTheirDescription())
+        .containsExactly(ImmutableSet.of("x", "y", "z"), "Auto-added to unblock migration");
   }
 
   @Test
@@ -3281,8 +3282,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
          *   , z}
          */
         """;
-    JSDocInfo info = parse(jsDocComment, "malformed @suppress tag");
-    assertThat(info).isNull();
+    JSDocInfo info = parse(jsDocComment);
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));
   }
 
   @Test
