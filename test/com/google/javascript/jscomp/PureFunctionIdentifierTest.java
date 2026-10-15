@@ -2576,6 +2576,171 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMutatesThis_localReceiver() {
+    String source =
+        """
+        /** @constructor */
+        function Foo() {}
+        Foo.prototype.initFoo = function(v) { this.v = v; };
+        Foo.createFoo = function(v) {
+          var instance = /** @type {!Foo} */ ({});
+          instance.initFoo(v);
+          return instance;
+        };
+        Foo.createFoo(1);
+        """;
+    assertPureCallsMarked(source, ImmutableList.of("Foo.createFoo"));
+    // The devirtualized form, e.g. `$ctor($instance, v)`: only `instance` needs to be local.
+    assertPureCallsMarked(
+        """
+        /** @constructor */
+        function Foo() {}
+        /**
+         * @param {!Foo} self
+         * @param {number} v
+         */
+        Foo.initFoo = function(self, v) { self.v = v; };
+        Foo.createFoo = function(v) {
+          var instance = /** @type {!Foo} */ ({});
+          Foo.initFoo(instance, v);
+          return instance;
+        };
+        Foo.createFoo(1);
+        """,
+        ImmutableList.of("Foo.createFoo"));
+  }
+
+  @Test
+  public void testMutatesThis_localReceiver_notLocal() {
+    disableTypeCheck();
+    String prefix =
+        """
+        /** @constructor */
+        function Foo() {}
+        Foo.prototype.init = function() { this.x = 1; };
+        """;
+    // Reassigned to a non-local value.
+    assertNoPureCalls(
+        prefix
+            + """
+            function f() {
+              var o = {};
+              for (var i = 0; i < 2; i++) { o.init(); o = window; }
+            }
+            f();
+            """);
+    // Parameter.
+    assertNoPureCalls(
+        prefix
+            + """
+            function f(o) { o.init(); }
+            f({});
+            """);
+    // Catch variable.
+    assertNoPureCalls(
+        prefix
+            + """
+            function f() { try { throw window; } catch (e) { e.init(); } }
+            f();
+            """);
+    // `this` is not the receiver when invoked via `.call`.
+    assertNoPureCalls(
+        prefix
+            + """
+            function f() { var o = Foo.prototype.init; o.call(window); }
+            f();
+            """);
+  }
+
+  @Test
+  public void testMutatesArguments_localVariable() {
+    disableTypeCheck();
+    assertPureCallsMarked(
+        """
+        function setX(o) { o.x = 1; }
+        function g() { var o = {}; setX(o); }
+        g();
+        """,
+        ImmutableList.of("g"));
+    // Reassigned to a non-local value.
+    assertNoPureCalls(
+        """
+        function setX(o) { o.x = 1; }
+        function g() { var o = {}; o = window; setX(o); }
+        g();
+        """);
+    // The arguments passed via `.apply` are the elements of the array.
+    assertNoPureCalls(
+        """
+        function setX(o) { o.x = 1; }
+        function g() { var a = [window]; setX.apply(null, a); }
+        g();
+        """);
+  }
+
+  @Test
+  public void testMutatesArguments_perParameter() {
+    disableTypeCheck();
+    assertPureCallsMarked(
+        """
+        function setX(o, v) { o.x = v; }
+        function g(v) { var o = {}; setX(o, v); }
+        g(window);
+        """,
+        ImmutableList.of("g"));
+    assertNoPureCalls(
+        """
+        function setX(o, v) { o.x = v; }
+        function g(v) { var o = {}; setX(v, o); }
+        g(window);
+        """);
+    // The mutated parameters of all definitions of an ambiguated name are combined.
+    assertNoPureCalls(
+        """
+        A.a = function(x, y) { x.p = 1; };
+        B.a = function(x, y) { y.p = 1; };
+        function g() { C.a({}, window); }
+        g();
+        """);
+    // Via the alias `f = A.a`, `f` also mutates its second parameter. This must reach the callers
+    // of `f`, even though `f` was already known to mutate its first parameter.
+    assertNoPureCalls(
+        """
+        var f = function(x, y) { x.p = 1; };
+        f = A.a;
+        A.a = function(x, y) { y.p = 1; };
+        function g() { f({}, window); }
+        g();
+        """);
+    // The arguments following a spread don't correspond to the parameter at their position.
+    assertNoPureCalls(
+        """
+        function setY(x, y) { y.p = 1; }
+        function g() { setY(...[window, window], {}); }
+        g();
+        """);
+    // The callees of `goog.reflect.cache` are invoked with the key, not the first argument.
+    assertNoPureCalls(
+        """
+        function g() { goog.reflect.cache({}, window, function(k) { k.x = 1; }); }
+        g();
+        """);
+  }
+
+  @Test
+  public void testMutatesArguments_restParameter() {
+    disableTypeCheck();
+    // Rest parameters are treated like destructured parameters, which don't directly correspond
+    // to an argument.
+    assertNoPureCalls(
+        """
+        function f(a, ...r) { r.x = 1; }
+        function g() { f({}, {}); }
+        g();
+        """);
+  }
+
+  @Test
   public void testMutatesArguments4() {
     assertPureCallsMarked(
         """

@@ -887,7 +887,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         case CALL:
         case NEW:
         case TAGGED_TEMPLATELIT:
-          visitCall(encloserSummary, node);
+          visitCall(encloserSummary, traversal.getScope(), node);
           break;
 
         case DESTRUCTURING_LHS:
@@ -1074,7 +1074,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
               && !isFromDestructuring
               && !functionEntry.skiplistedVars.contains(v)
               && functionEntry.taintedVars.contains(v)) {
-            sideEffectInfo.setMutatesArguments(v.getNode());
+            sideEffectInfo.setMutatesArgumentAt(getParamIndex(v), v.getNode());
             continue;
           }
 
@@ -1156,7 +1156,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /** Record information about a call site. */
-    private void visitCall(AmbiguatedFunctionSummary callerInfo, Node invocation) {
+    private void visitCall(AmbiguatedFunctionSummary callerInfo, Scope scope, Node invocation) {
       // Handle special cases (Math, RegExp)
       // TODO: This logic can probably be replaced with @nosideeffects annotations in externs.
       if (invocation.isCall() && !astAnalyzer.functionCallHasSideEffects(invocation)) {
@@ -1175,13 +1175,29 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       }
 
       FunctionStackEntry enclosingFunction = this.functionScopeStack.getLast();
-      boolean propatesThrows = enclosingFunction.catchDepth == 0;
-      boolean callerIsArrowFunction = enclosingFunction.root.isArrowFunction();
+      boolean propagatesThrows = enclosingFunction.catchDepth == 0;
       for (AmbiguatedFunctionSummary calleeInfo : calleeSummaries) {
         SideEffectPropagation edge =
-            SideEffectPropagation.forInvocation(invocation, callerIsArrowFunction, propatesThrows);
+            SideEffectPropagation.forInvocation(
+                invocation,
+                scope,
+                enclosingFunction,
+                argumentsMatchParameters(invocation),
+                propagatesThrows);
         reverseCallGraph.connect(calleeInfo.graphNode, edge, callerInfo.graphNode);
       }
+    }
+
+    /**
+     * Whether the i-th argument of {@code invocation} is passed as the i-th parameter of the
+     * callee, in the absence of spread arguments.
+     */
+    private boolean argumentsMatchParameters(Node invocation) {
+      return !invocation.isTaggedTemplateLit()
+          && !isInvocationViaCallOrApply(invocation)
+          // For caching calls like `goog.reflect.cache(cacheObj, key, valueFn)`, the analyzed
+          // callee is `valueFn(key)`, whose 0th parameter is the 2nd argument (`key`).
+          && compiler.getCodingConvention().describeCachingCall(invocation) == null;
     }
 
     private void addToCatchDepthIfTryBlock(Node n, int delta) {
@@ -1197,6 +1213,17 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       this.functionScopeStack.getLast().catchDepth += delta;
     }
+  }
+
+  /**
+   * Returns the index of {@code param} in the parameter list of its function.
+   *
+   * <p>{@code param} must not be destructured (which includes rest parameters).
+   */
+  private static int getParamIndex(Var param) {
+    Node node = param.isDefaultParam() ? param.getParentNode() : param.getNameNode();
+    checkState(node.getParent().isParamList(), node);
+    return node.getParent().getIndexOfChild(node);
   }
 
   private static boolean isInvocationViaCallOrApply(Node callSite) {
@@ -1242,9 +1269,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     // side effects of the "callee" just need to be copied onto the "caller".
     private final boolean callerIsAlias;
 
-    // If all the arguments passed to the callee are local to the caller.
-    private final boolean allArgsUnescapedLocal;
-
     /*
      * If you call a function with apply or call, one of the arguments at the call site will be used
      * as 'this' inside the implementation. If this is pass into apply like so: function.apply(this,
@@ -1263,37 +1287,94 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     // The token used to invoke the callee by the caller.
     private final @Nullable Node invocation;
 
+    // The scope containing the invocation.
+    private final @Nullable Scope callScope;
+
+    // The function containing the invocation.
+    private final FunctionBodyAnalyzer.@Nullable FunctionStackEntry callerEntry;
+
+    // Whether the i-th argument of the invocation is passed as the i-th parameter of the callee,
+    // in the absence of spread arguments.
+    private final boolean argumentsMatchParameters;
+
     private SideEffectPropagation(
         boolean callerIsAlias,
-        boolean allArgsUnescapedLocal,
         boolean calleeThisEqualsCallerThis,
         boolean propagateThrows,
-        @Nullable Node invocation) {
+        @Nullable Node invocation,
+        @Nullable Scope callScope,
+        FunctionBodyAnalyzer.@Nullable FunctionStackEntry callerEntry,
+        boolean argumentsMatchParameters) {
       checkArgument(invocation == null || NodeUtil.isInvocation(invocation), invocation);
 
       this.callerIsAlias = callerIsAlias;
-      this.allArgsUnescapedLocal = allArgsUnescapedLocal;
       this.calleeThisEqualsCallerThis = calleeThisEqualsCallerThis;
       this.propagateThrows = propagateThrows;
       this.invocation = invocation;
+      this.callScope = callScope;
+      this.callerEntry = callerEntry;
+      this.argumentsMatchParameters = argumentsMatchParameters;
     }
 
     static SideEffectPropagation forAlias() {
-      return new SideEffectPropagation(true, false, false, true, null);
+      return new SideEffectPropagation(true, false, true, null, null, null, false);
     }
 
     static SideEffectPropagation forInvocation(
-        Node invocation, boolean callerIsArrowFunction, boolean propagateThrows) {
+        Node invocation,
+        Scope callScope,
+        FunctionBodyAnalyzer.FunctionStackEntry callerEntry,
+        boolean argumentsMatchParameters,
+        boolean propagateThrows) {
       checkArgument(NodeUtil.isInvocation(invocation), invocation);
 
       return new SideEffectPropagation(
           false,
-          NodeUtil.allArgsUnescapedLocal(invocation),
           // `this` in an arrow function is the `this` of the enclosing function, which is not
           // tracked.
-          calleeAndCallerShareThis(invocation) && !callerIsArrowFunction,
+          calleeAndCallerShareThis(invocation) && !callerEntry.root.isArrowFunction(),
           propagateThrows,
-          invocation);
+          invocation,
+          callScope,
+          callerEntry,
+          argumentsMatchParameters);
+    }
+
+    /**
+     * Whether {@code expr}, passed to the callee, holds a value that is local to the caller.
+     *
+     * <p>Must only be called once the caller has been fully traversed.
+     */
+    private boolean holdsLocalValue(Node expr) {
+      return NodeUtil.evaluatesToLocalValue(expr)
+          || (expr.isName()
+              && callerEntry.isLocalVar(callScope.getVar(expr.getString()), callScope));
+    }
+
+    /** Whether all the arguments that may be mutated by the callee are local to the caller. */
+    private boolean mutatedArgumentsAreLocal(long mutatedParamMask) {
+      if (!argumentsMatchParameters) {
+        return NodeUtil.allArgsUnescapedLocal(invocation);
+      }
+      int index = 0;
+      for (Node arg = invocation.getSecondChild(); arg != null; arg = arg.getNext(), index++) {
+        if (arg.isSpread()) {
+          return false;
+        }
+        if ((index >= Long.SIZE || (mutatedParamMask & (1L << index)) != 0)
+            && !holdsLocalValue(arg)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    /** Whether the receiver of the invocation is local to the caller, e.g. `o` in `o.m()`. */
+    private boolean receiverIsLocal() {
+      Node callee = invocation.getFirstChild();
+      return !isInvocationViaCallOrApply(invocation)
+          && NodeUtil.isNormalOrOptChainGetProp(callee)
+          && holdsLocalValue(callee.getFirstChild());
     }
 
     private static boolean calleeAndCallerShareThis(Node invocation) {
@@ -1338,9 +1419,11 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      */
     boolean propagate(AmbiguatedFunctionSummary callee, AmbiguatedFunctionSummary caller) {
       int initialCallerFlags = caller.bitmask;
+      long initialCallerParamMask = caller.mutatedParamMask;
 
       if (callerIsAlias) {
         caller.setMask(callee.bitmask);
+        caller.mutatedParamMask |= callee.mutatedParamMask;
       } else if (callee.mutatesGlobalState()) {
         // If the callee modifies global state then so does that caller.
         caller.setMutatesGlobalStateAndAllOtherFlags(invocation);
@@ -1349,7 +1432,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           // If the callee throws an exception then so does the caller.
           caller.setThrows(invocation);
         }
-        if (callee.mutatesArguments() && !allArgsUnescapedLocal) {
+        if (callee.mutatesArguments() && !mutatedArgumentsAreLocal(callee.mutatedParamMask)) {
           // If the callee mutates its input arguments and the arguments escape the caller then it
           // has unbounded side effects.
           caller.setMutatesGlobalStateAndAllOtherFlags(invocation);
@@ -1359,13 +1442,16 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
             // NEWing a constructor provide a unescaped "this" making side-effects impossible.
           } else if (calleeThisEqualsCallerThis) {
             caller.setMutatesThis(invocation);
+          } else if (receiverIsLocal()) {
+            // The callee mutates an object local to the caller, e.g. `const o = new Foo(); o.m();`.
           } else {
             caller.setMutatesGlobalStateAndAllOtherFlags(invocation);
           }
         }
       }
 
-      return caller.bitmask != initialCallerFlags;
+      return caller.bitmask != initialCallerFlags
+          || caller.mutatedParamMask != initialCallerParamMask;
     }
   }
 
@@ -1394,6 +1480,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     // The side effect flags for this set of functions.
     // TODO(nickreid): Replace this with a `Node.SideEffectFlags`.
     private int bitmask = 0;
+    // The indices of the parameters (0..63) mutated by this function, if MUTATES_ARGUMENTS is set.
+    private long mutatedParamMask = 0L;
     private boolean collectImpureDebuggingReason;
     // FUNCTION nodes with a name corresponding to this summary that are impure.
     // Only ever initialized if `collectImpureDebuggingReason` is true, and if
@@ -1468,6 +1556,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     @CanIgnoreReturnValue
     AmbiguatedFunctionSummary setMutatesGlobalStateAndAllOtherFlags(Node debuggingReason) {
       maybeCollectImpureDebuggingReason(debuggingReason);
+      this.mutatedParamMask = ~0L;
       return setMask(THROWS | MUTATES_THIS | MUTATES_ARGUMENTS | MUTATES_GLOBAL_STATE);
     }
 
@@ -1481,6 +1570,18 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     @CanIgnoreReturnValue
     AmbiguatedFunctionSummary setMutatesArguments(Node debuggingReason) {
       maybeCollectImpureDebuggingReason(debuggingReason);
+      this.mutatedParamMask = ~0L;
+      return setMask(MUTATES_ARGUMENTS);
+    }
+
+    /** Marks the function as mutating the parameter at {@code paramIndex}. */
+    @CanIgnoreReturnValue
+    AmbiguatedFunctionSummary setMutatesArgumentAt(int paramIndex, Node debuggingReason) {
+      checkArgument(paramIndex >= 0, paramIndex);
+      maybeCollectImpureDebuggingReason(debuggingReason);
+      // A parameter that doesn't fit in the mask is approximated by all the parameters.
+      long paramBit = paramIndex < Long.SIZE ? 1L << paramIndex : ~0L;
+      this.mutatedParamMask |= paramBit;
       return setMask(MUTATES_ARGUMENTS);
     }
 
