@@ -8959,4 +8959,46 @@ console.log(new X(1));
         """,
         errorReporter);
   }
+
+  @Test
+  public void testNewTargetInClassFieldInitializer() {
+    mode = LanguageMode.ECMASCRIPT_2022;
+    expectFeatures(Feature.CLASSES, Feature.PUBLIC_CLASS_FIELDS, Feature.NEW_TARGET);
+    // TODO(b/572053262): Per ECMAScript (sec. 15.7.10 / 9.4.3), class field initializers are
+    // evaluated inside an implicit function scope that binds [[NewTarget]] to undefined.
+    // Therefore, new.target is syntactically valid in field initializers (both instance and static)
+    // even at top-level script/module scope, and this should parse without error. Currently,
+    // IRFactory rejects it because it only checks for an enclosing function.
+    parseError(
+        "class C { x = new.target; static s = new.target; }",
+        "new.target must be inside a function",
+        "new.target must be inside a function");
+  }
+
+  @Test
+  public void testNewTargetInClassFieldInitializer_inArrowFn() {
+    mode = LanguageMode.ECMASCRIPT_2022;
+    expectFeatures(Feature.CLASSES, Feature.PUBLIC_CLASS_FIELDS, Feature.NEW_TARGET);
+    parse("class C { x = () => new.target; static s = () => new.target; }");
+  }
+
+  @Test
+  public void testNewTargetInClassComputedPropertyName() {
+    mode = LanguageMode.ECMASCRIPT_2022;
+    expectFeatures(Feature.CLASSES, Feature.PUBLIC_CLASS_FIELDS, Feature.NEW_TARGET);
+    // Correct behavior - property names are evaluated in the enclosing scope.
+    parseError(
+        "class C { [new.target] = 1; static [new.target] = 1; }",
+        "new.target must be inside a function",
+        "new.target must be inside a function");
+  }
+
+  @Test
+  public void testNewTargetInClassStaticBlock() {
+    mode = LanguageMode.ECMASCRIPT_2022;
+    expectFeatures(Feature.CLASSES, Feature.CLASS_STATIC_BLOCK, Feature.NEW_TARGET);
+    // TODO(b/572053262): new.target is syntactically valid in static blocks and should parse
+    // without error.
+    parseError("class C { static { new.target; } }", "new.target must be inside a function");
+  }
 }
