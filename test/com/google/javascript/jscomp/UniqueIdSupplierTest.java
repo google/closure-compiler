@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -110,5 +111,30 @@ public final class UniqueIdSupplierTest {
         .isEqualTo(uniqueId2); // different IDs for same input with different compilers
     assertThat(uniqueId1)
         .isNotEqualTo(differentUniqueId1); // different IDs for same input with same compiler
+  }
+
+  @Test
+  public void testProtoRoundTripPreservesInsertionOrder() {
+    CompilerInput input1 = new CompilerInput(SourceFile.fromCode("fileA.js", ""));
+    CompilerInput input2 = new CompilerInput(SourceFile.fromCode("fileB.js", ""));
+    CompilerInput input3 = new CompilerInput(SourceFile.fromCode("fileC.js", ""));
+
+    String unused1 = uniqueIdSupplier.getUniqueId(input1);
+    String unused2 = uniqueIdSupplier.getUniqueId(input2);
+    String unused3 = uniqueIdSupplier.getUniqueId(input3);
+    String unused4 = uniqueIdSupplier.getUniqueId(input1); // increment counter for fileA
+
+    List<UniqueIdProto> protos = uniqueIdSupplier.toProto();
+
+    assertThat(protos).hasSize(3);
+    assertThat(protos.get(0).getHash()).isEqualTo("fileA.js".hashCode());
+    assertThat(protos.get(0).getCounter()).isEqualTo(2);
+    assertThat(protos.get(1).getHash()).isEqualTo("fileB.js".hashCode());
+    assertThat(protos.get(1).getCounter()).isEqualTo(1);
+    assertThat(protos.get(2).getHash()).isEqualTo("fileC.js".hashCode());
+    assertThat(protos.get(2).getCounter()).isEqualTo(1);
+
+    UniqueIdSupplier restored = UniqueIdSupplier.fromProto(protos);
+    assertThat(restored.toProto()).isEqualTo(protos);
   }
 }

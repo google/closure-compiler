@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.HashMultiset;
+import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ public final class UniqueIdSupplier {
   private final Multiset<Integer> counter;
 
   UniqueIdSupplier() {
-    counter = HashMultiset.create();
+    counter = LinkedHashMultiset.create();
   }
 
   /**
