@@ -69,9 +69,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -844,7 +843,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         usage =
             "Prefixes to replace in ES6 import paths before resolving. "
                 + "module_resolution must be BROWSER_WITH_TRANSFORMED_PREFIXES to take effect.")
-    private Map<String, String> browserResolverPrefixReplacements = new HashMap<>();
+    private Map<String, String> browserResolverPrefixReplacements = new LinkedHashMap<>();
 
     @Option(
         name = "--package_json_entry_names",
@@ -1242,7 +1241,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     protected List<FlagEntry<JsSourceType>> getMixedJsSources()
         throws CmdLineException, IOException {
       List<FlagEntry<JsSourceType>> mixedSources = new ArrayList<>();
-      Set<String> excludes = new HashSet<>();
+      Set<String> excludes = new LinkedHashSet<>();
       for (FlagEntry<JsSourceType> source : Flags.mixedJsSources) {
         if (source.getValue().endsWith(".zip")) {
           mixedSources.add(source);
@@ -2156,7 +2155,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     // A map from normalized absolute paths to original paths. We need to return original paths to
     // support allowlist files that depend on them.
     Map<String, String> allJsInputs = sortAlphabetically ? new TreeMap<>() : new LinkedHashMap<>();
-    Set<String> excludes = new HashSet<>();
+    Set<String> excludes = new LinkedHashSet<>();
     for (String pattern : patterns) {
       if (!pattern.contains("*") && !pattern.startsWith("!")) {
         File matchedFile = new File(pattern);

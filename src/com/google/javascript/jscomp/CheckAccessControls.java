@@ -22,8 +22,9 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.auto.value.AutoBuilder;
 import com.google.auto.value.AutoValue;
-import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Table;
+import com.google.common.collect.Tables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
@@ -34,6 +35,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Deque;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -132,8 +134,8 @@ class CheckAccessControls implements NodeTraversal.Callback, CompilerPass {
   // handful of elements, it provides the smoothest API (push, pop, and a peek that doesn't throw
   // on empty), and (unlike ArrayDeque) is null-permissive. No other option meets all these needs.
   private final Deque<ObjectType> currentClassStack = new LinkedList<>();
-  private final HashBasedTable<JSType, String, ConstantDeclaration> constPropertyInits =
-      HashBasedTable.create();
+  private final Table<JSType, String, ConstantDeclaration> constPropertyInits =
+      Tables.newCustomTable(new LinkedHashMap<>(), LinkedHashMap::new);
 
   /**
    * Distinguishes between different kinds of "constant" JSDoc to provide more useful error messages
