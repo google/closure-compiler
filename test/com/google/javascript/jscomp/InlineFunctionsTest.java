@@ -16,7 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
 import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
@@ -5846,6 +5850,31 @@ JSCompiler_temp_const$jscomp$v0.bug = JSCompiler_inline_result$jscomp$v1;
           el.innerHTML = sanitize(untrusted);
         }
         """);
+  }
+
+  @Test
+  public void testInline_optChainContinuesAfterCall_block() {
+    // TODO(b/571219735): block-mode inlining leaves callee reference un-inlined after temp hoisting
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class,
+            () -> testSame("function foo(a) { return {x: a, y: a}; } var y = foo?.(z()).x;"));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(IllegalStateException.class);
+    assertThat(root).hasMessageThat().contains("Call site missed");
+  }
+
+  @Test
+  public void testInline_optChainContinuesAfterCall_direct() {
+    // TODO(b/571219735): DIRECT-mode inlining orphans the trailing chain segment
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class, () -> testSame("function foo() { return {x: 1}; } foo?.().x;"));
+    Throwable root = Throwables.getRootCause(e);
+    assertThat(root).isInstanceOf(IllegalStateException.class);
+    assertThat(root)
+        .hasMessageThat()
+        .contains("Start of optional chain node OPTCHAIN_GETPROP is not marked as the start");
   }
 }
 
