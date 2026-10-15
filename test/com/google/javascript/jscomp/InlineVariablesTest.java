@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.After;
 import org.junit.Before;
@@ -2697,6 +2698,54 @@ public final class InlineVariablesTest extends CompilerTestCase {
         var C = class extends getBase() {};
         doSomething();
         use(C);
+        """);
+  }
+
+  @Test
+  public void testField_declaredConstAssignedInsideInstanceFieldInitializer() {
+    // TODO(b/572004916): @const assigned in field initializer is inlined before instantiation
+    setLanguageOut(LanguageMode.ECMASCRIPT_2022);
+    test(
+        """
+        /** @const */ var a;
+        class C {
+          x = (a = 1);
+        }
+        alert(a);
+        new C();
+        """,
+        """
+        class C {
+          x = 1;
+        }
+        alert(1);
+        new C();
+        """);
+  }
+
+  @Test
+  public void testField_declaredConstAssignedInsideInstanceFieldInitializer_local() {
+    // TODO(b/572004916): local @const assigned in field initializer is inlined before instantiation
+    setLanguageOut(LanguageMode.ECMASCRIPT_2022);
+    test(
+        """
+        function f() {
+          /** @const */ var a;
+          class C {
+            x = (a = 1);
+          }
+          alert(a);
+          return new C();
+        }
+        """,
+        """
+        function f() {
+          class C {
+            x = 1;
+          }
+          alert(1);
+          return new C();
+        }
         """);
   }
 }
