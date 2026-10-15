@@ -3069,8 +3069,21 @@ public final class NodeUtil {
 
     return switch (parent.getToken()) {
       case IMPORT_SPEC, VAR, LET, CONST, PARAM_LIST, IMPORT, CATCH, CLASS, FUNCTION -> true;
-      case STRING_KEY -> isNameDeclaration(parent.getParent().getGrandparent());
-      case OBJECT_PATTERN, ARRAY_PATTERN -> isNameDeclaration(parent.getGrandparent());
+      case STRING_KEY,
+          OBJECT_PATTERN,
+          ARRAY_PATTERN,
+          COMPUTED_PROP,
+          DEFAULT_VALUE,
+          ITER_REST,
+          OBJECT_REST -> {
+        Node rootTargetParent = getRootTarget(n).getParent();
+        if (rootTargetParent.isRest() || rootTargetParent.isDefaultValue()) {
+          yield rootTargetParent.getParent().isParamList();
+        } else if (rootTargetParent.isDestructuringLhs()) {
+          yield isNameDeclaration(rootTargetParent.getParent());
+        }
+        yield rootTargetParent.isParamList() || rootTargetParent.isCatch();
+      }
       default -> false;
     };
   }

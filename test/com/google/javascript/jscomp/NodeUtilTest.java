@@ -3151,6 +3151,58 @@ public final class NodeUtilTest {
       assertNotLValueNamedX(x);
     }
 
+    private void assertDeclarationLValueNamedX(String js) {
+      Node x = getNameNode(parse(js), "x");
+      assertThat(NodeUtil.isDeclarationLValue(x)).isTrue();
+    }
+
+    private void assertNotDeclarationLValueNamedX(String js) {
+      Node x = getNameNode(parse(js), "x");
+      assertThat(NodeUtil.isDeclarationLValue(x)).isFalse();
+    }
+
+    @Test
+    public void testIsDeclarationLValue() {
+      assertDeclarationLValueNamedX("var x;");
+      assertDeclarationLValueNamedX("let x = 1;");
+      assertDeclarationLValueNamedX("const x = 1;");
+      assertDeclarationLValueNamedX("const [x] = arr;");
+      assertDeclarationLValueNamedX("const [[x]] = arr;");
+      assertDeclarationLValueNamedX("const {y: x} = obj;");
+      assertDeclarationLValueNamedX("const {z: {y: x}} = obj;");
+      assertDeclarationLValueNamedX("const [x = 1] = arr;");
+      assertDeclarationLValueNamedX("const [...x] = arr;");
+      assertDeclarationLValueNamedX("const {...x} = obj;");
+      assertDeclarationLValueNamedX("const {[k]: x} = obj;");
+      assertDeclarationLValueNamedX("const {[k]: [x = 1]} = obj;");
+      assertDeclarationLValueNamedX("for (const [x] of arr) {}");
+      assertDeclarationLValueNamedX("for (const [[x]] of arr) {}");
+      assertDeclarationLValueNamedX("function f(x) {}");
+      assertDeclarationLValueNamedX("function f(x = 1) {}");
+      assertDeclarationLValueNamedX("function f(...x) {}");
+      assertDeclarationLValueNamedX("function f({z: [x = 1]} = {}) {}");
+      assertDeclarationLValueNamedX("try {} catch ({y: [x]}) {}");
+    }
+
+    @Test
+    public void testIsNotDeclarationLValue() {
+      assertNotDeclarationLValueNamedX("x = 1;");
+      assertNotDeclarationLValueNamedX("x++;");
+      assertNotDeclarationLValueNamedX("([x] = arr);");
+      assertNotDeclarationLValueNamedX("([[x]] = arr);");
+      assertNotDeclarationLValueNamedX("({y: x} = obj);");
+      assertNotDeclarationLValueNamedX("({z: {y: x}} = obj);");
+      assertNotDeclarationLValueNamedX("([x = 1] = arr);");
+      assertNotDeclarationLValueNamedX("([...x] = arr);");
+      assertNotDeclarationLValueNamedX("({...x} = obj);");
+      assertNotDeclarationLValueNamedX("({[k]: x} = obj);");
+      assertNotDeclarationLValueNamedX("for ([x] of arr) {}");
+      assertNotDeclarationLValueNamedX("for ([[x]] of arr) {}");
+      assertNotDeclarationLValueNamedX("var a = x;");
+      assertNotDeclarationLValueNamedX("const [a = x] = arr;");
+      assertNotDeclarationLValueNamedX("const {[x]: a} = obj;");
+    }
+
     @Test
     public void testGetBestJsDocInfoNodeStrict_declaredName_doesNotThrow() {
       Node aName = parse("/** some */ let A;").getFirstFirstChild();
