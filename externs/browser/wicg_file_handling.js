@@ -15,7 +15,8 @@
  */
 
 /**
- * @fileoverview @externs
+ * @fileoverview
+ * @externs
  * Externs for interfaces in //third_party/blink/renderer/modules/launch/*
  *
  * FileHandling Explainer:
