@@ -4620,4 +4620,26 @@ public final class CodePrinterTest extends CodePrinterTestBase {
                 .build())
         .isEqualTo(expectedCode);
   }
+
+  @Test
+  public void testNullishCoalesceCastInOr() {
+    // TODO(b/571641705): CodeGenerator omits required parentheses around ?? in CAST-wrapped logical expressions
+    assertPrintNode(
+        "x??y||z",
+        IR.or(new Node(Token.CAST, IR.coalesce(IR.name("x"), IR.name("y"))), IR.name("z")));
+  }
+
+  @Test
+  public void testNullishCoalesceExtends() {
+    // TODO(b/571641705): CodeGenerator omits required parentheses around ?? in class extends clauses
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertThat(printNode(parse("class C extends (a ?? b) {}"))).isEqualTo("class C extends a??b{}");
+  }
+
+  @Test
+  public void testNullishCoalesceAssignExtends() {
+    // TODO(b/571641705): CodeGenerator omits required parentheses around ??= in class extends clauses
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+    assertThat(printNode(parse("class C extends (a ??= b) {}"))).isEqualTo("class C extends a??=b{}");
+  }
 }
