@@ -214,7 +214,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       // Rename.
       n.setString(coalescedVar.getName());
       compiler.reportChangeToEnclosingScope(n);
-      updateDeclarationsPostCoalescing(n, coalescedVar, parent);
+      updateDeclarationsPostCoalescing(n, coalescedVar, var, parent);
     } else {
       // This code block is slow but since usePseudoName is for debugging,
       // we should not sacrifice performance for non-debugging compilation to
@@ -247,7 +247,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       if (vNode.getValue().equals(coalescedVar)) {
         return;
       }
-      updateDeclarationsPostCoalescing(n, coalescedVar, parent);
+      updateDeclarationsPostCoalescing(n, coalescedVar, var, parent);
     }
   }
 
@@ -276,9 +276,11 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
    *
    * @param n The name node which is getting coalesced with the coalescedVar
    * @param coalescedVar the first declared variable of a group that is being coalesced
+   * @param originalVar the original variable being coalesced
    * @param parent The parent node of the name node n
    */
-  private void updateDeclarationsPostCoalescing(Node n, Var coalescedVar, Node parent) {
+  private void updateDeclarationsPostCoalescing(
+      Node n, Var coalescedVar, Var originalVar, Node parent) {
     checkState(n.isName(), "trying to update the declaration of a non-name node");
     if (NodeUtil.isNameDeclaration(parent)
         || (NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null
@@ -289,7 +291,7 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
       // convert the coalesced variable's declaration into a `var` if it is a `const` or a `let`
       makeDeclarationVar(coalescedVar);
       // remove the declaration of the given name node as it has been coalesced with coalescedVar
-      removeVarDeclaration(n);
+      removeVarDeclaration(n, originalVar);
     }
   }
 
@@ -466,8 +468,9 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
    * https://bugs.webkit.org/show_bug.cgi?id=182414 Another
    *
    * @param name name node of the variable being coalesced
+   * @param originalVar the original variable being coalesced
    */
-  private static void removeVarDeclaration(Node name) {
+  private void removeVarDeclaration(Node name, Var originalVar) {
     Node var = NodeUtil.getEnclosingNode(name, NodeUtil::isNameDeclaration);
     Node parent = var.getParent();
 
@@ -500,6 +503,14 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
         }
         var.replaceWith(assign);
 
+      } else if (isUninitializedLetNameInLoopBodyAndLive(name, originalVar)) {
+        name.detach();
+        Node undefinedValue = astFactory.createUndefinedValue().srcrefTree(name);
+        Node assign = IR.assign(name, undefinedValue).srcref(name);
+        if (!parent.isVanillaFor()) {
+          assign = NodeUtil.newExpr(assign);
+        }
+        var.replaceWith(assign);
       } else {
         // convert `let x;` to ``
         // and `for (let x;;) {}` to `for (;;) {}`
@@ -572,6 +583,19 @@ class CoalesceVariableNames extends NodeTraversal.AbstractCfgCallback implements
     }
     // Inside a loop body, but not the loop control node itself
     return NodeUtil.isWithinLoop(letParent);
+  }
+
+  private boolean isUninitializedLetNameInLoopBodyAndLive(Node nameNode, Var originalVar) {
+    if (!isUninitializedLetNameInLoopBody(nameNode)) {
+      return false;
+    }
+    checkState(liveness != null);
+    Node letNode = nameNode.getParent();
+    ControlFlowGraph<Node> cfg = liveness.getCfg();
+    DiGraphNode<Node, Branch> cfgNode = checkNotNull(cfg.getNode(letNode));
+    LinearFlowState<LiveVariableLattice> state = checkNotNull(cfgNode.getAnnotation());
+    int varIndex = liveness.getVarIndex(originalVar.getName());
+    return varIndex >= 0 && state.getOut().isLive(varIndex);
   }
 
   /**

@@ -552,8 +552,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
-  public void
-      test_doesNotUsePseudoName_coalesces_uninitializedDeclInLoopRetainsDirtyValueWhenLive() {
+  public void test_doesNotUsePseudoName_coalesces_resetsUninitializedDeclInLoopWhenLive() {
     usePseudoName = false;
     String src =
         """
@@ -570,6 +569,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         """
         var y;
         for (; someExtern;) {
+          y = void 0;
           y;
           y = 1;
         }
@@ -580,7 +580,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
-  public void test_usePseudoName_coalesces_uninitializedDeclInLoopRetainsDirtyValueWhenLive() {
+  public void test_usePseudoName_coalesces_resetsUninitializedDeclInLoopWhenLive() {
     usePseudoName = true;
     String src =
         """
@@ -597,6 +597,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         """
         var x_y;
         for (; someExtern;) {
+          x_y = void 0;
           x_y;
           x_y = 1;
         }
@@ -607,8 +608,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
-  public void
-      test_doesNotUsePseudoName_coalesces_uninitializedDeclInDoWhileRetainsDirtyValueWhenLive() {
+  public void test_doesNotUsePseudoName_coalesces_resetsUninitializedDeclInDoWhileWhenLive() {
     usePseudoName = false;
     String src =
         """
@@ -625,6 +625,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         """
         var y;
         do {
+          y = void 0;
           y;
           y = 1;
         } while (someExtern);
