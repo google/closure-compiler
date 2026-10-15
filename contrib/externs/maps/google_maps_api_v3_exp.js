@@ -4556,6 +4556,10 @@ google.maps.JourneySharingLibrary.prototype.WaypointType;
 /**
  * Contains details of the author of a KML document or feature.
  * @record
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlAuthor = function() {};
 
@@ -4582,6 +4586,10 @@ google.maps.KmlAuthor.prototype.uri;
  * clicked. The data contained in this object mirrors that associated with the
  * feature in the KML or GeoRSS markup in which it is declared.
  * @record
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlFeatureData = function() {};
 
@@ -4634,9 +4642,10 @@ google.maps.KmlFeatureData.prototype.snippet;
  * @param {?google.maps.KmlLayerOptions=} opts Options for this layer.
  * @extends {google.maps.MVCObject}
  * @constructor
- * @deprecated As of version 3.65, google.maps.KmlLayer is deprecated. For
- *     alternative methods of displaying KML data on the map, see <a
- *     href="https://developers.devsite.corp.google.com/maps/deprecations#kml_layer_deprecated_as_of_april_30_2026">https://developers.devsite.corp.google.com/maps/deprecations#kml_layer_deprecated_as_of_april_30_2026</a>
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlLayer = function(opts) {};
 
@@ -4708,6 +4717,10 @@ google.maps.KmlLayer.prototype.setZIndex = function(zIndex) {};
 /**
  * Metadata for a single KML layer, in JSON format.
  * @record
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlLayerMetadata = function() {};
 
@@ -4747,6 +4760,10 @@ google.maps.KmlLayerMetadata.prototype.snippet;
  * This object defines the properties that can be set on a <code>KmlLayer</code>
  * object.
  * @record
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlLayerOptions = function() {};
 
@@ -4806,6 +4823,10 @@ google.maps.KmlLayerOptions.prototype.zIndex;
  * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlLayerStatus = {
   /**
@@ -4850,6 +4871,10 @@ google.maps.KmlLayerStatus = {
 /**
  * The properties of a click event on a KML/KMZ or GeoRSS document.
  * @record
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlMouseEvent = function() {};
 
@@ -8246,6 +8271,12 @@ google.maps.PlacesLibrary.prototype.AdvancedPlaceDetailsElement;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.AdvancedPlaceItemElement}
+ */
+google.maps.PlacesLibrary.prototype.AdvancedPlaceItemElement;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.AdvancedPlaceListElement}
  */
 google.maps.PlacesLibrary.prototype.AdvancedPlaceListElement;
@@ -8520,6 +8551,12 @@ google.maps.PlacesLibrary.prototype.PlaceFeatureListElement;
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.PlaceItemElement}
+ */
+google.maps.PlacesLibrary.prototype.PlaceItemElement;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.PlaceLinkElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceLinkElement;
@@ -8554,6 +8591,18 @@ google.maps.PlacesLibrary.prototype.PlaceOpenNowStatusElement;
  * @type {typeof google.maps.places.PlacePhoneNumberElement}
  */
 google.maps.PlacesLibrary.prototype.PlacePhoneNumberElement;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {typeof google.maps.places.PlacePinElement}
+ */
+google.maps.PlacesLibrary.prototype.PlacePinElement;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {typeof google.maps.places.PlacePinIcon}
+ */
+google.maps.PlacesLibrary.prototype.PlacePinIcon;
 
 /**
  * @type {typeof google.maps.places.PlacePlusCodeElement}
@@ -19361,6 +19410,37 @@ google.maps.places.AdvancedPlaceDetailsElementOptions.prototype
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
+ * Public web component wrapper (<code>&lt;gmp-advanced-place-item&gt;</code>)
+ * for advanced place list items. The
+ * <code>&lt;gmp-advanced-place-item&gt;</code> custom element renders an
+ * individual rich place result card inside an advanced search or collection
+ * container, such as <code>&lt;gmp-advanced-place-search&gt;</code> or
+ * <code>&lt;gmp-advanced-place-list&gt;</code>. Each
+ * <code>&lt;gmp-advanced-place-item&gt;</code> presents rich place details,
+ * media collages, editorial summaries, and interactive action buttons composed
+ * of child visual components from the Places UI Kit.
+ *
+ * Access by calling `const {AdvancedPlaceItemElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.AdvancedPlaceItemElementOptions}
+ * @extends {google.maps.places.PlaceItemElement}
+ * @constructor
+ */
+google.maps.places.AdvancedPlaceItemElement = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>AdvancedPlaceItemElement</code>.
+ * @extends {google.maps.places.PlaceItemElementOptions}
+ * @record
+ */
+google.maps.places.AdvancedPlaceItemElementOptions = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
  * Displays the results of a place search in a list. Append one or more {@link
  * google.maps.places.PlaceDetailsPlaceRequestElement} or set the
  * <code>places</code> property to specify the places to display. Append
@@ -23460,6 +23540,32 @@ google.maps.places.PlaceGeometry.prototype.viewport;
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  *
+ * Public web component wrapper (<code>&lt;gmp-place-item&gt;</code>) for place
+ * list items. The <code>&lt;gmp-place-item&gt;</code> custom element renders an
+ * individual place result card inside <code>&lt;gmp-place-search&gt;</code>.
+ * Each <code>&lt;gmp-place-item&gt;</code> displays place information composed
+ * of child visual components from the Places UI Kit.
+ *
+ * Access by calling `const {PlaceItemElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceItemElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceItemElement = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * Options for <code>PlaceItemElement</code>.
+ * @record
+ */
+google.maps.places.PlaceItemElementOptions = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
  * Displays a link slotted into either the <code>action-main</code> slot or the
  * <code>action-corner</code> slot. By default the link will be shown in the
  * <code>action-main</code> slot. Use the <code>action</code> attribute to
@@ -24084,6 +24190,117 @@ google.maps.places.PlacePhoto.prototype.width;
  * @return {string}
  */
 google.maps.places.PlacePhoto.prototype.getUrl = function(opts) {};
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Displays a map pin for a place, using the place&#39;s category icon or photo.
+ * Append a {@link google.maps.places.PlaceDetailsPlaceRequestElement} or {@link
+ * google.maps.places.PlaceDetailsLocationRequestElement} to specify the place.
+ * Use the pin as the content of an {@link
+ * google.maps.marker.AdvancedMarkerElement}. Not supported in 3D maps. <br><br>
+ * Example: <pre><code> &lt;gmp-advanced-marker&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-pin&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-details-place-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;place="<var>PLACE_ID</var>"<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&gt;&lt;/gmp-place-details-place-request&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-rating&gt;&lt;/gmp-place-rating&gt;<br>
+ * &nbsp;&nbsp;&lt;/gmp-place-pin&gt;<br> &lt;/gmp-advanced-marker&gt;
+ * </code></pre> <br> To use this element, enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
+ *
+ * Access by calling `const {PlacePinElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlacePinElementOptions=} options
+ * @implements {google.maps.places.PlacePinElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlacePinElement = function(options) {};
+
+/**
+ * The icon shown inside the pin. See {@link google.maps.places.PlacePinIcon}.
+ * @default <code>PlacePinIcon.TYPE</code>
+ * @type {!google.maps.places.PlacePinIcon|null|undefined}
+ */
+google.maps.places.PlacePinElement.prototype.icon;
+
+/**
+ * Read only. True if the pin is showing the place&#39;s photo. Always false if
+ * <code>icon</code> isn&#39;t <code>PHOTO</code>. If <code>icon</code> is
+ * <code>PHOTO</code> but the place has no photo, or the photo failed to load,
+ * this is false and the pin shows the place type icon instead. Set before
+ * <code>gmp-load</code> fires.
+ * @type {boolean}
+ */
+google.maps.places.PlacePinElement.prototype.photoRendered;
+
+/**
+ * Read only. Place object containing the ID, location, and viewport of the
+ * currently rendered place. <code>undefined</code> if the place hasn&#39;t
+ * loaded yet or failed to load.
+ * @type {!google.maps.places.Place|undefined}
+ */
+google.maps.places.PlacePinElement.prototype.place;
+
+/**
+ * Size multiplier for the pin.
+ * @default <code>1</code>
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlacePinElement.prototype.scale;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Options for constructing a {@link google.maps.places.PlacePinElement}.
+ * @record
+ */
+google.maps.places.PlacePinElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlacePinElement.icon}.
+ * @type {!google.maps.places.PlacePinIcon|null|undefined}
+ */
+google.maps.places.PlacePinElementOptions.prototype.icon;
+
+/**
+ * See {@link google.maps.places.PlacePinElement.scale}.
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlacePinElementOptions.prototype.scale;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Icon options for {@link google.maps.places.PlacePinElement}.
+ * <code>TYPE</code> is the default. If the data needed for the selected icon is
+ * missing, the pin falls back to <code>TYPE</code>. If the data needed for
+ * <code>TYPE</code> is missing, a generic icon is shown instead.
+ *
+ * Access by calling `const {PlacePinIcon} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.PlacePinIcon = {
+  /**
+   * Shows no icon, only the slotted content. Falls back to <code>TYPE</code> if
+   * there&#39;s no slotted content.
+   */
+  NONE: 'NONE',
+  /**
+   * Shows the place&#39;s photo in a circle. Falls back to <code>TYPE</code> if
+   * the place has no photo.
+   */
+  PHOTO: 'PHOTO',
+  /**
+   * Shows the place&#39;s category icon.
+   */
+  TYPE: 'TYPE',
+};
 
 /**
  * Defines Open Location Codes or &quot;<a href="https://plus.codes/">plus
