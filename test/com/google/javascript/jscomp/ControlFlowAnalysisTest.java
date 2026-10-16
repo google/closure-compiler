@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -1829,6 +1830,43 @@ public final class ControlFlowAnalysisTest {
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertCrossEdge(cfg, Token.BREAK, Token.EXPR_RESULT, Branch.UNCOND);
     assertNoEdge(cfg, Token.BREAK, Token.BLOCK);
+  }
+
+  @Test
+  public void testTryFinallyDeterminism() throws IOException {
+    String src =
+        """
+        a: {
+          b: {
+            try {
+              if (x) { break a; } else { break b; }
+            } finally {
+              fin();
+            }
+          }
+          afterB();
+        }
+        afterA();
+        """;
+    ControlFlowGraph<Node> cfg = createCfg(src);
+
+    DiGraphNode<Node, Branch> finExpr =
+        cfg.getNodes().stream()
+            .filter(
+                n ->
+                    n.getValue() != null
+                        && n.getValue().isExprResult()
+                        && n.getValue().getFirstChild().getFirstChild().matchesName("fin"))
+            .findFirst()
+            .orElseThrow();
+
+    ImmutableList<String> onExTargets =
+        cfg.getOutEdges(finExpr.getValue()).stream()
+            .filter(e -> e.getValue() == Branch.ON_EX && e.getDestination().getValue() != null)
+            .map(e -> e.getDestination().getValue().getFirstChild().getFirstChild().getString())
+            .collect(toImmutableList());
+
+    assertThat(onExTargets).containsExactly("afterA", "afterB").inOrder();
   }
 
   @Test
