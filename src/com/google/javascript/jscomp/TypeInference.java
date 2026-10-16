@@ -1727,10 +1727,9 @@ class TypeInference extends DataFlowAnalysis<Node, FlowScope> {
     n.setJSType(type);
 
     if (n.isAssignAdd()) {
-      // TODO(johnlenz): this should not update the type of the lhs as that is use as a
-      // input and need to be preserved for type checking.
-      // Instead call this overload `updateScopeForAssignment(scope, left, leftType, type, null);`
-      scope = updateScopeForAssignment(scope, left, type, AssignmentType.ASSIGN);
+      scope =
+          updateScopeForAssignment(
+              scope, left, type, /* updateNode= */ null, AssignmentType.ASSIGN);
     }
 
     return scope;
