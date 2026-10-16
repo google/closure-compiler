@@ -2406,26 +2406,20 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   @Test
   public void testUnusedClassWithInstanceFieldSideEffects() {
-    // TODO(b/573195636): Hoists side effects out of non-static class field initializers on unused
-    // class expressions.
-    test("(class { x = alert(1); });", "alert(1);");
-    test("(class { x = alert(1); y = alert(2); });", "alert(1), alert(2);");
+    test("(class { x = alert(1); });", "");
+    test("(class { x = alert(1); y = alert(2); });", "");
   }
 
   @Test
   public void testUnusedClassWithInstanceFieldSideEffects_thisAndSuper() {
-    // TODO(b/573195636): Hoists side effects out of non-static class field initializers on unused
-    // class expressions.
-    test("(class { x = this.y(); });", "this.y();");
+    test("(class { x = this.y(); });", "");
     test("(class extends Object { x = super.toString(); });", "");
   }
 
   @Test
   public void testUnusedClassWithComputedInstanceFieldSideEffects() {
-    // TODO(b/573195636): Hoists side effects out of non-static class field initializers on unused
-    // class expressions.
-    test("(class { [alert(1)] = alert(2); });", "alert(1), alert(2);");
-    test("(class { ['x'] = alert(2); });", "alert(2);");
+    test("(class { [alert(1)] = alert(2); });", "alert(1);");
+    test("(class { ['x'] = alert(2); });", "");
   }
 
   @Test

@@ -403,7 +403,18 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       case FUNCTION -> {
         // Functions that aren't being invoked are dead. If they were invoked we'd see the CALL
         // before arriving here. We don't want to look at any children since they'll never execute.
-        return false;
+      }
+      case MEMBER_FIELD_DEF -> {
+        if (tree.isStaticMember() && tree.hasChildren()) {
+          trySimplifyUnusedResultInternal(tree.getFirstChild(), sideEffectRoots);
+        }
+      }
+      case COMPUTED_FIELD_DEF -> {
+        // Computed key initializers run once when the class is defined, even on non-static fields.
+        trySimplifyUnusedResultInternal(tree.getFirstChild(), sideEffectRoots);
+        if (tree.isStaticMember() && tree.hasTwoChildren()) {
+          trySimplifyUnusedResultInternal(tree.getLastChild(), sideEffectRoots);
+        }
       }
       default -> {
         // This is the meat of this function. It covers the general case of nodes which are unused
@@ -421,6 +432,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         return atFixedPoint;
       }
     }
+    return false;
   }
 
   /**
