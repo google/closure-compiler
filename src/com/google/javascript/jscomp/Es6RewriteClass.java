@@ -45,6 +45,11 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
       FeatureSet.BARE_MINIMUM.with(
           Feature.CLASSES, Feature.CLASS_GETTER_SETTER, Feature.NEW_TARGET, Feature.SUPER);
 
+  static final DiagnosticType CONSTRUCTOR_PRIMITIVE_RETURN =
+      DiagnosticType.error(
+          "JSC_CONSTRUCTOR_PRIMITIVE_RETURN",
+          "Class constructors may only return an object or undefined");
+
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
   private final Es6ConvertSuperConstructorCalls convertSuperConstructorCalls;
@@ -143,6 +148,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
           || (member.isGetterDef() || member.isSetterDef())) {
         visitNonMethodMember(member, metadata);
       } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(member)) {
+        if (!classNode.isFromExterns()) {
+          reportPrimitiveReturns(member.getFirstChild());
+        }
         constructor = member.removeFirstChild().setColor(classNode.getColor());
         if (!metadata.anonymous()) {
           // Turns class Foo { constructor: function() {} } into function Foo() {},
@@ -223,6 +231,34 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
     }
 
     t.reportCodeChange();
+  }
+
+  /**
+   * Reports an error for each primitive value returned from a class constructor. A native class
+   * constructor ignores such a value in a base class and throws a TypeError in a derived class
+   * (ES2022 § 10.2.2). After transpilation the constructor is a plain function, so a subclass's
+   * {@code Base.call(this) || this} can evaluate to the value, and a derived class constructor
+   * returns the new object instead of throwing.
+   *
+   * <p>Only side-effect-free primitive values ({@link NodeUtil#isImmutableValue}) are recognized,
+   * except {@code undefined}, which both kinds of constructor may return. A computed return value
+   * would need a runtime check in every constructor.
+   */
+  private void reportPrimitiveReturns(Node constructor) {
+    // TODO(b/573571176): A derived constructor that returns `undefined`, explicitly or by reaching
+    // the end of its body, before calling `super()` must throw a ReferenceError.
+    NodeUtil.visitPostOrder(
+        NodeUtil.getFunctionBody(constructor),
+        n -> {
+          if (n.isReturn()
+              && n.hasChildren()
+              && NodeUtil.isImmutableValue(n.getFirstChild())
+              && NodeUtil.getKnownValueType(n.getFirstChild()) != NodeUtil.ValueType.VOID) {
+            compiler.report(JSError.make(n, CONSTRUCTOR_PRIMITIVE_RETURN));
+          }
+        },
+        // A `return` in a nested function belongs to that function.
+        n -> !n.isFunction());
   }
 
   private Node createObjectDotDefineProperties() {

@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.Es6RewriteClass.CONSTRUCTOR_PRIMITIVE_RETURN;
 import static com.google.javascript.jscomp.TranspilationUtil.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypedScopeCreator.DYNAMIC_EXTENDS_WITHOUT_JSDOC;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -1441,9 +1442,10 @@ $jscomp.inherits(C, AggregateError);
 
   @Test
   public void testPrimitiveConstructorReturns() {
-    // TODO(b/573280089): A base constructor ignores a primitive return value, but the transpiled
-    // function returns it, so `Base.call(this, 0) || this` in a subclass can evaluate to `42`. A
-    // `return` in a nested function belongs to that function and must be kept.
+    // A base constructor ignores a primitive return value, but the transpiled function returns it,
+    // so `Base.call(this, 0) || this` in a subclass can evaluate to `42`. Each such return is
+    // reported as an error. A `return` in a nested function belongs to that function, so it isn't
+    // reported.
     ignoreWarnings(TypeValidator.TYPE_MISMATCH_WARNING);
     test(
         srcs(
@@ -1462,33 +1464,10 @@ $jscomp.inherits(C, AggregateError);
               }
             }
             """),
-        expected(
-            """
-            /** @constructor */
-            let Base = function(v) {
-              if (v === 1) {
-                return 42;
-              }
-              if (v === 2) {
-                return null;
-              }
-              this.f = function() {
-                return -1;
-              };
-            };
-            /** @constructor */
-            let Sub = function() {
-              var $jscomp$super$this$m1146332801$0;
-              $jscomp$super$this$m1146332801$0 = Base.call(this, 0) || this;
-              $jscomp$super$this$m1146332801$0.g = function() {
-                return "s";
-              };
-              return $jscomp$super$this$m1146332801$0;
-            };
-            $jscomp.inherits(Sub, Base);
-            """));
-    // TODO(b/573280089): A derived constructor that returns a primitive, before or after `super()`,
-    // throws a TypeError, but the transpiled constructor returns the new object instead.
+        error(CONSTRUCTOR_PRIMITIVE_RETURN),
+        error(CONSTRUCTOR_PRIMITIVE_RETURN));
+    // A derived constructor that returns a primitive, before or after `super()`, throws a
+    // TypeError, so it is reported as an error.
     test(
         srcs(
             """
@@ -1503,31 +1482,9 @@ $jscomp.inherits(C, AggregateError);
               constructor() { super(); return null; }
             }
             """),
-        expected(
-            """
-            /** @constructor */
-            let Base = function() {};
-            /** @constructor */
-            let NoSuper = function(w) {
-              if (w) {
-                return 42;
-              }
-              Base.call(this);
-            };
-            $jscomp.inherits(NoSuper, Base);
-            /** @constructor */
-            let AfterSuper = function() {
-              Base.call(this);
-              return "s";
-            };
-            $jscomp.inherits(AfterSuper, Base);
-            /** @constructor */
-            let ReturnsNull = function() {
-              Base.call(this);
-              return null;
-            };
-            $jscomp.inherits(ReturnsNull, Base);
-            """));
+        error(CONSTRUCTOR_PRIMITIVE_RETURN),
+        error(CONSTRUCTOR_PRIMITIVE_RETURN),
+        error(CONSTRUCTOR_PRIMITIVE_RETURN));
   }
 
   @Test
