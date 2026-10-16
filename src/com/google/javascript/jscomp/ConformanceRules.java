@@ -28,11 +28,11 @@ import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.reflect.TypeToken;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CheckConformance.Precondition;
 import com.google.javascript.jscomp.CheckConformance.Rule;
@@ -53,8 +53,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -1465,60 +1463,100 @@ public final class ConformanceRules {
 
     private Rule createRule(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
-      try {
-        Class<Rule> custom = getRuleClass(requirement.getJavaClass());
-        Constructor<?> ctor = getRuleConstructor(custom);
-        Rule rule;
-        try {
-          rule = (Rule) (ctor.newInstance(compiler, requirement));
-        } catch (InvocationTargetException e) {
-          Throwable cause = e.getCause();
-          if (cause instanceof InvalidRequirementSpec invalidRequirementSpec) {
-            throw invalidRequirementSpec;
-          }
-          throw new RuntimeException(cause);
-        }
-        return rule;
-      } catch (InstantiationException | IllegalAccessException | IllegalArgumentException e) {
-        throw new RuntimeException(e);
+      CustomRuleFactory factory = CUSTOM_RULE_REGISTRY.get(requirement.getJavaClass());
+      if (factory == null) {
+        throw new InvalidRequirementSpec("Unknown conformance rule: " + requirement.getJavaClass());
       }
+      return factory.create(compiler, requirement);
     }
 
-    private Constructor<?> getRuleConstructor(Class<Rule> cls) throws InvalidRequirementSpec {
-      for (Constructor<?> ctor : cls.getConstructors()) {
-        Class<?>[] paramClasses = ctor.getParameterTypes();
-        if (paramClasses.length == 2) {
-          TypeToken<?> param1 = TypeToken.of(paramClasses[0]);
-          TypeToken<?> param2 = TypeToken.of(paramClasses[1]);
-          if (param1.isSupertypeOf(COMPILER_TYPE) && param2.isSupertypeOf(REQUIREMENT_TYPE)) {
-            return ctor;
-          }
-        }
-      }
-
-      throw new InvalidRequirementSpec("No valid class constructors found.");
+    @FunctionalInterface
+    private interface CustomRuleFactory {
+      Rule create(AbstractCompiler compiler, Requirement requirement) throws InvalidRequirementSpec;
     }
 
-    private static final TypeToken<Rule> RULE_TYPE = new TypeToken<Rule>() {};
+    private static final ImmutableMap<String, CustomRuleFactory> CUSTOM_RULE_REGISTRY =
+        createCustomRuleRegistry();
 
-    private static final TypeToken<AbstractCompiler> COMPILER_TYPE =
-        new TypeToken<AbstractCompiler>() {};
-
-    private static final TypeToken<Requirement> REQUIREMENT_TYPE = new TypeToken<Requirement>() {};
-
-    private Class<Rule> getRuleClass(String className) throws InvalidRequirementSpec {
-      Class<?> customClass;
-      try {
-        customClass = Class.forName(className);
-      } catch (ClassNotFoundException e) {
-        throw new InvalidRequirementSpec("JavaClass not found.", e);
-      }
-      if (RULE_TYPE.isSupertypeOf(TypeToken.of(customClass))) {
-        @SuppressWarnings("unchecked") // Assignable to Rule;
-        Class<Rule> ruleClass = (Class<Rule>) customClass;
-        return ruleClass;
-      }
-      throw new InvalidRequirementSpec("JavaClass is not a rule.");
+    private static ImmutableMap<String, CustomRuleFactory> createCustomRuleRegistry() {
+      ImmutableMap.Builder<String, CustomRuleFactory> builder =
+          ImmutableMap.<String, CustomRuleFactory>builder()
+              .put("com.google.javascript.jscomp.ConformanceRules$NoOp", NoOp::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$InferredConstCheck",
+                  InferredConstCheck::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BannedDependency",
+                  BannedDependency::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BannedDependencyRegex",
+                  BannedDependencyRegex::new)
+              .put("com.google.javascript.jscomp.ConformanceRules$BannedName", BannedName::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BannedProperty",
+                  BannedProperty::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BannedStringRegex",
+                  BannedStringRegex::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$RestrictedNameCall",
+                  RestrictedNameCall::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$RestrictedMethodCall",
+                  RestrictedMethodCall::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$RestrictedPropertyWrite",
+                  RestrictedPropertyWrite::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BannedCodePattern",
+                  BannedCodePattern::new)
+              .put("com.google.javascript.jscomp.ConformanceRules$BanForOf", BanForOf::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$RequireUseStrict",
+                  RequireUseStrict::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanThrowOfNonErrorTypes",
+                  BanThrowOfNonErrorTypes::new)
+              .put("com.google.javascript.jscomp.ConformanceRules$BanNullDeref", BanNullDeref::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanUnknownThis",
+                  BanUnknownThis::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanUnknownDirectThisPropsReferences",
+                  BanUnknownDirectThisPropsReferences::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanUnknownTypedClassPropsReferences",
+                  BanUnknownTypedClassPropsReferences::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanUnresolvedType",
+                  BanUnresolvedType::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$StrictBanUnresolvedType",
+                  StrictBanUnresolvedType::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanGlobalVars", BanGlobalVars::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BannedEnhance", BannedEnhance::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BannedModsRegex",
+                  BannedModsRegex::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanCreateElement",
+                  BanCreateElement::new)
+              .put("com.google.javascript.jscomp.ConformanceRules$BanCreateDom", BanCreateDom::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanElementSetAttribute",
+                  BanElementSetAttribute::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanSettingAttributes",
+                  BanSettingAttributes::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanExecCommand",
+                  BanExecCommand::new)
+              .put(
+                  "com.google.javascript.jscomp.ConformanceRules$BanStaticThis",
+                  BanStaticThis::new);
+      return builder.buildOrThrow();
     }
   }
 
@@ -1689,6 +1727,7 @@ public final class ConformanceRules {
       return prop != null && !prop.isTypeInferred();
     }
   }
+
 
   /**
    * Banned unknown type references of the form "instance.prop" unless

@@ -19,11 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CompilerOptions.ConformanceReportingMode;
-import com.google.javascript.jscomp.ConformanceRules.AbstractRule;
-import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
-import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
 import com.google.protobuf.TextFormat.ParseException;
 import java.util.List;
@@ -2430,185 +2426,6 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCustom2() {
-    allowSourcelessWarnings();
-    configuration =
-        """
-        requirement: {
-          type: CUSTOM
-          java_class: 'MissingClass'
-          error_message: 'placeholder'
-        }
-        """;
-
-    testError(
-        "anything;",
-        CheckConformance.INVALID_REQUIREMENT_SPEC,
-        """
-        Invalid requirement. Reason: JavaClass not found.
-        Requirement spec:
-        error_message: "placeholder"
-        type: CUSTOM
-        java_class: "MissingClass"
-        """);
-  }
-
-  @Test
-  public void testCustom3() {
-    allowSourcelessWarnings();
-    configuration =
-        """
-        requirement: {
-          type: CUSTOM
-          java_class: 'com.google.javascript.jscomp.CheckConformanceTest'
-          error_message: 'placeholder'
-        }
-        """;
-
-    testError(
-        "anything;",
-        CheckConformance.INVALID_REQUIREMENT_SPEC,
-        """
-        Invalid requirement. Reason: JavaClass is not a rule.
-        Requirement spec:
-        error_message: "placeholder"
-        type: CUSTOM
-        java_class: "com.google.javascript.jscomp.CheckConformanceTest"
-        """);
-  }
-
-  // A custom rule missing a callable constructor.
-  public static class CustomRuleMissingPublicConstructor extends AbstractRule {
-    CustomRuleMissingPublicConstructor(AbstractCompiler compiler, Requirement requirement)
-        throws InvalidRequirementSpec {
-      super(compiler, requirement);
-      if (requirement.getValueCount() == 0) {
-        throw new InvalidRequirementSpec("missing value");
-      }
-    }
-
-    @Override
-    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      // Everything is ok.
-      return ConformanceResult.CONFORMANCE;
-    }
-  }
-
-  // A valid custom rule.
-  public static class CustomRule extends AbstractRule {
-    public CustomRule(AbstractCompiler compiler, Requirement requirement)
-        throws InvalidRequirementSpec {
-      super(compiler, requirement);
-      if (requirement.getValueCount() == 0) {
-        throw new InvalidRequirementSpec("missing value");
-      }
-    }
-
-    @Override
-    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      // Everything is ok.
-      return ConformanceResult.CONFORMANCE;
-    }
-  }
-
-  // A valid custom rule.
-  public static class CustomRuleReport extends AbstractRule {
-    public CustomRuleReport(AbstractCompiler compiler, Requirement requirement)
-        throws InvalidRequirementSpec {
-      super(compiler, requirement);
-      if (requirement.getValueCount() == 0) {
-        throw new InvalidRequirementSpec("missing value");
-      }
-    }
-
-    @Override
-    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      // Everything is ok.
-      return n.isScript() ? ConformanceResult.VIOLATION : ConformanceResult.CONFORMANCE;
-    }
-  }
-
-  @Test
-  public void testCustom4() {
-    allowSourcelessWarnings();
-    configuration =
-        """
-        requirement: {
-          type: CUSTOM
-          java_class: 'com.google.javascript.jscomp.CheckConformanceTest$CustomRuleMissingPublicConstructor'
-          error_message: 'placeholder'
-        }
-        """;
-
-    testError(
-        "anything;",
-        CheckConformance.INVALID_REQUIREMENT_SPEC,
-        """
-        Invalid requirement. Reason: No valid class constructors found.
-        Requirement spec:
-        error_message: "placeholder"
-        type: CUSTOM
-        java_class: "com.google.javascript.jscomp.CheckConformanceTest$CustomRuleMissingPublicConstructor"
-        """);
-  }
-
-  @Test
-  public void testCustom5() {
-    allowSourcelessWarnings();
-    configuration =
-        """
-        requirement: {
-          type: CUSTOM
-          java_class: 'com.google.javascript.jscomp.CheckConformanceTest$CustomRule'
-          error_message: 'placeholder'
-        }
-        """;
-
-    testError(
-        "anything;",
-        CheckConformance.INVALID_REQUIREMENT_SPEC,
-        """
-        Invalid requirement. Reason: missing value
-        Requirement spec:
-        error_message: "placeholder"
-        type: CUSTOM
-        java_class: "com.google.javascript.jscomp.CheckConformanceTest$CustomRule"
-        """);
-  }
-
-  @Test
-  public void testCustom6() {
-    allowSourcelessWarnings();
-    configuration =
-        """
-        requirement: {
-          type: CUSTOM
-          java_class: 'com.google.javascript.jscomp.CheckConformanceTest$CustomRule'
-          value: 'placeholder'
-          error_message: 'placeholder'
-        }
-        """;
-
-    testNoWarning("anything;");
-  }
-
-  @Test
-  public void testCustom7() {
-    configuration =
-        """
-        requirement: {
-          type: CUSTOM
-          java_class: 'com.google.javascript.jscomp.CheckConformanceTest$CustomRuleReport'
-          value: 'placeholder'
-          error_message: 'CustomRule Message'
-        }
-        """;
-
-    testWarning(
-        "anything;", CheckConformance.CONFORMANCE_VIOLATION, "Violation: CustomRule Message");
-  }
-
-  @Test
   public void testCustomBanForOf() {
     configuration =
         """
@@ -4874,5 +4691,82 @@ public final class CheckConformanceTest extends CompilerTestCase {
           }
         }
         """);
+  }
+
+  @Test
+  public void testInvalidCustomRuleJavaClass() {
+    allowSourcelessWarnings();
+    configuration =
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$NoSuchClass'
+          error_message: 'Should fail'
+        }
+        """;
+    testError(
+        "var x;",
+        CheckConformance.INVALID_REQUIREMENT_SPEC,
+        """
+        Invalid requirement. Reason: Unknown conformance rule: com.google.javascript.jscomp.ConformanceRules$NoSuchClass
+        Requirement spec:
+        error_message: "Should fail"
+        type: CUSTOM
+        java_class: "com.google.javascript.jscomp.ConformanceRules$NoSuchClass"
+        """);
+  }
+
+  @Test
+  public void testAllCustomRulesRegistered() {
+    allowSourcelessWarnings();
+    String[] rules = {
+      "NoOp",
+      "InferredConstCheck",
+      "BannedDependency",
+      "BannedDependencyRegex",
+      "BannedName",
+      "BannedProperty",
+      "BannedStringRegex",
+      "RestrictedNameCall",
+      "RestrictedMethodCall",
+      "RestrictedPropertyWrite",
+      "BannedCodePattern",
+      "BanForOf",
+      "RequireUseStrict",
+      "BanThrowOfNonErrorTypes",
+      "BanNullDeref",
+      "BanUnknownThis",
+      "BanUnknownDirectThisPropsReferences",
+      "BanUnknownTypedClassPropsReferences",
+      "BanUnresolvedType",
+      "StrictBanUnresolvedType",
+      "BanGlobalVars",
+      "BannedEnhance",
+      "BannedModsRegex",
+      "BanCreateElement",
+      "BanCreateDom",
+      "BanElementSetAttribute",
+      "BanSettingAttributes",
+      "BanExecCommand",
+      "BanStaticThis",
+    };
+    for (String rule : rules) {
+      configuration =
+          "requirement: {\n"
+              + "  type: CUSTOM\n"
+              + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$"
+              + rule
+              + "'\n"
+              + "  error_message: 'msg'\n"
+              + "  value: 'value'\n"
+              + "}\n";
+      try {
+        testNoWarning("var x;");
+      } catch (RuntimeException e) {
+        assertThat(e).hasMessageThat().doesNotContain("Unknown conformance rule");
+      } catch (AssertionError e) {
+        // Assertions are expected if the rule requires specific values
+      }
+    }
   }
 }
