@@ -78,7 +78,8 @@ public final class GatherGetterAndSetterProperties implements CompilerPass {
         case CALL -> {
           if (NodeUtil.isObjectDefinePropertyDefinition(n)) {
             visitDefineProperty(n);
-          } else if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
+          } else if (NodeUtil.isObjectDefinePropertiesDefinition(n)
+              || NodeUtil.isObjectCreateWithPropertiesDefinition(n)) {
             visitDefineProperties(n);
           }
         }

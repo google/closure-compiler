@@ -3893,6 +3893,17 @@ public final class NodeUtil {
         && isKnownGlobalObjectReference(getprop.getFirstChild());
   }
 
+  /** Returns {@code true} if the node is a 2-argument {@code Object.create(proto, descriptors)}. */
+  public static boolean isObjectCreateWithPropertiesDefinition(Node n) {
+    if (!n.isCall() || !n.hasXChildren(3)) {
+      return false;
+    }
+    Node getprop = n.getFirstChild();
+    return getprop.isGetProp()
+        && getprop.getString().equals("create")
+        && isKnownGlobalObjectReference(getprop.getFirstChild());
+  }
+
   private static final QualifiedName GLOBAL_OBJECT = QualifiedName.of("$jscomp.global.Object");
   private static final QualifiedName GLOBAL_OBJECT_MANGLED =
       QualifiedName.of("$jscomp$global.Object");

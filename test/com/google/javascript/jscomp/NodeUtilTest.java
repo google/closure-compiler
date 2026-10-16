@@ -4533,6 +4533,27 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testIsObjectCreateWithPropertiesDefinition() {
+      assertThat(
+              NodeUtil.isObjectCreateWithPropertiesDefinition(
+                  parseFirst(CALL, "Object.create(null, {});")))
+          .isTrue();
+      assertThat(
+              NodeUtil.isObjectCreateWithPropertiesDefinition(
+                  parseFirst(CALL, "$jscomp.global.Object.create(proto, foo);")))
+          .isTrue();
+
+      assertThat(
+              NodeUtil.isObjectCreateWithPropertiesDefinition(
+                  parseFirst(CALL, "Object.create(proto);")))
+          .isFalse();
+      assertThat(
+              NodeUtil.isObjectCreateWithPropertiesDefinition(
+                  parseFirst(CALL, "other.Object.create(proto, {});")))
+          .isFalse();
+    }
+
+    @Test
     public void testIsObjectDefinePropertyDefinition() {
       assertThat(
               NodeUtil.isObjectDefinePropertyDefinition(

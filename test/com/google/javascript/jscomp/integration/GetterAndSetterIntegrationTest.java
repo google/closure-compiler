@@ -1884,7 +1884,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setAssumeGettersArePure(false);
 
-    // TODO(b/573608432): `prop` is a getter with a side effect, so `void obj.prop` must be kept.
+    // `prop` is a getter with a side effect, so `void obj.prop` is kept.
     test(
         options,
         """
@@ -1893,11 +1893,13 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         window['read'] = function() { void obj.prop; };
         """,
         """
-        Object.create(null, {prop:{get() {
+        const obj = Object.create(null, {prop:{get() {
           alert("side effect");
           return 1;
         }}});
-        window.read = function() {};
+        window.read = function() {
+          obj.prop;
+        };
         """);
   }
 }
