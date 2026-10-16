@@ -3738,23 +3738,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("const [x, y];", "const variables must have an initializer");
   }
 
-  @Test
-  public void testComprehensions() {
-    strictMode = SLOPPY;
-    String error = "unsupported language feature:" + " array/generator comprehensions";
-
-    // array comprehensions
-    parseError("[for (x of y) z];", error);
-    parseError("[for ({x,y} of z) x+y];", error);
-    parseError("[for (x of y) if (x<10) z];", error);
-    parseError("[for (a = 5 of v) a];", "'identifier' expected");
-
-    // generator comprehensions
-    parseError("(for (x of y) z);", error);
-    parseError("(for ({x,y} of z) x+y);", error);
-    parseError("(for (x of y) if (x<10) z);", error);
-    parseError("(for (a = 5 of v) a);", "'identifier' expected");
-  }
 
   @Test
   public void testLetForbidden1() {

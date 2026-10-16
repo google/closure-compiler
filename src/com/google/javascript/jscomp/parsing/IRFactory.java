@@ -53,9 +53,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyDefinitionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyFieldTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyGetterTree;
@@ -1467,18 +1464,6 @@ class IRFactory {
       setSourceInfo(node, literal);
       node.putBooleanProp(Node.QUOTED_PROP, true);
       return node;
-    }
-
-    Node processComprehension(ComprehensionTree tree) {
-      return unsupportedLanguageFeature(tree, "array/generator comprehensions");
-    }
-
-    Node processComprehensionFor(ComprehensionForTree tree) {
-      return unsupportedLanguageFeature(tree, "array/generator comprehensions");
-    }
-
-    Node processComprehensionIf(ComprehensionIfTree tree) {
-      return unsupportedLanguageFeature(tree, "array/generator comprehensions");
     }
 
     Node processArrayLiteral(ArrayLiteralExpressionTree tree) {
@@ -3763,15 +3748,6 @@ class IRFactory {
         }
         case OBJECT_PATTERN -> {
           return processObjectPattern(node.asObjectPattern());
-        }
-        case COMPREHENSION -> {
-          return processComprehension(node.asComprehension());
-        }
-        case COMPREHENSION_FOR -> {
-          return processComprehensionFor(node.asComprehensionFor());
-        }
-        case COMPREHENSION_IF -> {
-          return processComprehensionIf(node.asComprehensionIf());
         }
         case DEFAULT_PARAMETER -> {
           return processDefaultParameter(node.asDefaultParameter());

@@ -36,9 +36,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyDefinitionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyFieldTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyGetterTree;
@@ -1622,7 +1619,7 @@ public class Parser {
       case IDENTIFIER, TYPE, DECLARE, MODULE, NAMESPACE -> parseIdentifierExpression();
       case NUMBER, STRING, BIGINT, TRUE, FALSE, NULL -> parseLiteralExpression();
       case NO_SUBSTITUTION_TEMPLATE, TEMPLATE_HEAD -> parseTemplateLiteral(null);
-      case OPEN_SQUARE -> parseArrayInitializer();
+      case OPEN_SQUARE -> parseArrayLiteral();
       case OPEN_CURLY -> parseObjectLiteral();
       case OPEN_PAREN -> parseCoverParenthesizedExpressionAndArrowParameterList();
       case SLASH, SLASH_EQUAL -> parseRegularExpressionLiteral();
@@ -1746,71 +1743,6 @@ public class Parser {
     LiteralToken literal = nextRegularExpressionLiteralToken();
     recordFeatureUsed(Feature.REGEXP_SYNTAX);
     return new LiteralExpressionTree(getTreeLocation(start), literal);
-  }
-
-  private ParseTree parseArrayInitializer() {
-    if (peekType(1) == TokenType.FOR) {
-      return parseArrayComprehension();
-    } else {
-      return parseArrayLiteral();
-    }
-  }
-
-  private ParseTree parseGeneratorComprehension() {
-    return parseComprehension(
-        ComprehensionTree.ComprehensionType.GENERATOR, TokenType.OPEN_PAREN, TokenType.CLOSE_PAREN);
-  }
-
-  private ParseTree parseArrayComprehension() {
-    return parseComprehension(
-        ComprehensionTree.ComprehensionType.ARRAY, TokenType.OPEN_SQUARE, TokenType.CLOSE_SQUARE);
-  }
-
-  private ParseTree parseComprehension(
-      ComprehensionTree.ComprehensionType type, TokenType startToken, TokenType endToken) {
-    SourcePosition start = getTreeStartLocation();
-    eat(startToken);
-
-    ImmutableList.Builder<ParseTree> children = ImmutableList.builder();
-    while (peek(TokenType.FOR) || peek(TokenType.IF)) {
-      if (peek(TokenType.FOR)) {
-        children.add(parseComprehensionFor());
-      } else {
-        children.add(parseComprehensionIf());
-      }
-    }
-
-    ParseTree tailExpression = parseAssignmentExpression();
-    eat(endToken);
-
-    return new ComprehensionTree(getTreeLocation(start), type, children.build(), tailExpression);
-  }
-
-  private ParseTree parseComprehensionFor() {
-    SourcePosition start = getTreeStartLocation();
-    eat(TokenType.FOR);
-    eat(TokenType.OPEN_PAREN);
-
-    ParseTree initializer;
-    if (peekId()) {
-      initializer = parseIdentifierExpression();
-    } else {
-      initializer = parsePattern(PatternKind.ANY);
-    }
-
-    eatPredefinedString(PredefinedName.OF);
-    ParseTree collection = parseAssignmentExpression();
-    eat(TokenType.CLOSE_PAREN);
-    return new ComprehensionForTree(getTreeLocation(start), initializer, collection);
-  }
-
-  private ParseTree parseComprehensionIf() {
-    SourcePosition start = getTreeStartLocation();
-    eat(TokenType.IF);
-    eat(TokenType.OPEN_PAREN);
-    ParseTree initializer = parseAssignmentExpression();
-    eat(TokenType.CLOSE_PAREN);
-    return new ComprehensionIfTree(getTreeLocation(start), initializer);
   }
 
   // 11.1.4 Array Literal Expression
@@ -2100,9 +2032,6 @@ public class Parser {
   //     ( ... BindingIdentifier )
   //     ( Expression , ... BindingIdentifier )
   private ParseTree parseCoverParenthesizedExpressionAndArrowParameterList() {
-    if (peekType(1) == TokenType.FOR) {
-      return parseGeneratorComprehension();
-    }
 
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.OPEN_PAREN);

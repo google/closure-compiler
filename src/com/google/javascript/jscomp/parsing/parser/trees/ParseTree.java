@@ -67,9 +67,6 @@ public class ParseTree {
   public CatchTree asCatch() { return (CatchTree) this; }
   public ClassDeclarationTree asClassDeclaration() { return (ClassDeclarationTree) this; }
   public CommaExpressionTree asCommaExpression() { return (CommaExpressionTree) this; }
-  public ComprehensionIfTree asComprehensionIf() { return (ComprehensionIfTree) this; }
-  public ComprehensionForTree asComprehensionFor() { return (ComprehensionForTree) this; }
-  public ComprehensionTree asComprehension() { return (ComprehensionTree) this; }
   public ComputedPropertyDefinitionTree asComputedPropertyDefinition() {
     return (ComputedPropertyDefinitionTree) this; }
 
