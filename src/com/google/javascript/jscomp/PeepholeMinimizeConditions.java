@@ -411,6 +411,16 @@ class PeepholeMinimizeConditions
       case NE -> complementOperator = Token.EQ;
       case SHEQ -> complementOperator = Token.SHNE;
       case SHNE -> complementOperator = Token.SHEQ;
+      case NOT -> {
+        // !!(a < b) -> a < b (when the inner expression already produces a boolean)
+        if (NodeUtil.isBooleanResult(notChild.getFirstChild())) {
+          Node expr = notChild.removeFirstChild();
+          n.replaceWith(expr);
+          reportChangeToEnclosingScope(parent);
+          return expr;
+        }
+        return n;
+      }
       // GT, GE, LT, LE are not handled in this because !(x<NaN) != x>=NaN.
       default -> {
         return n;
@@ -452,12 +462,43 @@ class PeepholeMinimizeConditions
    */
   private Node tryMinimizeHook(Node n) {
     Node originalCond = n.getFirstChild();
+    Node thenBranch = originalCond.getNext();
+    Node elseBranch = thenBranch.getNext();
+
+    // Fold boolean-literal HOOKs:
+    //   x ? true : false -> x   (if x is already a boolean result)
+    //   x ? true : false -> !!x (otherwise)
+    //   x ? false : true -> !x
+    // Note: identical branches (e.g. x ? true : true -> true or (x, true)) are handled
+    // generally for any equal subtrees (x ? a : a) in PeepholeRemoveDeadCode.tryFoldHook.
+    if (NodeUtil.isBooleanResult(thenBranch) && NodeUtil.isBooleanResult(elseBranch)) {
+      Tri thenVal = getSideEffectFreeBooleanValue(thenBranch);
+      Tri elseVal = getSideEffectFreeBooleanValue(elseBranch);
+      Node replacement = null;
+      if (thenVal == Tri.TRUE && elseVal == Tri.FALSE) {
+        // x ? true : false -> x (if boolean) or !!x
+        Node cond = originalCond.detach();
+        replacement =
+            NodeUtil.isBooleanResult(cond) ? cond : IR.not(IR.not(cond).srcref(n)).srcref(n);
+      } else if (thenVal == Tri.FALSE && elseVal == Tri.TRUE) {
+        // x ? false : true -> !x
+        Node cond = originalCond.detach();
+        replacement = IR.not(cond).srcref(n);
+      }
+      if (replacement != null) {
+        // Replace `x ? true : false` or `x ? false : true` with `replacement` (`x`, `!!x`, or `!x`)
+        n.replaceWith(replacement);
+        reportChangeToEnclosingScope(replacement);
+        markFunctionsDeleted(n);
+        return replacement.isNot() ? tryMinimizeNot(replacement) : replacement;
+      }
+    }
+
     MinimizedCondition minCond = MinimizedCondition.fromConditionNode(originalCond);
     MeasuredNode mNode =
         minCond.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT);
     if (mNode.isNot()) {
       // Swap the HOOK
-      Node thenBranch = n.getSecondChild();
       replaceNode(originalCond, mNode.withoutNot());
       thenBranch.detach();
       n.addChildToBack(thenBranch);
