@@ -1856,4 +1856,48 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
         alert(c.b());  // Alerts, "Hello GrandChild"
         """);
   }
+
+  @Test
+  public void getterDefinedWithObjectCreate_unusedRead_assumeGettersArePure() {
+    CompilerOptions options = createCompilerOptions();
+    options.setAssumeGettersArePure(true);
+
+    // Getters are assumed to be pure, so `void obj.prop` is removed.
+    test(
+        options,
+        """
+        const obj = /** @type {?} */ (
+            Object.create(null, {prop: {get() { alert('side effect'); return 1; }}}));
+        window['read'] = function() { void obj.prop; };
+        """,
+        """
+        Object.create(null, {prop:{get() {
+          alert("side effect");
+          return 1;
+        }}});
+        window.read = function() {};
+        """);
+  }
+
+  @Test
+  public void getterDefinedWithObjectCreate_unusedRead_doNotAssumeGettersArePure() {
+    CompilerOptions options = createCompilerOptions();
+    options.setAssumeGettersArePure(false);
+
+    // TODO(b/573608432): `prop` is a getter with a side effect, so `void obj.prop` must be kept.
+    test(
+        options,
+        """
+        const obj = /** @type {?} */ (
+            Object.create(null, {prop: {get() { alert('side effect'); return 1; }}}));
+        window['read'] = function() { void obj.prop; };
+        """,
+        """
+        Object.create(null, {prop:{get() {
+          alert("side effect");
+          return 1;
+        }}});
+        window.read = function() {};
+        """);
+  }
 }

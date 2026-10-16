@@ -320,6 +320,22 @@ public class GatherGetterAndSetterPropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void detectObjectCreateWithProperties() {
+    // TODO(b/573608432): Getters and setters in the descriptors of `Object.create(proto,
+    // descriptors)` should be collected like those of `Object.defineProperties`.
+    testSame(
+        """
+        Object.create(null, {
+          prop: {
+            get() {},
+          }
+        });
+        """);
+
+    assertThat(getLastAccessorSummary().getKind("prop")).isEqualTo(PropertyAccessKind.NORMAL);
+  }
+
+  @Test
   public void detectJscompGlobalObject() {
     testSame(
         """
