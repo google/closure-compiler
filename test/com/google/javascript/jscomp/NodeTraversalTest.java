@@ -1057,4 +1057,41 @@ public final class NodeTraversalTest {
 
     return IR.root(IR.root(extern), IR.root(main));
   }
+
+  @Test
+  public void testCanonicalTraverseEntryPoints() {
+    Compiler compiler = new Compiler();
+    Node externs = new Node(Token.BLOCK);
+    Node root = new Node(Token.BLOCK);
+    Node scopeRoot = new Node(Token.ROOT, externs, root);
+
+    List<Node> visited = new ArrayList<>();
+    NodeTraversal.Callback cb =
+        new NodeTraversal.AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            visited.add(n);
+          }
+        };
+
+    // test traverse
+    NodeTraversal.traverse(compiler, root, cb);
+    assertThat(visited).containsExactly(root);
+    visited.clear();
+
+    // test traverseRoots
+    NodeTraversal.traverseRoots(compiler, cb, externs, root);
+    assertThat(visited).containsExactly(externs, root).inOrder();
+    visited.clear();
+
+    // test traverseScopeRoots
+    NodeTraversal.traverseScopeRoots(compiler, ImmutableList.of(root), cb, false);
+    assertThat(visited).containsExactly(root);
+    visited.clear();
+
+    // test traverseAtScope
+    NodeTraversal.traverseAtScope(
+        compiler, cb, new SyntacticScopeCreator(compiler).createScope(scopeRoot, null));
+    assertThat(visited).containsExactly(externs, root, scopeRoot).inOrder();
+  }
 }

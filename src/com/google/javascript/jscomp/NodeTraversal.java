@@ -712,6 +712,11 @@ public class NodeTraversal {
     }
   }
 
+  /** Traverses the given scope. */
+  static void traverseAtScope(AbstractCompiler compiler, Callback cb, AbstractScope<?, ?> scope) {
+    NodeTraversal.builder().setCompiler(compiler).setCallback(cb).traverseAtScope(scope);
+  }
+
   /**
    * Traverses *just* the contents of provided scope nodes (and optionally scopes nested within
    * them)
