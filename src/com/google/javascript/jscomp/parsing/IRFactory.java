@@ -3501,11 +3501,6 @@ class IRFactory {
       }
     }
 
-    Node unsupportedLanguageFeature(ParseTree node, String feature) {
-      errorReporter.error(
-          "unsupported language feature: " + feature, sourceName, lineno(node), charno(node));
-      return createMissingExpressionNode();
-    }
 
     Node processLiteralExpression(LiteralExpressionTree expr) {
       return switch (expr.literalToken.type) {
