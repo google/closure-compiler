@@ -42,6 +42,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.JSTypeExpression.IMPLICIT_TEMPLATE_BOUND;
 
+import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -97,6 +98,47 @@ public final class JSTypeExpressionTest {
     f.addChildToBack(c);
     f.addChildToBack(d);
     f.addChildToBack(e);
-    return new JSTypeExpression(f, "");
+    return new JSTypeExpression(f, "<JSTypeExpressionTest>");
+  }
+
+  @Test
+  public void testMakeOptionalArgAndVarArgsDoesNotMutateRoot() {
+    Node root = new Node(Token.NAME);
+    JSTypeExpression expr = new JSTypeExpression(root, "source.js");
+
+    JSTypeExpression optArg = JSTypeExpression.makeOptionalArg(expr);
+    assertThat(optArg.getRoot().getToken()).isEqualTo(Token.EQUALS);
+    assertThat(optArg.getRoot().getParent()).isNull();
+
+    JSTypeExpression varArg = JSTypeExpression.makeVarArgs(expr);
+    assertThat(varArg.getRoot().getToken()).isEqualTo(Token.ITER_REST);
+    assertThat(varArg.getRoot().getParent()).isNull();
+
+    // root remains detached
+    assertThat(expr.getRoot().getParent()).isNull();
+
+    // We can call it multiple times on the same expression without throwing
+    JSTypeExpression optArg2 = JSTypeExpression.makeOptionalArg(expr);
+    assertThat(optArg2.getRoot().getToken()).isEqualTo(Token.EQUALS);
+    assertThat(optArg2.getRoot().getParent()).isNull();
+
+    // replaceNamesWithUnknownType does not mutate the original root
+    JSTypeExpression replaced = expr.replaceNamesWithUnknownType(ImmutableSet.of("foo"));
+    assertThat(replaced.getRoot().getParent()).isNull();
+    assertThat(expr.getRoot().getParent()).isNull();
+  }
+
+  @Test
+  public void testConstructWithAttachedNodeClonesRoot() {
+    Node parent = new Node(Token.BLOCK);
+    Node child = new Node(Token.NAME);
+    parent.addChildToBack(child);
+    assertThat(child.getParent()).isSameInstanceAs(parent);
+
+    JSTypeExpression expr = new JSTypeExpression(child, "source.js");
+    assertThat(expr.getRoot()).isNotSameInstanceAs(child);
+    assertThat(expr.getRoot().getParent()).isNull();
+    assertThat(child.getParent()).isSameInstanceAs(parent);
   }
 }
+

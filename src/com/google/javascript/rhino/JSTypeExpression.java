@@ -79,7 +79,7 @@ public final class JSTypeExpression implements Serializable {
   private final String sourceName;
 
   public JSTypeExpression(Node root, String sourceName) {
-    this.root = root;
+    this.root = (root.getParent() != null) ? root.cloneTree() : root;
     this.sourceName = sourceName;
   }
 
@@ -159,7 +159,7 @@ public final class JSTypeExpression implements Serializable {
     if (expr.isOptionalArg() || expr.isVarArgs()) {
       return expr;
     } else {
-      Node equals = new Node(Token.EQUALS, expr.root);
+      Node equals = new Node(Token.EQUALS, expr.root.cloneTree());
       equals.clonePropsFrom(expr.root);
       return new JSTypeExpression(equals, expr.sourceName);
     }
@@ -170,7 +170,7 @@ public final class JSTypeExpression implements Serializable {
     if (expr.isOptionalArg() || expr.isVarArgs()) {
       return expr;
     } else {
-      Node equals = new Node(Token.ITER_REST, expr.root);
+      Node equals = new Node(Token.ITER_REST, expr.root.cloneTree());
       equals.clonePropsFrom(expr.root);
       return new JSTypeExpression(equals, expr.sourceName);
     }

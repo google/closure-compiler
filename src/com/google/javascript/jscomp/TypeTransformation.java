@@ -731,7 +731,8 @@ class TypeTransformation {
   }
 
   private JSType evalNativeTypeExpr(Node ttlAst) {
-    JSTypeExpression expr = new JSTypeExpression(getCallArgument(ttlAst, 0), VIRTUAL_FILE);
+    JSTypeExpression expr =
+        new JSTypeExpression(getCallArgument(ttlAst, 0).cloneTree(), VIRTUAL_FILE);
     return this.registry.evaluateTypeExpression(expr, this.typeEnv);
   }
 
