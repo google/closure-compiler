@@ -1626,12 +1626,15 @@ public final class SymbolTableTest {
     SymbolTable table = createSymbolTableWithDefaultExterns("");
 
     // From the externs.
-    Symbol sliceArg = getLocalVar(table, "sliceArg");
-    assertThat(sliceArg).isNotNull();
+    Symbol slice = getGlobalVar(table, "String.prototype.slice");
+    assertThat(slice).isNotNull();
 
-    Symbol scope = table.getSymbolForScope(table.getScope(sliceArg));
+    Symbol begin = table.getParameterInFunction(slice, "begin");
+    assertThat(begin).isNotNull();
+
+    Symbol scope = table.getSymbolForScope(table.getScope(begin));
     assertThat(scope).isNotNull();
-    assertThat(getGlobalVar(table, "String.prototype.slice")).isEqualTo(scope);
+    assertThat(slice).isEqualTo(scope);
 
     Symbol proto = getGlobalVar(table, "String.prototype");
     assertThat(proto.getDeclaration().getNode().getSourceFileName()).isEqualTo("externs1");
