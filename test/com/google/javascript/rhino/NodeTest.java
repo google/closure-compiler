@@ -1069,4 +1069,41 @@ public class NodeTest {
     assertThat(new Node(Token.NEG).isPos()).isFalse();
     assertThat(Node.newNumber(1.0).isPos()).isFalse();
   }
+
+  @Test
+  public void testReplaceWithPropagatesSrcrefIfMissing() {
+    Node parent = new Node(Token.BLOCK);
+    Node target = new Node(Token.NAME);
+    target.setLinenoCharno(10, 5);
+    target.setSourceFileForTesting("target.js");
+    parent.addChildToBack(target);
+
+    // Case (a): replacement has no source info
+    Node replacement1 = new Node(Token.NAME);
+    target.replaceWith(replacement1);
+    assertThat(replacement1.getLineno()).isEqualTo(10);
+    assertThat(replacement1.getCharno()).isEqualTo(5);
+    assertThat(replacement1.getSourceFileName()).isEqualTo("target.js");
+
+    // Case (b): replacement already has source info
+    Node replacement2 = new Node(Token.NAME);
+    replacement2.setLinenoCharno(20, 8);
+    replacement2.setSourceFileForTesting("replacement.js");
+    replacement1.replaceWith(replacement2);
+    assertThat(replacement2.getLineno()).isEqualTo(20);
+    assertThat(replacement2.getCharno()).isEqualTo(8);
+    assertThat(replacement2.getSourceFileName()).isEqualTo("replacement.js");
+
+    // Case (c): child of replacement has no source info
+    Node replacement3 = new Node(Token.NAME);
+    Node child = new Node(Token.NAME);
+    replacement3.addChildToBack(child);
+    replacement2.replaceWith(replacement3);
+    assertThat(replacement3.getLineno()).isEqualTo(20);
+    assertThat(replacement3.getCharno()).isEqualTo(8);
+    assertThat(replacement3.getSourceFileName()).isEqualTo("replacement.js");
+    assertThat(child.getLineno()).isEqualTo(-1);
+    assertThat(child.getCharno()).isEqualTo(-1);
+    assertThat(child.getSourceFileName()).isNull();
+  }
 }
