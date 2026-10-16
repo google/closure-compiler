@@ -5220,7 +5220,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("Js\\u{}ompiler", "Invalid escape sequence");
     // Legal unicode but invalid in identifier
     parseError("Js\\u{99}ompiler", "Invalid escape sequence");
+    // Won't fix (b/573608398): U+10000, U+16978 and U+10041 are valid identifier characters outside
+    // the BMP, but the compiler doesn't support astral-plane characters in identifiers, whether
+    // they are written as escapes or literally, and rejects them. We decided not to support them,
+    // since that would add complexity to the scanner and the code printer.
     parseError("Js\\u{10000}ompiler", "Invalid escape sequence");
+    parseError("var _\\u{16978}", "Invalid escape sequence");
+    parseError(
+        "var _\uD81A\uDD78", "Character '\uD81A' (U+D81A) is not a valid identifier start char");
     // Code points outside the BMP must not be truncated to their low 16 bits. U+10041 shares its
     // low bits with U+0041 ('A') and U+110041 is above the U+10FFFF maximum; both used to be
     // silently accepted.
