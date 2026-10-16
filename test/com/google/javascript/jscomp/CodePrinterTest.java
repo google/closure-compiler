@@ -2740,6 +2740,37 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testFormatNumber() {
+    // Schubfach boundary values
+    assertThat(CodeConsumer.formatNumber(2.0e-3)).isEqualTo(".002");
+    assertThat(CodeConsumer.formatNumber(1.0e23)).isEqualTo("1E23");
+    assertThat(CodeConsumer.formatNumber(Double.parseDouble("9.007199254740993e15")))
+        .isEqualTo("9007199254740992");
+
+    // Subnormals and MAX_VALUE
+    assertThat(CodeConsumer.formatNumber(Double.MIN_VALUE)).isEqualTo("4.9E-324");
+    assertThat(CodeConsumer.formatNumber(Double.MAX_VALUE)).isEqualTo("1.7976931348623157E308");
+
+    // Powers of 10
+    assertThat(CodeConsumer.formatNumber(100)).isEqualTo("100");
+    assertThat(CodeConsumer.formatNumber(1000)).isEqualTo("1E3");
+    assertThat(CodeConsumer.formatNumber(1e12)).isEqualTo("1E12");
+    assertThat(CodeConsumer.formatNumber(1e13)).isEqualTo("1E13");
+
+    // Hex-vs-decimal crossover integers around 1000000000000L
+    assertThat(CodeConsumer.formatNumber(1000000000000L)).isEqualTo("1E12");
+    assertThat(CodeConsumer.formatNumber(1000000000001L)).isEqualTo("0xe8d4a51001");
+
+    // Leading-zero fractions
+    assertThat(CodeConsumer.formatNumber(0.5)).isEqualTo(".5");
+    assertThat(CodeConsumer.formatNumber(0.002)).isEqualTo(".002");
+    assertThat(CodeConsumer.formatNumber(0.0001)).isEqualTo("1E-4");
+
+    // .0E stripping
+    assertThat(CodeConsumer.formatNumber(1.0e21)).isEqualTo("1E21");
+  }
+
+  @Test
   public void testBiggerThanMaxLongNumericLiterals() {
     // Since ECMAScript implements IEEE 754 "round to nearest, ties to even",
     // any literal in the range [0x7ffffffffffffe00,0x8000000000000400] will

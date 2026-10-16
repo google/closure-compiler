@@ -332,10 +332,12 @@ public abstract class CodeConsumer {
 
   void addNumber(double x, Node n) {
     checkState(isPositive(x), x);
+    addConstant(formatNumber(x));
+  }
 
+  static String formatNumber(double x) {
     if ((long) x != x) {
-      addConstant(String.valueOf(x).replace(".0E", "E").replaceFirst("^0\\.", "."));
-      return;
+      return String.valueOf(x).replace(".0E", "E").replaceFirst("^0\\.", ".");
     }
 
     long value = (long) x;
@@ -349,22 +351,20 @@ public abstract class CodeConsumer {
     }
 
     if (exp > 2) {
-      addConstant(mantissa + "E" + exp);
-      return;
+      return mantissa + "E" + exp;
     }
 
     String decValueString = Long.toString(value);
     if (value <= 1000000000000L) {
       // Values <1E12 are shorter in decimal
-      addConstant(decValueString);
-      return;
+      return decValueString;
     }
 
     String hexValueString = Long.toHexString(value);
     if (hexValueString.length() + 2 < decValueString.length()) {
-      addConstant("0x" + hexValueString);
+      return "0x" + hexValueString;
     } else {
-      addConstant(decValueString);
+      return decValueString;
     }
   }
 
