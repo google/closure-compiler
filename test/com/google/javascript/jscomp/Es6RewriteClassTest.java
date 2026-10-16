@@ -1440,6 +1440,128 @@ $jscomp.inherits(C, AggregateError);
   }
 
   @Test
+  public void testPrimitiveConstructorReturns() {
+    // TODO(b/573280089): A base constructor ignores a primitive return value, but the transpiled
+    // function returns it, so `Base.call(this, 0) || this` in a subclass can evaluate to `42`. A
+    // `return` in a nested function belongs to that function and must be kept.
+    ignoreWarnings(TypeValidator.TYPE_MISMATCH_WARNING);
+    test(
+        srcs(
+            """
+            class Base {
+              constructor(v) {
+                if (v === 1) return 42;
+                if (v === 2) return null;
+                this.f = function() { return -1; };
+              }
+            }
+            class Sub extends Base {
+              constructor() {
+                super(0);
+                this.g = function() { return 's'; };
+              }
+            }
+            """),
+        expected(
+            """
+            /** @constructor */
+            let Base = function(v) {
+              if (v === 1) {
+                return 42;
+              }
+              if (v === 2) {
+                return null;
+              }
+              this.f = function() {
+                return -1;
+              };
+            };
+            /** @constructor */
+            let Sub = function() {
+              var $jscomp$super$this$m1146332801$0;
+              $jscomp$super$this$m1146332801$0 = Base.call(this, 0) || this;
+              $jscomp$super$this$m1146332801$0.g = function() {
+                return "s";
+              };
+              return $jscomp$super$this$m1146332801$0;
+            };
+            $jscomp.inherits(Sub, Base);
+            """));
+    // TODO(b/573280089): A derived constructor that returns a primitive, before or after `super()`,
+    // throws a TypeError, but the transpiled constructor returns the new object instead.
+    test(
+        srcs(
+            """
+            class Base {}
+            class NoSuper extends Base {
+              constructor(w) { if (w) return 42; super(); }
+            }
+            class AfterSuper extends Base {
+              constructor() { super(); return 's'; }
+            }
+            class ReturnsNull extends Base {
+              constructor() { super(); return null; }
+            }
+            """),
+        expected(
+            """
+            /** @constructor */
+            let Base = function() {};
+            /** @constructor */
+            let NoSuper = function(w) {
+              if (w) {
+                return 42;
+              }
+              Base.call(this);
+            };
+            $jscomp.inherits(NoSuper, Base);
+            /** @constructor */
+            let AfterSuper = function() {
+              Base.call(this);
+              return "s";
+            };
+            $jscomp.inherits(AfterSuper, Base);
+            /** @constructor */
+            let ReturnsNull = function() {
+              Base.call(this);
+              return null;
+            };
+            $jscomp.inherits(ReturnsNull, Base);
+            """));
+  }
+
+  @Test
+  public void testUndefinedConstructorReturnsAreKept() {
+    // Both base and derived constructors may return `undefined`.
+    ignoreWarnings(TypeValidator.TYPE_MISMATCH_WARNING);
+    test(
+        """
+        class Base {
+          constructor(v) { if (v) return undefined; }
+        }
+        class Sub extends Base {
+          constructor(w) { super(0); if (w) return void 0; }
+        }
+        """,
+        """
+        /** @constructor */
+        let Base = function(v) {
+          if (v) {
+            return undefined;
+          }
+        };
+        /** @constructor */
+        let Sub = function(w) {
+          Base.call(this, 0);
+          if (w) {
+            return void 0;
+          }
+        };
+        $jscomp.inherits(Sub, Base);
+        """);
+  }
+
+  @Test
   public void testComputedSuper() {
     test(
         """
