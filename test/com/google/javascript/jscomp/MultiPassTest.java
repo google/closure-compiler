@@ -458,7 +458,6 @@ public final class MultiPassTest extends CompilerTestCase {
                         compiler.getUniqueNameIdSupplier(),
                         CompilerOptions.Reach.ALL,
                         true,
-                        true,
                         CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING))
             .build());
   }

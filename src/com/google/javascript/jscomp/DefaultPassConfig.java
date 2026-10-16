@@ -2384,7 +2384,6 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler.getUniqueNameIdSupplier(),
                       options.getInlineFunctionsLevel(),
                       options.assumeStrictThis() || options.expectStrictModeInput(),
-                      options.assumeClosuresOnlyCaptureReferences(),
                       options.getMaxFunctionSizeAfterInlining()))
           .build();
 

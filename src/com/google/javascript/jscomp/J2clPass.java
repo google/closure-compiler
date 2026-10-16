@@ -122,7 +122,6 @@ public class J2clPass implements CompilerPass {
           new FunctionInjector.Builder(compiler)
               .safeNameIdSupplier(safeNameIdSupplier)
               .assumeStrictThis(true)
-              .assumeMinimumCapture(true)
               .build();
       ImmutableSet<String> fnNamesToInline =
           inlineSpecs.stream().flatMap(b -> b.fnNamesToInline.stream()).collect(toImmutableSet());

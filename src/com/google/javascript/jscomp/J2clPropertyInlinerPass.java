@@ -436,7 +436,6 @@ public class J2clPropertyInlinerPass implements CompilerPass {
             FunctionInjector injector =
                 new FunctionInjector.Builder(compiler)
                     .assumeStrictThis(true)
-                    .assumeMinimumCapture(true)
                     .build();
             Node functionCall = IR.call(IR.name("inlined_j2cl_getter"));
             n.replaceWith(functionCall);
@@ -457,7 +456,6 @@ public class J2clPropertyInlinerPass implements CompilerPass {
               FunctionInjector injector =
                   new FunctionInjector.Builder(compiler)
                       .assumeStrictThis(true)
-                      .assumeMinimumCapture(true)
                       .build();
               assignmentValue.detach();
               Node functionCall = IR.call(IR.name("inlined_j2cl_setter"), assignmentValue);

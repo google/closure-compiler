@@ -97,7 +97,6 @@ class ClosureUnawareOptions {
     shadowOptions.setCodingConvention(CodingConventions.getDefault());
     shadowOptions.setRemoveClosureAsserts(false);
 
-    shadowOptions.setAssumeClosuresOnlyCaptureReferences(false);
     shadowOptions.setAssumeGettersArePure(false);
     shadowOptions.setAssumePropertiesAreStaticallyAnalyzable(false);
     shadowOptions.setAssumeStaticInheritanceIsNotUsed(false);

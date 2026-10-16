@@ -145,7 +145,6 @@ public enum CompilationLevel {
     options.setRenamingPolicy(VariableRenamingPolicy.LOCAL, PropertyRenamingPolicy.OFF);
     options.setInlineVariables(Reach.LOCAL_ONLY);
     options.setInlineFunctions(Reach.LOCAL_ONLY);
-    options.setAssumeClosuresOnlyCaptureReferences(false);
     options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.OFF);
     options.setFoldConstants(true);
     options.setCoalesceVariableNames(true);
@@ -200,7 +199,6 @@ public enum CompilationLevel {
     options.setSmartNameRemoval(true);
     options.setInlineConstantVars(true);
     options.setInlineFunctions(Reach.ALL);
-    options.setAssumeClosuresOnlyCaptureReferences(false);
     options.setInlineVariables(Reach.ALL);
     options.setComputeFunctionSideEffects(true);
     options.setAssumeStrictThis(true);

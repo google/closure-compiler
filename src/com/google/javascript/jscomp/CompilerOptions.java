@@ -453,9 +453,6 @@ public class CompilerOptions {
 
   static final int UNLIMITED_FUN_SIZE_AFTER_INLINING = -1;
 
-  /** More aggressive function inlining */
-  private boolean assumeClosuresOnlyCaptureReferences;
-
   /** Inlines properties */
   private boolean inlineProperties;
 
@@ -1484,7 +1481,6 @@ public class CompilerOptions {
     inlineFunctionsLevel = Reach.NONE;
     maxFunctionSizeAfterInlining = UNLIMITED_FUN_SIZE_AFTER_INLINING;
     assumeStrictThis = false;
-    assumeClosuresOnlyCaptureReferences = false;
     inlineProperties = false;
     crossChunkCodeMotion = false;
     parentChunkCanSeeSymbolsDeclaredInChildren = false;
@@ -2211,21 +2207,6 @@ public class CompilerOptions {
   /** If true, enables enables additional optimizations. */
   public void setAssumeStrictThis(boolean enable) {
     this.assumeStrictThis = enable;
-  }
-
-  /**
-   * @return Whether assumeClosuresOnlyCaptureReferences is set.
-   */
-  public boolean assumeClosuresOnlyCaptureReferences() {
-    return assumeClosuresOnlyCaptureReferences;
-  }
-
-  /**
-   * Whether to assume closures capture only what they reference. This allows more aggressive
-   * function inlining.
-   */
-  public void setAssumeClosuresOnlyCaptureReferences(boolean enable) {
-    this.assumeClosuresOnlyCaptureReferences = enable;
   }
 
   /** Sets the list of properties that we report property invalidation errors for. */
@@ -3429,7 +3410,6 @@ public class CompilerOptions {
         .add("aliasStringsMode", getAliasStringsMode())
         .add("ambiguateProperties", ambiguateProperties)
         .add("angularPass", angularPass)
-        .add("assumeClosuresOnlyCaptureReferences", assumeClosuresOnlyCaptureReferences)
         .add("assumeGettersArePure", assumeGettersArePure)
         .add("assumePropertiesAreStaticallyAnalyzable", assumePropertiesAreStaticallyAnalyzable)
         .add("assumeStrictThis", assumeStrictThis())

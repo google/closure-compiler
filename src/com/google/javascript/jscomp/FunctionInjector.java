@@ -54,7 +54,6 @@ class FunctionInjector {
   private final boolean allowDecomposition;
   private ImmutableSet<String> knownConstantFunctions = ImmutableSet.of();
   private final boolean assumeStrictThis;
-  private final boolean assumeMinimumCapture;
   private final Supplier<String> safeNameIdSupplier;
   private final Supplier<String> throwawayNameSupplier =
       new Supplier<String>() {
@@ -77,7 +76,6 @@ class FunctionInjector {
     this.compiler = checkNotNull(builder.compiler);
     this.safeNameIdSupplier = checkNotNull(builder.safeNameIdSupplier);
     this.assumeStrictThis = builder.assumeStrictThis;
-    this.assumeMinimumCapture = builder.assumeMinimumCapture;
     this.allowDecomposition = builder.allowDecomposition;
     this.functionArgumentInjector = checkNotNull(builder.functionArgumentInjector);
   }
@@ -87,7 +85,6 @@ class FunctionInjector {
     private final AbstractCompiler compiler;
     private @Nullable Supplier<String> safeNameIdSupplier = null;
     private boolean assumeStrictThis = true;
-    private boolean assumeMinimumCapture = true;
     private boolean allowDecomposition = true;
     private @Nullable FunctionArgumentInjector functionArgumentInjector = null;
 
@@ -120,12 +117,6 @@ class FunctionInjector {
     @CanIgnoreReturnValue
     Builder assumeStrictThis(boolean assumeStrictThis) {
       this.assumeStrictThis = assumeStrictThis;
-      return this;
-    }
-
-    @CanIgnoreReturnValue
-    Builder assumeMinimumCapture(boolean assumeMinimumCapture) {
-      this.assumeMinimumCapture = assumeMinimumCapture;
       return this;
     }
 
@@ -274,7 +265,7 @@ class FunctionInjector {
     // a memory leak.  This isn't a problem in the global scope as those values
     // last until explicitly cleared.
     if (containsClosures) {
-      if (!assumeMinimumCapture && !ref.scope.isGlobal()) {
+      if (!ref.scope.isGlobal()) {
         // TODO(johnlenz): Allow inlining into any scope without local names or inner functions.
         return CanInlineResult.NO;
       } else if (NodeUtil.isWithinLoop(callNode)) {
@@ -810,7 +801,7 @@ class FunctionInjector {
       // that contains functions (excluding the function being inlined).
       if (this.referencesEval(callerFn)) {
         forbidTemps = true;
-      } else if (!this.assumeMinimumCapture) {
+      } else {
         Node innerFn = this.innerFunctionOf(callerFn);
         boolean calleeIsOnlyInnerFn = innerFn.equals(NO_FUNCTIONS) || innerFn.equals(calleeFn);
         forbidTemps = !calleeIsOnlyInnerFn;

@@ -76,7 +76,6 @@ class InlineFunctions implements CompilerPass {
   private final FunctionArgumentInjector functionArgumentInjector;
 
   private final Reach reach;
-  private final boolean assumeMinimumCapture;
 
   private final boolean enforceMaxSizeAfterInlining;
   private final int maxSizeAfterInlining;
@@ -86,7 +85,6 @@ class InlineFunctions implements CompilerPass {
       Supplier<String> safeNameIdSupplier,
       Reach reach,
       boolean assumeStrictThis,
-      boolean assumeMinimumCapture,
       int maxSizeAfterInlining) {
     checkArgument(compiler != null);
     checkArgument(safeNameIdSupplier != null);
@@ -95,7 +93,6 @@ class InlineFunctions implements CompilerPass {
     this.compiler = compiler;
 
     this.reach = reach;
-    this.assumeMinimumCapture = assumeMinimumCapture;
 
     this.maxSizeAfterInlining = maxSizeAfterInlining;
     this.enforceMaxSizeAfterInlining =
@@ -112,7 +109,6 @@ class InlineFunctions implements CompilerPass {
         new FunctionInjector.Builder(compiler)
             .safeNameIdSupplier(safeNameIdSupplier)
             .assumeStrictThis(assumeStrictThis)
-            .assumeMinimumCapture(assumeMinimumCapture)
             .functionArgumentInjector(this.functionArgumentInjector)
             .build();
   }
@@ -337,7 +333,7 @@ class InlineFunctions implements CompilerPass {
           // TODO(johnlenz): this can be improved by looking at the possible
           // values for locals.  If there are simple values, or constants
           // we could still inline.
-          if (!assumeMinimumCapture && hasLocalNames(fnNode)) {
+          if (hasLocalNames(fnNode)) {
             functionState.disallowInlining(compiler, DisallowInliningReason.HAS_LOCAL_NAMES);
           }
         }
