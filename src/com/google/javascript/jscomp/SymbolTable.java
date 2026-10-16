@@ -21,13 +21,13 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
-import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Table;
+import com.google.common.collect.Tables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.base.LinkedIdentityHashMap;
 import com.google.javascript.jscomp.modules.Module;
@@ -110,7 +110,8 @@ public final class SymbolTable {
    * All symbols in the program, uniquely identified by the node where they're declared and their
    * name.
    */
-  private final Table<Node, String, Symbol> symbols = HashBasedTable.create();
+  private final Table<Node, String, Symbol> symbols =
+      Tables.newCustomTable(new LinkedHashMap<>(), LinkedHashMap::new);
 
   /**
    * All syntactic scopes in the program, uniquely identified by the node where they're declared.
@@ -1511,7 +1512,8 @@ public final class SymbolTable {
     // To find duplicated symbols we rely on the fact that duplicated symbol share the same
     // source position as original symbol and going to use filename => sourcePosition => symbol
     // table.
-    Table<String, Integer, Symbol> externSymbols = HashBasedTable.create();
+    Table<String, Integer, Symbol> externSymbols =
+        Tables.newCustomTable(new LinkedHashMap<>(), LinkedHashMap::new);
     for (Symbol symbol : ImmutableList.copyOf(symbols.values())) {
       if (symbol.getDeclarationNode() == null
           || symbol.getDeclarationNode().getStaticSourceFile() == null
@@ -2353,7 +2355,15 @@ public final class SymbolTable {
 
           // After than, just use lexicographic ordering.
           // This ensures "a.b" comes before "a.b.c".
-          return a.getName().compareTo(b.getName());
+          result = a.getName().compareTo(b.getName());
+          if (result != 0) {
+            return result;
+          }
+
+          if (scopeA.isLexicalScope() && scopeB.isLexicalScope()) {
+            return lexicalScopeOrdering.compare(scopeA, scopeB);
+          }
+          return nodeOrdering.nullsFirst().compare(a.getDeclarationNode(), b.getDeclarationNode());
         }
       };
 

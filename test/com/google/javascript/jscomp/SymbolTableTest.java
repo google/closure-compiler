@@ -2077,6 +2077,60 @@ public final class SymbolTableTest {
     return result;
   }
 
+  @Test
+  public void testDeterministicSymbolOrdering() {
+    SymbolTable table =
+        createSymbolTable(
+            """
+            function f1() { var x = 1; }
+            function f2() { var x = 2; }
+            function f3() { var x = 3; }
+            var x = 4;
+            """);
+
+    // We have four symbols named "x".
+    // 1 global "x"
+    // 3 local "x"
+
+    // We expect them to be sorted by scope depth, then by name, then by declaration node.
+    List<Symbol> allSorted = table.getAllSymbolsSorted();
+    List<Symbol> xSymbols = new ArrayList<>();
+    for (Symbol s : allSorted) {
+      if (s.getName().equals("x")) {
+        xSymbols.add(s);
+      }
+    }
+
+    assertThat(xSymbols).hasSize(4);
+
+    // Global x is at depth 0
+    assertThat(xSymbols.get(0).getDeclarationNode().getLineno()).isEqualTo(4);
+    // f1's x
+    assertThat(xSymbols.get(1).getDeclarationNode().getLineno()).isEqualTo(1);
+    // f2's x
+    assertThat(xSymbols.get(2).getDeclarationNode().getLineno()).isEqualTo(2);
+    // f3's x
+    assertThat(xSymbols.get(3).getDeclarationNode().getLineno()).isEqualTo(3);
+
+    // getAllSymbols() should also be deterministic now (it iterates values() which comes from
+    // LinkedHashMap).
+    // The exact insertion order into `symbols` depends on the traversal order.
+    // In our traversal, we traverse line 1, then line 2, then line 3, then line 4.
+    ImmutableList<Symbol> allIterated = table.getAllSymbols();
+    List<Symbol> xIterated = new ArrayList<>();
+    for (Symbol s : allIterated) {
+      if (s.getName().equals("x")) {
+        xIterated.add(s);
+      }
+    }
+
+    assertThat(xIterated).hasSize(4);
+    assertThat(xIterated.get(0).getDeclarationNode().getLineno()).isEqualTo(4);
+    assertThat(xIterated.get(1).getDeclarationNode().getLineno()).isEqualTo(1);
+    assertThat(xIterated.get(2).getDeclarationNode().getLineno()).isEqualTo(2);
+    assertThat(xIterated.get(3).getDeclarationNode().getLineno()).isEqualTo(3);
+  }
+
   private SymbolTable createSymbolTableWithDefaultExterns(String input) {
     return createSymbolTable(input, CompilerTypeTestCase.DEFAULT_EXTERNS);
   }
