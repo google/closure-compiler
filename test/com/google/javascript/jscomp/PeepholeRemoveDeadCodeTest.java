@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -2397,9 +2400,65 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUnusedClassWithUninitializedField() {
+    test("(class { x; });", "");
+  }
+
+  @Test
   public void testUnusedClassWithInstanceFieldSideEffects() {
     // TODO(b/573195636): Hoists side effects out of non-static class field initializers on unused
     // class expressions.
     test("(class { x = alert(1); });", "alert(1);");
+    test("(class { x = alert(1); y = alert(2); });", "alert(1), alert(2);");
+  }
+
+  @Test
+  public void testUnusedClassWithInstanceFieldSideEffects_thisAndSuper() {
+    // TODO(b/573195636): Hoists side effects out of non-static class field initializers on unused
+    // class expressions.
+    test("(class { x = this.y(); });", "this.y();");
+    test("(class extends Object { x = super.toString(); });", "");
+  }
+
+  @Test
+  public void testUnusedClassWithComputedInstanceFieldSideEffects() {
+    // TODO(b/573195636): Hoists side effects out of non-static class field initializers on unused
+    // class expressions.
+    test("(class { [alert(1)] = alert(2); });", "alert(1), alert(2);");
+    test("(class { ['x'] = alert(2); });", "alert(2);");
+  }
+
+  @Test
+  public void testUnusedClassWithComputedInstanceFieldSideEffects_uninitialized() {
+    test("(class { [alert(1)]; });", "alert(1);");
+  }
+
+  @Test
+  public void testUnusedClassWithStaticField_uninitialized() {
+    test("(class { static x; });", "");
+    test("(class { static [alert(1)]; });", "alert(1);");
+  }
+
+  @Test
+  public void testUnusedClassWithStaticFieldSideEffects() {
+    test("(class { static x = alert(1); });", "alert(1);");
+    test("(class { static x = alert(1); static y = alert(2); });", "alert(1), alert(2);");
+    test("(class { static [alert(1)] = alert(2); });", "alert(1), alert(2);");
+  }
+
+  @Test
+  public void testUnusedClassWithStaticFieldSideEffects_thisAndSuper() {
+    // TODO(b/574118308): fix the `super.y()` and `this.y()` inlining.
+    test("(class extends Parent { static x = this.y(); } );", "this.y();");
+    var ex =
+        assertThrows(
+            Exception.class, () -> testSame("(class extends Parent { static x = super.y(); });"));
+    assertThat(ex)
+        .hasMessageThat()
+        .contains(
+            "super property references are only allowed in methods, class static blocks and class"
+                + " fields");
+    // This is correct - we know `super.toString()` has no side-effects so is safe to remove.
+    test("(class extends Object { static x = super.toString(); });", "");
   }
 }
