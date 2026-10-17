@@ -28,6 +28,7 @@ import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import org.jspecify.annotations.Nullable;
@@ -722,6 +723,33 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testNoCreateVarsForLabels() {
     checkSynthesizedExtern(srcs("x:var y"), VAR_CHECK_EXTERNS);
+  }
+
+  @Test
+  public void testJSCompiler_renamePropertyInRequiredSymbols() {
+    assertThat(VarCheck.REQUIRED_SYMBOLS).contains("JSCompiler_renameProperty");
+  }
+
+  @Test
+  public void testJSCompiler_renamePropertySynthesizedExtern() {
+    checkSynthesizedExtern(srcs(""), VAR_CHECK_EXTERNS);
+    assertThat(VAR_CHECK_EXTERNS).contains("var JSCompiler_renameProperty;\n");
+  }
+
+  @Test
+  public void testJSCompiler_renamePropertySynthesizedExternAllowsLaterPasses() {
+    Compiler compiler = createAndInitializeCompiler(externs(""), srcs("var placeholder = 1;"));
+    compiler.parseInputs();
+    Node externs = compiler.getExternsRoot();
+    Node root = compiler.getJsRoot();
+    new VarCheck(compiler, /* validityCheck= */ false).process(externs, root);
+    // Simulate a pass like ClosureOptimizePrimitives or DartSuperAccessorsPass adding a call
+    // to JSCompiler_renameProperty without an explicit extern declaration.
+    Node syntheticCall =
+        IR.exprResult(IR.call(IR.name("JSCompiler_renameProperty"), IR.string("foo")));
+    root.getFirstChild().addChildToBack(syntheticCall);
+    // ValidityCheck runs VarCheck with validityCheck = true, which must pass without throwing.
+    new VarCheck(compiler, /* validityCheck= */ true).process(externs, root);
   }
 
   @Test
