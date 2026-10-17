@@ -224,4 +224,28 @@ public final class CompilerOptionsTest {
     assertThat(options.getTranspilePublicClassFields()).isFalse();
     assertThat(options.getOutputFeatureSet().has(Feature.PUBLIC_CLASS_FIELDS)).isTrue();
   }
+
+  @Test
+  public void testRequiresTypesForOptimization() {
+    CompilerOptions options = new CompilerOptions();
+    assertThat(options.requiresTypesForOptimization()).isFalse();
+
+    options.setClosurePass(true);
+    assertThat(options.requiresTypesForOptimization()).isFalse();
+
+    options.setClosurePass(false);
+    options.setRemoveClosureAsserts(true);
+    assertThat(options.requiresTypesForOptimization()).isFalse();
+
+    options.setRemoveClosureAsserts(false);
+    options.setRemoveAbstractMethods(true);
+    assertThat(options.requiresTypesForOptimization()).isFalse();
+
+    options.setClosurePass(true);
+    assertThat(options.requiresTypesForOptimization()).isTrue();
+
+    options.setRemoveAbstractMethods(false);
+    options.setRemoveClosureAsserts(true);
+    assertThat(options.requiresTypesForOptimization()).isTrue();
+  }
 }

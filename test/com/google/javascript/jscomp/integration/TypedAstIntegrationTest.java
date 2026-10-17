@@ -955,6 +955,50 @@ public final class TypedAstIntegrationTest extends IntegrationTestCase {
         """);
   }
 
+  @Test
+  public void testRemovesClosurePrimitiveAssertsWithoutOtherTypeBasedOptimizations()
+      throws IOException {
+    SourceFile externs = extern(new TestExternsBuilder().addClosureExterns().addAlert().build());
+    SourceFile assertsLib =
+        code(
+            """
+            goog.module('custom.asserts');
+            /**
+             * @param {T} val
+             * @return {T}
+             * @template T
+             * @closurePrimitive {asserts.truthy}
+             * @noinline
+             */
+            function assertExists(val) {
+              if (!val) {
+                throw 'fail';
+              }
+              return val;
+            }
+            exports = {assertExists};
+            """);
+    precompileLibrary(externs);
+    precompileLibrary(typeSummary(externs), assertsLib);
+    precompileLibrary(
+        typeSummary(externs),
+        typeSummary(assertsLib),
+        code(
+            """
+            goog.module('main');
+            const {assertExists} = goog.require('custom.asserts');
+            alert(assertExists('hello'));
+            """));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setCollapsePropertiesLevel(CompilerOptions.PropertyCollapseLevel.NONE);
+    options.setDependencyOptions(DependencyOptions.none());
+
+    Compiler compiler = compileTypedAstShards(options);
+    assertCompiledCodeEquals(compiler, "", "alert('hello');");
+  }
+
   // use over 'compileTypedAstShards' if you want to validate reported errors or warnings in your
   // @Test case.
   private Compiler compileTypedAstShardsWithoutErrorChecks(CompilerOptions options)

@@ -2556,7 +2556,8 @@ public class CompilerOptions {
     return this.disambiguateProperties
         || this.ambiguateProperties
         || this.inlineProperties
-        || this.useTypesForLocalOptimization;
+        || this.useTypesForLocalOptimization
+        || (this.closurePass && (this.removeAbstractMethods || this.removeClosureAsserts));
   }
 
   public void setRewriteFunctionExpressions(boolean rewriteFunctionExpressions) {
