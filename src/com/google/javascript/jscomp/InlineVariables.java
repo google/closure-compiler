@@ -929,6 +929,16 @@ class InlineVariables implements CompilerPass {
     }
 
     /**
+     * Maximum number of AST steps LocalVarMotion will traverse before giving up. Prevents quadratic
+     * traversal in large monolithic scopes with many definitions (b/545160233).
+     *
+     * <p>5000 steps is large enough to span massive side-effect-free AST structures like protobuf
+     * descriptor arrays without regressing code size, while bounding worst-case traversal time in
+     * huge monolithic scopes to fractions of a second.
+     */
+    private static final int MAX_MODERATE_MOTION_STEPS = 5000;
+
+    /**
      * If the value of a variable is not constant, then it may read or modify state. Therefore it
      * cannot be moved past anything else that may modify the value being read or read values that
      * are modified.
@@ -958,10 +968,14 @@ class InlineVariables implements CompilerPass {
             "Unexpected initialization parent\n" + initialization.getParent().toStringTree());
       }
       Node targetName = reference.getNode();
+      int steps = 0;
       while (it.hasNext()) {
         Node curNode = it.next();
         if (curNode == targetName) {
           return true;
+        }
+        if (++steps > MAX_MODERATE_MOTION_STEPS) {
+          return false;
         }
       }
 

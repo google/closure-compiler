@@ -2622,6 +2622,21 @@ public final class InlineVariablesTest extends CompilerTestCase {
   @Test
   public void testClassExpressionInlined() {
     test("var C = class {}; use(C);", "use(class {});");
+    test("const C = class {}; use(C);", "use(class {});");
+    test("let C = class {}; use(C);", "use(class {});");
+  }
+
+  @Test
+  public void testModerateMotionStepLimit_doesNotInlinedAcrossTooManyNodes() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("var C = class {};\n");
+    // Generate enough side-effect-free class declarations to exceed MAX_MODERATE_MOTION_STEPS
+    // (5000)
+    for (int i = 0; i < 1000; i++) {
+      sb.append("class Extra").append(i).append(" { foo() {} }\n");
+    }
+    sb.append("use(C);\n");
+    testSame(sb.toString());
   }
 
   @Test
