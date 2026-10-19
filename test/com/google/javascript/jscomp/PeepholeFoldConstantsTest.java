@@ -2275,6 +2275,16 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSetterDefIgnoredInObjectLiteralPropertyFolding() {
+    // Pre-fix: SETTER_DEF and computed setters do not clear previously tracked data properties,
+    // incorrectly folding the access to the superseded data property value.
+    test("var x = ({ a: 1, set a(v) {} }).a;", "var x = 1;");
+    test("var x = ({ a: 1, set ['a'](v) {} }).a;", "var x = 1;");
+    test("var x = ({ a: 1, set b(v) {} }).a;", "var x = 1;");
+    test("var x = ({ set a(v) {}, a: 2 }).a;", "var x = 2;");
+  }
+
+  @Test
   public void testFoldObjectLiteralRef2() {
     late = false;
     test("({a:x}).a += 1", "({a:x}).a = x + 1");
