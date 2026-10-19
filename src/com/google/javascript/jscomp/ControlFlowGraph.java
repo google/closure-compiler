@@ -165,7 +165,7 @@ public class ControlFlowGraph<N> extends
           // for(var x = 0; x < 10; x++) { } has a graph that is isomorphic to
           // var x = 0; while(x<10) {  x++; }
           NodeUtil.getConditionExpression(parent) != n;
-      case FOR_IN ->
+      case FOR_IN, FOR_OF, FOR_AWAIT_OF ->
           // TODO(user): Investigate how we should handle the case where
           // we have a very complex expression inside the FOR-IN header.
           n != parent.getFirstChild();

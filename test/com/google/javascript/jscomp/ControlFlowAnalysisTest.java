@@ -1992,4 +1992,52 @@ public final class ControlFlowAnalysisTest {
                 .collect(Collectors.toList()))
         .isEqualTo(nodeTypes);
   }
+
+  @Test
+  public void testIsEnteringNewCfgNode_enhancedForLoops() {
+    Compiler compiler = new Compiler();
+
+    // FOR_IN
+    {
+      Node root = compiler.parseSyntheticCode("for_in", "for (var item in collection) { body(); }");
+      Node forIn = CodeSubTree.findNodesNonEmpty(root, Node::isForIn).get(0);
+      Node item = forIn.getFirstChild();
+      Node collection = item.getNext();
+      Node body = collection.getNext();
+
+      assertThat(ControlFlowGraph.isEnteringNewCfgNode(item)).isFalse();
+      assertThat(ControlFlowGraph.isEnteringNewCfgNode(collection)).isTrue();
+      assertThat(ControlFlowGraph.isEnteringNewCfgNode(body)).isTrue();
+    }
+
+    // FOR_OF
+    {
+      Node root = compiler.parseSyntheticCode("for_of", "for (var item of collection) { body(); }");
+      Node forOf = CodeSubTree.findNodesNonEmpty(root, Node::isForOf).get(0);
+      Node item = forOf.getFirstChild();
+      Node collection = item.getNext();
+      Node body = collection.getNext();
+
+      assertThat(ControlFlowGraph.isEnteringNewCfgNode(item)).isFalse();
+      assertThat(ControlFlowGraph.isEnteringNewCfgNode(collection)).isTrue();
+      assertThat(ControlFlowGraph.isEnteringNewCfgNode(body)).isTrue();
+    }
+
+    // FOR_AWAIT_OF
+    {
+      Node root =
+          compiler.parseSyntheticCode(
+              "for_await_of",
+              "async function f() { for await (var item of collection) { body(); } }");
+      Node forAwaitOf = CodeSubTree.findNodesNonEmpty(root, Node::isForAwaitOf).get(0);
+      Node item = forAwaitOf.getFirstChild();
+      Node collection = item.getNext();
+      Node body = collection.getNext();
+
+      assertThat(ControlFlowGraph.isEnteringNewCfgNode(item)).isFalse();
+      assertThat(ControlFlowGraph.isEnteringNewCfgNode(collection)).isTrue();
+      assertThat(ControlFlowGraph.isEnteringNewCfgNode(body)).isTrue();
+    }
+  }
 }
+
