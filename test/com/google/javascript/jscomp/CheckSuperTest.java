@@ -126,6 +126,19 @@ public final class CheckSuperTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoWarning_derivedConstructorCompletesWithUndefinedBeforeSuperCall() {
+    // Won't fix (b/573571176): a derived class constructor that completes with `undefined` before
+    // calling `super()` throws a ReferenceError natively, but for a class without instance fields
+    // or private members, `MISSING_CALL_TO_SUPER` is only reported for a constructor that has
+    // neither a `super()` call nor a `return` with a value. We decided not to report these
+    // constructors, since the compiler isn't required to preserve errors in code that is already
+    // broken.
+    testNoWarning("class C extends D { constructor() { return undefined; } }");
+    testNoWarning("class C extends D { constructor(w) { if (w) return; super(); } }");
+    testNoWarning("class C extends D { constructor(w) { if (w) return {}; } }");
+  }
+
+  @Test
   public void testNoWarning() {
     testSame("class C extends D { constructor() { super(); } }");
     testSame("class C { constructor() {} }");

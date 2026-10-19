@@ -752,6 +752,49 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDerivedConstructorCompletesWithUndefinedBeforeSuperCall() {
+    // Won't fix (b/573571176): natively, `new RetUndef()`, `new EarlyReturn(true)` and
+    // `new MaybeObj(false)` throw a ReferenceError, because the constructor completes with
+    // `undefined` before calling `super()`. The transpiled constructors are plain functions, so
+    // `new` returns an instance on which `Base` never ran. We decided not to fix this, since the
+    // compiler isn't required to preserve errors in code that is already broken.
+    // The type checker reports these returns as inconsistent with the constructor type.
+    disableTypeCheck();
+    disableTypeInfoValidation();
+    test(
+        """
+        class Base { constructor() {} }
+        class RetUndef extends Base { constructor() { return undefined; } }
+        class EarlyReturn extends Base { constructor(w) { if (w) return; super(); } }
+        class MaybeObj extends Base { constructor(w) { if (w) return {}; } }
+        """,
+        """
+        /** @constructor */
+        let Base = function() {};
+        /** @constructor */
+        let RetUndef = function() {
+          return undefined;
+        };
+        $jscomp.inherits(RetUndef, Base);
+        /** @constructor */
+        let EarlyReturn = function(w) {
+          if (w) {
+            return;
+          }
+          Base.call(this);
+        };
+        $jscomp.inherits(EarlyReturn, Base);
+        /** @constructor */
+        let MaybeObj = function(w$jscomp$1) {
+          if (w$jscomp$1) {
+            return {};
+          }
+        };
+        $jscomp.inherits(MaybeObj, Base);
+        """);
+  }
+
+  @Test
   public void testExtends_nonGlobalClass() {
     test(
         srcs(
