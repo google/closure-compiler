@@ -200,6 +200,12 @@ Map.prototype.values = function() {};
 Map.prototype[Symbol.iterator] = function() {};
 
 /**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/Symbol.toStringTag
+ */
+Map.prototype[Symbol.toStringTag];
+
+/**
  * @constructor @struct
  * @param {Iterable<!Array<K|V>>|!Array<!Array<K|V>>=} opt_iterable
  * @template K, V
@@ -259,6 +265,12 @@ WeakMap.prototype.has = function(key) {};
  * @template THIS
  */
 WeakMap.prototype.set = function(key, value) {};
+
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/Symbol.toStringTag
+ */
+WeakMap.prototype[Symbol.toStringTag];
 
 /**
  * @record
@@ -568,6 +580,12 @@ Set.prototype.isDisjointFrom = function(other) {};
 Set.prototype[Symbol.iterator] = function() {};
 
 /**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/Symbol.toStringTag
+ */
+Set.prototype[Symbol.toStringTag];
+
+/**
  * @type {number} (readonly)
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/size
  */
@@ -607,3 +625,9 @@ WeakSet.prototype.delete = function(value) {};
  * @nosideeffects
  */
 WeakSet.prototype.has = function(value) {};
+
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet/Symbol.toStringTag
+ */
+WeakSet.prototype[Symbol.toStringTag];

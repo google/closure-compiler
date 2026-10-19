@@ -327,6 +327,74 @@ Math.f16round = function(x) {};
  */
 RegExp.escape = function(string) {};
 
+// Well-known symbols
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance
+ * @const {symbol}
+ */
+Symbol.hasInstance;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
+ * @const {symbol}
+ */
+Symbol.species;
+
+/**
+ * @const {symbol}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toPrimitive
+ */
+Symbol.toPrimitive;
+
+/**
+ * @const {symbol}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag
+ */
+Symbol.toStringTag;
+
+/**
+ * @const {symbol}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/unscopables
+ */
+Symbol.unscopables;
+
+/**
+ * @param {string} hint
+ * @return {symbol}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toPrimitive
+ */
+Symbol.prototype[Symbol.toPrimitive] = function(hint) {};
+
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag
+ */
+Symbol.prototype[Symbol.toStringTag];
+
+/**
+ * @param {*} value
+ * @return {boolean}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/Symbol.hasInstance
+ */
+Function.prototype[Symbol.hasInstance] = function(value) {};
+
+/**
+ * @param {string} hint
+ * @return {(string|number)}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Symbol.toPrimitive
+ */
+Date.prototype[Symbol.toPrimitive] = function(hint) {};
+
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/Symbol.toStringTag
+ */
+JSONType.prototype[Symbol.toStringTag];
+
 
 /**
  * @param {*} a
@@ -554,6 +622,12 @@ ArrayBuffer.prototype.slice = function(begin, opt_end) {};
  */
 ArrayBuffer.isView = function(arg) {};
 
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/Symbol.toStringTag
+ */
+ArrayBuffer.prototype[Symbol.toStringTag];
+
 
 /**
  * @constructor
@@ -589,6 +663,12 @@ SharedArrayBuffer.prototype.byteLength;
  * @nosideeffects
  */
 SharedArrayBuffer.prototype.slice = function(begin, end) {};
+
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer/Symbol.toStringTag
+ */
+SharedArrayBuffer.prototype[Symbol.toStringTag];
 
 
 /**
@@ -810,6 +890,12 @@ DataView.prototype.setBigInt64 = function(byteOffset, value, littleEndian) {};
  * @return {undefined}
  */
 DataView.prototype.setBigUint64 = function(byteOffset, value, littleEndian) {};
+
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/Symbol.toStringTag
+ */
+DataView.prototype[Symbol.toStringTag];
 
 
 /**
@@ -1085,6 +1171,12 @@ Promise.prototype.catch = function(onRejected) {};
  */
 Promise.prototype.finally = function(callback) {};
 
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/Symbol.toStringTag
+ */
+Promise.prototype[Symbol.toStringTag];
+
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of
@@ -1104,6 +1196,12 @@ Array.of = function(var_args) {};
  * @template T,S,R
  */
 Array.from = function(arrayLike, opt_mapFn, opt_this) {};
+
+/**
+ * @type {!Object<string, boolean>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Symbol.unscopables
+ */
+Array.prototype[Symbol.unscopables];
 
 
 /**

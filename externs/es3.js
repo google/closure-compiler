@@ -73,11 +73,6 @@ Symbol.keyFor = function(sym) {};
  */
 Symbol.asyncIterator;
 
-/**
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance
- * @const {symbol}
- */
-Symbol.hasInstance;
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/isConcatSpreadable
@@ -115,35 +110,11 @@ Symbol.replace;
  */
 Symbol.search;
 
-/**
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
- * @const {symbol}
- */
-Symbol.species;
-
 // /**
 //  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/split
 //  * @const {symbol}
 //  */
 // Symbol.split;
-
-/**
- * @const {symbol}
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toPrimitive
- */
-Symbol.toPrimitive;
-
-/**
- * @const {symbol}
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag
- */
-Symbol.toStringTag;
-
-/**
- * @const {symbol}
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/unscopables
- */
-Symbol.unscopables;
 
 
 /**
