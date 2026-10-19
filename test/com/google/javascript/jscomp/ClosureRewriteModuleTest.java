@@ -4369,4 +4369,83 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             }
             """));
   }
+
+  @Test
+  public void testUntypedLegacyNamespace_referenceToExports_normalized() {
+    enableNormalize();
+    runTypeCheck = false;
+    disableTypeInfoValidation();
+    test(
+        """
+        goog.module('a.b.c');
+        goog.module.declareLegacyNamespace();
+        exports = class {};
+        function useExports() {
+          return exports;
+        }
+        """,
+        """
+        goog.provide('a.b.c');
+        /** @const */
+        a.b.c = class {};
+        function module$contents$a$b$c_useExports() {
+          return a.b.c;
+        }
+        """);
+  }
+
+  @Test
+  public void testUntypedLegacyNamespace_referenceToExportProperty_normalized() {
+    enableNormalize();
+    runTypeCheck = false;
+    disableTypeInfoValidation();
+    test(
+        """
+        goog.module('a.b.c');
+        goog.module.declareLegacyNamespace();
+        exports.Foo = class {};
+        function useExports() {
+          return exports.Foo;
+        }
+        """,
+        """
+        goog.provide('a.b.c');
+        /** @const */
+        a.b.c.Foo = class {};
+        function module$contents$a$b$c_useExports() {
+          return a.b.c.Foo;
+        }
+        """);
+  }
+
+  @Test
+  public void testUntypedGoogRequireDynamicInAwait_legacyNamespace_normalized() {
+    enableNormalize();
+    runTypeCheck = false;
+    disableTypeInfoValidation();
+    test(
+        srcs(
+            """
+            goog.module('a.b.c');
+            goog.module.declareLegacyNamespace();
+            exports = class {};
+            """,
+            """
+            async function f() {
+              const {Foo} = await goog.requireDynamic('a.b.c');
+            }
+            """),
+        expected(
+            """
+            goog.provide('a.b.c');
+            /** @const */
+            a.b.c = class {};
+            """,
+            """
+            async function f() {
+              await goog.importHandler_('sG5M4c');
+              const {Foo} = a.b.c;
+            }
+            """));
+  }
 }

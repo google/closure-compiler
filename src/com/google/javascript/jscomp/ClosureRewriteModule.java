@@ -1385,7 +1385,9 @@ public final class ClosureRewriteModule implements CompilerPass {
 
     // `module$exports$a$b$c`
     Node exportedNamespaceNameNode =
-        this.astFactory.createQName(this.globalTypedScope, exportedNamespace).srcrefTree(call);
+        this.astFactory
+            .createQNameUsingJSTypeInfo(this.globalTypedScope, exportedNamespace)
+            .srcrefTree(call);
     exportedNamespaceNameNode.setJSType(rewriteState.getGoogModuleNamespaceType(namespaceId));
     exportedNamespaceNameNode.setOriginalName(namespaceId);
 
@@ -1684,7 +1686,7 @@ public final class ClosureRewriteModule implements CompilerPass {
     if (currentScript.declareLegacyNamespace) {
       Node legacyQname =
           this.astFactory
-              .createQName(this.globalTypedScope, currentScript.namespaceId)
+              .createQNameUsingJSTypeInfo(this.globalTypedScope, currentScript.namespaceId)
               .srcrefTree(n);
       legacyQname.setJSType(n.getJSType());
       n.replaceWith(legacyQname);
