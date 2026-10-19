@@ -1411,11 +1411,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
       Node arg2 = arg1.getNext();
       if (arg2 != null) {
-        if (arg2.isNumber()) {
-          limit = min((int) arg2.getDouble(), limit);
-          if (limit < 0) {
-            return n;
-          }
+        if (NodeUtil.isNumericLiteral(arg2)) {
+          long uint32Limit =
+              Integer.toUnsignedLong(ecmascriptToUint32(NodeUtil.getNumericLiteralValue(arg2)));
+          limit = (int) Math.min(uint32Limit, limit);
         } else {
           return n;
         }

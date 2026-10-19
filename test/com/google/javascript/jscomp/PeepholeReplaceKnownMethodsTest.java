@@ -728,7 +728,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = ' '.split(' ')", "x = ['','']");
 
     foldSame("x = 'abcde'.split(/ /)");
-    foldSame("x = 'abcde'.split(' ', -1)");
+    fold("x = 'abcde'.split(' ', -1)", "x = ['abcde']");
 
     // Template strings
     foldSame("x = `abcdef`.split()");
@@ -1386,5 +1386,14 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     test(
         "function f(/** string */ a) {" + js + "}",
         "function f(/** string */ a) {" + expected + "}");
+  }
+
+  @Test
+  public void testStringSplit_uint32Limit() {
+    late = false;
+    fold("x = 'a,b'.split(',', 4294967296)", "x = []");
+    fold("x = 'a,b'.split(',', 0)", "x = []");
+    fold("x = 'a,b'.split(',', 1)", "x = ['a']");
+    fold("x = 'a,b'.split(',', -1)", "x = ['a', 'b']");
   }
 }
