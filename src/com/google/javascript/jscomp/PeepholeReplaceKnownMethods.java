@@ -282,6 +282,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         case "round" -> {
           if (Double.isNaN(arg) || Double.isInfinite(arg)) {
             replacement = arg;
+          } else if (arg >= -0.5
+              && (arg < 0.0 || (arg == 0.0 && Double.doubleToRawLongBits(arg) < 0))) {
+            replacement = -0.0;
           } else {
             replacement = (double) Math.round(arg);
           }
