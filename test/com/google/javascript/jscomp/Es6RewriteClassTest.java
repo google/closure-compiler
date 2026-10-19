@@ -144,6 +144,23 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEs5MethodsAreEnumerable() {
+    // Won't fix (b/573609265): natively, class methods are non-enumerable, but the transpiled code
+    // assigns them to the prototype and to the constructor, which makes them enumerable. For
+    // example, `Object.keys(C.prototype)` is `["m"]` instead of `[]`. We decided to keep this
+    // output, since defining every method as non-enumerable would cost code size.
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        "class C { m() {} static s() {} }",
+        """
+        /** @constructor */
+        let C = function() {};
+        C.prototype.m = function() {};
+        C.s = function() {};
+        """);
+  }
+
+  @Test
   public void testClassStatementWithConstructorReferencingThis() {
     test(
         "class C { constructor(a) { this.a = a; } }",
