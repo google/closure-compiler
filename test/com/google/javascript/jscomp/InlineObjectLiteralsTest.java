@@ -941,6 +941,117 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         """);
   }
 
+  @Test
+  public void testUnreferencedVariableInScope_googModule() {
+    test(
+        """
+        goog.module('my.mod');
+        function local() {
+          var a = {x: 1};
+          f(a.x);
+        }
+        """,
+        """
+        goog.module('my.mod');
+        function local() {
+          var JSCompiler_object_inline_x_0 = 1;
+          f(JSCompiler_object_inline_x_0);
+        }
+        """);
+  }
+
+  @Test
+  public void testUnreferencedVariableInCatch() {
+    testLocal(
+        """
+        try {
+          var a = {x: 1};
+          f(a.x);
+        } catch (e) {
+        }
+        """,
+        """
+        try {
+          var JSCompiler_object_inline_x_0 = 1;
+          f(JSCompiler_object_inline_x_0);
+        } catch (e) {
+        }
+        """);
+  }
+
+  @Test
+  public void testUnreferencedVariableInScope() {
+    testLocal(
+        """
+        var a = {x: 1};
+        var unused;
+        f(a.x);
+        """,
+        """
+        var JSCompiler_object_inline_x_0 = 1;
+        var unused;
+        f(JSCompiler_object_inline_x_0);
+        """);
+  }
+
+  @Test
+  public void testUnreferencedVariableInDeadCode() {
+    testLocal(
+        """
+        var a = {x: 1};
+        f(a.x);
+        return;
+        var dead = {y: 2};
+        """,
+        """
+        var JSCompiler_object_inline_x_0 = 1;
+        f(JSCompiler_object_inline_x_0);
+        return;
+        var JSCompiler_object_inline_y_1 = 2;
+        """);
+  }
+
+  @Test
+  public void testIssue132728074() {
+    testSame(
+        """
+        (() => {
+          for (;;) {
+            try {
+              break;
+            } catch (a) {
+              {
+                function a() {}
+              }
+            }
+          }
+        });
+        """);
+  }
+
+  @Test
+  public void testIssue132728074_minimized() {
+    testSame(
+        """
+        try {} catch (a) {
+          {
+            function a() {}
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testIssue546730364() {
+    testSame(
+        """
+        var x;
+        {
+          function x() {}
+        }
+        """);
+  }
+
   private static final String LOCAL_PREFIX = "function local(){";
   private static final String LOCAL_POSTFIX = "}";
 

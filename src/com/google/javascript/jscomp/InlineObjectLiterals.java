@@ -81,6 +81,12 @@ class InlineObjectLiterals implements CompilerPass {
         }
 
         ReferenceCollection referenceInfo = referenceMap.getReferences(v);
+        // ReferenceMap only creates collections for variables that have references.
+        // A variable declared in a scope (e.g. unreferenced catch parameter or block-scoped
+        // function declaration) without references will return null.
+        if (referenceInfo == null) {
+          continue;
+        }
 
         if (isInlinableObject(referenceInfo.references)) {
           // Skiplist the object itself, as well as any other values
