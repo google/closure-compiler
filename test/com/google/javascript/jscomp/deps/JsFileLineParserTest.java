@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
@@ -193,6 +194,20 @@ public final class JsFileLineParserTest {
         """);
   }
 
+  @Test
+  public void testParseJsString_escapedQuotes() throws Exception {
+    TestParser parser = new TestParser();
+    assertThat(parser.parseJsString("'foo\\'bar'")).isEqualTo("foo\\'bar");
+    assertThat(parser.parseJsString("\"foo\\\"bar\"")).isEqualTo("foo\\\"bar");
+  }
+
+  @Test
+  public void testParseJsString_unterminatedEscapedQuote_throwsParseException() {
+    TestParser parser = new TestParser();
+    assertThrows(JsFileLineParser.ParseException.class, () -> parser.parseJsString("'foo\\'"));
+    assertThrows(JsFileLineParser.ParseException.class, () -> parser.parseJsString("\"foo\\\""));
+  }
+
   private void assertStrip(String expected, String input) {
     ErrorManager errorManager = new PrintStreamErrorManager(System.err);
     TestParser parser = new TestParser(errorManager);
@@ -210,6 +225,10 @@ public final class JsFileLineParserTest {
   private static class TestParser extends JsFileLineParser {
     final StringBuilder sb = new StringBuilder();
     final StringBuilder comments = new StringBuilder();
+
+    TestParser() {
+      super(/* errorManager= */ null);
+    }
 
     TestParser(ErrorManager errorManager) {
       super(errorManager);

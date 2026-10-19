@@ -68,8 +68,8 @@ public abstract class JsFileLineParser {
   }
 
   /** Pattern for matching JavaScript string literals. */
-  private static final Pattern STRING_LITERAL_PATTERN = Pattern.compile(
-      "\\s*(?:'((?:\\\\'|[^'])*?)'|\"((?:\\\\\"|[^\"])*?)\")\\s*");
+  private static final Pattern STRING_LITERAL_PATTERN =
+      Pattern.compile("\\s*(?:'((?:\\\\.|[^'\\\\])*)'|\"((?:\\\\.|[^\"\\\\])*)\")\\s*");
 
   /** Matcher used in the parsing string literals. */
   private final Matcher valueMatcher = STRING_LITERAL_PATTERN.matcher("");
