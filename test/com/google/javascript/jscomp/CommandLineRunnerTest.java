@@ -2139,6 +2139,25 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testEs5OutputRunsClassCodeInSloppyMode() {
+    // Won't fix (b/573608886): class code is strict mode code, so natively `this.ro = 2` throws a
+    // TypeError, because `ro` only has a getter. With --language_out=ECMASCRIPT5, unlike
+    // ECMASCRIPT5_STRICT, the output has no 'use strict', so the transpiled class code runs in
+    // sloppy mode and the write is silently ignored. We decided not to change this, since the
+    // compiler isn't required to preserve errors in code that is already broken.
+    args.add("--language_in=ECMASCRIPT_2015");
+    args.add("--language_out=ECMASCRIPT5");
+    Compiler compiler =
+        compile(
+            new String[] {
+              "class C { get ro() { return 1; } write() { this.ro = 2; } } new C().write();"
+            });
+    String outputSource = compiler.toSource();
+    assertThat(outputSource).doesNotContain("use strict");
+    assertThat(outputSource).contains("this.ro=2");
+  }
+
+  @Test
   public void testWithKeywordWithEs5ChecksOff() {
     args.add("--jscomp_off=es5Strict");
     args.add("--strict_mode_input=false");
