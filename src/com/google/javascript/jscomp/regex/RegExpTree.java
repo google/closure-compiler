@@ -1944,17 +1944,7 @@ public abstract class RegExpTree {
   }
 
   /** Internal representation for [] charsets */
-  static final class DecomposedCharset {
-    boolean inverted;
-    final CharRanges ranges;
-    final String namedGroups;
-
-    DecomposedCharset(boolean inverted, CharRanges ranges, String namedGroups) {
-      this.inverted = inverted;
-      this.ranges = ranges;
-      this.namedGroups = namedGroups;
-    }
-
+  record DecomposedCharset(boolean inverted, CharRanges ranges, String namedGroups) {
     int complexity() {
       return (inverted ? 1 : 0) + namedGroups.length() + complexity(ranges);
     }
@@ -2040,22 +2030,6 @@ public abstract class RegExpTree {
         }
       }
       return complexity;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (!(o instanceof DecomposedCharset that)) {
-        return false;
-      }
-      return this.inverted =
-          that.inverted
-              && this.ranges.equals(that.ranges)
-              && this.namedGroups.equals(that.namedGroups);
-    }
-
-    @Override
-    public int hashCode() {
-      return ranges.hashCode() + 31 * (namedGroups.hashCode() + (inverted ? 1 : 0));
     }
   }
 

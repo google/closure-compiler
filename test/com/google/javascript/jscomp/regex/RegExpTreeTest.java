@@ -222,4 +222,51 @@ public class RegExpTreeTest {
         .hasMessageThat()
         .isEqualTo("Cannot parse hexadecimal encoding wider than 28 bits: FF00FFFF");
   }
+
+  @Test
+  public void testDecomposedCharsetEqualsAndHashCode() {
+    RegExpTree.DecomposedCharset empty1 =
+        new RegExpTree.DecomposedCharset(false, CharRanges.EMPTY, "");
+    RegExpTree.DecomposedCharset empty2 =
+        new RegExpTree.DecomposedCharset(false, CharRanges.EMPTY, "");
+    RegExpTree.DecomposedCharset invertedEmpty =
+        new RegExpTree.DecomposedCharset(true, CharRanges.EMPTY, "");
+
+    CharRanges rangesA = CharRanges.withMembers('a', 'b');
+    CharRanges rangesB = CharRanges.withMembers('a', 'c');
+    RegExpTree.DecomposedCharset charsetA1 =
+        new RegExpTree.DecomposedCharset(false, rangesA, "\\d");
+    RegExpTree.DecomposedCharset charsetA2 =
+        new RegExpTree.DecomposedCharset(false, rangesA, "\\d");
+    RegExpTree.DecomposedCharset charsetAInverted =
+        new RegExpTree.DecomposedCharset(true, rangesA, "\\d");
+    RegExpTree.DecomposedCharset charsetDiffRanges =
+        new RegExpTree.DecomposedCharset(false, rangesB, "\\d");
+    RegExpTree.DecomposedCharset charsetDiffGroups =
+        new RegExpTree.DecomposedCharset(false, rangesA, "\\s");
+
+    // Symmetric equality
+    assertThat(empty1).isEqualTo(empty2);
+    assertThat(empty2).isEqualTo(empty1);
+    assertThat(empty1.hashCode()).isEqualTo(empty2.hashCode());
+
+    assertThat(charsetA1).isEqualTo(charsetA2);
+    assertThat(charsetA2).isEqualTo(charsetA1);
+    assertThat(charsetA1.hashCode()).isEqualTo(charsetA2.hashCode());
+
+    // Inverted true equality
+    RegExpTree.DecomposedCharset charsetAInverted2 =
+        new RegExpTree.DecomposedCharset(true, rangesA, "\\d");
+    assertThat(charsetAInverted).isEqualTo(charsetAInverted2);
+    assertThat(charsetAInverted.hashCode()).isEqualTo(charsetAInverted2.hashCode());
+
+    // Inequality across inverted, ranges, and namedGroups
+    assertThat(empty1).isNotEqualTo(invertedEmpty);
+    assertThat(invertedEmpty).isNotEqualTo(empty1);
+    assertThat(charsetA1).isNotEqualTo(charsetAInverted);
+    assertThat(charsetAInverted).isNotEqualTo(charsetA1);
+    assertThat(charsetA1).isNotEqualTo(charsetDiffRanges);
+    assertThat(charsetA1).isNotEqualTo(charsetDiffGroups);
+    assertThat(charsetA1).isNotNull();
+  }
 }
