@@ -293,6 +293,11 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
         if (currentPropertyName.equals(propertyName)) {
           return false;
         }
+      } else if (currentProperty.isComputedProp()) {
+        Node keyNode = currentProperty.getFirstChild();
+        if (!keyNode.isStringLit() || keyNode.getString().equals(propertyName)) {
+          return false;
+        }
       }
     }
 

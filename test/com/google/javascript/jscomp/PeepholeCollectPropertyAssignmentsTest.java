@@ -57,6 +57,27 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
   }
 
   @Test
+  public void testComputedPropertyShadowing() {
+    testSame(
+        """
+        var called = false;
+        var x = { set ['a'](v) { called = true; } };
+        x.a = 2;
+        """);
+    testSame(
+        """
+        var called = false;
+        var x = { get ['a']() { return 1; } };
+        x.a = 2;
+        """);
+  }
+
+  @Test
+  public void testObjectSpreadDoesNotBlockFolding() {
+    test("var x = { ...c }; x.a = 1;", "var x = { ...c, a: 1 };");
+  }
+
+  @Test
   public void testArrayOptimization1() {
     test("var a = []; a[0] = 1; a[1] = 2; a[2] = 3;", "var a = [1, 2, 3];");
   }
