@@ -147,7 +147,7 @@ public final class VariableMap implements Serializable {
         newLine = string.length();
       }
       int endOfLine = newLine;
-      if (string.charAt(newLine - 1) == '\r') {
+      if (newLine > 0 && string.charAt(newLine - 1) == '\r') {
         newLine--;
       }
       String line = string.substring(startOfLine, newLine);
@@ -177,7 +177,7 @@ public final class VariableMap implements Serializable {
       if (stopCharIndex == -1) {
         return -1;
       }
-      if (value.charAt(stopCharIndex - 1) != '\\') {
+      if (stopCharIndex == 0 || value.charAt(stopCharIndex - 1) != '\\') {
         // it isn't escaped, return
         return stopCharIndex;
       }

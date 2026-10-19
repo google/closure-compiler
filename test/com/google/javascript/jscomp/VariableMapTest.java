@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;
@@ -159,5 +160,19 @@ public final class VariableMapTest {
   public void testReverseLookupOfNullFindsNoName() {
     VariableMap vm = new VariableMap(ImmutableMap.of("AA", "a", "BB", "b"));
     assertThat(vm.lookupSourceName(null)).isNull();
+  }
+
+  @Test
+  public void testFromLines_leadingNewline() throws ParseException {
+    VariableMap vm = VariableMap.fromBytes("\na:b\n".getBytes(UTF_8));
+    assertThat(vm.lookupNewName("a")).isEqualTo("b");
+
+    VariableMap vmCrlf = VariableMap.fromBytes("\r\na:b\r\n".getBytes(UTF_8));
+    assertThat(vmCrlf.lookupNewName("a")).isEqualTo("b");
+  }
+
+  @Test
+  public void testFromLines_colonAtStartThrowsParseException() {
+    assertThrows(ParseException.class, () -> VariableMap.fromBytes(":foo\n".getBytes(UTF_8)));
   }
 }
