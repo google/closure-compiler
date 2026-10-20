@@ -179,6 +179,12 @@ public final class CheckSuperTest extends CompilerTestCase {
         error(THIS_BEFORE_SUPER));
   }
 
+  @Test
+  public void testThisBeforeSuper_inParameterDefault() {
+    // Parameter defaults are evaluated before the body, so before super() binds `this`.
+    testError("class C extends D { constructor(x = this.foo) { super(); } }", THIS_BEFORE_SUPER);
+  }
+
   // We could require that the super() call is the first statement in the constructor, except that
   // doing so breaks J2CL-compiled code, which needs to do the static initialization for the class
   // before anything else.

@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp.integration;
 
+import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilationLevel;
+import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -485,6 +487,30 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
           console.log(c.a)  // prints 1
         }
         """);
+  }
+
+  @Test
+  public void publicClassFields_derivedConstructorParamDefaultReadsThis() {
+    // In a derived class `this` is unbound until super() returns, and parameter defaults run before
+    // the body, so `z = this.b` throws a ReferenceError natively instead of reading the field.
+    // `CheckSuper` reports it.
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+
+    String src =
+        """
+        class Parent {}
+        class Child extends Parent {
+          b = 2;
+          constructor(z = this.b) {
+            super();
+            this.z = z;
+          }
+        }
+        """;
+    Compiler compiler = compile(options, src);
+    checkUnexpectedErrorsOrWarnings(compiler, 1);
+    assertThat(compiler.getErrors().get(0).type().key).isEqualTo("JSC_THIS_BEFORE_SUPER");
   }
 
   @Test

@@ -6702,6 +6702,136 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBaseConstructorParamDefaultReadsField() {
+    // TODO(b/572052294): A base class initializes its fields before it binds the constructor's
+    // parameters, so `y = this.a` must read 1. The fields are initialized in the body instead,
+    // after the parameters are bound, so `y` is `undefined`.
+    test(
+        """
+        class C {
+          a = 1;
+          constructor(x, y = this.a) {
+            this.x = x;
+            this.y = y;
+          }
+        }
+        """,
+        """
+        class C {
+          constructor(x, y = this.a) {
+            this.a = 1;
+            this.x = x;
+            this.y = y;
+          }
+        }
+        """);
+    // `this` in a nested non-arrow function is not the instance being constructed.
+    test(
+        """
+        class D {
+          a = 1;
+          constructor(f = function() { return this; }) {
+            this.f = f;
+          }
+        }
+        """,
+        """
+        class D {
+          constructor(f = function() { return this; }) {
+            this.a = 1;
+            this.f = f;
+          }
+        }
+        """);
+    // TODO(b/572052294): `super.hasOwnProperty('b')` passes `this` as the receiver, so it must see
+    // the field `b`. It runs before the fields are initialized instead, so it returns false.
+    test(
+        """
+        class E {
+          b = 2;
+          constructor(z = super.hasOwnProperty('b')) {
+            this.z = z;
+          }
+        }
+        """,
+        """
+        class E {
+          constructor(z = super.hasOwnProperty('b')) {
+            this.b = 2;
+            this.z = z;
+          }
+        }
+        """);
+    // TODO(b/572052294): Defaults in destructuring parameters must see the fields too, so
+    // `b = this.x` must read 1. They run before the fields are initialized instead, so `b` is
+    // `undefined`, and `new G()` throws a `TypeError` because `this.x` is `undefined`.
+    test(
+        """
+        class F {
+          x = 1;
+          constructor({a, b = this.x}) {
+            this.a = a;
+            this.b = b;
+          }
+        }
+        """,
+        """
+        class F {
+          constructor({a, b = this.x}) {
+            this.x = 1;
+            this.a = a;
+            this.b = b;
+          }
+        }
+        """);
+    test(
+        """
+        class G {
+          x = {a: 1, b: 2};
+          constructor({a, b} = this.x, ...[c = this.x]) {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+          }
+        }
+        """,
+        """
+        class G {
+          constructor({a, b} = this.x, ...[c = this.x]) {
+            this.x = {a: 1, b: 2};
+            this.a = a;
+            this.b = b;
+            this.c = c;
+          }
+        }
+        """);
+    // TODO(b/572052294): `x + this.a` must read the field `a`, so `y` must be 3. It runs before the
+    // fields are initialized instead, so `y` is `NaN`. The `x` that it reads is the outer `x`, not
+    // the `x` declared in the constructor body.
+    test(
+        """
+        const x = 1;
+        class H {
+          a = 2;
+          constructor(y = x + this.a) {
+            const x = 3;
+            this.y = y + x;
+          }
+        }
+        """,
+        """
+        const x = 1;
+        class H {
+          constructor(y = x + this.a) {
+            this.a = 2;
+            const x$jscomp$1 = 3;
+            this.y = y + x$jscomp$1;
+          }
+        }
+        """);
+  }
+
+  @Test
   public void testBaseClassParameterDefaultsOrder() {
     // TODO(b/572052294): lowered base-class instance fields execute after constructor parameter
     // default initializers
@@ -6719,6 +6849,25 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           constructor(a = alert(2), b = this.x) {
             this.x = alert(1);
             alert(a, b);
+          }
+        }
+        """);
+    // TODO(b/572052294): Defaults that don't read `this` run before the fields, so `alert(2)` runs
+    // before `alert(1)`.
+    test(
+        """
+        class A {
+          x = alert(1);
+          constructor(a = alert(2)) {
+            alert(a);
+          }
+        }
+        """,
+        """
+        class A {
+          constructor(a = alert(2)) {
+            this.x = alert(1);
+            alert(a);
           }
         }
         """);
