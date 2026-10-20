@@ -3641,7 +3641,19 @@ public class CompilerOptions {
      * In addition to {@link #ALL_CHUNKS}, create dedicated singleton holder objects for mutable
      * cross-chunk symbols (e.g. `var a = _.a = {};`) and access them via `a._`.
      */
-    ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS,
+    ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+
+    boolean shouldOptimize() {
+      return this != DISABLED;
+    }
+
+    boolean shouldOptimizeAllChunks() {
+      return this.ordinal() >= ALL_CHUNKS.ordinal();
+    }
+
+    boolean shouldWrapReassignableSymbols() {
+      return this.ordinal() >= ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS.ordinal();
+    }
   }
 
   /**

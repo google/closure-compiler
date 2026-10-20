@@ -162,8 +162,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
   }
 
   private ImmutableSet<String> collectWrappedReassignableCrossChunkNames() {
-    if (optimizeLocalAccess
-        != CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS) {
+    if (!optimizeLocalAccess.shouldWrapReassignableSymbols()) {
       return ImmutableSet.of();
     }
 
@@ -230,7 +229,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
 
     // Add pre-declarations for all LHS variables that are neither global/cross-chunk names nor
     // externs.
-    if (optimizeLocalAccess != CompilerOptions.OptimizeLocalAccess.DISABLED) {
+    if (optimizeLocalAccess.shouldOptimize()) {
       // If we are optimizing local accesses, we only want to pre-declare variables if the
       // declaration will be converted to assignments/property accesses and removed by
       // RemoveGlobalVarCallback. We don't want to add a new var declaration otherwise to avoid
@@ -354,7 +353,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
 
     JSChunk currentChunk = t.getChunk();
 
-    if (optimizeLocalAccess != CompilerOptions.OptimizeLocalAccess.DISABLED) {
+    if (optimizeLocalAccess.shouldOptimize()) {
       JSChunk definingChunk = var.getInput().getChunk();
       if (currentChunk == definingChunk) {
         if (!symbolInfo.crossChunkNamesWithWriteFromOtherChunk().contains(name)
@@ -370,9 +369,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
           // Early return to skip replacing the symbol.
           return;
         }
-      } else if (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS
-          || optimizeLocalAccess
-              == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS) {
+      } else if (optimizeLocalAccess.shouldOptimizeAllChunks()) {
         // Variables defined in a different chunk are still safe for local aliasing if all of the
         // following conditions are met.
         // 1. The variable is not written to in any other chunk than in the defining chunk.
@@ -468,9 +465,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
    */
   void addDeclarations() {
     declareChunkGlobals();
-    if (optimizeLocalAccess == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS
-        || optimizeLocalAccess
-            == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS) {
+    if (optimizeLocalAccess.shouldOptimizeAllChunks()) {
       declareLocalAliasesAndWrappers();
     }
   }
@@ -536,8 +531,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
     boolean changed = false;
 
     Set<String> wrappedReassignableLocalAliases = ImmutableSet.of();
-    if (optimizeLocalAccess
-        == CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS) {
+    if (optimizeLocalAccess.shouldWrapReassignableSymbols()) {
       wrappedReassignableLocalAliases = new LinkedHashSet<>();
 
       for (String name : wrappedReassignableCrossChunkNames) {

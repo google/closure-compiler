@@ -124,8 +124,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     // Find global names that are used in more than one chunk. Those that
     // are have to be rewritten.
     FindCrossChunkNamesCallback findCrossChunkNames =
-        new FindCrossChunkNamesCallback(
-            optimizeLocalAccess != CompilerOptions.OptimizeLocalAccess.DISABLED);
+        new FindCrossChunkNamesCallback(optimizeLocalAccess.shouldOptimize());
 
     // And find names that may refer to functions that reference this.
     FindNamesReferencingThis findNamesReferencingThis = new FindNamesReferencingThis();
