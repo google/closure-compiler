@@ -42,6 +42,15 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
   static final DiagnosticType MISSING_CALL_TO_SUPER =
       DiagnosticType.error("JSC_MISSING_CALL_TO_SUPER", "constructor is missing a call to super()");
 
+  // For a derived class constructor that has a `super()` call or returns a value, but might still
+  // return without calling `super()`. Unlike MISSING_CALL_TO_SUPER, this can be suppressed, since
+  // the constructor might intentionally return a different object.
+  static final DiagnosticType MISSING_ROOT_LEVEL_CALL_TO_SUPER =
+      DiagnosticType.error(
+          "JSC_MISSING_ROOT_LEVEL_CALL_TO_SUPER",
+          "constructor must unconditionally call super() in a root-level statement before any"
+              + " return");
+
   static final DiagnosticType THIS_BEFORE_SUPER =
       DiagnosticType.error("JSC_THIS_BEFORE_SUPER", "cannot access this before calling super()");
 

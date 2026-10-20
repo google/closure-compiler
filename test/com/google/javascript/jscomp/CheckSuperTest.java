@@ -56,6 +56,11 @@ public final class CheckSuperTest extends CompilerTestCase {
   @Test
   public void testMissingSuper() {
     testError("class C extends D { constructor() {} }", MISSING_CALL_TO_SUPER);
+    // Without a `super()` call or a returned value, the constructor always throws, so
+    // `missingCallToSuper` doesn't suppress this error.
+    testError(
+        "class C extends D { /** @suppress {missingCallToSuper} */ constructor() {} }",
+        MISSING_CALL_TO_SUPER);
     test(
         srcs("class C extends D { constructor() { super.foo(); } }"),
         error(MISSING_CALL_TO_SUPER),

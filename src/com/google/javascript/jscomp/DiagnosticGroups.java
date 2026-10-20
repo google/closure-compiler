@@ -140,6 +140,7 @@ public class DiagnosticGroups {
           + "invalidCasts, "
           + "lintVarDeclarations, "
           + "misplacedTypeAnnotation, "
+          + "missingCallToSuper, "
           + "missingOverride, "
           + "missingPolyfill, "
           + "missingProperties, "
@@ -259,6 +260,10 @@ public class DiagnosticGroups {
           "tweakValidation",
           ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING,
           ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING);
+
+  public static final DiagnosticGroup MISSING_CALL_TO_SUPER =
+      DiagnosticGroups.registerGroup(
+          "missingCallToSuper", CheckSuper.MISSING_ROOT_LEVEL_CALL_TO_SUPER);
 
   public static final DiagnosticGroup MISSING_OVERRIDE =
       DiagnosticGroups.registerGroup(
