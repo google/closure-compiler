@@ -7134,9 +7134,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
 
     parseError("new.target;", "new.target must be inside a function");
-    // TODO(b/572053262): An arrow function uses the `new.target` of the code around it, so this
-    // should be an error too.
-    parse("() => new.target;");
+    parseError("() => new.target;", "new.target must be inside a function");
 
     parse("function f() { new.target; };");
     parse("function f() { () => new.target; };");
@@ -7162,24 +7160,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testNewTargetInFieldInitializersAndStaticBlocks() {
-    // TODO(b/572053262): `new.target` is always `undefined` in field initializers and static
-    // blocks. `IRFactory` reports a generic error for it outside of a function, and accepts it
-    // inside one, including an arrow function.
-    parseError("class C { x = new.target; }", "new.target must be inside a function");
-    parseError("class C { static x = new.target; }", "new.target must be inside a function");
-    parseError("class C { ['x'] = new.target; }", "new.target must be inside a function");
-    parseError("class C { static { new.target; } }", "new.target must be inside a function");
-    parse("class C { x = () => new.target; }");
-    parse("function f() { class C { x = new.target; static { new.target; } } }");
+    // `new.target` is always `undefined` in field initializers and static blocks, also in arrow
+    // functions nested in them, so it is an error there.
+    String error = IRFactory.NEW_DOT_TARGET_IN_CLASS_FIELD_OR_STATIC_BLOCK;
+    parseError("class C { x = new.target; }", error);
+    parseError("class C { static x = new.target; }", error);
+    parseError("class C { ['x'] = new.target; }", error);
+    parseError("class C { static { new.target; } }", error);
+    parseError("class C { x = () => new.target; }", error);
+    parseError("function f() { class C { x = new.target; static { new.target; } } }", error, error);
     // A nested non-arrow function has its own `new.target`.
     parse("class C { x = function() { return new.target; }; }");
 
     // A computed key is not part of the initializer, so it may use `new.target` only inside a
-    // function.
+    // non-arrow function.
     parseError("class C { [new.target] = 1; }", "new.target must be inside a function");
-    // TODO(b/572053262): An arrow function uses the `new.target` of the code around it, so this
-    // should be an error too.
-    parse("() => class C { [new.target] = 1; };");
+    parseError("() => class C { [new.target] = 1; };", "new.target must be inside a function");
     parse("function f() { class C { [new.target] = 1; } }");
   }
 
@@ -9002,22 +8998,20 @@ console.log(new X(1));
   public void testNewTargetInClassFieldInitializer() {
     mode = LanguageMode.ECMASCRIPT_2022;
     expectFeatures(Feature.CLASSES, Feature.PUBLIC_CLASS_FIELDS, Feature.NEW_TARGET);
-    // TODO(b/572053262): Per ECMAScript (sec. 15.7.10 / 9.4.3), class field initializers are
-    // evaluated inside an implicit function scope that binds [[NewTarget]] to undefined.
-    // Therefore, new.target is syntactically valid in field initializers (both instance and static)
-    // even at top-level script/module scope, and this should parse without error. Currently,
-    // IRFactory rejects it because it only checks for an enclosing function.
     parseError(
         "class C { x = new.target; static s = new.target; }",
-        "new.target must be inside a function",
-        "new.target must be inside a function");
+        IRFactory.NEW_DOT_TARGET_IN_CLASS_FIELD_OR_STATIC_BLOCK,
+        IRFactory.NEW_DOT_TARGET_IN_CLASS_FIELD_OR_STATIC_BLOCK);
   }
 
   @Test
   public void testNewTargetInClassFieldInitializer_inArrowFn() {
     mode = LanguageMode.ECMASCRIPT_2022;
     expectFeatures(Feature.CLASSES, Feature.PUBLIC_CLASS_FIELDS, Feature.NEW_TARGET);
-    parse("class C { x = () => new.target; static s = () => new.target; }");
+    parseError(
+        "class C { x = () => new.target; static s = () => new.target; }",
+        IRFactory.NEW_DOT_TARGET_IN_CLASS_FIELD_OR_STATIC_BLOCK,
+        IRFactory.NEW_DOT_TARGET_IN_CLASS_FIELD_OR_STATIC_BLOCK);
   }
 
   @Test
@@ -9035,8 +9029,8 @@ console.log(new X(1));
   public void testNewTargetInClassStaticBlock() {
     mode = LanguageMode.ECMASCRIPT_2022;
     expectFeatures(Feature.CLASSES, Feature.CLASS_STATIC_BLOCK, Feature.NEW_TARGET);
-    // TODO(b/572053262): new.target is syntactically valid in static blocks and should parse
-    // without error.
-    parseError("class C { static { new.target; } }", "new.target must be inside a function");
+    parseError(
+        "class C { static { new.target; } }",
+        IRFactory.NEW_DOT_TARGET_IN_CLASS_FIELD_OR_STATIC_BLOCK);
   }
 }

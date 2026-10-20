@@ -196,6 +196,8 @@ class IRFactory {
   static final String UNEXPECTED_FOR_AWAIT_OF =
       "'for-await-of' used in a non-async function context";
   static final String UNEXPECTED_NEW_DOT_TARGET = "new.target must be inside a function";
+  static final String NEW_DOT_TARGET_IN_CLASS_FIELD_OR_STATIC_BLOCK =
+      "new.target is not supported in class field initializers or static blocks";
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
   private final StaticSourceFile sourceFile;
@@ -575,9 +577,22 @@ class IRFactory {
       return;
     }
 
-    Node parent = n;
-    while ((parent = parent.getParent()) != null) {
-      if (parent.isFunction()) {
+    Node child = n;
+    for (Node parent = n.getParent(); parent != null; child = parent, parent = parent.getParent()) {
+      // Skip arrow functions, which use the `new.target` of the code around them.
+      if (parent.isFunction() && !parent.isArrowFunction()) {
+        return;
+      }
+      if (parent.isMemberFieldDef()
+          || (parent.isComputedFieldDef() && child.isSecondChildOf(parent))
+          || (parent.isClassMembers() && child.isBlock())) {
+        // Class field initializers and static blocks run with no [[NewTarget]], so `new.target` is
+        // always `undefined` there. That is rarely what the code means, so it is an error.
+        errorReporter.error(
+            NEW_DOT_TARGET_IN_CLASS_FIELD_OR_STATIC_BLOCK,
+            sourceName,
+            n.getLineno(),
+            n.getCharno());
         return;
       }
     }

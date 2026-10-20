@@ -15,9 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.CLOSURE_DEFS;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.DEFAULT_EXTERNS;
 import static com.google.javascript.jscomp.TypeCheckTestCase.TypeTestBuilder.newTest;
+import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
@@ -6422,8 +6424,13 @@ override: function(number): undefined
 
   @Test
   public void testClassNewTargetInArrowFunction() {
-    // TODO(sdh): This should be an error.
-    newTest().addSource("const f = () => { const /** null */ x = new.target; };").run();
+    // `new.target` in an arrow function with no enclosing non-arrow function is a parse error, so
+    // `run()` fails before type checking.
+    AssertionError e =
+        assertThrows(
+            AssertionError.class,
+            newTest().addSource("const f = () => { const /** null */ x = new.target; };")::run);
+    assertThat(e).hasMessageThat().contains("Parse error. new.target must be inside a function");
   }
 
   @Test
