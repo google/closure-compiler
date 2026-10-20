@@ -6703,9 +6703,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testBaseConstructorParamDefaultReadsField() {
-    // TODO(b/572052294): A base class initializes its fields before it binds the constructor's
-    // parameters, so `y = this.a` must read 1. The fields are initialized in the body instead,
-    // after the parameters are bound, so `y` is `undefined`.
+    // A base class initializes its fields before it binds the constructor's parameters, so
+    // `y = this.a` reads 1. The parameter default moves into an assignment that runs after the
+    // fields are initialized.
     test(
         """
         class C {
@@ -6718,8 +6718,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class C {
-          constructor(x, y = this.a) {
+          constructor(x, y) {
             this.a = 1;
+            y = y === void 0 ? this.a : y;
             this.x = x;
             this.y = y;
           }
@@ -6743,8 +6744,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
           }
         }
         """);
-    // TODO(b/572052294): `super.hasOwnProperty('b')` passes `this` as the receiver, so it must see
-    // the field `b`. It runs before the fields are initialized instead, so it returns false.
+    // `super.hasOwnProperty('b')` passes `this` as the receiver, so the parameter default moves
+    // after the fields too, and sees the field `b`.
     test(
         """
         class E {
@@ -6756,15 +6757,14 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class E {
-          constructor(z = super.hasOwnProperty('b')) {
+          constructor(z) {
             this.b = 2;
+            z = z === void 0 ? super.hasOwnProperty('b') : z;
             this.z = z;
           }
         }
         """);
-    // TODO(b/572052294): Defaults in destructuring parameters must see the fields too, so
-    // `b = this.x` must read 1. They run before the fields are initialized instead, so `b` is
-    // `undefined`, and `new G()` throws a `TypeError` because `this.x` is `undefined`.
+    // Destructuring parameters move into `let` declarations after the fields.
     test(
         """
         class F {
@@ -6777,8 +6777,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class F {
-          constructor({a, b = this.x}) {
+          constructor(TMP$0) {
             this.x = 1;
+            let {a, b = this.x} = TMP$0;
             this.a = a;
             this.b = b;
           }
@@ -6797,17 +6798,19 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class G {
-          constructor({a, b} = this.x, ...[c = this.x]) {
+          constructor(TMP$0, ...TMP$1) {
             this.x = {a: 1, b: 2};
+            let {a, b} = TMP$0 === void 0 ? this.x : TMP$0;
+            let [c = this.x] = TMP$1;
             this.a = a;
             this.b = b;
             this.c = c;
           }
         }
         """);
-    // TODO(b/572052294): `x + this.a` must read the field `a`, so `y` must be 3. It runs before the
-    // fields are initialized instead, so `y` is `NaN`. The `x` that it reads is the outer `x`, not
-    // the `x` declared in the constructor body.
+    // A local declaration in the constructor body that shadows a name referenced by a parameter
+    // default is renamed by Normalize, so moving the default into the body still references the
+    // outer variable.
     test(
         """
         const x = 1;
@@ -6822,8 +6825,9 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """
         const x = 1;
         class H {
-          constructor(y = x + this.a) {
+          constructor(y) {
             this.a = 2;
+            y = y === void 0 ? x + this.a : y;
             const x$jscomp$1 = 3;
             this.y = y + x$jscomp$1;
           }
@@ -6833,8 +6837,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
 
   @Test
   public void testBaseClassParameterDefaultsOrder() {
-    // TODO(b/572052294): lowered base-class instance fields execute after constructor parameter
-    // default initializers
+    // b/572052294: A parameter default reads `this`, so all the defaults move into assignments
+    // after the instance fields are initialized, as in a native base class constructor.
     test(
         """
         class A {
@@ -6846,8 +6850,10 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """,
         """
         class A {
-          constructor(a = alert(2), b = this.x) {
+          constructor(a, b) {
             this.x = alert(1);
+            a = a === void 0 ? alert(2) : a;
+            b = b === void 0 ? this.x : b;
             alert(a, b);
           }
         }

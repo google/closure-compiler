@@ -1248,7 +1248,10 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
     ctorCreator.synthesizeClassConstructorIfMissing(t, record.classNode);
     Node ctor = NodeUtil.getEs6ClassConstructorMemberFunctionDef(record.classNode);
-    Node ctorBlock = ctor.getFirstChild().getLastChild();
+    Node ctorFn = ctor.getFirstChild();
+    Node ctorBlock = ctorFn.getLastChild();
+    boolean isDerived = !record.classNode.getSecondChild().isEmpty();
+
     Node insertionPoint = addTemporaryInsertionPoint(ctorBlock, record);
 
     if (hasPriv) {
@@ -1353,11 +1356,102 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       }
     }
 
+    // ES2022 § 10.2.2 ([[Construct]]) runs InitializeInstanceElements before
+    // OrdinaryCallEvaluateBody, which binds the parameters. So when a base constructor's parameters
+    // read `this` (or `super`, which passes `this` as the receiver), move its parameter default
+    // initializers into statements after the field initializations. In a derived constructor
+    // `this` is unbound until super() returns, so there a parameter that reads `this` throws both
+    // natively and after lowering.
+    if (!isDerived && NodeUtil.referencesEnclosingReceiver(ctorFn.getSecondChild())) {
+      moveConstructorParamDefaultsAfterFields(t, ctorFn, insertionPoint);
+    }
+
     insertionPoint.detach();
 
     // We moved the field from the class body to the constructor, so we need both.
     t.reportCodeChange();
     t.reportCodeChange(ctorBlock);
+  }
+
+  /**
+   * Moves a constructor's parameter default initializers and destructuring patterns into statements
+   * before {@code insertionPoint}, so that the instance elements installed before {@code
+   * insertionPoint} are initialized before the defaults run.
+   *
+   * <pre>{@code
+   * constructor(a, b = this.x, {c = this.y}) { body }
+   * // becomes
+   * constructor(a, b, TMP$0) {
+   *   this.x = ...;
+   *   this.y = ...;
+   *   b = b === void 0 ? this.x : b;
+   *   let {c = this.y} = TMP$0;
+   *   body
+   * }
+   * }</pre>
+   *
+   * <p>{@link Normalize} has already run {@link MakeDeclaredNamesUnique}, so any variable declared
+   * in the constructor body that shadowed a name referenced by a parameter default has already been
+   * renamed.
+   */
+  private void moveConstructorParamDefaultsAfterFields(
+      NodeTraversal t, Node ctorFn, Node insertionPoint) {
+    Node paramList = ctorFn.getSecondChild();
+    for (Node param = paramList.getFirstChild(); param != null; ) {
+      Node next = param.getNext();
+      if (param.isDefaultValue()) {
+        Node lhs = param.removeFirstChild();
+        JSDocInfo jsDoc = lhs.getJSDocInfo();
+        lhs.setJSDocInfo(null);
+        Node defaultValue = param.removeFirstChild();
+        if (lhs.isName()) {
+          // A name with a default, e.g. `b = this.x`, becomes the parameter `b` and the statement
+          // `b = b === void 0 ? this.x : b;` after the fields.
+          Node rhs = createDefaultValueHook(lhs, defaultValue);
+          Node assignStmt =
+              astFactory.createAssignStatement(lhs.cloneNode(), rhs).srcrefTreeIfMissing(param);
+          assignStmt.insertBefore(insertionPoint);
+          param.replaceWith(lhs);
+          lhs.setJSDocInfo(jsDoc);
+        } else {
+          // A destructuring pattern with a default, e.g. `{c} = this.y`, becomes a temporary
+          // parameter `TMP$0` and the statement `let {c} = TMP$0 === void 0 ? this.y : TMP$0;`
+          // after the fields.
+          checkState(lhs.isDestructuringPattern(), lhs);
+          Node tempParam = astFactory.createName(generateUniqueTmpVarName(t), type(lhs));
+          Node rhs = createDefaultValueHook(tempParam, defaultValue);
+          Node letStmt = IR.let(lhs, rhs).srcrefTreeIfMissing(param);
+          letStmt.insertBefore(insertionPoint);
+          NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
+          param.replaceWith(tempParam);
+          tempParam.setJSDocInfo(jsDoc);
+        }
+      } else if (param.isDestructuringPattern()
+          || (param.isRest() && param.getOnlyChild().isDestructuringPattern())) {
+        // A destructuring pattern without a default, e.g. `{c = this.y}`, becomes a temporary
+        // parameter `TMP$0` and the statement `let {c = this.y} = TMP$0;` after the fields. In a
+        // rest parameter, `...[d = this.y]` becomes `...TMP$0` and `let [d = this.y] = TMP$0;`.
+        Node pattern = param.isRest() ? param.getOnlyChild() : param;
+        JSDocInfo jsDoc = pattern.getJSDocInfo();
+        pattern.setJSDocInfo(null);
+        Node tempParam = astFactory.createName(generateUniqueTmpVarName(t), type(pattern));
+        pattern.replaceWith(tempParam);
+        tempParam.setJSDocInfo(jsDoc);
+        Node letStmt = IR.let(pattern, tempParam.cloneNode()).srcrefTreeIfMissing(param);
+        letStmt.insertBefore(insertionPoint);
+        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
+      }
+      param = next;
+    }
+  }
+
+  private Node createDefaultValueHook(Node paramName, Node defaultValue) {
+    Node undefined = astFactory.createUndefinedValue();
+    undefined.makeNonIndexable();
+    return astFactory.createHook(
+        astFactory.createSheq(paramName.cloneNode(), undefined),
+        defaultValue,
+        paramName.cloneNode());
   }
 
   /**
