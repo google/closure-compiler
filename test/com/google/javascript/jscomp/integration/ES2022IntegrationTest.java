@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
+import com.google.javascript.jscomp.TranspilationUtil;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.js.RuntimeJsLibManager.RuntimeLibraryMode;
@@ -343,6 +344,72 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         """,
         """
         alert(2);
+        """);
+  }
+
+  @Test
+  public void publicClassFields_newTargetInFieldInitializers() {
+    // TODO(b/572053262): `new.target` is always `undefined` in field initializers. Outside of a
+    // function, `IRFactory` reports a generic error for it.
+    CompilerOptions options = createCompilerOptions();
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+    String src =
+        """
+        class C {
+          inst = new.target;
+          static stat = new.target;
+        }
+        """;
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        options,
+        new String[] {src},
+        (String[]) null,
+        new DiagnosticGroup[] {DiagnosticGroups.PARSING, DiagnosticGroups.PARSING});
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2022);
+    test(
+        options,
+        new String[] {src},
+        (String[]) null,
+        new DiagnosticGroup[] {DiagnosticGroups.PARSING, DiagnosticGroups.PARSING});
+
+    // TODO(b/572053262): Inside a function it is accepted. Transpiling to ES5 then reports that
+    // `new.target` can't be transpiled yet, and with ES2022 output the static field initializer
+    // moves after the class, where it reads the `new.target` of `f`.
+    String srcInFunction =
+        """
+        function f() {
+          class C {
+            inst = new.target;
+            static stat = new.target;
+          }
+          return C;
+        }
+        """;
+    DiagnosticGroup cannotConvertYet = new DiagnosticGroup(TranspilationUtil.CANNOT_CONVERT_YET);
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        options,
+        new String[] {srcInFunction},
+        (String[]) null,
+        new DiagnosticGroup[] {cannotConvertYet, cannotConvertYet});
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2022);
+    test(
+        options,
+        srcInFunction,
+        """
+        function f() {
+          class C {
+            inst = new.target;
+            static stat;
+          }
+          C.stat = new.target;
+          return C;
+        }
         """);
   }
 

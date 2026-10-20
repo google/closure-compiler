@@ -7134,8 +7134,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
 
     parseError("new.target;", "new.target must be inside a function");
+    // TODO(b/572053262): An arrow function uses the `new.target` of the code around it, so this
+    // should be an error too.
+    parse("() => new.target;");
 
     parse("function f() { new.target; };");
+    parse("function f() { () => new.target; };");
 
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning(
@@ -7154,6 +7158,29 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT_2015;
     expectFeatures(Feature.CLASSES, Feature.MEMBER_DECLARATIONS, Feature.NEW_TARGET);
     parse("class C { f() { new.target; } }");
+  }
+
+  @Test
+  public void testNewTargetInFieldInitializersAndStaticBlocks() {
+    // TODO(b/572053262): `new.target` is always `undefined` in field initializers and static
+    // blocks. `IRFactory` reports a generic error for it outside of a function, and accepts it
+    // inside one, including an arrow function.
+    parseError("class C { x = new.target; }", "new.target must be inside a function");
+    parseError("class C { static x = new.target; }", "new.target must be inside a function");
+    parseError("class C { ['x'] = new.target; }", "new.target must be inside a function");
+    parseError("class C { static { new.target; } }", "new.target must be inside a function");
+    parse("class C { x = () => new.target; }");
+    parse("function f() { class C { x = new.target; static { new.target; } } }");
+    // A nested non-arrow function has its own `new.target`.
+    parse("class C { x = function() { return new.target; }; }");
+
+    // A computed key is not part of the initializer, so it may use `new.target` only inside a
+    // function.
+    parseError("class C { [new.target] = 1; }", "new.target must be inside a function");
+    // TODO(b/572053262): An arrow function uses the `new.target` of the code around it, so this
+    // should be an error too.
+    parse("() => class C { [new.target] = 1; };");
+    parse("function f() { class C { [new.target] = 1; } }");
   }
 
   @Test
