@@ -403,6 +403,42 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void publicClassFields_derivedConstructorReturnsObjectWithoutSuperCall() {
+    // TODO(b/573596312): `CheckSuper` doesn't require a `super()` call in a constructor that
+    // returns a value, so this compiles without errors. Natively the fields of `Sub` never run and
+    // `new Sub()` returns the object, but the transpiled constructor installs `y` first, which
+    // reads `this` before `super()` and throws a ReferenceError.
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
+    String src =
+        """
+        class Base {}
+        class Sub extends Base {
+          y = 2;
+          constructor() {
+            return {tag: 'ret'};
+          }
+        }
+        console.log(new Sub().tag);
+        """;
+    String expected =
+        """
+        class Base {}
+        class Sub extends Base {
+          constructor() {
+            this.y = 2;
+            return {tag: 'ret'};
+          }
+        }
+        console.log(new Sub().tag);
+        """;
+    test(options, src, expected);
+  }
+
+  @Test
   public void computedFieldExecutionOrderAndDeadAssignmentElimination() {
     CompilerOptions options = fullyOptimizedCompilerOptions();
 

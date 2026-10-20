@@ -486,11 +486,37 @@ public final class CheckSuperTest extends CompilerTestCase {
 
   @Test
   public void testNoWarning_withExplicitReturnInConstructor() {
+    // TODO(b/573596312): Require `super()` unless `@suppress {missingCallToSuper}` is used.
     testNoWarning("class C extends D { constructor() { return {}; } }");
     testNoWarning("class C extends D { constructor() { return f(); } }");
     // the following cases will error at runtime but we don't bother checking them.
     testNoWarning("class C extends D { constructor() { return 3; } }");
     testNoWarning("class C extends D { constructor() { if (false) return {}; } }");
+  }
+
+  @Test
+  public void testReturnWithoutSuperCall() {
+    // TODO(b/573596312): A derived class constructor should be required to call `super()` as a
+    // root-level statement, before any `return`, even when it returns a value. When class fields
+    // are transpiled, they are installed at the start of a constructor that never calls `super()`,
+    // where reading `this` throws a ReferenceError.
+    testNoWarning("class C extends D { x = 1; constructor() { return {}; } }");
+    testNoWarning("class C extends D { [k] = 1; constructor() { return {}; } }");
+    testNoWarning("class C extends D { #x = 1; constructor() { return {}; } }");
+    testNoWarning("class C extends D { #m() {} constructor() { return {}; } }");
+    testNoWarning("class C extends D { static x = 1; constructor() { return {}; } }");
+    testNoWarning(
+        "class C extends D { constructor(a) { if (a) { super(); } else { return {}; } } }");
+    testNoWarning("class C extends D { constructor(a) { if (a) return {}; super(); } }");
+  }
+
+  @Test
+  public void testNoWarning_rootLevelSuperCall() {
+    // `super()` is a root-level statement before any `return`, so every path that returns calls it.
+    testNoWarning(
+        "class C extends D { x = 1; constructor(a) { if (!a) throw new Error(); super(); } }");
+    testNoWarning(
+        "class C extends D { x = 1; constructor() { super(); return new Proxy(this, {}); } }");
   }
 
   @Test
