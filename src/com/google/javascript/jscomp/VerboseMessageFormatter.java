@@ -49,7 +49,7 @@ class VerboseMessageFormatter extends AbstractMessageFormatter {
         "%s at %s line %s %s",
         description,
         (Strings.isNullOrEmpty(sourceName) ? "(unknown source)" : sourceName),
-        ((lineNumber < 0) ? String.valueOf(lineNumber) : "(unknown line)"),
+        ((lineNumber < 0) ? "(unknown line)" : String.valueOf(lineNumber)),
         ((lineSource != null) ? ":\n\n" + lineSource : "."));
   }
 }
