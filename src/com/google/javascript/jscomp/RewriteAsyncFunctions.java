@@ -232,16 +232,28 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
         // e.g. `() => something`
         // function someFunc(callback = () => something) {}
         String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
-        return new FunctionContext(functionContext, n, uniqueId);
+        return new FunctionContext(getAsyncContextForParameterList(), n, uniqueId);
       } else {
         return this;
       }
     }
 
+    /**
+     * Returns the async context that `this`, `arguments`, `new.target`, and `super` refer to in
+     * this parameter list, or null if they should be left unchanged.
+     *
+     * <p>When the function owning this parameter list is itself the async context, the parameter
+     * list stays on the outer function and is not moved into the generator body, so references here
+     * (including inside nested arrow functions) must not be aliased.
+     */
+    private @Nullable FunctionContext getAsyncContextForParameterList() {
+      FunctionContext asyncContext = functionContext.asyncThisAndArgumentsContext;
+      return asyncContext == functionContext ? null : asyncContext;
+    }
+
     @Override
     public void visit(NodeTraversal t, Node n) {
-      if (functionContext.asyncThisAndArgumentsContext != null
-          && functionContext.asyncThisAndArgumentsContext != functionContext) {
+      if (getAsyncContextForParameterList() != null) {
         // e.g.
         // async function outer(outerT = this) {
         //   // `this` in outer parameter list must remain unchanged
@@ -285,26 +297,25 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
       }
     }
 
-    FunctionContext(FunctionContext outer, Node contextRootNode, String uniqueId) {
+    // outerAsyncContext is the async context that `this`, `arguments`, etc. refer to at the point
+    // where this function is defined, or null if there is none.
+    FunctionContext(
+        @Nullable FunctionContext outerAsyncContext, Node contextRootNode, String uniqueId) {
       super(contextRootNode, uniqueId);
       checkState(contextRootNode.isFunction(), contextRootNode);
       if (contextRootNode.isAsyncFunction()) {
         if (contextRootNode.isArrowFunction()) {
-          // An async arrow function context points to outer.asyncThisAndArgumentsContext
+          // An async arrow function context points to outerAsyncContext
           // if non-null, otherwise to itself.
-          asyncThisAndArgumentsContext =
-              outer.asyncThisAndArgumentsContext == null
-                  ? this
-                  : outer.asyncThisAndArgumentsContext;
+          asyncThisAndArgumentsContext = outerAsyncContext == null ? this : outerAsyncContext;
         } else {
           // An async non-arrow function context always points to itself
           asyncThisAndArgumentsContext = this;
         }
       } else {
         if (contextRootNode.isArrowFunction()) {
-          // A non-async arrow function context always points to
-          // outer.asyncThisAndArgumentsContext
-          asyncThisAndArgumentsContext = outer.asyncThisAndArgumentsContext;
+          // A non-async arrow function context always points to outerAsyncContext
+          asyncThisAndArgumentsContext = outerAsyncContext;
         } else {
           // A non-async, non-arrow function has no async context.
           asyncThisAndArgumentsContext = null;
@@ -318,7 +329,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
         return this;
       } else if (n.isFunction()) {
         String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
-        return new FunctionContext(this, n, uniqueId);
+        return new FunctionContext(asyncThisAndArgumentsContext, n, uniqueId);
       } else if (n.isParamList()) {
         String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(t.getInput());
         return new ParameterListContext(this, n, uniqueId);
