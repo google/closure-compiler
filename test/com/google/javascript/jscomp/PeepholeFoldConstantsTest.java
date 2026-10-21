@@ -1630,6 +1630,44 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = 'string'[6]", "x = void 0;");
   }
 
+  @Test
+  public void testFoldGetElem_nonCanonicalKeys() {
+    testSame("var x = [1, 2]['+0'];");
+    testSame("var x = 'abc'['00'];");
+    testSame("var x = [1][false];");
+    testSame("var x = [1, 2]['1.0'];");
+    testSame("var x = [1, 2][' 0 '];");
+    testSame("var x = [1, 2][''];");
+    testSame("var x = [1, 2][null];");
+    testSame("var x = [1, 2][true];");
+    test("var x = [1, 2][!0];", "var x = [1, 2][true];");
+
+    test("var x = [1, 2]['0'];", "var x = 1;");
+    test("var x = [1, 2]['1'];", "var x = 2;");
+    test("var x = 'abc'['0'];", "var x = 'a';");
+
+    // Leading zeros, signs, exponents, and radix prefixes are not canonical.
+    testSame("var x = [1, 2]['01'];");
+    testSame("var x = [1, 2]['-0'];");
+    testSame("var x = [1, 2]['-1'];");
+    testSame("var x = 'abc'['-1'];");
+    testSame("var x = [1, 2]['1e0'];");
+    testSame("var x = [1, 2]['0x1'];");
+    // '0.5' names a property; it is not an invalid index, so no warning.
+    testSame("var x = [1, 2]['0.5'];");
+    // String([]) is '', which is not an index.
+    testSame("var x = [1, 2][[]];");
+    // 2^31 - 1 is the largest index folded; larger valid indexes are left alone.
+    test("var x = [1, 2]['2147483647'];", "var x = void 0;");
+    testSame("var x = [1, 2]['2147483648'];");
+    testSame("var x = [1, 2]['4294967294'];");
+    testSame("var x = [1, 2]['4294967295'];");
+    // Number keys still fold; -0 converts to the key '0'.
+    test("var x = [1, 2][-0];", "var x = 1;");
+    testSame("var x = [1, 2]?.['01'];");
+    test("var x = [1, 2]?.['1'];", "var x = 2;");
+  }
+
   /** Optional versions of the above `testFoldGetElem2` tests */
   @Test
   public void testFoldOptChainGetElem2() {

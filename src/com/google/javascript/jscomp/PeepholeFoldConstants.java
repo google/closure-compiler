@@ -1774,6 +1774,19 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
+  /**
+   * Returns true if {@code right} represents a valid key for folding element reads.
+   * For string keys, only canonical decimal array index spellings (e.g. "0", "1")
+   * match. For number keys, any number-typed expression is accepted so callers can
+   * emit warnings for non-integers or fold out-of-bounds index reads to undefined.
+   */
+  private static boolean isFoldableElementIndexKey(Node right, int intIndex) {
+    if (right.isStringLit()) {
+      return intIndex >= 0 && right.getString().equals(String.valueOf(intIndex));
+    }
+    return NodeUtil.isNumericResult(right);
+  }
+
   private Node tryFoldArrayAccess(Node n, Node left, Node right) {
     // If GETPROP/GETELEM is used as assignment target the array literal is
     // acting as a temporary we can't fold it here:
@@ -1789,13 +1802,16 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
+    int intIndex = index.intValue();
+    if (!isFoldableElementIndexKey(right, intIndex)) {
+      return n;
+    }
+
     if (!isExactInt32(index)) {
       // Ideally this should be caught in the check passes.
       report(INVALID_GETELEM_INDEX_ERROR, right);
       return n;
     }
-
-    int intIndex = index.intValue();
     Node current = left.getFirstChild();
     Node elem = null;
     for (int i = 0; current != null; i++) {
@@ -1897,6 +1913,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     int intIndex = index.intValue();
+    if (!isFoldableElementIndexKey(right, intIndex)) {
+      return n;
+    }
+
     if (intIndex != index) {
       report(INVALID_GETELEM_INDEX_ERROR, right);
       return n;
