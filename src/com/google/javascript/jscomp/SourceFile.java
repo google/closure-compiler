@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -337,6 +338,7 @@ public final class SourceFile implements StaticSourceFile {
 
   @Override
   public int getLineOfOffset(int offset) {
+    checkArgument(offset >= 0, "offset must be non-negative: %s", offset);
     findLineOffsets();
     int search = Arrays.binarySearch(lineOffsets, offset);
     if (search >= 0) {
@@ -657,6 +659,8 @@ public final class SourceFile implements StaticSourceFile {
     // use "-1"
     int protoNumLines = protoSourceFile.getNumLinesPlusOne() - 1;
     int protoNumBytes = protoSourceFile.getNumBytesPlusOne() - 1;
+    checkState(protoNumLines >= -1, "protoNumLines must be >= -1: %s", protoNumLines);
+    checkState(protoNumBytes >= -1, "protoNumBytes must be >= -1: %s", protoNumBytes);
     // It's possible that this.numLines and protoNumLines are both not "-1" but contain
     // conflicting values. This would happen if a file changes on disk after TypedAST
     // proto serialization. We choose the proto value over this.numLines because this
@@ -671,8 +675,12 @@ public final class SourceFile implements StaticSourceFile {
     SourceKind sourceKind = getSourceKindFromProto(protoSourceFile);
     SourceFile sourceFile = fromProto(protoSourceFile, sourceKind);
     // Restore the number of lines/bytes, which are offset by 1 in the proto.
-    sourceFile.numLines = protoSourceFile.getNumLinesPlusOne() - 1;
-    sourceFile.numBytes = protoSourceFile.getNumBytesPlusOne() - 1;
+    int protoNumLines = protoSourceFile.getNumLinesPlusOne() - 1;
+    int protoNumBytes = protoSourceFile.getNumBytesPlusOne() - 1;
+    checkState(protoNumLines >= -1, "protoNumLines must be >= -1: %s", protoNumLines);
+    checkState(protoNumBytes >= -1, "protoNumBytes must be >= -1: %s", protoNumBytes);
+    sourceFile.numLines = protoNumLines;
+    sourceFile.numBytes = protoNumBytes;
     if (protoSourceFile.getIsClosureUnawareCode()) {
       sourceFile.markAsClosureUnawareCode();
     }

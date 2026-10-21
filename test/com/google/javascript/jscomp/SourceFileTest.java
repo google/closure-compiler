@@ -115,9 +115,8 @@ public final class SourceFileTest {
     assertThat(f3.getNumBytes()).isEqualTo(903);
     assertThat(f3.getNumLines()).isEqualTo(4);
 
-    // TODO(nickreid): This seems like a bug.
-    assertThat(f3.getLineOfOffset(-1)).isEqualTo(0);
-    assertThrows(Exception.class, () -> f3.getColumnOfOffset(-1));
+    assertThrows(IllegalArgumentException.class, () -> f3.getLineOfOffset(-1));
+    assertThrows(IllegalArgumentException.class, () -> f3.getColumnOfOffset(-1));
 
     SourceFile startsWithNewline = factory.apply("\n'a'\n'b'");
     assertThat(startsWithNewline.getLineOffset(1)).isEqualTo(0);
@@ -631,10 +630,57 @@ public final class SourceFileTest {
         SourceFileProto.newBuilder()
             .setFilename("file.js")
             .setNumLinesPlusOne(1000)
-            .setNumBytesPlusOne(-1)
             .build());
 
     assertThat(sourceFile.getNumLines()).isEqualTo(999);
+    assertThat(sourceFile.getNumBytes()).isEqualTo(2);
+  }
+
+  @Test
+  public void testRestoreCachedState_throwsOnNegativeCounts() {
+    SourceFile sourceFile = SourceFile.fromCode("file.js", "42");
+    SourceFileProto linesProto =
+        SourceFileProto.newBuilder()
+            .setFilename("file.js")
+            .setNumLinesPlusOne(-1)
+            .build();
+    assertThrows(
+        IllegalStateException.class,
+        () -> sourceFile.restoreCachedStateFrom(linesProto));
+
+    SourceFileProto bytesProto =
+        SourceFileProto.newBuilder()
+            .setFilename("file.js")
+            .setNumBytesPlusOne(-1)
+            .build();
+    assertThrows(
+        IllegalStateException.class,
+        () -> sourceFile.restoreCachedStateFrom(bytesProto));
+  }
+
+  @Test
+  public void testFromProto_throwsOnNegativeCounts() {
+    SourceFileProto linesProto =
+        SourceFileProto.newBuilder()
+            .setFilename("file.js")
+            .setSourceKind(SourceFileProto.SourceKind.CODE)
+            .setPreloadedContents("42")
+            .setNumLinesPlusOne(-1)
+            .build();
+    assertThrows(
+        IllegalStateException.class,
+        () -> SourceFile.fromProto(linesProto));
+
+    SourceFileProto bytesProto =
+        SourceFileProto.newBuilder()
+            .setFilename("file.js")
+            .setSourceKind(SourceFileProto.SourceKind.CODE)
+            .setPreloadedContents("42")
+            .setNumBytesPlusOne(-1)
+            .build();
+    assertThrows(
+        IllegalStateException.class,
+        () -> SourceFile.fromProto(bytesProto));
   }
 
   @Test
