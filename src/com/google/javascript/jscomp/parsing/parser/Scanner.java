@@ -1107,7 +1107,8 @@ public class Scanner {
       reportError("Unterminated string literal escape sequence");
       return false;
     }
-    if (isStringLineTerminator(peekChar())) {
+    // A backslash followed by any LineTerminator, including <LS> and <PS>, is a line continuation.
+    if (isLineTerminator(peekChar())) {
       skipLineTerminator();
       return true;
     }

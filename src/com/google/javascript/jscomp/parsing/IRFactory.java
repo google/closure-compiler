@@ -3948,6 +3948,8 @@ class IRFactory {
           result.append('\u000B');
           break;
         case '\n':
+        case '\u2028':
+        case '\u2029':
           // line continuation, skip the line break
           maybeWarnForFeature(token, Feature.STRING_CONTINUATION);
           errorReporter.warning(

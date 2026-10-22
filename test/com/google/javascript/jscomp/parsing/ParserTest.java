@@ -4288,6 +4288,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     n = parseWarning("'one\\\n two';", STRING_CONTINUATIONS_WARNING);
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("one two");
+
+    // <LS> and <PS> are line terminators too, so a backslash before them is a line continuation.
+    n = parseWarning("'one\\\u2028two';", STRING_CONTINUATIONS_WARNING);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+
+    n = parseWarning("'one\\\u2029two';", STRING_CONTINUATIONS_WARNING);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
   }
 
   /** See https://github.com/google/closure-compiler/issues/3492 */
@@ -4402,6 +4409,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node stringNode = templateLiteral.getFirstChild();
     assertNode(stringNode).hasType(Token.TEMPLATELIT_STRING);
     assertThat(stringNode.getCookedString()).isEqualTo("string continuation");
+
+    n = parseWarning("`string \\\u2028continuation`", STRING_CONTINUATIONS_WARNING);
+    stringNode = n.getFirstFirstChild().getFirstChild();
+    assertThat(stringNode.getCookedString()).isEqualTo("string continuation");
+    assertThat(stringNode.getRawString()).isEqualTo("string \\\u2028continuation");
   }
 
   @Test
