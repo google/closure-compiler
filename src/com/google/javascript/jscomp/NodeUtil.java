@@ -3558,6 +3558,10 @@ public final class NodeUtil {
    * @return A NAME or GETPROP node
    */
   public static Node newQName(AbstractCompiler compiler, String name) {
+    return newQName(compiler.getCodingConvention(), name);
+  }
+
+  public static Node newQName(CodingConvention convention, String name) {
     int endPos = name.indexOf('.');
     if (endPos == -1) {
       endPos = name.length();
@@ -3570,7 +3574,7 @@ public final class NodeUtil {
     } else if ("super".equals(nodeName)) {
       qname = IR.superNode();
     } else {
-      qname = newName(compiler, nodeName);
+      qname = newName(convention, nodeName);
     }
     qname.setLength(endPos);
 
@@ -3582,7 +3586,7 @@ public final class NodeUtil {
 
       String part = name.substring(startPos, endPos);
       qname = IR.getprop(qname, part);
-      if (compiler.getCodingConvention().isConstantKey(part)) {
+      if (convention.isConstantKey(part)) {
         qname.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
       qname.setLength(part.length());
@@ -3603,7 +3607,12 @@ public final class NodeUtil {
    */
   static Node newQName(
       AbstractCompiler compiler, String name, Node basisNode, String originalName) {
-    Node node = newQName(compiler, name);
+    return newQName(compiler.getCodingConvention(), name, basisNode, originalName);
+  }
+
+  static Node newQName(
+      CodingConvention convention, String name, Node basisNode, String originalName) {
+    Node node = newQName(convention, name);
     node.srcrefTreeIfMissing(basisNode);
     if (!originalName.equals(node.getOriginalName())) {
       // If basisNode already had the correct original name, then it will already be set correctly.
@@ -3637,8 +3646,12 @@ public final class NodeUtil {
 
   /** Creates a property access on the {@code context} tree. */
   public static Node newPropertyAccess(AbstractCompiler compiler, Node context, String name) {
+    return newPropertyAccess(compiler.getCodingConvention(), context, name);
+  }
+
+  public static Node newPropertyAccess(CodingConvention convention, Node context, String name) {
     Node propNode = IR.getprop(context, name);
-    if (compiler.getCodingConvention().isConstantKey(name)) {
+    if (convention.isConstantKey(name)) {
       propNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
     return propNode;
@@ -3652,7 +3665,12 @@ public final class NodeUtil {
    */
   public static Node newQNameDeclaration(
       AbstractCompiler compiler, String name, Node value, JSDocInfo info) {
-    return newQNameDeclaration(compiler, name, value, info, Token.VAR);
+    return newQNameDeclaration(compiler.getCodingConvention(), name, value, info);
+  }
+
+  public static Node newQNameDeclaration(
+      CodingConvention convention, String name, Node value, JSDocInfo info) {
+    return newQNameDeclaration(convention, name, value, info, Token.VAR);
   }
 
   /**
@@ -3664,8 +3682,13 @@ public final class NodeUtil {
    */
   public static Node newQNameDeclaration(
       AbstractCompiler compiler, String name, Node value, JSDocInfo info, Token type) {
+    return newQNameDeclaration(compiler.getCodingConvention(), name, value, info, type);
+  }
+
+  public static Node newQNameDeclaration(
+      CodingConvention convention, String name, Node value, JSDocInfo info, Token type) {
     checkState(type == Token.VAR || type == Token.LET || type == Token.CONST, type);
-    Node nameNode = newQName(compiler, name);
+    Node nameNode = newQName(convention, name);
     return getDeclarationFromName(nameNode, value, type, info);
   }
 
@@ -3688,10 +3711,10 @@ public final class NodeUtil {
     return qName.substring(0, dot);
   }
 
-  private static Node newName(AbstractCompiler compiler, String name) {
+  private static Node newName(CodingConvention convention, String name) {
     Node nameNode = IR.name(name);
     nameNode.setLength(name.length());
-    if (compiler.getCodingConvention().isConstant(name)) {
+    if (convention.isConstant(name)) {
       nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
     return nameNode;
@@ -3706,7 +3729,11 @@ public final class NodeUtil {
    * @return The node created.
    */
   static Node newName(AbstractCompiler compiler, String name, Node srcref) {
-    return newName(compiler, name).srcref(srcref);
+    return newName(compiler.getCodingConvention(), name, srcref);
+  }
+
+  static Node newName(CodingConvention convention, String name, Node srcref) {
+    return newName(convention, name).srcref(srcref);
   }
 
   /**
@@ -3720,7 +3747,12 @@ public final class NodeUtil {
    * @return The node created.
    */
   static Node newName(AbstractCompiler compiler, String name, Node basisNode, String originalName) {
-    Node nameNode = newName(compiler, name, basisNode);
+    return newName(compiler.getCodingConvention(), name, basisNode, originalName);
+  }
+
+  static Node newName(
+      CodingConvention convention, String name, Node basisNode, String originalName) {
+    Node nameNode = newName(convention, name, basisNode);
     nameNode.setOriginalName(originalName);
     return nameNode;
   }
@@ -5525,22 +5557,30 @@ public final class NodeUtil {
 
   /** Recurses through a tree, marking all function nodes as changed. */
   static void markNewScopesChanged(Node node, AbstractCompiler compiler) {
-    compiler.getChangeTracker().markNewScopesChanged(node);
+    markNewScopesChanged(node, compiler.getChangeTracker());
+  }
+
+  static void markNewScopesChanged(Node node, ChangeTracker changeTracker) {
+    changeTracker.markNewScopesChanged(node);
   }
 
   /** Recurses through a tree, marking all function nodes deleted. */
   public static void markFunctionsDeleted(Node node, AbstractCompiler compiler) {
+    markFunctionsDeleted(node, compiler.getChangeTracker());
+  }
+
+  public static void markFunctionsDeleted(Node node, ChangeTracker changeTracker) {
     if (node.isFunction()) {
-      compiler.reportFunctionDeleted(node);
+      changeTracker.reportFunctionDeleted(node);
     }
 
     for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
-      markFunctionsDeleted(child, compiler);
+      markFunctionsDeleted(child, changeTracker);
     }
 
     Node shadowed = node.getClosureUnawareShadow();
     if (shadowed != null) {
-      markFunctionsDeleted(shadowed, compiler);
+      markFunctionsDeleted(shadowed, changeTracker);
     }
   }
 

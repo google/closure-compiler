@@ -5772,4 +5772,14 @@ public final class NodeUtilTest {
   private static boolean isValidQualifiedName(String s) {
     return NodeUtil.isValidQualifiedName(FeatureSet.ES3, s);
   }
+
+  @RunWith(JUnit4.class)
+  public static class DelegatedHelpersTests {
+    @Test
+    public void testDelegatedHelpersWithNarrowDependencies() {
+      Node nameNode = NodeUtil.newQName(CodingConventions.getDefault(), "foo.bar");
+      assertThat(nameNode.isGetProp()).isTrue();
+      assertThat(nameNode.getString()).isEqualTo("bar");
+    }
+  }
 }
