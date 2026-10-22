@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.deps;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -37,24 +36,16 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
-import com.google.javascript.jscomp.parsing.parser.trees.Comment;
-import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.re2j.Matcher;
-import com.google.re2j.Pattern;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * A parser that extracts dependency information from a .js file, including goog.require,
- * goog.provide, goog.module, import/export statements, and JSDoc annotations related to dependency
- * management.
+ * goog.provide, goog.module, and import/export statements.
  */
 public class JsFileFullParser {
   /** The dependency information contained in a .js source file. */
@@ -68,21 +59,14 @@ public class JsFileFullParser {
     }
 
     public boolean goog = false;
-    public boolean isConfig = false;
-    public boolean isExterns = false;
-    public boolean provideGoog = false;
     public boolean testonly = false;
     public ModuleType moduleType = ModuleType.UNKNOWN;
     public boolean isLegacyNamespace = false;
 
-    public final Set<String> delcalls = new TreeSet<>();
-    public final Set<String> deltemplates = new TreeSet<>();
     // Use a LinkedHashSet as import order matters!
     public final Set<String> importedModules = new LinkedHashSet<>();
     public final Set<String> dynamicRequires = new LinkedHashSet<>();
     public final Set<String> readToggles = new LinkedHashSet<>();
-    public final List<String> modName = new ArrayList<>();
-    public final List<String> mods = new ArrayList<>();
 
     // Note: multiple copies doesn't make much sense, but we report
     // each copy so that calling code can choose how to handle it
@@ -90,55 +74,9 @@ public class JsFileFullParser {
     public final Multiset<String> requires = TreeMultiset.create();
     public final Multiset<String> typeRequires = TreeMultiset.create();
     public final Multiset<String> maybeRequires = TreeMultiset.create();
-    public final Multiset<String> requiresCss = TreeMultiset.create();
-    public final Multiset<String> visibility = TreeMultiset.create();
 
-    public final Multimap<String, String> customAnnotations = TreeMultimap.create();
     public final Multimap<String, String> loadFlags = TreeMultimap.create();
-  }
-
-  /** Represents a single JSDoc annotation, with an optional argument. */
-  private static class CommentAnnotation {
-
-    /** Annotation name, e.g. "@fileoverview" or "@externs". */
-    final String name;
-
-    /**
-     * Annotation value: either the bare identifier immediately after the annotation, or else string
-     * in braces.
-     */
-    final String value;
-
-    CommentAnnotation(String name, String value) {
-      this.name = name;
-      this.value = value;
-    }
-
-    /** Returns all the annotations in a given comment string. */
-    static List<CommentAnnotation> parse(String comment) {
-      // TODO(b/139159612): This is reinventing a large part of JSDocInfoParser.  We should
-      // try to consolidate as much as possible.  This requires several steps:
-      //   1. Make all the annotations we look for first-class in JSDocInfo
-      //   2. Support custom annotations (may already be done?)
-      //   3. Fix up existing code so that all these annotations are in @fileoverview
-      //   4. Change this code to simply inspect the script's JSDocInfo instead of re-parsing
-      List<CommentAnnotation> out = new ArrayList<>();
-      Matcher matcher = ANNOTATION_RE.matcher(comment);
-      while (matcher.find()) {
-        String name = matcher.group(ANNOTATION_NAME_GROUP);
-        String value = Strings.nullToEmpty(matcher.group(ANNOTATION_VALUE_GROUP));
-        out.add(new CommentAnnotation(name, value));
-      }
-      return out;
-    }
-
-    // Regex for a JSDoc annotation with an `@name` and an optional brace-delimited `{value}`.
-    // The `@` should not match the middle of a word.
-    private static final Pattern ANNOTATION_RE =
-        Pattern.compile(
-            "(?:[^a-zA-Z0-9_$]|^)(@[a-zA-Z]+)(?:\\s*\\{\\s*([^}\\t\\n\\v\\f\\r ]+)\\s*\\})?");
-    private static final int ANNOTATION_NAME_GROUP = 1;
-    private static final int ANNOTATION_VALUE_GROUP = 2;
+    public ParserRunner.ParseResult parsed = null;
   }
 
   private JsFileFullParser() {
@@ -196,6 +134,7 @@ public class JsFileFullParser {
     if (errorReporter.seenError) {
       return info;
     }
+    info.parsed = parsed;
 
     parsed.ast.setInputId(new InputId(filename));
     String version = parsed.features.version();
@@ -203,7 +142,6 @@ public class JsFileFullParser {
       info.loadFlags.put("lang", version);
     }
 
-    parseTopLevelJsDocComments(parsed.topLevelStatementRanges, parsed.comments, info);
     GatherModuleMetadata gatherModuleMetadata =
         new GatherModuleMetadata(
             compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER);
@@ -255,96 +193,6 @@ public class JsFileFullParser {
     // Traverse any nested modules (goog.loadModule calls).
     for (ModuleMetadata nested : module.nestedModules()) {
       recordModuleMetadata(info, nested);
-    }
-  }
-
-  /**
-   * Parses all top-level JSDoc comments (comments before or after top-level statements, or all
-   * comments if there are no statements), ignoring comments nested inside top-level statement
-   * bodies (functions, classes, methods, blocks).
-   *
-   * <p>Uses the parser's statement ranges rather than {@link Node#getSourceOffset}, which is lossy:
-   * {@code Node} wraps line numbers past 2^20, clamps columns past {@link Node#MAX_COLUMN_NUMBER},
-   * and resolves lines via {@code SourceFile}, which disagrees with the parser on line terminators
-   * other than {@code \n}.
-   */
-  private static void parseTopLevelJsDocComments(
-      List<SourceRange> statementRanges, List<Comment> comments, FileInfo info) {
-    int i = 0;
-    for (Comment comment : comments) {
-      if (comment.type != Comment.Type.JSDOC) {
-        continue;
-      }
-      int commentStart = comment.location.start.offset;
-      int commentEnd = comment.location.end.offset;
-      while (i < statementRanges.size() && statementRanges.get(i).end.offset <= commentStart) {
-        i++;
-      }
-      if (i < statementRanges.size()
-          && commentStart >= statementRanges.get(i).start.offset
-          && commentEnd <= statementRanges.get(i).end.offset) {
-        continue;
-      }
-      parseComment(comment, info);
-    }
-  }
-
-  /** Mutates {@code info} with information from the given {@code comment}. */
-  private static void parseComment(Comment comment, FileInfo info) {
-    boolean fileOverview = comment.value.contains("@fileoverview");
-    for (CommentAnnotation annotation : CommentAnnotation.parse(comment.value)) {
-      switch (annotation.name) {
-        case "@fileoverview", "@author", "@see", "@link" -> {}
-        case "@mods" -> {
-          if (!annotation.value.isEmpty()) {
-            info.mods.add(annotation.value);
-          }
-        }
-        case "@visibility" -> {
-          if (!annotation.value.isEmpty()) {
-            info.visibility.add(annotation.value);
-          }
-        }
-        case "@modName" -> {
-          if (!annotation.value.isEmpty()) {
-            info.modName.add(annotation.value);
-          }
-        }
-        case "@config" -> info.isConfig = true;
-        case "@provideGoog" -> info.provideGoog = true;
-        case "@requirecss" -> {
-          if (!annotation.value.isEmpty()) {
-            info.requiresCss.add(annotation.value);
-          }
-        }
-        case "@deltemplate", "@hassoydeltemplate" -> {
-          // TODO(b/210468818): Remove legacy @hassoydeltemplate annotation once Soy gencode has
-          // been updated to use the new one.
-          if (!annotation.value.isEmpty()) {
-            info.deltemplates.add(annotation.value);
-          }
-        }
-        case "@delcall", "@hassoydelcall" -> {
-          // TODO(b/210468818): Remove legacy @hassoydelcall annotation once Soy gencode has
-          // been updated to use the new one.
-          if (!annotation.value.isEmpty()) {
-            info.delcalls.add(annotation.value);
-          }
-        }
-        case "@externs" -> info.isExterns = true;
-        case "@enhanceable", "@pintomodule", "@mayhaveextraedge" ->
-            info.customAnnotations.put(annotation.name.substring(1), annotation.value);
-        case "@enhance" -> {
-          if (!annotation.value.isEmpty()) {
-            info.customAnnotations.put(annotation.name.substring(1), annotation.value);
-          }
-        }
-        default -> {
-          if (fileOverview) {
-            info.customAnnotations.put(annotation.name.substring(1), annotation.value);
-          }
-        }
-      }
     }
   }
 
