@@ -55,8 +55,16 @@ Navigator.prototype.clipboard;
  * @param {!Object<string, (!string|!Blob|!Promise<!string>|!Promise<!Blob>)>}
  *     items
  * @param {ClipboardItemOptions=} options
+ * @see https://w3c.github.io/clipboard-apis/#clipboarditem-interface
  */
 function ClipboardItem(items, options) {}
+
+/**
+ * @param {string} type
+ * @return {boolean}
+ * @see https://w3c.github.io/clipboard-apis/#dom-clipboarditem-supports
+ */
+ClipboardItem.supports = function(type) {};
 
 /** @type {!Array<!string>} */
 ClipboardItem.prototype.types;
