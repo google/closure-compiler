@@ -877,6 +877,40 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassMovement_reflectObjectProperty_classDeclaration() {
+    // TODO(b/435019132): The expectation is currently wrong. Foo and value should move to m2.
+    testSame(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk(
+                    """
+                    class Foo {}
+                    const value = goog.reflect.objectProperty('x', Foo);
+                    """)
+                // m2
+                .addChunk("const useValue = value;")
+                .build()));
+  }
+
+  @Test
+  public void testClassMovement_reflectObjectProperty_classExpression() {
+    // TODO(b/435019132): The expectation is currently wrong. Foo and value should move to m2.
+    testSame(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                // m1
+                .addChunk(
+                    """
+                    const Foo = class {};
+                    const value = goog.reflect.objectProperty('x', Foo);
+                    """)
+                // m2
+                .addChunk("const useValue = value;")
+                .build()));
+  }
+
+  @Test
   public void testPureOrBreakMyCodedStaticClassFieldIsMovable() {
     //
     //
