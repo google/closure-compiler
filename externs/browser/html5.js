@@ -2623,6 +2623,13 @@ HTMLMediaElement.prototype.crossOrigin;
 HTMLMediaElement.prototype.currentTime;
 
 /**
+ * @param {number} time
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-fastseek-dev
+ */
+HTMLMediaElement.prototype.fastSeek = function(time) {};
+
+/**
  * The absolute timeline offset.
  * @return {!Date}
  */
