@@ -290,6 +290,171 @@ public final class CheckPathsBetweenNodesTest {
         .isTrue();
   }
 
+  @Test
+  public void testConfluentPaths_visitedEdgePreventsRedundantTraversal_allPaths() {
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
+    g.createNode("e");
+
+    g.connect("a", "-", "b");
+    g.connect("a", "-", "c");
+    g.connect("b", "-", "d");
+    g.connect("c", "-", "d");
+    g.connect("d", "-", "e");
+
+    // Diamond DAG where paths a -> b -> d -> e and a -> c -> d -> e converge at 'd'.
+    // Once edge d -> e is traversed and marked VISITED_EDGE on the first path,
+    // the second path converging at 'd' must not re-traverse d -> e.
+    NodeCountingPredicate<String> countE = new NodeCountingPredicate<>("e", true);
+    assertThat(createTest(g, "a", "e", countE, ALL_EDGE).allPathsSatisfyPredicate()).isTrue();
+    assertThat(countE.count).isEqualTo(1);
+  }
+
+  @Test
+  public void testConfluentPaths_visitedEdgePreventsRedundantTraversal_somePaths() {
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
+    g.createNode("e");
+
+    g.connect("a", "-", "b");
+    g.connect("a", "-", "c");
+    g.connect("b", "-", "d");
+    g.connect("c", "-", "d");
+    g.connect("d", "-", "e");
+
+    // Diamond DAG where paths a -> b -> d -> e and a -> c -> d -> e converge at 'd'.
+    // In somePathsSatisfyPredicate, when the first path does not satisfy the predicate,
+    // edge d -> e is marked VISITED_EDGE. The second path converging at 'd' must not
+    // re-traverse d -> e.
+    NodeCountingPredicate<String> countE = new NodeCountingPredicate<>("e", false);
+    assertThat(createTest(g, "a", "e", countE, ALL_EDGE).somePathsSatisfyPredicate()).isFalse();
+    assertThat(countE.count).isEqualTo(1);
+  }
+
+  @Test
+  public void testConfluentPaths_withCycles_allPaths() {
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
+    g.createNode("e");
+    g.createNode("f");
+
+    g.connect("a", "-", "b");
+    g.connect("a", "-", "c");
+    g.connect("b", "-", "d");
+    g.connect("c", "-", "d");
+    g.connect("d", "-", "e");
+    g.connect("e", "-", "d"); // cycle on confluent subgraph
+    g.connect("d", "-", "f");
+
+    // All paths from 'a' to 'f' converge at 'd'. The cycle e -> d is a back edge,
+    // and d -> f is marked VISITED_EDGE once traversed. 'f' must be visited once.
+    NodeCountingPredicate<String> countF = new NodeCountingPredicate<>("f", true);
+    assertThat(createTest(g, "a", "f", countF, ALL_EDGE).allPathsSatisfyPredicate()).isTrue();
+    assertThat(countF.count).isEqualTo(1);
+  }
+
+  @Test
+  public void testConfluentPaths_withCycles_somePaths() {
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
+    g.createNode("e");
+    g.createNode("f");
+
+    g.connect("a", "-", "b");
+    g.connect("a", "-", "c");
+    g.connect("b", "-", "d");
+    g.connect("c", "-", "d");
+    g.connect("d", "-", "e");
+    g.connect("e", "-", "d"); // cycle on confluent subgraph
+    g.connect("d", "-", "f");
+
+    NodeCountingPredicate<String> countF = new NodeCountingPredicate<>("f", false);
+    assertThat(createTest(g, "a", "f", countF, ALL_EDGE).somePathsSatisfyPredicate()).isFalse();
+    assertThat(countF.count).isEqualTo(1);
+  }
+
+  @Test
+  public void testCycles_backEdgeNotTraversed_allPaths() {
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
+
+    g.connect("a", "-", "b");
+    g.connect("b", "-", "c");
+    g.connect("c", "-", "b"); // back edge to b
+    g.connect("b", "-", "d");
+
+    // NodeCountingPredicate on 'b': without back edges, 'b' should only be visited once.
+    // TODO(b/572846422): Fix back-edge traversal. Currently, back edge c -> b is traversed
+    // because e.setAnnotation(VISITED_EDGE) overwrites BACK_EDGE before it is checked,
+    // causing 'b' to be visited twice instead of once.
+    NodeCountingPredicate<String> countB = new NodeCountingPredicate<>("b", false);
+    assertThat(createTest(g, "a", "d", countB, ALL_EDGE).allPathsSatisfyPredicate()).isFalse();
+    assertThat(countB.count).isEqualTo(2);
+  }
+
+  @Test
+  public void testCycles_backEdgeNotTraversed_somePaths() {
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
+
+    g.connect("a", "-", "b");
+    g.connect("b", "-", "c");
+    g.connect("c", "-", "b"); // back edge to b
+    g.connect("b", "-", "d");
+
+    // NodeCountingPredicate on 'b': without back edges, 'b' should only be visited once.
+    // TODO(b/572846422): Fix back-edge traversal. Currently, back edge c -> b is traversed
+    // because e.setAnnotation(VISITED_EDGE) overwrites BACK_EDGE before it is checked,
+    // causing 'b' to be visited twice instead of once.
+    NodeCountingPredicate<String> countB = new NodeCountingPredicate<>("b", false);
+    assertThat(createTest(g, "a", "d", countB, ALL_EDGE).somePathsSatisfyPredicate()).isFalse();
+    assertThat(countB.count).isEqualTo(2);
+  }
+
+  @Test
+  public void testCycles_backEdgeToStartNotTraversed() {
+    DiGraph<String, String> g = LinkedDirectedGraph.create();
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
+
+    g.connect("a", "-", "b");
+    g.connect("b", "-", "c");
+    g.connect("c", "-", "a"); // back edge to start 'a'
+    g.connect("b", "-", "d");
+
+    // NodeCountingPredicate on 'a': without back edges, start 'a' should only be visited once.
+    // TODO(b/572846422): Fix back-edge traversal. Currently, back edge c -> a is traversed
+    // because e.setAnnotation(VISITED_EDGE) overwrites BACK_EDGE before it is checked,
+    // causing 'a' to be visited twice instead of once.
+    NodeCountingPredicate<String> countA = new NodeCountingPredicate<>("a", false);
+    assertThat(createTest(g, "a", "d", countA, ALL_EDGE).allPathsSatisfyPredicate()).isFalse();
+    assertThat(countA.count).isEqualTo(2);
+
+    NodeCountingPredicate<String> countSomeA = new NodeCountingPredicate<>("a", false);
+    assertThat(createTest(g, "a", "d", countSomeA, ALL_EDGE).somePathsSatisfyPredicate()).isFalse();
+    assertThat(countSomeA.count).isEqualTo(2);
+  }
+
   private static <N, E> void assertGood(CheckPathsBetweenNodes<N, E> test) {
     assertThat(test.allPathsSatisfyPredicate()).isTrue();
   }
@@ -335,6 +500,27 @@ public final class CheckPathsBetweenNodesTest {
     public boolean apply(T input) {
       count++;
       return delegate.apply(input);
+    }
+  }
+
+  private static class NodeCountingPredicate<T> implements Predicate<T> {
+
+    private int count = 0;
+    private final T target;
+    private final boolean returnValue;
+
+    private NodeCountingPredicate(T target, boolean returnValue) {
+      this.target = target;
+      this.returnValue = returnValue;
+    }
+
+    @Override
+    public boolean apply(T input) {
+      if (input.equals(target)) {
+        count++;
+        return returnValue;
+      }
+      return false;
     }
   }
 }
