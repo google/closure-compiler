@@ -706,7 +706,7 @@ RTCEncodedVideoFrameMetadata.prototype.width;
 function RTCEncodedVideoFrame() {}
 
 /**
- * @const {!ArrayBuffer}
+ * @type {!ArrayBuffer}
  */
 RTCEncodedVideoFrame.prototype.data;
 
@@ -747,7 +747,7 @@ RTCEncodedAudioFrameMetadata.prototype.sequenceNumber;
 function RTCEncodedAudioFrame() {}
 
 /**
- * @const {!ArrayBuffer}
+ * @type {!ArrayBuffer}
  */
 RTCEncodedAudioFrame.prototype.data;
 
@@ -1899,6 +1899,7 @@ ImageCapture.prototype.track;
  * @see https://www.w3.org/TR/webrtc/#rtctrackevent
  * @param {string} type
  * @param {!Object} eventInitDict
+ * @extends {Event}
  * @constructor
  */
 function RTCTrackEvent(type, eventInitDict) {}
@@ -3768,11 +3769,10 @@ RTCPeerConnection.prototype.removeStream = function(stream) {};
 
 /**
  * @param {!MediaStreamTrack} track
- * @param {!MediaStream} stream
- * @param {...MediaStream} var_args Additional streams.
+ * @param {...MediaStream} var_args Optional streams.
  * @return {!RTCRtpSender}
  */
-RTCPeerConnection.prototype.addTrack = function(track, stream, var_args) {};
+RTCPeerConnection.prototype.addTrack = function(track, var_args) {};
 
 /**
  * @param {!MediaStreamTrack|string} trackOrKind
