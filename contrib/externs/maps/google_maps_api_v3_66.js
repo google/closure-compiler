@@ -8236,13 +8236,11 @@ google.maps.PlacesLibrary = function() {};
 google.maps.PlacesLibrary.prototype.AccessibilityOptions;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.ActionButtonPosition}
  */
 google.maps.PlacesLibrary.prototype.ActionButtonPosition;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.ActionLinkType}
  */
 google.maps.PlacesLibrary.prototype.ActionLinkType;
@@ -8258,31 +8256,26 @@ google.maps.PlacesLibrary.prototype.AddressComponent;
 google.maps.PlacesLibrary.prototype.AddressDescriptor;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.AdvancedPlaceDetailsCompactElement}
  */
 google.maps.PlacesLibrary.prototype.AdvancedPlaceDetailsCompactElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.AdvancedPlaceDetailsElement}
  */
 google.maps.PlacesLibrary.prototype.AdvancedPlaceDetailsElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.AdvancedPlaceItemElement}
  */
 google.maps.PlacesLibrary.prototype.AdvancedPlaceItemElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.AdvancedPlaceListElement}
  */
 google.maps.PlacesLibrary.prototype.AdvancedPlaceListElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.AdvancedPlaceSearchElement}
  */
 google.maps.PlacesLibrary.prototype.AdvancedPlaceSearchElement;
@@ -8468,7 +8461,6 @@ google.maps.PlacesLibrary.prototype.Place;
 google.maps.PlacesLibrary.prototype.PlaceAccessibleEntranceIconElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.PlaceActionEvent}
  */
 google.maps.PlacesLibrary.prototype.PlaceActionEvent;
@@ -8494,7 +8486,6 @@ google.maps.PlacesLibrary.prototype.PlaceAttributionElement;
 google.maps.PlacesLibrary.prototype.PlaceAutocompleteElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.PlaceButtonElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceButtonElement;
@@ -8550,13 +8541,11 @@ google.maps.PlacesLibrary.prototype.PlaceDetailsPlaceRequestElement;
 google.maps.PlacesLibrary.prototype.PlaceFeatureListElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.PlaceItemElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceItemElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.PlaceLinkElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceLinkElement;
@@ -8567,7 +8556,6 @@ google.maps.PlacesLibrary.prototype.PlaceLinkElement;
 google.maps.PlacesLibrary.prototype.PlaceMediaElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.PlaceNameElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceNameElement;
@@ -13112,9 +13100,12 @@ google.maps.geometry.encoding.encodePath = function(path) {};
 google.maps.geometry.poly = {};
 
 /**
- * Computes whether the given point lies inside the specified polygon.
+ * Computes whether the given point lies inside the specified polygon or circle.
+ * Passing a <code>Circle</code> requires <code>center</code> to be set and
+ * <code>radius</code> to be set to a non-negative value.
  * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} point
- * @param {!google.maps.Polygon} polygon
+ * @param {!google.maps.Polygon|!google.maps.Circle|!google.maps.CircleLiteral}
+ *     polygon
  * @return {boolean}
  */
 google.maps.geometry.poly.containsLocation = function(point, polygon) {};
@@ -19173,8 +19164,6 @@ google.maps.places.AccessibilityOptions.prototype
     .hasWheelchairAccessibleSeating;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The slotted position of the control in the place details widget.
  *
  * Access by calling `const {ActionButtonPosition} = await
@@ -19196,8 +19185,6 @@ google.maps.places.ActionButtonPosition = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The action taken by a {@link google.maps.places.PlaceLinkElement} when
  * clicked. Determines the icon, label and href destination.
  *
@@ -19292,8 +19279,6 @@ google.maps.places.AddressDescriptor.prototype.areas;
 google.maps.places.AddressDescriptor.prototype.landmarks;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays details for a place in a compact layout. Append a {@link
  * google.maps.places.PlaceDetailsPlaceRequestElement} or {@link
  * google.maps.places.PlaceDetailsLocationRequestElement} to specify the place
@@ -19331,8 +19316,6 @@ google.maps.places.AdvancedPlaceDetailsCompactElement.prototype
 google.maps.places.AdvancedPlaceDetailsCompactElement.prototype.place;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>AdvancedPlaceDetailsCompactElement</code>.
  * @extends {google.maps.places.PlaceDetailsCompactElementOptions}
  * @record
@@ -19347,8 +19330,6 @@ google.maps.places.AdvancedPlaceDetailsCompactElementOptions.prototype
     .internalUsageAttributionIds;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays details for a place in a full layout. Append either a {@link
  * google.maps.places.PlaceDetailsPlaceRequestElement} or {@link
  * google.maps.places.PlaceDetailsLocationRequestElement} to specify the place
@@ -19392,8 +19373,6 @@ google.maps.places.AdvancedPlaceDetailsElement.prototype
 google.maps.places.AdvancedPlaceDetailsElement.prototype.place;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>AdvancedPlaceDetailsElement</code>.
  * @extends {google.maps.places.PlaceDetailsElementOptions}
  * @record
@@ -19408,8 +19387,6 @@ google.maps.places.AdvancedPlaceDetailsElementOptions.prototype
     .internalUsageAttributionIds;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Public web component wrapper (<code>&lt;gmp-advanced-place-item&gt;</code>)
  * for advanced place list items. The
  * <code>&lt;gmp-advanced-place-item&gt;</code> custom element renders an
@@ -19430,8 +19407,6 @@ google.maps.places.AdvancedPlaceDetailsElementOptions.prototype
 google.maps.places.AdvancedPlaceItemElement = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>AdvancedPlaceItemElement</code>.
  * @extends {google.maps.places.PlaceItemElementOptions}
  * @record
@@ -19439,8 +19414,6 @@ google.maps.places.AdvancedPlaceItemElement = function() {};
 google.maps.places.AdvancedPlaceItemElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays the results of a place search in a list. Append one or more {@link
  * google.maps.places.PlaceDetailsPlaceRequestElement} or set the
  * <code>places</code> property to specify the places to display. Append
@@ -19517,8 +19490,6 @@ google.maps.places.AdvancedPlaceListElement.prototype.selectable;
 google.maps.places.AdvancedPlaceListElement.prototype.truncationPreferred;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>AdvancedPlaceListElement</code>.
  * @record
  */
@@ -19564,8 +19535,6 @@ google.maps.places.AdvancedPlaceListElementOptions.prototype
     .truncationPreferred;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays the results of an advanced place search in a list. Append a {@link
  * google.maps.places.PlaceTextSearchRequestElement} or {@link
  * google.maps.places.PlaceNearbySearchRequestElement} to specify the request to
@@ -19634,8 +19603,6 @@ google.maps.places.AdvancedPlaceSearchElement.prototype.selectable;
 google.maps.places.AdvancedPlaceSearchElement.prototype.truncationPreferred;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>AdvancedPlaceSearchElement</code>.
  * @extends {google.maps.places.PlaceSearchElementOptions}
  * @record
@@ -22513,8 +22480,6 @@ google.maps.places.PlaceAccessibleEntranceIconElement = function(options) {};
 google.maps.places.PlaceAccessibleEntranceIconElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The event fired when the action button is clicked.
  *
  * Access by calling `const {PlaceActionEvent} = await
@@ -22963,8 +22928,6 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
 google.maps.places.PlaceAutocompleteElementOptions.prototype.value;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays a button slotted into either the <code>action-main</code> slot or
  * the <code>action-corner</code> slot. <code>PlaceButtonElement</code> has no
  * default behavior. Attach an event listener to the element to define its
@@ -23001,8 +22964,6 @@ google.maps.places.PlaceButtonElement.prototype.actionAriaLabel;
 google.maps.places.PlaceButtonElement.prototype.label;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceButtonElement</code>.
  * @record
  */
@@ -23071,12 +23032,36 @@ google.maps.places.PlaceButtonElementOptions.prototype.label;
  * @implements {google.maps.places.PlaceContentConfigElementOptions}
  * @extends {HTMLElement}
  * @constructor
+ * @deprecated Append content elements or preset elements ({@link
+ *     google.maps.places.PlaceAllContentElement}, {@link
+ *     google.maps.places.PlaceStandardContentElement}) directly to {@link
+ *     google.maps.places.PlaceDetailsElement} or {@link
+ *     google.maps.places.PlaceDetailsCompactElement}, or inside a
+ *     <code>&lt;template slot=&quot;details-item&quot;&gt;</code> child element
+ *     in {@link google.maps.places.PlaceSearchElement}. At this time,
+ *     PlaceContentConfigElement is not scheduled to be discontinued. At least
+ *     12 months notice will be given before support is discontinued. Please see
+ *     <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>
+ *     for additional details.
  */
 google.maps.places.PlaceContentConfigElement = function(options) {};
 
 /**
  * Options for <code>PlaceContentConfigElement</code>.
  * @record
+ * @deprecated Append content elements or preset elements ({@link
+ *     google.maps.places.PlaceAllContentElement}, {@link
+ *     google.maps.places.PlaceStandardContentElement}) directly to {@link
+ *     google.maps.places.PlaceDetailsElement} or {@link
+ *     google.maps.places.PlaceDetailsCompactElement}, or inside a
+ *     <code>&lt;template slot=&quot;details-item&quot;&gt;</code> child element
+ *     in {@link google.maps.places.PlaceSearchElement}. At this time,
+ *     PlaceContentConfigElement is not scheduled to be discontinued. At least
+ *     12 months notice will be given before support is discontinued. Please see
+ *     <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>
+ *     for additional details.
  */
 google.maps.places.PlaceContentConfigElementOptions = function() {};
 
@@ -23538,8 +23523,6 @@ google.maps.places.PlaceGeometry.prototype.location;
 google.maps.places.PlaceGeometry.prototype.viewport;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Public web component wrapper (<code>&lt;gmp-place-item&gt;</code>) for place
  * list items. The <code>&lt;gmp-place-item&gt;</code> custom element renders an
  * individual place result card inside <code>&lt;gmp-place-search&gt;</code>.
@@ -23556,16 +23539,12 @@ google.maps.places.PlaceGeometry.prototype.viewport;
 google.maps.places.PlaceItemElement = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceItemElement</code>.
  * @record
  */
 google.maps.places.PlaceItemElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays a link slotted into either the <code>action-main</code> slot or the
  * <code>action-corner</code> slot. By default the link will be shown in the
  * <code>action-main</code> slot. Use the <code>action</code> attribute to
@@ -23636,8 +23615,6 @@ google.maps.places.PlaceLinkElement.prototype.label;
 google.maps.places.PlaceLinkElement.prototype.target;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceLinkElement</code>.
  * @record
  */
@@ -23737,8 +23714,6 @@ google.maps.places.PlaceMediaElementOptions.prototype.lightboxPreferred;
 google.maps.places.PlaceMediaElementOptions.prototype.preferredSize;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays the name of a place within a place details element.
  *
  * Access by calling `const {PlaceNameElement} = await
@@ -23751,8 +23726,6 @@ google.maps.places.PlaceMediaElementOptions.prototype.preferredSize;
 google.maps.places.PlaceNameElement = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceNameElement</code>.
  * @record
  */
@@ -24287,8 +24260,7 @@ google.maps.places.PlacePinElementOptions.prototype.scale;
  */
 google.maps.places.PlacePinIcon = {
   /**
-   * Shows no icon, only the slotted content. Falls back to <code>TYPE</code> if
-   * there&#39;s no slotted content.
+   * Shows no icon, only the slotted content.
    */
   NONE: 'NONE',
   /**
