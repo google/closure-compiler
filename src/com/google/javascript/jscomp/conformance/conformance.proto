@@ -60,9 +60,10 @@ message ConformanceConfig {
 // A specification of code requirements
 // NEXT ID: 20
 message Requirement {
-  // Required: The message to report when a requirement is violated. This should
-  // reference a document describing the reasoning for the requirement
-  // and contacts.
+  // Required on root rules: The message to report when a requirement is
+  // violated. This should reference a document describing the reasoning for the
+  // requirement and contacts. If specified on a rule that extends another rule,
+  // it is appended to the extended rule's error_message separated by a space.
   optional string error_message = 1;
 
   // Optional: A list of google3-relative path prefixes that are exempt from the
@@ -240,10 +241,10 @@ message Requirement {
   // through 'extends'. An example of ID is 'closure:innerHtml'.
   optional string rule_id = 9;
 
-  // Allows extending allowlists/whitelists of rules with the specified rule_id.
-  // If this field is specified then all fields except allowlist/whitelist,
-  // allowlist_regexp/whitelist_regexp, only_apply_to and only_apply_to_regexp
-  // are ignored.
+  // Allows extending allowlists/whitelists and error_message of rules with the
+  // specified rule_id. If this field is specified then all fields except
+  // allowlist/whitelist, allowlist_regexp/whitelist_regexp, only_apply_to,
+  // only_apply_to_regexp, and error_message are ignored.
   optional string extends = 10;
 
   // Whether to report possible violations when type information is not exact.

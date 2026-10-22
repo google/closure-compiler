@@ -3057,6 +3057,67 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSimpleExtends_withErrorMessage() {
+    baseConfiguration =
+        """
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          error_message: "Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+          value: "goog.Promise.all"
+        }
+        """;
+    extendingConfiguration =
+        """
+        requirement: {
+          extends: 'gws:goog.Promise.X'
+          error_message: "Contact gws-team@ for questions."
+        }
+        """;
+
+    testWarning(
+        """
+        goog.Promise.all();
+        """,
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: Prefer using native Promise equivalents. See go/gws-js-conformance#goog-promise"
+            + " Contact gws-team@ for questions.");
+  }
+
+  @Test
+  public void testSimpleExtends_missingRootErrorMessage_reportsInvalidRequirementSpec() {
+    allowSourcelessWarnings();
+    baseConfiguration =
+        """
+        requirement: {
+          rule_id: "gws:goog.Promise.X"
+          type: BANNED_NAME
+          value: "goog.Promise.all"
+        }
+        """;
+    extendingConfiguration =
+        """
+        requirement: {
+          extends: 'gws:goog.Promise.X'
+          error_message: "Contact gws-team@ for questions."
+        }
+        """;
+
+    testError(
+        """
+        goog.Promise.all();
+        """,
+        CheckConformance.INVALID_REQUIREMENT_SPEC,
+        """
+        Invalid requirement. Reason: missing message
+        Requirement spec:
+        type: BANNED_NAME
+        value: "goog.Promise.all"
+        rule_id: "gws:goog.Promise.X"
+        """);
+  }
+
+  @Test
   public void testRequirementHasBothRuleIdAndExtends_reportsInvalidRequirementSpec() {
     allowSourcelessWarnings();
     baseConfiguration =
@@ -3708,6 +3769,22 @@ public final class CheckConformanceTest extends CompilerTestCase {
     assertThat(requirement.getAllowlistCount()).isEqualTo(2);
     assertThat(requirement.getAllowlistRegexpCount()).isEqualTo(2);
     assertThat(requirement.getAllowlistEntryCount()).isEqualTo(2);
+  }
+
+  @Test
+  public void testMergeRequirementsErrorMessage() {
+    Compiler compiler = createCompiler();
+    ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
+    builder.addRequirementBuilder().setRuleId("a").setErrorMessage("Root message.");
+    builder.addRequirementBuilder().setExtends("a").setErrorMessage("Project message.");
+    CheckConformance checkConformance = new CheckConformance(compiler);
+    List<Requirement> requirements =
+        checkConformance.mergeRequirements(
+            compiler,
+            ImmutableList.of(builder.build()),
+            /* isLibraryLevelConformanceReportingMode= */ false);
+    assertThat(requirements).hasSize(1);
+    assertThat(requirements.get(0).getErrorMessage()).isEqualTo("Root message. Project message.");
   }
 
   @Test

@@ -296,6 +296,7 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
   private static final ImmutableSet<String> EXTENDABLE_FIELDS =
       ImmutableSet.of(
           "config_file",
+          "error_message",
           "extends",
           "only_apply_to",
           "only_apply_to_regexp",
@@ -521,6 +522,10 @@ public final class CheckConformance implements NodeTraversal.Callback, CompilerP
         .addAllAllowlistEntry(extendingRequirement.getAllowlistEntryList())
         .addAllValue(extendingRequirement.getValueList())
         .addAllConfigFile(extendingRequirement.getConfigFileList());
+    if (extendingRequirement.hasErrorMessage() && extendedRequirement.hasErrorMessage()) {
+      extendedRequirement.setErrorMessage(
+          extendedRequirement.getErrorMessage() + " " + extendingRequirement.getErrorMessage());
+    }
   }
 
   /**
