@@ -55,7 +55,7 @@ Navigator.prototype.clipboard;
  * @param {!Object<string, (!string|!Blob|!Promise<!string>|!Promise<!Blob>)>}
  *     items
  * @param {ClipboardItemOptions=} options
- * @see https://w3c.github.io/clipboard-apis/#clipboarditem-interface
+ * @see https://w3c.github.io/clipboard-apis/#clipboard-item-interface
  */
 function ClipboardItem(items, options) {}
 
