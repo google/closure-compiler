@@ -129,7 +129,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
         }
       }
     }
-    if (isBlockBoundary(n, parent)) {
+    if (ReferenceCollector.isBlockBoundary(n, parent)) {
       pop(blockStack);
     }
   }
@@ -162,7 +162,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
       topLevelStatementDraft = initializeDraftStatement(t.getChunk(), n);
     }
     // If node is a new basic block, put on basic block stack
-    if (isBlockBoundary(n, parent)) {
+    if (ReferenceCollector.isBlockBoundary(n, parent)) {
       blockStack.add(new BasicBlock(peek(blockStack), n));
     }
     return true;
@@ -273,36 +273,6 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
 
   private static <T> T peek(List<T> list) {
     return Iterables.getLast(list);
-  }
-
-  /**
-   * @return true if this node marks the start of a new basic block
-   */
-  private static boolean isBlockBoundary(Node n, Node parent) {
-    if (parent != null) {
-      switch (parent.getToken()) {
-        case DO, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, TRY, WHILE, WITH, CLASS -> {
-          // NOTE: TRY has up to 3 child blocks:
-          // TRY
-          //   BLOCK
-          //   BLOCK
-          //     CATCH
-          //   BLOCK
-          // Note that there is an explicit CATCH token but no explicit
-          // FINALLY token. For simplicity, we consider each BLOCK
-          // a separate basic BLOCK.
-          return true;
-        }
-        case AND, HOOK, IF, OR, SWITCH, COALESCE -> {
-          // The first child of a conditional is not a boundary,
-          // but all the rest of the children are.
-          return n != parent.getFirstChild();
-        }
-        default -> {}
-      }
-    }
-
-    return n.isCase();
   }
 
   private void addReferenceToCollection(Var v, Reference reference) {

@@ -281,7 +281,7 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
   /**
    * @return true if this node marks the start of a new basic block
    */
-  private static boolean isBlockBoundary(Node n, Node parent) {
+  static boolean isBlockBoundary(Node n, Node parent) {
     if (parent != null) {
       switch (parent.getToken()) {
         case DO, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, TRY, WHILE, WITH, CLASS, SWITCH_BODY -> {
