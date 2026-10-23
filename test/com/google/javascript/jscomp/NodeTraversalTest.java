@@ -1067,7 +1067,7 @@ public final class NodeTraversalTest {
 
     List<Node> visited = new ArrayList<>();
     NodeTraversal.Callback cb =
-        new NodeTraversal.AbstractPostOrderCallback() {
+        new AbstractPostOrderCallback() {
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {
             visited.add(n);
