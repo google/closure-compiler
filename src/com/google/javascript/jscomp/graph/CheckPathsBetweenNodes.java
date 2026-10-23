@@ -177,14 +177,13 @@ public final class CheckPathsBetweenNodes<N, E> {
       if (e.getAnnotation() == VISITED_EDGE) {
         continue;
       }
-      e.setAnnotation(VISITED_EDGE);
-
       if (ignoreEdge(e)) {
         continue;
       }
       if (e.getAnnotation() == BACK_EDGE) {
         continue;
       }
+      e.setAnnotation(VISITED_EDGE);
 
       DiGraphNode<N, E> next = e.getDestination();
       if (!checkAllPathsWithoutBackEdges(next, b)) {
@@ -213,14 +212,13 @@ public final class CheckPathsBetweenNodes<N, E> {
       if (e.getAnnotation() == VISITED_EDGE) {
         continue;
       }
-      e.setAnnotation(VISITED_EDGE);
-
       if (ignoreEdge(e)) {
         continue;
       }
       if (e.getAnnotation() == BACK_EDGE) {
         continue;
       }
+      e.setAnnotation(VISITED_EDGE);
 
       DiGraphNode<N, E> next = e.getDestination();
       if (checkSomePathsWithoutBackEdges(next, b)) {

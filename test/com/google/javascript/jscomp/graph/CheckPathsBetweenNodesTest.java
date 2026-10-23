@@ -398,13 +398,11 @@ public final class CheckPathsBetweenNodesTest {
     g.connect("c", "-", "b"); // back edge to b
     g.connect("b", "-", "d");
 
-    // NodeCountingPredicate on 'b': without back edges, 'b' should only be visited once.
-    // TODO(b/572846422): Fix back-edge traversal. Currently, back edge c -> b is traversed
-    // because e.setAnnotation(VISITED_EDGE) overwrites BACK_EDGE before it is checked,
-    // causing 'b' to be visited twice instead of once.
+    // NodeCountingPredicate on 'b': without back edges, 'b' is visited once.
+    // If the back edge c -> b is traversed, 'b' is revisited.
     NodeCountingPredicate<String> countB = new NodeCountingPredicate<>("b", false);
     assertThat(createTest(g, "a", "d", countB, ALL_EDGE).allPathsSatisfyPredicate()).isFalse();
-    assertThat(countB.count).isEqualTo(2);
+    assertThat(countB.count).isEqualTo(1);
   }
 
   @Test
@@ -420,13 +418,11 @@ public final class CheckPathsBetweenNodesTest {
     g.connect("c", "-", "b"); // back edge to b
     g.connect("b", "-", "d");
 
-    // NodeCountingPredicate on 'b': without back edges, 'b' should only be visited once.
-    // TODO(b/572846422): Fix back-edge traversal. Currently, back edge c -> b is traversed
-    // because e.setAnnotation(VISITED_EDGE) overwrites BACK_EDGE before it is checked,
-    // causing 'b' to be visited twice instead of once.
+    // NodeCountingPredicate on 'b': without back edges, 'b' is visited once.
+    // If the back edge c -> b is traversed, 'b' is revisited.
     NodeCountingPredicate<String> countB = new NodeCountingPredicate<>("b", false);
     assertThat(createTest(g, "a", "d", countB, ALL_EDGE).somePathsSatisfyPredicate()).isFalse();
-    assertThat(countB.count).isEqualTo(2);
+    assertThat(countB.count).isEqualTo(1);
   }
 
   @Test
@@ -442,17 +438,15 @@ public final class CheckPathsBetweenNodesTest {
     g.connect("c", "-", "a"); // back edge to start 'a'
     g.connect("b", "-", "d");
 
-    // NodeCountingPredicate on 'a': without back edges, start 'a' should only be visited once.
-    // TODO(b/572846422): Fix back-edge traversal. Currently, back edge c -> a is traversed
-    // because e.setAnnotation(VISITED_EDGE) overwrites BACK_EDGE before it is checked,
-    // causing 'a' to be visited twice instead of once.
+    // NodeCountingPredicate on 'a': without back edges, start 'a' is visited once.
+    // If the back edge c -> a is traversed, 'a' is revisited.
     NodeCountingPredicate<String> countA = new NodeCountingPredicate<>("a", false);
     assertThat(createTest(g, "a", "d", countA, ALL_EDGE).allPathsSatisfyPredicate()).isFalse();
-    assertThat(countA.count).isEqualTo(2);
+    assertThat(countA.count).isEqualTo(1);
 
     NodeCountingPredicate<String> countSomeA = new NodeCountingPredicate<>("a", false);
     assertThat(createTest(g, "a", "d", countSomeA, ALL_EDGE).somePathsSatisfyPredicate()).isFalse();
-    assertThat(countSomeA.count).isEqualTo(2);
+    assertThat(countSomeA.count).isEqualTo(1);
   }
 
   private static <N, E> void assertGood(CheckPathsBetweenNodes<N, E> test) {
