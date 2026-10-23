@@ -47,7 +47,7 @@ NetworkInformation.prototype.onchange;
 
 /**
  * @type {boolean}
- * @see https://wicg.github.io/netinfo/#savedata-attribute
+ * @see https://wicg.github.io/savedata/
  */
 NetworkInformation.prototype.saveData;
 
