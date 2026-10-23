@@ -55,7 +55,7 @@ ChapterInformation.prototype.artwork;
 
 
 /**
- * @see https://wicg.github.io/mediasession/#the-chapterinformationinit-dictionary
+ * @see https://w3c.github.io/mediasession/#dictdef-chapterinformationinit
  * @record
  * @struct
  */
