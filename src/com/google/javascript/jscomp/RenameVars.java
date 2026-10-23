@@ -132,6 +132,12 @@ final class RenameVars implements CompilerPass {
   /** A prefix to distinguish temporary local names from global names */
   private static final String LOCAL_VAR_PREFIX = "L ";
 
+  /**
+   * A suffix distinguishing the temporary name of a function expression's name from the temporary
+   * name of the parameter shadowing it. See {@link #isFunctionNameShadowedByParameter}.
+   */
+  private static final String FUNCTION_NAME_SUFFIX = " fn";
+
   // Shared name generator
   private final NameGenerator nameGenerator;
 
@@ -263,11 +269,23 @@ final class RenameVars implements CompilerPass {
         return;
       }
 
+      boolean isShadowedFunctionName = isFunctionNameShadowedByParameter(n, parent, var);
+
       if (pseudoNameMap != null) {
-        recordPseudoName(n);
+        recordPseudoName(n, isShadowedFunctionName);
       }
 
-      if (local && shouldTemporarilyRenameLocalsInScope(var.getScope())) {
+      if (isShadowedFunctionName) {
+        // Give the function name a temporary name that no other variable can share, so that it is
+        // guaranteed to be renamed to something other than the parameter's name. assignNames()
+        // reserves every name it generates, so distinct temporary names never collide.
+        String tempName = LOCAL_VAR_PREFIX + getLocalVarIndex(var) + FUNCTION_NAME_SUFFIX;
+        incCount(tempName);
+        localNameNodes.add(n);
+        // Remember the original string in a name before it's temporarily filled with an "L".
+        originalNameByNode.put(n, n.getString());
+        n.setString(tempName);
+      } else if (local && shouldTemporarilyRenameLocalsInScope(var.getScope())) {
         // Give local variables a temporary name based on the
         // variable's index in the scope to enable name reuse across
         // locals in independent scopes.
@@ -289,6 +307,51 @@ final class RenameVars implements CompilerPass {
       Assignment s = assignments.computeIfAbsent(name, Assignment::new);
       s.count++;
     }
+  }
+
+  /**
+   * Whether {@code n} is the name of a function expression that one of the function's own
+   * parameters shadows, in a function that Safari would reject if the two shared a name.
+   *
+   * <p>A function expression's name and its parameters are separate bindings, but {@link
+   * SyntacticScopeCreator} merges them when a parameter declares the same name, so {@code var} is
+   * the parameter's rather than the function name's. Renaming both to the same name is
+   * semantically correct - the parameter shadows the function name throughout the function, so the
+   * function name is unreferenceable - but it preserves a construct that older versions of Safari
+   * reject: they treat a function expression's name as an extra parameter, so they report a
+   * duplicate parameter name whenever the parameter list is non-simple. For example, {@code
+   * function a({a}) {}} fails to parse with "SyntaxError: Duplicate parameter 'a' not allowed in
+   * function with destructuring parameters".
+   *
+   * <p>See https://bugs.webkit.org/show_bug.cgi?id=220517, fixed by
+   * https://bugs.webkit.org/show_bug.cgi?id=247433.
+   */
+  private static boolean isFunctionNameShadowedByParameter(Node n, Node parent, @Nullable Var var) {
+    if (!NodeUtil.isBleedingFunctionName(n)) {
+      return false;
+    }
+    // `parent` is the function expression, since that is what makes `n` a bleeding function name.
+    return var != null
+        // The name resolved to a different declaration in this function's own scope, which can
+        // only be one of its parameters.
+        && var.getNode() != n
+        && var.getScope().getRootNode() == parent
+        && hasNonSimpleParameterList(parent);
+  }
+
+  /**
+   * Whether the given function has a non-simple parameter list, i.e. one containing a destructuring
+   * pattern, a default value, or a rest parameter.
+   */
+  private static boolean hasNonSimpleParameterList(Node function) {
+    for (Node param = NodeUtil.getFunctionParameters(function).getFirstChild();
+        param != null;
+        param = param.getNext()) {
+      if (!param.isName()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -387,10 +450,13 @@ final class RenameVars implements CompilerPass {
     return null;
   }
 
-  private void recordPseudoName(Node n) {
+  private void recordPseudoName(Node n, boolean isShadowedFunctionName) {
     // Variable names should be in a different name space than
     // property pseudo names.
-    pseudoNameMap.put(n, '$' + n.getString() + "$$");
+    // A function expression's name shares its string with the parameter shadowing it, so it needs
+    // an extra marker to keep the two pseudo names apart. See
+    // isFunctionNameShadowedByParameter().
+    pseudoNameMap.put(n, '$' + n.getString() + (isShadowedFunctionName ? "$fn$$" : "$$"));
   }
 
   /**
