@@ -386,6 +386,12 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
           // Early return to skip replacing the symbol.
           return;
         }
+        // If the variable is only initialized in its defining chunk and never read there, replace
+        // it directly with an access on the global namespace symbol instead of keeping an unused
+        // local variable.
+        Node replacement = IR.getprop(IR.name(globalSymbolNamespace), name);
+        replaceSymbol(n, name, replacement);
+        return;
       } else if (optimizeLocalAccess.shouldOptimizeAllChunks()) {
         // Variables defined in a different chunk are still safe for local aliasing if all of the
         // following conditions are met.
@@ -403,6 +409,13 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
           return;
         }
       }
+    }
+
+    if (optimizeLocalAccess.shouldWrapReassignableSymbols()) {
+      throw new IllegalStateException(
+          "Unexpected unaliased cross-chunk symbol under"
+              + " ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS: "
+              + name);
     }
 
     // Otherwise replace the symbol with an access on the global namespace symbol.

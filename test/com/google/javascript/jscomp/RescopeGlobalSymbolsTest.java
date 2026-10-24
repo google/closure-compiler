@@ -1415,6 +1415,16 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAllChunksWithWrappedMutables_notUsedInDefiningChunk() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(JSChunkGraphBuilder.forChain().addChunk("var a = 1;").addChunk("a;").build()),
+        expected("_.a = 1;", "var {a} = _; a;"));
+  }
+
+  @Test
   public void testAllChunksWithWrappedMutables_externs() {
     optimizeLocalAccess =
         CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
