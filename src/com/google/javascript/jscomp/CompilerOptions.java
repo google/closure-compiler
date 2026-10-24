@@ -3639,7 +3639,8 @@ public class CompilerOptions {
 
     /**
      * In addition to {@link #ALL_CHUNKS}, create dedicated singleton holder objects for mutable
-     * cross-chunk symbols (e.g. `var a = _.a = {};`) and access them via `a._`.
+     * cross-chunk symbols or cross-chunk symbols referenced in a chunk that does not depend on
+     * their defining chunk (e.g. `var a = _.a = {};`) and access them via `a._`.
      */
     ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
 

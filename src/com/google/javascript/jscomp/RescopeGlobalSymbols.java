@@ -124,7 +124,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
     // Find global names that are used in more than one chunk. Those that
     // are have to be rewritten.
     FindCrossChunkNamesCallback findCrossChunkNames =
-        new FindCrossChunkNamesCallback(optimizeLocalAccess.shouldOptimize());
+        new FindCrossChunkNamesCallback(compiler, optimizeLocalAccess.shouldOptimize());
 
     // And find names that may refer to functions that reference this.
     FindNamesReferencingThis findNamesReferencingThis = new FindNamesReferencingThis();
@@ -136,6 +136,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         new RescopeGlobalSymbolsRewriteCallback.SymbolInformation(
             findCrossChunkNames.crossChunkNames,
             findCrossChunkNames.crossChunkNamesWithWriteFromOtherChunk,
+            findCrossChunkNames.crossChunkNamesUsedInNonDependentChunk,
             findCrossChunkNames.globalNamesWithReadInDefiningChunk,
             findCrossChunkNames.globalNamesWithInnerScopeWriteInDefiningChunk,
             findNamesReferencingThis.maybeReferencesThis);
@@ -227,6 +228,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * transformations can ignore the globals that are not.
    */
   private static class FindCrossChunkNamesCallback extends AbstractPostOrderCallback {
+    private final AbstractCompiler compiler;
     private final boolean trackLocalAccessSets;
     final Set<String> crossChunkNames = new LinkedHashSet<>();
 
@@ -235,6 +237,12 @@ final class RescopeGlobalSymbols implements CompilerPass {
      * Only populated if trackLocalAccessSets is true.
      */
     final Set<String> crossChunkNamesWithWriteFromOtherChunk = new LinkedHashSet<>();
+
+    /**
+     * Global cross-chunk identifiers that are referenced in a chunk that does not depend on their
+     * defining chunk. Only populated if trackLocalAccessSets is true.
+     */
+    final Set<String> crossChunkNamesUsedInNonDependentChunk = new LinkedHashSet<>();
 
     /**
      * Global identifiers that are read in the chunk where they are defined. Only populated if
@@ -248,7 +256,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
      */
     final Set<String> globalNamesWithInnerScopeWriteInDefiningChunk = new LinkedHashSet<>();
 
-    FindCrossChunkNamesCallback(boolean trackLocalAccessSets) {
+    FindCrossChunkNamesCallback(AbstractCompiler compiler, boolean trackLocalAccessSets) {
+      this.compiler = compiler;
       this.trackLocalAccessSets = trackLocalAccessSets;
     }
 
@@ -286,12 +295,15 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (chunk != t.getChunk()) {
           crossChunkNames.add(name);
 
-          // If tracking local access, track names with non-local writes separately. This includes
-          // all L-value names except for declarations without children.
-          if (trackLocalAccessSets
-              && NodeUtil.isLValue(n)
-              && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
-            crossChunkNamesWithWriteFromOtherChunk.add(name);
+          if (trackLocalAccessSets) {
+            // If tracking local access, track names with non-local writes separately. This includes
+            // all L-value names except for declarations without children.
+            if (NodeUtil.isLValue(n) && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
+              crossChunkNamesWithWriteFromOtherChunk.add(name);
+            }
+            if (!compiler.getChunkGraph().dependsOn(t.getChunk(), chunk)) {
+              crossChunkNamesUsedInNonDependentChunk.add(name);
+            }
           }
         } else if (trackLocalAccessSets && n != v.getNameNode()) {
           globalNamesWithReadInDefiningChunk.add(name);

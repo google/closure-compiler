@@ -1377,4 +1377,108 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
             "var b = _.b = {}; b._ = 1; b._ + 1;",
             "var a = _.a; var b = _.b; a._ = 2; b._ = 2;"));
   }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_definingChunkDependsOnUsingChunk() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("function f() { return a; }")
+                .addChunk("var a = 1;")
+                .addChunk("a;")
+                .build()),
+        expected(
+            "var a = _.a = {}; var f = function() { return a._; };",
+            "var {a} = _; a._ = 1;",
+            "var {a} = _; a._;"));
+  }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_independentSiblingChunks() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forTree()
+                .addChunk("var x = 1;")
+                .addChunk("var a = 1; a + 1;")
+                .addChunk("function f() { return a; }")
+                .build()),
+        expected(
+            "_.a = {}; var x = 1;",
+            "var {a} = _; a._ = 1; a._ + 1;",
+            "var {a} = _; var f = function() { return a._; };"));
+  }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_externs() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        externs("var window; var customExtern;"),
+        srcs(
+            JSChunkGraphBuilder.forTree()
+                .addChunk("window.onload = function() { return customExtern + a; };")
+                .addChunk("var a = customExtern; window.foo = a;")
+                .addChunk("customExtern = window.foo + a;")
+                .build()),
+        expected(
+            "var a = _.a = {}; window.onload = function() { return customExtern + a._; };",
+            "var {a} = _; a._ = customExtern; window.foo = a._;",
+            "var {a} = _; customExtern = window.foo + a._;"));
+  }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_sameVarDeclaredInExternsAndSource() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        externs("var ext;"),
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("function f() { return ext; }")
+                .addChunk("var ext = 1; ext + 1;")
+                .build()),
+        expected("var f = function() { return ext; };", "ext = 1; ext + 1;"));
+  }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_functionAndClassUsedInNonDependentChunk() {
+    disableCompareAsTree();
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("function f() { return g() + h() + new C(); }")
+                .addChunk("function g() { return 1; } function h() { return this; } class C {}")
+                .build()),
+        expected(
+            "var g=_.g={};var h=_.h={};var C=_.C={};"
+                + "var f=function(){return g._()+(0,h._)()+new C._};",
+            "var {g,h,C}=_;g._=function(){return 1};h._=function(){return this};C._=class{}"));
+  }
+
+  @Test
+  public void testAllChunksWithWrappedMutables_mixedWrappedAndUnwrappedLocalAliases() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("var a = 1; a + 1; function f() { return b; }")
+                .addChunk("var b, c; b = 2; c = 3; a + b + c;")
+                .build()),
+        expected(
+            "var b = _.b = {}; var a; a = _.a = 1; a + 1; var f = function() { return b._; };",
+            "var {a, b} = _; var c; b._ = 2; c = 3; a + b._ + c;"));
+  }
 }
