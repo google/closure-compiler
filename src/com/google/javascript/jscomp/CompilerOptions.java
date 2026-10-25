@@ -3642,7 +3642,15 @@ public class CompilerOptions {
      * cross-chunk symbols or cross-chunk symbols referenced in a chunk that does not depend on
      * their defining chunk (e.g. `var a = _.a = {};`) and access them via `a._`.
      */
-    ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS;
+    ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS,
+
+    /**
+     * In addition to {@link #ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS}, preserve {@code var}
+     * declarations with initializers in place (e.g. {@code var a = _.a = 1;}) for variables that
+     * remain local to their defining chunk instead of hoisting uninitialized {@code var}
+     * declarations to the top of the chunk.
+     */
+    ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED;
 
     boolean shouldOptimize() {
       return this != DISABLED;
@@ -3654,6 +3662,10 @@ public class CompilerOptions {
 
     boolean shouldWrapReassignableSymbols() {
       return this.ordinal() >= ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS.ordinal();
+    }
+
+    boolean shouldPreserveLocalVarDeclarations() {
+      return this.ordinal() >= ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED.ordinal();
     }
   }
 

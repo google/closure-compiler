@@ -23,6 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -223,41 +224,119 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
   }
 
   /**
-   * Partially rewrites a declaration as an assignment.
+   * Returns whether a global variable declared in the current chunk remains a local variable in
+   * that chunk (rather than being replaced everywhere in the chunk by a property access like {@code
+   * _.a} or {@code a._}, or referring to an extern).
    *
-   * <p>In the post traversal, all global, cross-chunk names and extern name references will become
-   * property accesses. They will then be invalid as the lhs of a declaration, so we need to convert
-   * them to assignments. We also convert any other names or destructuring patterns in the same
-   * declaration to assignments and add an earlier declaration.
+   * <p>A global variable stays local in its defining chunk if it is not an extern and either:
+   *
+   * <ul>
+   *   <li>it is not a cross-chunk global variable (so it is only ever used within this chunk), or
+   *   <li>{@code optimizeLocalAccess} is enabled and the cross-chunk variable is read in its
+   *       defining chunk, is not written to from any other chunk, and is not wrapped in a holder
+   *       object.
+   * </ul>
+   */
+  private boolean globalVarStaysLocalInDefiningChunk(String name, NodeTraversal t) {
+    checkState(t.getScope().getVar(name).isGlobal(), "Expected global variable: %s", name);
+    if (isExternVar(name, t)) {
+      return false;
+    }
+    if (!isCrossChunkName(name)) {
+      return true;
+    }
+    if (!optimizeLocalAccess.shouldOptimize()) {
+      return false;
+    }
+    return !symbolInfo.crossChunkNamesWithWriteFromOtherChunk().contains(name)
+        && !wrappedCrossChunkNames.contains(name)
+        && symbolInfo.globalNamesWithReadInDefiningChunk().contains(name);
+  }
+
+  /**
+   * Partially rewrites a variable declaration that contains at least one cross-chunk global or
+   * extern variable.
+   *
+   * <p>In the post-order traversal ({@link #visitName}), all rescoped cross-chunk global references
+   * will become property accesses (e.g. {@code _.a}), which are invalid as the LHS of a variable
+   * declaration and therefore must be converted into {@code ASSIGN} nodes beforehand.
+   *
+   * <ul>
+   *   <li>When {@code optimizeLocalAccess.shouldPreserveLocalVarDeclarations()} is true (outside of
+   *       {@code for}-loop headers), {@code NAME} declarations that remain local variables in their
+   *       defining chunk (both chunk-local variables and local-access-optimized cross-chunk
+   *       variables) are kept in place as {@code NAME} children on the {@code VAR} declaration so
+   *       their initializers stay attached to {@code var}. Only non-local {@code NAME} children
+   *       with initializers and {@code DESTRUCTURING_LHS} children are converted to {@code ASSIGN}
+   *       nodes.
+   *   <li>Otherwise (when {@code optimizeLocalAccess.shouldPreserveLocalVarDeclarations()} is
+   *       false, or in {@code for}-loop headers), all local variables in the statement are recorded
+   *       in {@link #preDeclarations} to be hoisted as uninitialized {@code var} declarations at
+   *       the top of the chunk, and all initialized {@code NAME} children and {@code
+   *       DESTRUCTURING_LHS} children are converted to {@code ASSIGN} nodes.
+   * </ul>
    */
   private void rewriteNameDeclaration(
       NodeTraversal t, Node declaration, List<Node> allLhsNodes, boolean isGlobalDeclaration) {
     CompilerInput input = t.getInput();
 
-    // Add pre-declarations for all LHS variables that are neither global/cross-chunk names nor
-    // externs.
-    if (optimizeLocalAccess.shouldOptimize()) {
-      // If we are optimizing local accesses, we only want to pre-declare variables if the
-      // declaration will be converted to assignments/property accesses and removed by
-      // RemoveGlobalVarCallback. We don't want to add a new var declaration otherwise to avoid
-      // redeclaration errors (e.g. "var a; let a;").
-      if (containsRescopedOrInitializedVars(declaration, isGlobalDeclaration)) {
-        for (Node lhs : allLhsNodes) {
-          String name = lhs.getString();
-          if (!symbolInfo.crossChunkNamesWithWriteFromOtherChunk().contains(name)
-              && !wrappedCrossChunkNames.contains(name)
-              && !isExternVar(name, t)
-              && (!isCrossChunkName(name)
-                  || symbolInfo.globalNamesWithReadInDefiningChunk().contains(name))) {
-            preDeclarations.add(
-                new ChunkGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
-          }
-        }
+    if (optimizeLocalAccess.shouldPreserveLocalVarDeclarations()
+        && !NodeUtil.isAnyFor(declaration.getParent())) {
+      // If all variables in a global `let` or `const` declaration stay local (e.g. `let a = 1;`
+      // becoming `var a = _.a = 1;`), RemoveGlobalVarCallback will leave the declaration node in
+      // place, so convert its token to `VAR`. Uninitialized declarations with no rescoped variables
+      // (e.g. `let a;`) are left untouched.
+      if (isGlobalDeclaration
+          && !declaration.isVar()
+          && containsRescopedOrInitializedVars(declaration, isGlobalDeclaration)) {
+        declaration.setToken(Token.VAR);
       }
-    } else {
+      for (Node child = declaration.getFirstChild(); child != null; ) {
+        final Node next = child.getNext();
+        if (child.isName()) {
+          String name = child.getString();
+          if (!globalVarStaysLocalInDefiningChunk(name, t)) {
+            if (child.hasChildren()) {
+              Node assign = IR.assign(child.cloneNode(), child.removeFirstChild());
+              child.replaceWith(assign);
+              assign.setJSDocInfo(declaration.getJSDocInfo());
+            } else if (isExternVar(name, t)) {
+              // Detach uninitialized extern redeclarations (e.g. `var externVar, a = 1;`) so
+              // RemoveGlobalVarCallback does not treat the remaining NAME node as a local variable.
+              child.detach();
+            }
+          }
+        } else if (child.isDestructuringLhs()) {
+          // Destructuring declarations are converted to assignments, so any bound variables that
+          // stay local to the defining chunk must be pre-declared at the top of the chunk.
+          NodeUtil.visitLhsNodesInNode(
+              child,
+              lhs -> {
+                String name = lhs.getString();
+                if (globalVarStaysLocalInDefiningChunk(name, t)) {
+                  preDeclarations.add(
+                      new ChunkGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
+                }
+              });
+          Node assign = IR.assign(child.removeFirstChild(), child.removeFirstChild());
+          child.replaceWith(assign);
+          assign.setJSDocInfo(declaration.getJSDocInfo());
+        }
+        child = next;
+      }
+      compiler.reportChangeToEnclosingScope(declaration);
+      return;
+    }
+
+    // Add pre-declarations for all LHS variables that remain local to the defining chunk.
+    // If we are optimizing local accesses (in a for-loop header), we only want to pre-declare
+    // variables if the declaration will be converted to assignments/property accesses and removed
+    // by RemoveGlobalVarCallback, to avoid redeclaration errors (e.g. "var a; let a;").
+    if (!optimizeLocalAccess.shouldOptimize()
+        || containsRescopedOrInitializedVars(declaration, isGlobalDeclaration)) {
       for (Node lhs : allLhsNodes) {
         String name = lhs.getString();
-        if (!(isGlobalDeclaration && isCrossChunkName(name)) && !isExternVar(name, t)) {
+        if (globalVarStaysLocalInDefiningChunk(name, t)) {
           preDeclarations.add(
               new ChunkGlobal(input.getAstRoot(compiler), IR.name(name).srcref(lhs)));
         }
@@ -300,8 +379,8 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
 
   /**
    * Determines whether a variable declaration statement contains any variables that will be
-   * rescoped (replaced with property accesses) or initialized (replaced with assignments). Assumes
-   * that optimizeLocalAccess is true.
+   * rescoped (replaced with property accesses) or initialized (replaced with assignments or chained
+   * namespace initializers). Assumes that optimizeLocalAccess is true.
    *
    * <p>Examples:
    *
@@ -311,8 +390,10 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
    *   <li>Initialized: `var a = 1;` (has children) or `var [a] = [1];` (destructuring LHS).
    * </ul>
    *
-   * <p>If a declaration contains any such variables, the statement will be removed by
-   * RemoveGlobalVarCallback, and we must pre-declare any other variables in it.
+   * <p>In a {@code for}-loop header, if a declaration contains any such variables, the declaration
+   * keyword will be removed by {@code RemoveGlobalVarCallback} and any local variables in it must
+   * be pre-declared. Outside a {@code for}-loop header, global {@code let}/{@code const}
+   * declarations containing any such variables are converted to {@code var}.
    */
   private boolean containsRescopedOrInitializedVars(Node declaration, boolean isGlobalDeclaration) {
     for (Node child = declaration.getFirstChild(); child != null; child = child.getNext()) {
@@ -442,10 +523,11 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
    * Aliases the local variable's value to the global namespace, so that it can be accessed from
    * other chunks.
    *
-   * <p>For simple assignments, this chains the assignment to avoid an extra statement (e.g.
-   * converts `a = x` to `a = _.a = x`). For other writes (e.g. compound assignments, destructuring,
-   * increments), it inserts a separate assignment statement after the current one (e.g. appends
-   * `_.a = a;`).
+   * <p>For simple assignments and variable declarations with initializers, this chains the
+   * assignment to avoid an extra statement (e.g. converts {@code a = x} to {@code a = _.a = x} and
+   * {@code var a = x} to {@code var a = _.a = x}). For other writes (e.g. compound assignments,
+   * destructuring, increments), it inserts a separate assignment statement after the current one
+   * (e.g. appends {@code _.a = a;}).
    */
   private void addGlobalNamespaceAlias(Node n, String name) {
     Node stmt = NodeUtil.getEnclosingStatement(n);
@@ -463,6 +545,14 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
       globalNamespaceAssign.srcrefTree(n);
       parent.addChildToBack(globalNamespaceAssign);
       compiler.reportChangeToEnclosingScope(parent);
+    } else if (NodeUtil.isNameDeclaration(parent)) {
+      // Optimized path for variable declarations with initializers (e.g. `var a = x`).
+      // We chain the assignment to the global namespace: `var a = _.a = x`.
+      Node rhs = n.removeFirstChild();
+      Node globalNamespaceAssign = IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), rhs);
+      globalNamespaceAssign.srcrefTree(n);
+      n.addChildToBack(globalNamespaceAssign);
+      compiler.reportChangeToEnclosingScope(n);
     } else {
       // Fallback path for other writes (e.g. `a++`, `a += x`, destructuring).
       // In these cases, we cannot easily chain the assignment without changing semantics

@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
@@ -154,7 +156,11 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
     // Remove the var from statements in global scope if the declared names have been rewritten
     // in the previous pass.
-    NodeTraversal.traverse(compiler, root, new RemoveGlobalVarCallback(compiler));
+    NodeTraversal.traverse(
+        compiler,
+        root,
+        new RemoveGlobalVarCallback(
+            compiler, optimizeLocalAccess.shouldPreserveLocalVarDeclarations()));
 
     rewriteScope.addDeclarations();
   }
@@ -362,7 +368,11 @@ final class RescopeGlobalSymbols implements CompilerPass {
   }
 
   /**
-   * Removes every occurrence of var/let/const that declares a global variable.
+   * Removes {@code var}/{@code let}/{@code const} declarations whose global variables have been
+   * rewritten to property assignments by {@link RescopeGlobalSymbolsRewriteCallback}, while
+   * preserving {@code var} declarations for variables that remain local to the chunk.
+   *
+   * <p>When all variables in a declaration are rewritten to namespace assignments:
    *
    * <pre>var NS.a = 1, NS.b = 2;</pre>
    *
@@ -370,13 +380,25 @@ final class RescopeGlobalSymbols implements CompilerPass {
    *
    * <pre>NS.a = 1; NS.b = 2;</pre>
    *
+   * <p>When {@code preserveLocalVarDeclarations} is true and a declaration mixes local variables
+   * with rewritten namespace assignments, the statement is split in order so local variables retain
+   * their {@code var} declarations in place:
+   *
+   * <pre>var a = NS.a = 1, NS.b = 2, c = 3;</pre>
+   *
+   * becomes
+   *
+   * <pre>var a = NS.a = 1; NS.b = 2; var c = 3;</pre>
+   *
+   * <p>In {@code for}-loop headers:
+   *
    * <pre>for (var a = 0, b = 0;;)</pre>
    *
    * becomes
    *
    * <pre>for (NS.a = 0, NS.b = 0;;)</pre>
    *
-   * Declarations without assignments are optimized away:
+   * <p>Rewritten declarations without assignments are optimized away:
    *
    * <pre>var a = 1, b;</pre>
    *
@@ -387,8 +409,29 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private static class RemoveGlobalVarCallback extends AbstractShallowStatementCallback {
     private final AbstractCompiler compiler;
 
-    RemoveGlobalVarCallback(AbstractCompiler compiler) {
+    /**
+     * Whether {@code NAME} children remaining in a partially rewritten declaration should be
+     * preserved in place as {@code var} declarations.
+     *
+     * <p>When {@code true} (used when {@code
+     * optimizeLocalAccess.shouldPreserveLocalVarDeclarations()} is true), variables that stay local
+     * to their defining chunk are left as {@code NAME} nodes (with optional initializers) in the
+     * declaration by {@link RescopeGlobalSymbolsRewriteCallback} and must be emitted as {@code var}
+     * statements in place. When {@code false}, all local variables in a partially rewritten
+     * declaration have already been hoisted to the top of the chunk via {@code preDeclarations} and
+     * their initializers converted to {@code ASSIGN} nodes, so any remaining bare {@code NAME}
+     * children are uninitialized and should be dropped.
+     */
+    private final boolean preserveLocalVarDeclarations;
+
+    /**
+     * @param compiler The JSCompiler, for reporting code changes.
+     * @param preserveLocalVarDeclarations If true, preserve remaining {@code NAME} children as
+     *     in-place {@code var} declarations rather than dropping them.
+     */
+    RemoveGlobalVarCallback(AbstractCompiler compiler, boolean preserveLocalVarDeclarations) {
       this.compiler = compiler;
+      this.preserveLocalVarDeclarations = preserveLocalVarDeclarations;
     }
 
     @Override
@@ -397,45 +440,81 @@ final class RescopeGlobalSymbols implements CompilerPass {
         return;
       }
 
-      List<Node> commas = new ArrayList<>();
-      List<Node> interestingChildren = new ArrayList<>();
-      // Filter out declarations without assignments.
-      // As opposed to regular var nodes, there are always assignments
-      // because the previous traversal in RescopeGlobalSymbolsRewriteCallback creates
-      // them.
-      boolean allNameOrDestructuring = true;
-      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-        if (!c.isName() && !c.isDestructuringLhs()) {
-          allNameOrDestructuring = false;
-        }
-        if (c.isAssign() || NodeUtil.isAnyFor(parent)) {
-          interestingChildren.add(c);
-        }
-      }
-      // If every child of a var declares a name, it must stay in place.
-      // This is the case if none of the declared variables cross chunk
-      // boundaries.
-      if (allNameOrDestructuring) {
+      // If every child of a non-empty declaration is still a variable binding (NAME or
+      // DESTRUCTURING_LHS) rather than a rewritten assignment (ASSIGN) or property access
+      // (GETPROP), then no variables in the declaration were rewritten into standalone
+      // expressions, and the declaration node must stay in place as-is.
+      if (hasOnlyNameOrDestructuringChildren(n)) {
         return;
       }
-      for (Node c : interestingChildren) {
-        if (NodeUtil.isAnyFor(parent) && parent.getFirstChild() == n) {
+
+      if (NodeUtil.isAnyFor(parent) && parent.getFirstChild() == n) {
+        // Declaration in a for-loop header (`for (var a = 0, b = 1; ...)` or
+        // `for (var x in/of ...)`). A for-loop initializer or iteration target slot only accepts a
+        // single expression and cannot be split into multiple statements. In a standard for-loop,
+        // join all children into a comma expression (`for (_.a = 0, b = 1; ...)`). In a for-in or
+        // for-of loop, the single rewritten LHS child (e.g. `_.x` or `[_.a, _.b]`) replaces the
+        // declaration directly (`for (_.x in ...)`). Any local variables declared in the loop
+        // header were already recorded in `preDeclarations` by RescopeGlobalSymbolsRewriteCallback
+        // to be hoisted to the top of the chunk.
+        List<Node> commas = new ArrayList<>();
+        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           commas.add(c.cloneTree());
-        } else {
-          // Var statement outside of for-loop.
-          Node expr = IR.exprResult(c.cloneTree()).srcref(c);
-          NodeUtil.markNewScopesChanged(expr, compiler);
-          expr.insertBefore(n);
+        }
+        if (!commas.isEmpty()) {
+          Node comma = joinOnComma(commas, n);
+          comma.insertBefore(n);
+        }
+      } else {
+        // Declaration statement outside of a for-loop header.
+        // Group consecutive local variable bindings (NAME) into VAR declarations when
+        // preserveLocalVarDeclarations is enabled, and emit rewritten ASSIGN children as standalone
+        // EXPR_RESULT statements in original declaration order. Any DESTRUCTURING_LHS children in a
+        // rewritten declaration were already converted to ASSIGN nodes by
+        // RescopeGlobalSymbolsRewriteCallback.
+        // Any other children (such as bare GETPROP nodes from uninitialized cross-chunk
+        // declarations, or uninitialized NAME nodes when preserveLocalVarDeclarations is false)
+        // have no side effects and are omitted.
+        Node currentVar = null;
+        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+          checkState(!c.isDestructuringLhs(), "Unexpected DESTRUCTURING_LHS child: %s", c);
+          if (preserveLocalVarDeclarations && c.isName()) {
+            if (currentVar == null) {
+              currentVar = IR.var(c.cloneTree()).srcref(n);
+              currentVar.setJSDocInfo(n.getJSDocInfo());
+              currentVar.insertBefore(n);
+            } else {
+              currentVar.addChildToBack(c.cloneTree());
+            }
+          } else if (c.isAssign()) {
+            // Finalize any in-progress VAR declaration before emitting the assignment expression
+            // so that initializer evaluation order is preserved across mixed declarations.
+            if (currentVar != null) {
+              NodeUtil.markNewScopesChanged(currentVar, compiler);
+              currentVar = null;
+            }
+            Node expr = IR.exprResult(c.cloneTree()).srcref(c);
+            NodeUtil.markNewScopesChanged(expr, compiler);
+            expr.insertBefore(n);
+          }
+        }
+        if (currentVar != null) {
+          NodeUtil.markNewScopesChanged(currentVar, compiler);
         }
       }
-      if (!commas.isEmpty()) {
-        Node comma = joinOnComma(commas, n);
-        comma.insertBefore(n);
-      }
-      // Remove the var/const/let node.
+      // Remove the original var/const/let node.
       n.detach();
       NodeUtil.markFunctionsDeleted(n, compiler);
       compiler.reportChangeToEnclosingScope(parent);
+    }
+
+    private static boolean hasOnlyNameOrDestructuringChildren(Node n) {
+      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+        if (!c.isName() && !c.isDestructuringLhs()) {
+          return false;
+        }
+      }
+      return n.hasChildren();
     }
 
     private Node joinOnComma(List<Node> commas, Node source) {
