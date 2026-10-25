@@ -860,6 +860,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("`]]>`", "`]]\\x3e`");
     assertPrint("` --></script>`", "` --\\x3e\\x3c/script>`");
     assertPrint("`<!-- I am a string -->`", "`\\x3c!-- I am a string --\\x3e`");
+
+    // An escaped `<` is broken without leaving its backslash in front of the new escape.
+    assertPrint("`\\</script>`", "`\\x3c/script>`");
+    assertPrint("`\\<!--`", "`\\x3c!--`");
   }
 
   @Test
@@ -871,6 +875,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("`</script>`", "`\\x3c/script\\x3e`");
     assertPrint("`<!-- I am a string -->`", "`\\x3c!-- I am a string --\\x3e`");
     assertPrint("`<=&>`", "`\\x3c\\x3d\\x26\\x3e`");
+    assertPrint("`\\<\\=\\&\\>`", "`\\x3c\\x3d\\x26\\x3e`");
   }
 
   @Test
@@ -4215,6 +4220,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("`\\\"`");
     assertPrintSame("`\\'`");
     assertPrintSame("`\\``");
+
+    // A character escaped with a backslash that has to be escaped again.
+    assertPrint("`\\\u00e9`", "`\\u00e9`");
+    assertPrint("`\\\ud83d\ude00`", "`\\ud83d\\ude00`");
+    assertPrint("`\\\\\u00e9`", "`\\\\\\u00e9`");
 
     assertPrintSame("foo`\\unicode`");
     // b/114808380

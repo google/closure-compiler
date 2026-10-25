@@ -2113,8 +2113,11 @@ public class CodeGenerator {
   private String escapeUnrecognizedCharacters(String s) {
     // TODO(yitingwang) Move this method to a suitable place
     StringBuilder sb = new StringBuilder();
+    // Output index of a backslash that starts an escape sequence, or -1.
+    int escapeStart = -1;
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
+      int start = sb.length();
       switch (c) {
         case '\b', '\f', '\n', '\r', '\t', '\\', '\"', '\'', '$', '`', '\u2028', '\u2029' ->
             // From the SingleEscapeCharacter grammar production.
@@ -2138,6 +2141,17 @@ public class CodeGenerator {
             Util.appendHexJavaScriptRepresentation(sb, c);
           }
         }
+      }
+      if (escapeStart >= 0) {
+        // If the escaped character was escaped again, the backslash would now escape the first
+        // character of the new sequence (`\</script` would print as `\\x3c/script`). Drop it:
+        // a NonEscapeCharacter cooks to itself, so `\<` and `\x3c` have the same value.
+        if (sb.length() - start > 1) {
+          sb.deleteCharAt(escapeStart);
+        }
+        escapeStart = -1;
+      } else if (c == '\\') {
+        escapeStart = start;
       }
     }
     return sb.toString();
