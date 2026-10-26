@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.joining;
+import static org.junit.Assert.assertThrows;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
@@ -3751,5 +3752,29 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
           ref[i] = "test";
         console.log(arr)
         """);
+  }
+
+  @Test
+  public void testPrivateFieldUsedOnlyInBrandCheck_knownBug() {
+    // Expected behavior: `RemoveUnusedCode` leaves this code unchanged. In `#brand in o`, `#brand`
+    // is a private name of `C`, not a variable, and the brand check is a use of the field.
+    String js =
+        """
+        class C {
+          // Expected: kept, because `#brand in o` uses it. Without it, `#brand in o` is a
+          // SyntaxError.
+          #brand;
+          static isC(o) { return #brand in o; }
+        }
+        alert(C.isC({}));
+        """;
+    // TODO(b/236744850): `RemoveUnusedCode` crashes on `#brand in o`.
+    // Current behavior: `testSame(js)` throws a NullPointerException, because `#brand` is looked
+    //   up as a variable, and there is none.
+    // Why it's a bug: the compiler crashes on valid code.
+    // In a full build: the crash shows up once `VarCheck` skips private names. Before that,
+    //   `VarCheck` reports `#brand` as undeclared, and with that check off it declares `#brand`
+    //   as a global, so this pass deletes `#brand;` instead, which is a SyntaxError.
+    assertThrows(NullPointerException.class, () -> testSame(js));
   }
 }

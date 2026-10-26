@@ -1300,4 +1300,29 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
     test(options, src, expected);
   }
+
+  @Test
+  public void privateClassMembers_brandCheckWithTypeAndSymbolChecks_knownBug() {
+    // Expected behavior: no diagnostics with `setCheckSymbols(true)` or `setCheckTypes(true)`. In
+    // `#x in this`, `#x` is a private name of `C`, not a variable, and a brand check is valid on
+    // any object, including a class instance, which the type checker treats as a struct.
+    String js = "class C { #x; has() { return #x in this; } }";
+    CompilerOptions checkSymbols = createCompilerOptions();
+    checkSymbols.setCheckSymbols(true);
+    CompilerOptions checkTypes = createCompilerOptions();
+    checkTypes.setCheckTypes(true);
+    // TODO(b/236744850): `VarCheck` reports the private name `#x` as an undeclared variable.
+    // Current behavior: `VarCheck` reports the error `JSC_UNDEFINED_VARIABLE` ("variable #x is
+    //   undeclared").
+    // Why it's a bug: the error is false, because `#x` is a private name declared in `C`, not a
+    //   variable. Valid code fails to compile.
+    test(checkSymbols, js, DiagnosticGroups.UNDEFINED_VARIABLES);
+    // TODO(b/236744850): `TypeCheck` reports a brand check on a struct.
+    // Current behavior: `TypeCheck` reports the warning `JSC_IN_USED_WITH_STRUCT` ("Cannot use
+    //   the IN operator with structs"), because class instances are structs.
+    // Why it's a bug: the warning is false, because `#x in this` only checks whether `this` has
+    //   the private field `#x`, which is fine on a struct. In strict builds, the warning is an
+    //   error, so valid code fails to compile.
+    test(checkTypes, js, DiagnosticGroups.CHECK_TYPES);
+  }
 }

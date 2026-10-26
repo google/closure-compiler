@@ -6397,6 +6397,23 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testPrivateProperty_namedConstructor_knownBug() {
+    // Expected behavior: the parser reports "Classes may not have a private element named
+    // '#constructor'" for each source. The spec makes a private element named `#constructor` an
+    // early SyntaxError.
+    //
+    // TODO(b/236744850): A private element named `#constructor` is accepted.
+    // Current behavior: each source parses without an error or a warning, so `parse` passes.
+    // Why it's a bug: natively each source is a SyntaxError, so the whole script fails to load.
+    //   The compiler accepts the code instead of reporting the error.
+    parse("class C { #constructor; }");
+    parse("class C { #constructor() {} }");
+    parse("class C { async #constructor() {} }");
+    parse("class C { get #constructor() {} }");
+    parse("class C { set #constructor(v) {} }");
+  }
+
+  @Test
   public void testPrivateProperty_classMembersReferencingOtherPrivateField() {
     expectFeatures(Feature.PRIVATE_ELEMENTS);
 

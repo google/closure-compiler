@@ -7323,4 +7323,168 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """);
   }
+
+  @Test
+  public void testComputedPropertyReferencingPrivateField_knownBug() {
+    // Expected behavior: `[o.#x] = 1` is lowered like any other computed field. It is a public
+    // field of the inner class whose key is the value of `o.#x`, not a private member, although
+    // its key reads the private field `#x` of `C`. The key is computed once, when the inner class
+    // is defined.
+    String js =
+        """
+        class C {
+          #x = 'key';
+          make(o) {
+            return /** @dict */ class {
+              [o.#x] = 1;
+            };
+          }
+        }
+        """;
+    String expected =
+        """
+        const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+        class C {
+          constructor() {
+            const PRIVATE$3 = Object.create(null);
+            PRIVATE_MAP$1.set(this, PRIVATE$3);
+            PRIVATE$3.x = 'key';
+          }
+          make(o) {
+            var COMP_FIELD$2 = PRIVATE_MAP$1.get(o).x;
+            const CLASS_DECL$0 = class {
+              constructor() {
+                this[COMP_FIELD$2] = 1;
+              }
+            };
+            return CLASS_DECL$0;
+          }
+        }
+        """;
+    // TODO(b/236744850): `Es6NormalizeClasses` crashes on a computed field whose key reads `#x`.
+    // Current behavior: `Es6NormalizeClasses` takes `[o.#x] = 1` for a private member of the
+    //   inner class, and fails a `checkArgument` in `recordPrivateMember`. `test(js, expected)`
+    //   throws an internal compiler error caused by an IllegalArgumentException.
+    // Why it's a bug: the compiler crashes on valid code.
+    var ex = assertThrows(RuntimeException.class, () -> test(js, expected));
+    assertThat(ex).hasMessageThat().contains("INTERNAL COMPILER ERROR");
+    assertThat(ex).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  public void testLogicalAssignmentToPrivateField_knownBug() {
+    // Expected behavior: both the read and the write of `#n` that `Normalize` creates for
+    // `this.#n ??= 1` are lowered, like any other use of `#n`, so both go through `C`'s private
+    // map. Once `#n` is lowered, `C` no longer declares a native `#n`, so a native `#n` access
+    // left in `C` is a SyntaxError.
+    String js =
+        """
+        class C {
+          #n;
+          m() {
+            this.#n ??= 1;
+          }
+        }
+        """;
+    String expected =
+        """
+        const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+        class C {
+          constructor() {
+            const PRIVATE$2 = Object.create(null);
+            PRIVATE_MAP$1.set(this, PRIVATE$2);
+            PRIVATE$2.n = void 0;
+          }
+          m() {
+            let $jscomp$logical$assign$tmpm1146332801$0;
+            PRIVATE_MAP$1.get($jscomp$logical$assign$tmpm1146332801$0 = this).n ??
+                (PRIVATE_MAP$1.get($jscomp$logical$assign$tmpm1146332801$0).n = 1);
+          }
+        }
+        """;
+    // TODO(b/236744850): The accesses to `#n` that `Normalize` creates for `??=` are not lowered.
+    // Current behavior: `Normalize` rewrites `this.#n ??= 1` to `(tmp = this).#n ?? (tmp.#n = 1)`
+    //   with a temporary `tmp`, without the private name flag on the two new `#n` accesses. So
+    //   neither is lowered, the output keeps both as `#n`, and `test(js, expected)` fails.
+    // Why it's a bug: `#n` was lowered, so `C` no longer declares `#n`, and `tmp.#n` is a
+    //   SyntaxError. The whole script fails to load.
+    var ex = assertThrows(AssertionError.class, () -> test(js, expected));
+    assertThat(ex).hasMessageThat().contains(".#n");
+  }
+
+  @Test
+  public void testLogicalAssignmentToPrivateMethod_knownBug() {
+    // Expected behavior: `this.#m ??= () => {}` compiles, and both accesses to `#m` that
+    // `Normalize` creates for it go through `C`'s private map. Natively `init()` only reads `#m`:
+    // a method is never nullish, so the assignment never runs.
+    String js =
+        """
+        class C {
+          #m() {}
+          init() {
+            this.#m ??= () => {};
+          }
+        }
+        """;
+    String expected =
+        """
+        const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$2 = Object.create(null, {
+          m: {
+            value: function() {}
+          }
+        });
+        class C {
+          constructor() {
+            const PRIVATE$3 = Object.create(PRIVATE_PROTO$2);
+            PRIVATE_MAP$1.set(this, PRIVATE$3);
+          }
+          init() {
+            let $jscomp$logical$assign$tmpm1146332801$0;
+            PRIVATE_MAP$1.get($jscomp$logical$assign$tmpm1146332801$0 = this).m ??
+                (PRIVATE_MAP$1.get($jscomp$logical$assign$tmpm1146332801$0).m = () => {});
+          }
+        }
+        """;
+    // TODO(b/236744850): The accesses to `#m` that `Normalize` creates for `??=` are not lowered.
+    // Current behavior: `Normalize` rewrites `this.#m ??= () => {}` to
+    //   `(tmp = this).#m ?? (tmp.#m = () => {})` with a temporary `tmp`, without the private name
+    //   flag on the two new `#m` accesses. So neither is lowered, the output keeps both as `#m`,
+    //   and `test(js, expected)` fails.
+    // Why it's a bug: `#m` was lowered, so `C` no longer declares `#m`, and `tmp.#m` is a
+    //   SyntaxError. The whole script fails to load.
+    var ex = assertThrows(AssertionError.class, () -> test(js, expected));
+    assertThat(ex).hasMessageThat().contains(".#m");
+  }
+
+  @Test
+  public void testDirectEvalInClassWithPrivateElements_knownBug() {
+    // Expected behavior: `Es6NormalizeClasses` reports `JSC_CANNOT_CONVERT_YET`. Code that a
+    // direct `eval` runs inside `C` can use `#x` natively, but not once `#x` is lowered, and the
+    // compiler can't lower the code in the `eval` string.
+    //
+    // TODO(b/236744850): No error for a direct `eval` that may use lowered private names.
+    // Current behavior: `#x` is lowered, `eval('this.#x')` is left as is, and no error is
+    //   reported.
+    // Why it's a bug: natively `new C().m()` returns the value of `#x`, `undefined`. The
+    //   compiled code throws a SyntaxError instead, because `C` no longer declares `#x`.
+    test(
+        """
+        class C {
+          #x;
+          m() { return eval('this.#x'); }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class C {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.x = void 0;
+          }
+          m() { return eval('this.#x'); }
+        }
+        """);
+  }
 }
