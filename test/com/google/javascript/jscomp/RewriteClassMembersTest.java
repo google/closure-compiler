@@ -6621,6 +6621,451 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPrivateNameInHeritageClause_knownBug() {
+    // Expected behavior: `o.#x` in the `extends` clause of `Sub` is lowered to a read of `Outer`'s
+    // private map. The `extends` clause is outside the body of `Sub`, so `#x` there refers to
+    // `Outer`'s `#x`, not `Sub`'s.
+    //
+    // TODO(b/236744850): `#x` in an `extends` clause refers to `Sub`'s `#x`.
+    // Current behavior: `o.#x` is lowered to a read of `Sub`'s private map.
+    // Why it's a bug: natively `Sub.read(new Outer())` returns 1 and `Sub.read(new Sub())` throws a
+    //   TypeError; the compiled code throws a TypeError for the first and returns 2 for the second.
+    test(
+        """
+        class Outer {
+          #x = 1;
+          makeSub() {
+            return class Sub extends (class { static read(o) { return o.#x; } }) {
+              #x = 2;
+            };
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$5 = new $jscomp.PrivateMap();
+        class Outer {
+          constructor() {
+            const PRIVATE$6 = Object.create(null);
+            PRIVATE_MAP$5.set(this, PRIVATE$6);
+            PRIVATE$6.x = 1;
+          }
+          makeSub() {
+            return (() => {
+              const CLASS_EXTENDS$0 = (() => {
+                const CLASS_DECL$2 = class {
+                  static read(o) {
+                    return PRIVATE_MAP$3.get(o).x;
+                  }
+                };
+                return CLASS_DECL$2;
+              })();
+              const PRIVATE_MAP$3 = new $jscomp.PrivateMap();
+              const CLASS_DECL$1 = class extends CLASS_EXTENDS$0 {
+                constructor() {
+                  super(...arguments);
+                  const PRIVATE$4 = Object.create(null);
+                  PRIVATE_MAP$3.set(this, PRIVATE$4);
+                  PRIVATE$4.x = 2;
+                }
+              };
+              return CLASS_DECL$1;
+            })();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateFieldAsSuperclass_knownBug() {
+    // Expected behavior: a private field read in an `extends` clause, as in `extends Outer.#base`,
+    // is lowered to a read of `Outer`'s static private map and moved into a temporary before the
+    // class, like other superclass expressions that aren't qualified names.
+    //
+    // TODO(b/236744850): A private field read in an `extends` clause crashes the compiler.
+    // Current behavior: `Outer.#base` is a qualified name, so the `extends` clause stays in place,
+    //   but lowering turns it into a read through a `get` call on `Outer`'s static private map,
+    //   which isn't one, so adding the constructor that initializes `x` throws an
+    //   IllegalStateException.
+    // Why it's a bug: the compiler crashes on valid code.
+    String src =
+        """
+        class Outer {
+          static #base = class {};
+          static make() {
+            return class extends Outer.#base {
+              x = 1;
+            };
+          }
+        }
+        """;
+    var ex = assertThrows(RuntimeException.class, () -> test(src, ""));
+    assertThat(ex).hasMessageThat().contains("INTERNAL COMPILER ERROR");
+    assertThat(ex).hasCauseThat().isInstanceOf(IllegalStateException.class);
+    assertThat(ex)
+        .hasCauseThat()
+        .hasMessageThat()
+        .contains("Expected Es6NormalizeClasses to make all extends clauses into qualified names");
+  }
+
+  @Test
+  public void testSuperInPrivateMethodParameterDefault_knownBug() {
+    // Expected behavior: `super` in a private method's parameter list is lowered like `super` in
+    // its body, so `super.m()` calls `Base.prototype.m` with the method's `this`.
+    //
+    // TODO(b/236744850): `super` in a private method's parameter list crashes the compiler.
+    // Current behavior: `super.m()` in the parameter list isn't lowered, so it ends up in a plain
+    //   function, where `super` is invalid, and AST validation fails.
+    // Why it's a bug: the compiler crashes on valid code.
+    String src =
+        """
+        class Base {}
+        class Sub extends Base {
+          #m(v = super.m()) {}
+        }
+        """;
+    var ex = assertThrows(IllegalStateException.class, () -> test(src, ""));
+    assertThat(ex)
+        .hasMessageThat()
+        .contains(
+            "super property references are only allowed in methods, class static blocks and class"
+                + " fields");
+  }
+
+  @Test
+  public void testSuperCompoundAssignmentInPrivateMethod_knownBug() {
+    // Expected behavior: `+=`, `++` and `--` on `super` properties in a private method keep their
+    // native semantics: `super[k()] += 1` calls `k()` once, and `super.c++` returns the old value
+    // of `super.c`, converted to a number.
+    //
+    // TODO(b/236744850): `+=`, `++` and `--` on `super` properties crash the compiler.
+    // Current behavior: in `super.b += 1`, `super[k()] += 1`, `super.c++` and `--super[k]`, the
+    //   `super` property is lowered to a `Reflect.get(...)` call, which isn't a valid assignment
+    //   target, so AST validation fails at `super.b += 1`.
+    // Why it's a bug: the compiler crashes on valid code.
+    String src =
+        """
+        class Base {}
+        class Sub extends Base {
+          #m(k) {
+            return [super.b += 1, super[k()] += 1, super.c++, --super[k]];
+          }
+        }
+        """;
+    var ex = assertThrows(IllegalStateException.class, () -> test(src, ""));
+    assertThat(ex).hasMessageThat().contains("Invalid child for ASSIGN_ADD node");
+  }
+
+  @Test
+  public void testSuperAssignmentInPrivateMethod_knownBug() {
+    // Expected behavior: `super.a = v` in a private method keeps its native semantics. In class
+    // code, which is strict, it evaluates to `v` and throws a TypeError if the write fails.
+    //
+    // TODO(b/236744850): `super.a = v` in a private method evaluates to a boolean.
+    // Current behavior: `super.a = v` is lowered to `Reflect.set(...)`.
+    // Why it's a bug: `Reflect.set(...)` evaluates to true or false instead of `v`, and returns
+    //   false instead of throwing a TypeError when the write fails.
+    ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY, TypeCheck.ILLEGAL_PROPERTY_CREATION);
+    test(
+        """
+        class Base {}
+        class Sub extends Base {
+          #m(v) {
+            return super.a = v;
+          }
+        }
+        """,
+        """
+        class Base {}
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          m: {
+            value: function(v) {
+              return Reflect.set(Base.prototype, JSCompiler_renameProperty("a", Base), v, this);
+            }
+          }
+        });
+        class Sub extends Base {
+          constructor() {
+            super(...arguments);
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testSuperInStaticPrivateAccessor_knownBug() {
+    // Expected behavior: `super.y` in a static private getter is lowered to a read of `y` from
+    // `Base` with `C` as the receiver, as in `Reflect.get(Base, "y", C)`. In a static accessor of
+    // `C`, `super.y` reads `Base.y` with the accessor's `this`, which is `C` here.
+    //
+    // TODO(b/236744850): `super.y` in a static private getter loses its receiver.
+    // Current behavior: `return super.y;` becomes `return Base.y;`.
+    // Why it's a bug: a `Base.y` getter runs with `Base` as `this` instead of `C`. For example,
+    //   with `static get y() { return this.name; }` in `Base`, reading `C.#x` returns "Base"
+    //   instead of "C".
+    ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
+    test(
+        """
+        class Base {}
+        class C extends Base {
+          static get #x() {
+            return super.y;
+          }
+        }
+        """,
+        """
+        class Base {}
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class C extends Base {
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = Object.create(null);
+            STATIC_PRIVATE_MAP$0.set(C, PRIVATE$1);
+            Object.defineProperty(PRIVATE$1, "x", {
+              get: function() {
+                return Base.y;
+              }
+            });
+          }
+        }
+        C.STATIC_INIT$2();
+        """);
+  }
+
+  @Test
+  public void testThisInPrivateAccessorParameterList_knownBug() {
+    // Expected behavior: `this` in the parameter list of a private accessor is lowered to the
+    // instance, like `this` in its body. A function's parameter list has the same `this` as its
+    // body.
+    //
+    // TODO(b/236744850): `this` in a private accessor's parameter list isn't lowered.
+    // Current behavior: `set: function(v = this) {}` keeps `this`, and the setter runs with the
+    //   internal record as `this`. Only `this` in the body is rewritten to `this.$self`.
+    // Why it's a bug: `v` defaults to the internal record instead of the instance. For example,
+    //   `this.#x = undefined` sets `v` to the record, not to `this`.
+    test(
+        """
+        class C {
+          set #x(v = this) {}
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          x: {
+            set: function(v = this) {}
+          }
+        });
+        class C {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodName_knownBug() {
+    // Expected behavior: lowered private methods keep their native names. The `name` of a private
+    // method is its private name, so `this.#m.name` is "#m" and `C.#s.name` is "#s".
+    //
+    // TODO(b/236744850): The lowered `#m` is named "value".
+    // Current behavior: `m: {value: function() {}}` names the function "value", after the
+    //   descriptor property that holds it.
+    // Why it's a bug: `this.#m.name` returns "value" instead of "#m".
+    //
+    // TODO(b/236744850): The lowered `#s` is named "".
+    // Current behavior: `#s` is lowered to `function() {}` assigned to a property of the static
+    //   private record, which gives the function no name.
+    // Why it's a bug: `C.#s.name` returns "" instead of "#s".
+    ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
+    test(
+        """
+        class C {
+          #m() {}
+          static #s() {}
+          names() {
+            return [this.#m.name, C.#s.name];
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$2 = Object.create(null, {
+          m: {value: function() {}},
+        });
+        const STATIC_PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+        class C {
+          constructor() {
+            const PRIVATE$3 = Object.create(PRIVATE_PROTO$2);
+            PRIVATE_MAP$0.set(this, PRIVATE$3);
+          }
+          names() {
+            return [PRIVATE_MAP$0.get(this).m.name, STATIC_PRIVATE_MAP$1.get(C).s.name];
+          }
+          static STATIC_INIT$5() {
+            const PRIVATE$4 = Object.create(null);
+            STATIC_PRIVATE_MAP$1.set(C, PRIVATE$4);
+            PRIVATE$4.s = function() {};
+          }
+        }
+        C.STATIC_INIT$5();
+        """);
+  }
+
+  @Test
+  public void testPrivateMethodNamedProto_knownBug() {
+    // Expected behavior: a private method named `#__proto__` is defined and called like any other
+    // private method, under a key other than `__proto__`. `#__proto__` is a valid private name with
+    // no special meaning.
+    //
+    // TODO(b/236744850): A private method named `#__proto__` is never defined.
+    // Current behavior: `__proto__: {value: function() {}}` sets the prototype of the object
+    //   literal instead of defining a property, so the private records get no `__proto__`
+    //   method, and `this.#__proto__` in `m()` is `undefined`.
+    // Why it's a bug: `new C().m()` throws a TypeError instead of calling `#__proto__`.
+    test(
+        """
+        class C {
+          #__proto__() {}
+          m() {
+            return this.#__proto__();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          __proto__: {value: function() {}},
+        });
+        class C {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          m() {
+            return PRIVATE_MAP$0.get(this).__proto__.call(this);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testForwardPrivateFieldWrite_knownBug() {
+    // Expected behavior: writing or updating an instance or static private field before it is
+    // initialized throws a TypeError. A private field exists only after its initializer runs, and
+    // writing a missing private field throws. Once `#later` is initialized, `#inc()` returns its
+    // old value converted to a number, like a native `this.#later++`, and `#add(f)` calls `f` once.
+    //
+    // TODO(b/236744850): Writing `#later` before it is initialized doesn't throw.
+    // Current behavior: `this.#later = 1` and `this.#later += 3` write `later` on the private
+    //   record of `this`. The private map's `get(this)` only checks that `this` has a private
+    //   record, which exists before any field is initialized, so the writes create `later` early.
+    // Why it's a bug: natively `new Foo()` throws a TypeError at `this.#later = 1`; the compiled
+    //   `new Foo()` succeeds, with `#first` set to 4.
+    //
+    // TODO(b/236744850): Writing `#b` before it is initialized doesn't throw.
+    // Current behavior: `Foo.#b = 99` writes `b` on the static private record of `Foo`, which
+    //   creates `b` early.
+    // Why it's a bug: natively the definition of `Foo` throws a TypeError at `Foo.#b = 99`; the
+    //   compiled code defines `Foo`, with `#a` set to 99.
+    test(
+        """
+        class Foo {
+          #first = (this.#later = 1, this.#later += 3);
+          #inc = () => this.#later++;
+          #add = (f) => f().#later += 1;
+          #later = 2;
+          static #a = (Foo.#b = 99);
+          static #b = 1;
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const STATIC_PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+        class Foo {
+          constructor() {
+            const PRIVATE$2 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            PRIVATE$2.first =
+                (PRIVATE_MAP$0.get(this).later = 1, PRIVATE_MAP$0.get(this).later += 3);
+            PRIVATE$2.inc = () => {
+              return PRIVATE_MAP$0.get(this).later++;
+            };
+            PRIVATE$2.add = (f) => {
+              return PRIVATE_MAP$0.get(f()).later += 1;
+            };
+            PRIVATE$2.later = 2;
+          }
+          static STATIC_INIT$4() {
+            const PRIVATE$3 = Object.create(null);
+            STATIC_PRIVATE_MAP$1.set(Foo, PRIVATE$3);
+            PRIVATE$3.a = STATIC_PRIVATE_MAP$1.get(Foo).b = 99;
+            PRIVATE$3.b = 1;
+          }
+        }
+        Foo.STATIC_INIT$4();
+        """);
+  }
+
+  @Test
+  public void testParenthesizedCallAndTaggedTemplate_knownBug() {
+    // Expected behavior: calls of a lowered private method get the same `this` as native calls. The
+    // comma operator drops the receiver, so `(0, this.#m)` gets `undefined` as `this` when called
+    // or used as a tag; the tag `this.#m` gets `this`; and in `(o?.#m)()`, the parentheses end the
+    // optional chain, so only `o?.#m` short-circuits.
+    //
+    // TODO(b/236744850): `(0, this.#m)()` throws instead of calling `#m`.
+    // Current behavior: it's lowered as if it were `(0, this.#m.call)(this)`, which calls `call`
+    //   with `undefined` as `this` and throws a TypeError.
+    // Why it's a bug: natively `(0, this.#m)()` calls `#m` with `undefined` as `this`, without
+    //   throwing.
+    //
+    // TODO(b/236744850): `(o?.#m)()` short-circuits the call too.
+    // Current behavior: it's lowered as if it were `o?.#m()`, which returns `undefined` when `o` is
+    //   nullish.
+    // Why it's a bug: natively the parentheses end the optional chain, so when `o` is nullish,
+    //   `(o?.#m)()` calls `undefined` and throws a TypeError.
+    //
+    // TODO(b/236744850): The tag `this.#m` gets the internal record as `this`.
+    // Current behavior: the tag is lowered to a read of `m` from the private record of `this`, so
+    //   `#m` runs with the record as `this`.
+    // Why it's a bug: natively the tag `this.#m` gets the instance as `this`. For example, if `#m`
+    //   returned `this`, the tagged template would return the record instead of the instance.
+    test(
+        """
+        class C {
+          #m(...a) {}
+          run(o) {
+            return [(0, this.#m)(), (o?.#m)(), this.#m`x`, (0, this.#m)`x`];
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          m: {value: function(...a) {}},
+        });
+        class C {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+          }
+          run(o) {
+            return [
+              (0, PRIVATE_MAP$0.get(this).m.call)(this),
+              o == null ? void 0 : PRIVATE_MAP$0.get(o).m.call(o),
+              PRIVATE_MAP$0.get(this).m`x`,
+              (0, PRIVATE_MAP$0.get(this).m)`x`,
+            ];
+          }
+        }
+        """);
+  }
+
+  @Test
   public void testPrivateMethodAssignment_reportsCompileTimeError() {
     // See: BUG-5 in go/tsjs-private-elements-bugs
     //

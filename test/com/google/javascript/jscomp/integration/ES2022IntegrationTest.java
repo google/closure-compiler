@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
@@ -1019,6 +1020,100 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
 
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
     test(options, src, expected);
+  }
+
+  @Test
+  public void privateClassMembers_superReadWithConstReflectExterns_knownBug() {
+    // Expected behavior: `super.p` in a private method is lowered to
+    // `Reflect.get(Base.prototype, "p", this)`, with the `Reflect` name marked constant. The
+    // externs declare `@const Reflect`, and the compiler requires every reference to a constant
+    // name to be marked constant.
+    // In a full build: only `DevMode.EVERY_PASS` checks this; the output is correct either way.
+    //
+    // TODO(b/236744850): `super.p` in a private method crashes the compiler with `@const Reflect`.
+    // Current behavior: the `Reflect` name in the lowered `Reflect.get(...)` isn't marked constant,
+    //   so the validity check after `es6NormalizeClasses` fails.
+    // Why it's a bug: the compiler crashes on valid code when its validity checks are on, as in
+    //   this test (`DevMode.EVERY_PASS`).
+    CompilerOptions options = createCompilerOptions();
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addReflect()
+                .addExtra("/** @const */ var $jscomp = {};")
+                .buildExternsFile("externs"));
+    String src =
+        """
+        class Base {}
+        class Sub extends Base {
+          #m() {
+            return super.p;
+          }
+        }
+        """;
+
+    var ex = assertThrows(RuntimeException.class, () -> compile(options, src));
+    assertThat(ex).hasMessageThat().contains("Validity check failed for es6NormalizeClasses");
+    assertThat(ex)
+        .hasCauseThat()
+        .hasCauseThat()
+        .hasMessageThat()
+        .contains("Should be const but not marked as const");
+  }
+
+  @Test
+  public void privateClassMembers_staticPrivateAccessorWithPropertyRenaming_knownBug() {
+    // Expected behavior: property renaming renames the key of a static private accessor and its
+    // reads the same way, so `C.read()` still returns "sa". Renaming must not change what a
+    // property read returns.
+    //
+    // TODO(b/236744850): Property renaming breaks reads of a static private accessor.
+    // Current behavior: the getter is defined under the quoted key "sa", which property renaming
+    //   doesn't rename, but the inlined read of `C.#sa` is renamed.
+    // Why it's a bug: `console.log(C.read())` logs `undefined` instead of "sa".
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addObject()
+                .addExtra(
+                    "/** @const */ var $jscomp = {};",
+                    "/** @constructor */ $jscomp.PrivateMap = function() {};",
+                    "$jscomp.PrivateMap.prototype.get = function(o) {};",
+                    "$jscomp.PrivateMap.prototype.set = function(o, v) {};")
+                .buildExternsFile("externs"));
+
+    test(
+        options,
+        """
+        class C {
+          static get #sa() { return 'sa'; }
+          static read() { return C.#sa; }
+        }
+        console.log(C.read());
+        """,
+        """
+        const $jscomp$staticPrivateMap$98447280$0 = new $jscomp.PrivateMap();
+        class C {}
+        (function() {
+          var $jscomp$priv$98447280$1 = Object.create(null);
+          $jscomp$staticPrivateMap$98447280$0.set(C, $jscomp$priv$98447280$1);
+          Object.defineProperty($jscomp$priv$98447280$1, "sa", {
+            get: function() {
+              return "sa";
+            }
+          });
+        })();
+        console.log($jscomp$staticPrivateMap$98447280$0.get(C).a);
+        """);
   }
 
   @Test
