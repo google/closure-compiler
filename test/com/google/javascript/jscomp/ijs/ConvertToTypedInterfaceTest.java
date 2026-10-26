@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp.ijs;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -418,6 +421,48 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         }
         /** @const {number}*/ Foo.prototype.sameField
         """);
+  }
+
+  @Test
+  public void testPrivateClassMembers_knownBug() {
+    // Expected behavior: the output is `expected`, with every private member still declared in the
+    // class body, because a private name is valid only there.
+    String js =
+        """
+        class Foo {
+          /** @type {number} */ #a = 1;
+          #b;
+          static #s = 2;
+          #m() {}
+          constructor() {
+            // Expected: removed. Unlike `this.b = 2`, it doesn't become a declaration after `Foo`,
+            // because `#b` is already declared in the class body.
+            /** @const {number} */ this.#b = 2;
+          }
+          /** @return {number} */
+          get() { return this.#a; }
+        }
+        """;
+    String expected =
+        """
+        class Foo {
+          /** @type {number} */ #a;
+          /** @const @type {UnusableType} */ #b;
+          /** @const @type {UnusableType} */ static #s;
+          #m() {}
+          constructor() {}
+          /** @return {number} */
+          get() {}
+        }
+        """;
+    // TODO(b/236744850): `this.#b = 2` is moved out of `Foo` as a declaration.
+    // Current behavior: `#b;` is removed from `Foo`, and `this.#b = 2` becomes
+    //   `/** @const @type {number} */ Foo.prototype.#b;` after `Foo`. So `test(js, expected)`
+    //   fails.
+    // Why it's a bug: `Foo.prototype.#b` outside the body of `Foo` is a SyntaxError, so the
+    //   generated `.i.js` file can't be parsed.
+    var ex = assertThrows(AssertionError.class, () -> test(js, expected));
+    assertThat(ex).hasMessageThat().contains("Foo.prototype.#b;");
   }
 
   @Test

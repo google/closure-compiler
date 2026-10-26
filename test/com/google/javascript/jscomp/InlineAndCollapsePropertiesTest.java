@@ -4260,5 +4260,51 @@ use(Foo$Bar$baz$A);
     assertThat(root).isInstanceOf(IllegalStateException.class);
     assertThat(root).hasMessageThat().contains("unexpected node: MEMBER_FIELD_DEF");
   }
+
+  @Test
+  public void testClassStaticPrivateField_knownBug() {
+    // Expected behavior: `InlineAndCollapseProperties` leaves this code unchanged. `#s` is valid
+    // only inside the body of `C`, so it can't be moved out of `C` into a global variable.
+    String js =
+        """
+        class C {
+          static #s = 1;
+        }
+        """;
+    // TODO(b/236744850): `CollapseProperties` crashes on a static private field.
+    // Current behavior: `CollapseProperties` tries to move `static #s = 1` out of `C` into a
+    //   global variable, and fails a `checkState` because `1` is not a function. `testSame(js)`
+    //   throws the `IllegalStateException`.
+    // Why it's a bug: the compiler crashes on valid code.
+    var ex = assertThrows(IllegalStateException.class, () -> testSame(js));
+    // The failed `checkState` has no message, so check that it is the one in
+    // `checkForReceiverAffectedByCollapse`.
+    assertThat(ex.getStackTrace()[1].getMethodName())
+        .isEqualTo("checkForReceiverAffectedByCollapse");
+  }
+
+  @Test
+  public void testClassStaticPrivateMethod_knownBug() {
+    // Expected behavior: `InlineAndCollapseProperties` leaves this code unchanged. `#m` is valid
+    // only inside the body of `C`, so neither `#m` nor `getM`, which calls `C.#m()`, can be moved
+    // out of `C` into a global variable.
+    String js =
+        """
+        class C {
+          static #m() { return 1; }
+          static getM() { return C.#m(); }
+        }
+        """;
+    // TODO(b/236744850): A static private method, and a static method that calls it, are moved
+    // out of their class.
+    // Current behavior: `CollapseProperties` moves `#m` and `getM` out of `C`, to
+    //   `var C$#m = function() { return 1; };` and `var C$getM = function() { return C$#m(); };`
+    //   before an empty `class C {}`. So `testSame(js)` fails.
+    // Why it's a bug: `C$#m` is not a valid name, so the output is a SyntaxError, and the whole
+    //   script fails to load.
+    var ex = assertThrows(AssertionError.class, () -> testSame(js));
+    assertThat(ex).hasMessageThat().contains("+var C$#m = function() {");
+    assertThat(ex).hasMessageThat().contains("+var C$getM = function() {");
+  }
 }
 

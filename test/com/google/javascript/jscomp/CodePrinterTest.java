@@ -3658,6 +3658,30 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testPrivateClassProperties_nonLatinNames_knownBug() {
+    // Expected behavior: each input prints unchanged. Private names are never quoted, because a
+    // quoted name is a public property name. Non-Latin characters in method and field names are
+    // escaped, as in other identifiers.
+    //
+    // TODO(b/236744850): Private method and getter names with non-Latin characters are quoted.
+    // Current behavior: `#\u00f1(){}` prints as `"#\u00f1"(){}`, and `get #\u00fc(){return 1}`
+    //   prints as `get "#\u00fc"(){return 1}`.
+    // Why it's a bug: the quoted names declare public members, not the private `#\u00f1` and
+    //   `#\u00fc`. Then a use like `this.#\u00f1()` in the class is a SyntaxError, because
+    //   `#\u00f1` is no longer declared.
+    assertPrint("class C{#\\u00f1(){}}", "class C{\"#\\u00f1\"(){}}");
+    assertPrint("class C{get #\\u00fc(){return 1}}", "class C{get \"#\\u00fc\"(){return 1}}");
+    // TODO(b/236744850): Non-Latin characters in field names are not escaped.
+    // Current behavior: `#\u00e9=1;` and `\u00e9=1;` print with the character U+00E9 itself
+    //   instead of the escape `\u00e9`.
+    // Why it's a bug: other identifiers are always printed in ASCII. The command-line compiler
+    //   writes its output in US-ASCII by default, which turns U+00E9 into `?`, and `#?=1;` and
+    //   `?=1;` are SyntaxErrors.
+    assertPrint("class C{#\\u00e9=1;}", "class C{#\u00e9=1;}");
+    assertPrint("class C{\\u00e9=1;}", "class C{\u00e9=1;}");
+  }
+
+  @Test
   public void testSuper() {
     assertPrintSame("class C extends foo(){}");
     assertPrintSame("class C extends m.foo(){}");

@@ -2966,6 +2966,35 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassMethodReadingPrivateField_knownBug() {
+    // Expected behavior: only the call `C.isC({})` is marked pure. `C.check(o)` may throw, because
+    // reading `o.#b` throws a TypeError if `o` has no `#b`. `C.isC` catches that error, so it is
+    // pure.
+    String source =
+        """
+        class C {
+          #b;
+          static check(o) { return o.#b; }
+          static isC(o) {
+            try {
+              C.check(o);
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }
+        }
+        C.isC({});
+        """;
+    // TODO(b/236744850): A call that reads a private field is marked pure.
+    // Current behavior: both `C.check(o)` and `C.isC({})` are marked pure.
+    // Why it's a bug: `C.check(o)` throws a TypeError when `o` has no `#b`. Because the call is
+    //   marked pure and its result is unused, `PeepholeRemoveDeadCode` removes `C.check(o);`, so
+    //   `C.isC({})` returns true instead of false.
+    assertPureCallsMarked(source, ImmutableList.of("C.check", "C.isC"));
+  }
+
+  @Test
   public void testClassInstantiation_implicitCtor_noSuperclass_isPure() {
     assertPureCallsMarked(
         """

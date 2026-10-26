@@ -51,6 +51,7 @@ import static com.google.javascript.rhino.Token.GETPROP;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.HOOK;
 import static com.google.javascript.rhino.Token.IF;
+import static com.google.javascript.rhino.Token.IN;
 import static com.google.javascript.rhino.Token.INC;
 import static com.google.javascript.rhino.Token.ITER_REST;
 import static com.google.javascript.rhino.Token.ITER_SPREAD;
@@ -734,7 +735,25 @@ public final class AstAnalyzerTest {
           kase().expect(false).js("Symbol()"),
           kase().expect(false).js("Symbol('desc')"),
           kase().expect(true).js("Symbol(foo())"),
-          kase().expect(true).js("Symbol()").assumeBuiltinsPure(false));
+          kase().expect(true).js("Symbol()").assumeBuiltinsPure(false),
+
+          // Expected behavior: the private reads `o.#x`, `o?.#x`, and `this.#x` have side effects,
+          // but `#x in o` doesn't. A private read throws a TypeError if the object has no `#x`,
+          // also on `this` (as in `C.prototype.m.call(other)`), and code uses that as a brand
+          // check. `#x in o` throws only if `o` is not an object, like `'x' in o`, which has no
+          // side effects either.
+          //
+          // TODO(b/236744850): Private member reads are treated as free of side effects.
+          // Current behavior: `mayHaveSideEffects` returns false for the 3 reads below. It also
+          //   returns false for the last case, `#x in o`, which is correct.
+          // Why it's a bug: passes remove the brand checks. For example, `PeepholeRemoveDeadCode`
+          //   removes `if (o.#x) {}`, so
+          //   `try { if (o.#x) {} return true; } catch (e) { return false; }` returns true for
+          //   any `o`.
+          kase().expect(false).token(GETPROP).js("class C { #x; m(o) { o.#x; } }"),
+          kase().expect(false).token(OPTCHAIN_GETPROP).js("class C { #x; m(o) { o?.#x; } }"),
+          kase().expect(false).token(GETPROP).js("class C { #x; m() { this.#x; } }"),
+          kase().expect(false).token(IN).js("class C { #x; m(o) { #x in o; } }"));
     }
   }
 

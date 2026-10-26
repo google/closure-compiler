@@ -678,6 +678,44 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void privateClassFields_nativeWithTranspiledPublicFields_knownBug() {
+    // Expected behavior: with public fields lowered and private fields kept native, field
+    // initializers still run in declaration order. So `#b` reads `a` after `a = 1` has run, and
+    // `new C().getB()` returns 1, as in the input.
+    CompilerOptions options = createCompilerOptions();
+    options.setTranspilePublicClassFields(true);
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+
+    // TODO(b/236744850): Lowering only the public fields changes the initializer order.
+    // Current behavior: `a = 1` becomes `this.a = 1` in the constructor, but `#b = this.a` stays a
+    //   field, and fields are initialized before the constructor body runs.
+    // Why it's a bug: `#b` reads `this.a` before `this.a = 1` runs, so `new C().getB()` returns
+    //   undefined instead of 1.
+    // In a full build: only when a tool calls `setTranspilePublicClassFields(true)`. No flag sets
+    //   it, and no output language lowers public fields but keeps private ones.
+    test(
+        options,
+        """
+        class C {
+          a = 1;
+          #b = this.a;
+          getB() { return this.#b; }
+        }
+        console.log(new C().getB());
+        """,
+        """
+        class C {
+          constructor() {
+            this.a = 1;
+          }
+          #b = this.a;
+          getB() { return this.#b; }
+        }
+        console.log(new C().getB());
+        """);
+  }
+
+  @Test
   public void privateClassMembers_fullIntegrationTest() {
     CompilerOptions options = createCompilerOptions();
     options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
@@ -1352,5 +1390,45 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
     //   if it does so only when `rewritePolyfills` is on, ES5 builds with it off would have to
     //   provide `WeakMap` themselves.
     assertThat(injected).contains("es6/weakmap");
+  }
+
+  @Test
+  public void privateClassMembers_nativeOutputWithAdvancedOptimizations_knownBug() {
+    // Expected behavior: when private elements are not lowered, ADVANCED optimizations keep the
+    // private members in `C` and rename them to other private names. Private names are valid only
+    // inside the body of their class.
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+    String js =
+        """
+        class C {
+          static #s = 1;
+          #x = 2;
+          #m() { return C.#s; }
+          run() { return this.#x + this.#m(); }
+        }
+        console.log(new C().run());
+        """;
+    String expected =
+        """
+        class a {
+          static #b = 1;
+          #c = 2;
+          #a() { return a.#b; }
+          d() { return this.#c + this.#a(); }
+        }
+        console.log(new a().d());
+        """;
+    // TODO(b/236744850): ADVANCED optimizations crash on a static private field.
+    // Current behavior: `CollapseProperties` tries to move `static #s = 1` out of `C` into a
+    //   global variable, and fails a `checkState` because `1` is not a function.
+    //   `test(options, js, expected)` throws the `IllegalStateException`.
+    // Why it's a bug: the compiler crashes on valid code.
+    var ex = assertThrows(IllegalStateException.class, () -> test(options, js, expected));
+    // The failed `checkState` has no message, so check that it is the one in
+    // `checkForReceiverAffectedByCollapse`.
+    assertThat(ex.getStackTrace()[1].getMethodName())
+        .isEqualTo("checkForReceiverAffectedByCollapse");
   }
 }

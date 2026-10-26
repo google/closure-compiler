@@ -76,6 +76,11 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
     Options useEs5LanguageOut() {
       return new Options(assumeStaticInheritanceIsNotUsed(), LanguageMode.ECMASCRIPT5);
     }
+
+    /** Private elements are only emitted natively (not transpiled) for `UNSUPPORTED` output. */
+    Options useNativePrivateElementsLanguageOut() {
+      return new Options(assumeStaticInheritanceIsNotUsed(), LanguageMode.UNSUPPORTED);
+    }
   }
 
   @Override
@@ -7663,6 +7668,99 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             PRIVATE_MAP$0.get(o).acc = rhs();
           }
         }
+        """);
+  }
+
+  @Test
+  public void testStaticInitializationWithNativePrivateElements_knownBug() {
+    // Expected behavior: when private elements are not lowered, static initializers still run in
+    // declaration order, and code that uses a private name stays inside its class body. Static
+    // fields are initialized in order when the class is defined, and `#f` is valid only inside
+    // the body of `O`. In `C`, `static #b;` stays without its initializer, and both initializers
+    // move, in declaration order, into a static method of `C` that is called right after the
+    // class.
+    Options options = withOptions().useNativePrivateElementsLanguageOut();
+    // TODO(b/236744850): The initializer of `#b` runs before the initializer of `a`.
+    // Current behavior: `alert('b')` stays in the class body, but `alert('a')` moves out to
+    //   `C.a = alert('a');` after the class.
+    // Why it's a bug: natively 'a' is alerted before 'b'. The compiled code alerts 'b' first,
+    //   when `C` is defined, and 'a' after that.
+    test(
+        options,
+        """
+        class C {
+          static a = alert('a');
+          static #b = alert('b');
+        }
+        """,
+        """
+        class C {
+          static a;
+          static #b = alert('b');
+        }
+        C.a = alert('a');
+        """);
+    String js =
+        """
+        class O {
+          #f = 1;
+          static d = {
+            read(o) { return o.#f; }
+          };
+        }
+        """;
+    String expected =
+        """
+        class O {
+          #f = 1;
+          static d;
+          static STATIC_INIT$0() {
+            O.d = {
+              read(o) { return o.#f; }
+            };
+          }
+        }
+        O.STATIC_INIT$0();
+        """;
+    // TODO(b/236744850): A static initializer that uses `#f` is moved out of `O`.
+    // Current behavior: the initializer moves out of `O`, to `O.d = {read(o) { return o.#f; }};`
+    //   after the class. So `test(options, js, expected)` fails.
+    // Why it's a bug: `o.#f` outside the body of `O` is a SyntaxError, so the whole script fails
+    //   to load.
+    var ex = assertThrows(AssertionError.class, () -> test(options, js, expected));
+    assertThat(ex).hasMessageThat().contains("+O.d = {read(o) {");
+  }
+
+  @Test
+  public void testNativeStaticPrivateFieldReadBeforeItsInitializerRuns_knownBug() {
+    // Expected behavior: reading `C.#b` in the static block throws a TypeError. Static blocks and
+    // static field initializers run in declaration order, and `#b` is added to `C` only after its
+    // initializer has run.
+    //
+    // TODO(b/236744850): The static block reads `#b` after the initializer of `#b` has run.
+    // Current behavior: `static #b = 2;` stays in the class body, but the static block moves into a
+    //   static method of `C` that is called after the class.
+    // Why it's a bug: natively defining `C` throws a TypeError; with this output, it alerts 2.
+    test(
+        withOptions().useNativePrivateElementsLanguageOut(),
+        """
+        class C {
+          static {
+            alert(C.#b);
+          }
+          static #b = 2;
+        }
+        """,
+        """
+        class C {
+          static #b = 2;
+          static STATIC_INIT$0() {
+            {
+              alert(C.#b);
+            }
+          }
+        }
+        C.STATIC_INIT$0();
         """);
   }
 }

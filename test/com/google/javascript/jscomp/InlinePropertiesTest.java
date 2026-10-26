@@ -1025,5 +1025,29 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         new C().foo;
         """);
   }
+
+  @Test
+  public void testPrivateClassField_knownBug() {
+    // Expected behavior: `InlineProperties` leaves `o.#a` alone. Reading `o.#a` throws a
+    // TypeError if `o` has no `#a`, so it can't be replaced by the initial value `1`.
+    //
+    // TODO(b/236744850): `o.#a` is replaced by its initial value.
+    // Current behavior: `return o.#a;` becomes `return 1;`.
+    // Why it's a bug: natively `C.read({})` throws a TypeError, because `{}` has no `#a`; the
+    //   compiled code returns 1 instead.
+    test(
+        """
+        class C {
+          #a = 1;
+          static read(/** !C */ o) { return o.#a; }
+        }
+        """,
+        """
+        class C {
+          #a = 1;
+          static read(o) { return 1; }
+        }
+        """);
+  }
 }
 

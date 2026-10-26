@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
 import org.junit.Test;
@@ -312,6 +315,77 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});
             (new Foo).method2();
             """));
+  }
+
+  @Test
+  public void doNotMoveClassMethodContainingPrivateName_knownBug() {
+    // Expected behavior: `CrossChunkMethodMotion` leaves this code unchanged. `getX` uses `#x`,
+    // which is valid only inside the body of `Foo`, so `getX` can't be moved out of `Foo`.
+    Sources srcs =
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk(
+                    """
+                    class Foo {
+                      #x = 1;
+                      // Expected: stays in `Foo`, although only the second chunk calls it.
+                      getX() { return this.#x; }
+                    }
+                    """)
+                .addChunk("(new Foo).getX()")
+                .build());
+    // TODO(b/236744850): A method that uses a private name is moved out of its class.
+    // Current behavior: `getX` is moved to the second chunk. The first chunk has
+    //   `Foo.prototype.getX = JSCompiler_stubMethod(0);` after `Foo`, and the second chunk starts
+    //   with `Foo.prototype.getX = JSCompiler_unstubMethod(0, function() { return this.#x; });`.
+    //   So `testSame(srcs)` fails.
+    // Why it's a bug: `this.#x` outside the body of `Foo` is a SyntaxError, so the second chunk
+    //   fails to load.
+    var ex = assertThrows(AssertionError.class, () -> testSame(srcs));
+    assertThat(ex)
+        .hasMessageThat()
+        .contains("Foo.prototype.getX = JSCompiler_unstubMethod(0, function() {");
+  }
+
+  @Test
+  public void doNotMovePrivateClassMethod_knownBug() {
+    // Expected behavior: `CrossChunkMethodMotion` leaves this code unchanged. A private method can
+    // be defined only inside the body of its class, so `#m` of `Foo` can't be moved out of `Foo`,
+    // although the name `#m` is used only in the second chunk.
+    Sources srcs =
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk(
+                    """
+                    class Foo {
+                      #m() {}
+                    }
+                    """)
+                .addChunk(
+                    """
+                    class Bar {
+                      // Expected: stays in `Bar`. It is not `#m` of `Foo`, because each class has
+                      // its own private names, so `this.#m()` below doesn't use `#m` of `Foo`.
+                      #m() {}
+                      run() { this.#m(); }
+                    }
+                    (new Bar).run();
+                    """)
+                .build());
+    // TODO(b/236744850): A private method is moved out of its class.
+    // Current behavior: `#m` of `Foo` is moved to the second chunk, where its name is used. The
+    //   first chunk has `class Foo {}` and `Foo.prototype.#m = JSCompiler_stubMethod(0);`, and
+    //   the second chunk starts with
+    //   `Foo.prototype.#m = JSCompiler_unstubMethod(0, function() {});`. So `testSame(srcs)` fails.
+    // Why it's a bug: `Foo.prototype.#m` outside the body of `Foo` is a SyntaxError, so both
+    //   chunks fail to load.
+    // In a full build: with property renaming, as in ADVANCED builds, the moved `#m` is renamed
+    //   like a public property, so both chunks load, but `Foo` gets a public method instead of
+    //   `#m`.
+    var ex = assertThrows(AssertionError.class, () -> testSame(srcs));
+    assertThat(ex)
+        .hasMessageThat()
+        .contains("Foo.prototype.#m = JSCompiler_unstubMethod(0, function() {});");
   }
 
   @Test

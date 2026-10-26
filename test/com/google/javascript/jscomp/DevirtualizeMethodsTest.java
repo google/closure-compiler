@@ -18,7 +18,9 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -1160,6 +1162,33 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             // We need at least one normal call to trigger rewriting.
             x.bar();
             """));
+  }
+
+  @Test
+  public void testNoRewrite_privateMethod_knownBug() {
+    // Expected behavior: `DevirtualizeMethods` leaves this code unchanged. `#m` is valid only
+    // inside the body of `Foo`, so neither `#m` nor `bar`, which calls `this.#m()`, can be moved
+    // out of `Foo` into a global function.
+    String js =
+        """
+        class Foo {
+          #m() { return 5; }
+          bar() { return this.#m(); }
+        }
+        new Foo().bar();
+        """;
+    // TODO(b/236744850): `#m` and `bar` are moved out of `Foo`.
+    // Current behavior: `#m` and `bar` become `var JSCompiler_StaticMethods_#m = function(...)`
+    //   and `var JSCompiler_StaticMethods_bar = function(...)` before an empty `class Foo {}`, and
+    //   `new Foo().bar()` becomes `JSCompiler_StaticMethods_bar(new Foo())`. So `testSame(js)`
+    //   fails.
+    // Why it's a bug: `JSCompiler_StaticMethods_#m` is not a valid name, so the output is a
+    //   SyntaxError, and the whole script fails to load.
+    // In a full build: ADVANCED variable renaming gives `JSCompiler_StaticMethods_#m` a valid
+    //   name, so the output loads, but `bar` no longer throws a TypeError for a receiver without
+    //   `#m`. The SyntaxError shows with pseudo names.
+    var ex = assertThrows(AssertionError.class, () -> testSame(js));
+    assertThat(ex).hasMessageThat().contains("var JSCompiler_StaticMethods_#m = function(");
   }
 
   @Test

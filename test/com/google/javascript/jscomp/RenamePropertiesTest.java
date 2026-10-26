@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -1086,6 +1087,39 @@ public final class RenamePropertiesTest extends CompilerTestCase {
                 var bar = {myProp: 0};
                 f('otherProp.myProp.someProp');
                 """)));
+  }
+
+  @Test
+  public void testPrivateClassMembers_knownBug() {
+    // Expected behavior: `RenameProperties` renames private names only to other private names,
+    // and renames `#field in o` like the other uses of `#field`. A private member must stay
+    // private, and each private name in the code must be declared in its class.
+    String js =
+        """
+        class C {
+          #field = 1;
+          #method() { return this.#field; }
+          check(o) { return #field in o ? this.#method() : 0; }
+        }
+        """;
+    String expected =
+        """
+        class C {
+          #a = 1;
+          #b() { return this.#a; }
+          c(o) { return #a in o ? this.#b() : 0; }
+        }
+        """;
+    // TODO(b/236744850): Private names are renamed to public names.
+    // Current behavior: `#field` and `#method` become the public `a` and `b`, and `#field in o`
+    //   is not renamed. So `test(js, expected)` fails.
+    // Why it's a bug: `C` no longer declares `#field`, so `#field in o` is a SyntaxError, and the
+    //   whole script fails to load.
+    // In a full build: `VarCheck` and `RemoveUnusedCode` mishandle `#field in o` before this pass
+    //   runs (see their tests). Without `in`, private names still become public, so a
+    //   subclass's `#x` overwrites its base class's `#x`.
+    var ex = assertThrows(AssertionError.class, () -> test(js, expected));
+    assertThat(ex).hasMessageThat().contains("return #field in o ? this.b() : 0;");
   }
 
   private Compiler compileChunks(String externs, JSChunk[] chunks) {

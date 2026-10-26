@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -875,5 +878,45 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
         var f = new Foo();
         var x = void 0;
         """);
+  }
+
+  @Test
+  public void testNoInlineOfGetterThatReadsPrivateField_knownBug() {
+    // Expected behavior: `InlineSimpleMethods` leaves this code unchanged. `this.#a` is valid only
+    // inside the body of `C`, so `new C().getA()` can't be replaced by `new C().#a`.
+    String js =
+        """
+        class C {
+          #a = 1;
+          getA() { return this.#a; }
+        }
+        var x = new C().getA();
+        """;
+    // TODO(b/236744850): `getA()` is inlined, although it reads a private field.
+    // Current behavior: `var x = new C().getA();` becomes `var x = new C().#a;`. So
+    //   `testSame(js)` fails.
+    // Why it's a bug: `new C().#a` outside the body of `C` is a SyntaxError, so the whole script
+    //   fails to load.
+    var ex = assertThrows(AssertionError.class, () -> testSame(js));
+    assertThat(ex).hasMessageThat().contains("var x = (new C()).#a;");
+  }
+
+  @Test
+  public void testNoInlineOfPrivateMethodCall_knownBug() {
+    // Expected behavior: `InlineSimpleMethods` leaves this code unchanged. `o.#m()` throws a
+    // TypeError if `o` has no `#m`, so it can't be replaced by `2`, the value that `#m` returns.
+    String js =
+        """
+        class C {
+          #m() { return 2; }
+          callM(o) { return o.#m(); }
+        }
+        """;
+    // TODO(b/236744850): `o.#m()` is replaced by the value that `#m` returns.
+    // Current behavior: `return o.#m();` becomes `return 2;`. So `testSame(js)` fails.
+    // Why it's a bug: natively `new C().callM({})` throws a TypeError, because `{}` has no `#m`;
+    //   the compiled code returns 2 instead.
+    var ex = assertThrows(AssertionError.class, () -> testSame(js));
+    assertThat(ex).hasMessageThat().contains("+    return 2;");
   }
 }

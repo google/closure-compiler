@@ -678,6 +678,78 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUnusedPrivateFieldRead_knownBug() {
+    // Expected behavior: the unused constant `unused` is removed, but the read `o.#b` is kept as
+    // `o.#b;`, so `isC` keeps its parameter `o`. Reading `o.#b` throws a TypeError if `o` has no
+    // `#b`, and `isC` relies on that.
+    //
+    // TODO(b/236744850): The brand check `o.#b` is removed.
+    // Current behavior: `const unused = o.#b;` is removed entirely, and then the unused parameter
+    //   `o` too.
+    // Why it's a bug: natively `C.isC({})` returns false, because `o.#b` throws a TypeError for
+    //   `{}`; the compiled `C.isC({})` returns true.
+    test(
+        """
+        class C {
+          #b;
+          static isC(o) {
+            try {
+              const unused = o.#b;
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }
+        }
+        alert(C.isC({}));
+        """,
+        """
+        class C {
+          #b;
+          static isC() {
+            try {
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }
+        }
+        alert(C.isC({}));
+        """);
+  }
+
+  @Test
+  public void testPrivateFieldWriteToUnusedObjectLiteral_wontFix() {
+    // Won't fix (b/236744850): A private field write to an unused object literal is removed.
+    // Native behavior: `o.#x = 1` always throws a TypeError, because an object literal never has
+    // the private field `#x`.
+    // Current behavior: `o` is never read, so `const o = {};` and `o.#x = 1;` are removed, like an
+    //   unused variable and an assignment to one of its properties.
+    // Why it's a bug: natively `C.f()` throws a TypeError; with this output, it returns undefined.
+    // Why we won't fix it: the program already throws natively, so it is already broken.
+    //   `RemoveUnusedCode` removes property writes only on an unused variable that holds a new
+    //   object, and for an object literal, a private field write always throws.
+    test(
+        """
+        class C {
+          #x;
+          static f() {
+            const o = {};
+            o.#x = 1;
+          }
+        }
+        alert(C.f());
+        """,
+        """
+        class C {
+          #x;
+          static f() {}
+        }
+        alert(C.f());
+        """);
+  }
+
+  @Test
   public void testDefaultParamsWithoutSideEffects0() {
     test(
         "function f({} = {}){}; f()", // preserve alignment

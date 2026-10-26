@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.disambiguate;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.stream.Collectors.joining;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -1297,6 +1298,34 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
               JSC$3_z() { }
             }
             """));
+  }
+
+  @Test
+  public void privateNamesAreNotDisambiguated_knownBug() {
+    // Expected behavior: `DisambiguateProperties` leaves this code unchanged. A private name is
+    // scoped to the body of its class, so `Foo`'s `#x` and `Other`'s `#x` are already distinct,
+    // and there is nothing to disambiguate.
+    String js =
+        """
+        class Foo {
+          #x = 1;
+          #m() { return this.#x; }
+        }
+        class Other {
+          #x = 2;
+          #m() { return this.#x; }
+        }
+        """;
+    // TODO(b/236744850): Private names are renamed to names that are not valid.
+    // Current behavior: in both classes, `#x` and `#m` are renamed to names of the form
+    //   `JSC$<n>_#x` and `JSC$<n>_#m`, each with its own number `<n>`. So `testSame(js)` fails.
+    // Why it's a bug: the new names are not valid names, so the output is a SyntaxError, and the
+    //   whole script fails to load.
+    // In a full build: ADVANCED property renaming renames these names again to valid (public)
+    //   names, so the output loads; the SyntaxError shows only with pseudo names or without
+    //   property renaming.
+    var ex = assertThrows(AssertionError.class, () -> testSame(js));
+    assertThat(ex).hasMessageThat().contains("JSC$1_#x = 1;");
   }
 
   private static final class SilenceNoiseGuard extends WarningsGuard {
