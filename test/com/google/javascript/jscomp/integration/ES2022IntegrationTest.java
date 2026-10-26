@@ -405,10 +405,9 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void publicClassFields_derivedConstructorReturnsObjectWithoutSuperCall() {
-    // TODO(b/573596312): `CheckSuper` doesn't require a `super()` call in a constructor that
-    // returns a value, so this compiles without errors. Natively the fields of `Sub` never run and
-    // `new Sub()` returns the object, but the transpiled constructor installs `y` first, which
-    // reads `this` before `super()` and throws a ReferenceError.
+    // The fields of `Sub` are never initialized, since its constructor never calls `super()`.
+    // `CheckSuper` reports it, although the constructor returns a value, since the transpiled
+    // fields need a `super()` call to be installed after.
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
     options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
@@ -425,18 +424,10 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         }
         console.log(new Sub().tag);
         """;
-    String expected =
-        """
-        class Base {}
-        class Sub extends Base {
-          constructor() {
-            this.y = 2;
-            return {tag: 'ret'};
-          }
-        }
-        console.log(new Sub().tag);
-        """;
-    test(options, src, expected);
+    Compiler compiler = compile(options, src);
+    checkUnexpectedErrorsOrWarnings(compiler, 1);
+    assertThat(compiler.getErrors().get(0).type().key)
+        .isEqualTo("JSC_MISSING_ROOT_LEVEL_CALL_TO_SUPER");
   }
 
   @Test

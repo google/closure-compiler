@@ -39,17 +39,21 @@ import org.jspecify.annotations.Nullable;
  * of it directly to {@code NodeTraversal.traverse()}.
  */
 final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
+  // For a derived class constructor that has neither a `super()` call nor a `return` with a value,
+  // so it always throws. This can't be suppressed.
   static final DiagnosticType MISSING_CALL_TO_SUPER =
       DiagnosticType.error("JSC_MISSING_CALL_TO_SUPER", "constructor is missing a call to super()");
 
-  // For a derived class constructor that has a `super()` call or returns a value, but might still
-  // return without calling `super()`. Unlike MISSING_CALL_TO_SUPER, this can be suppressed, since
-  // the constructor might intentionally return a different object.
+  // For a derived class with instance fields or private members whose constructor doesn't call
+  // `super()` exactly once in a root-level statement before any `return`, so there is no single
+  // place to initialize the instance elements when they are transpiled. Unlike
+  // MISSING_CALL_TO_SUPER, this can be suppressed, since the constructor might intentionally return
+  // a different object.
   static final DiagnosticType MISSING_ROOT_LEVEL_CALL_TO_SUPER =
       DiagnosticType.error(
           "JSC_MISSING_ROOT_LEVEL_CALL_TO_SUPER",
-          "constructor must unconditionally call super() in a root-level statement before any"
-              + " return");
+          "constructor of a class with instance fields or private members must call super()"
+              + " unconditionally once in a root-level statement before any return");
 
   static final DiagnosticType THIS_BEFORE_SUPER =
       DiagnosticType.error("JSC_THIS_BEFORE_SUPER", "cannot access this before calling super()");
@@ -364,11 +368,19 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
   /** Lexical context within a class constructor method. */
   private static class ConstructorContext extends Context {
     final boolean hasParentClass;
+    final boolean hasInstanceElements;
 
     // Will be set to the first `super()` call that appears lexically, if any.
     @Nullable Node firstSuperCall = null;
-    // Call to super() isn't required if the constructor returns a value.
+    // Will be set to the first `super()` call that is executed exactly once by a statement directly
+    // in the constructor body, if any.
+    @Nullable Node rootLevelSuperCall = null;
+    // Whether the constructor contains more than one `super()` call.
+    boolean hasMultipleSuperCalls = false;
+    // Whether the constructor returns a value.
     boolean returnsAValue = false;
+    // Whether a `return` appears before `rootLevelSuperCall`.
+    boolean returnsBeforeRootLevelSuperCall = false;
     @Nullable Node thisAccessedBeforeSuper = null;
     @Nullable Node superPropertyAccessedBeforeSuperCall = null;
 
@@ -377,6 +389,7 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
       checkArgument(NodeUtil.isEs6Constructor(contextNode), contextNode);
       Node classNode = NodeUtil.getEnclosingClass(contextNode);
       hasParentClass = !classNode.getSecondChild().isEmpty();
+      hasInstanceElements = NodeUtil.hasInstanceElements(classNode);
     }
 
     @Override
@@ -391,6 +404,16 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
     void visitSuperConstructorCall(NodeTraversal t, Node superNode) {
       if (firstSuperCall == null) {
         firstSuperCall = superNode;
+      } else {
+        hasMultipleSuperCalls = true;
+      }
+      Node call = superNode.getParent();
+      if (rootLevelSuperCall == null
+          && NodeUtil.getEnclosingStatement(call)
+              .getParent()
+              .equals(NodeUtil.getFunctionBody(getContextNode()))
+          && NodeUtil.isExecutedExactlyOnce(call)) {
+        rootLevelSuperCall = superNode;
       }
     }
 
@@ -413,6 +436,9 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
       if (returnNode.hasChildren()) {
         returnsAValue = true;
       }
+      if (rootLevelSuperCall == null) {
+        returnsBeforeRootLevelSuperCall = true;
+      }
     }
 
     @Override
@@ -430,6 +456,14 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
           // The context node is the function itself , but ErrorToFixMapper expects the error to
           // be reported on the MEMBER_FUNCTION_DEF that is its parent.
           t.report(getContextNode().getParent(), MISSING_CALL_TO_SUPER);
+        } else if (hasInstanceElements
+            && (rootLevelSuperCall == null
+                || returnsBeforeRootLevelSuperCall
+                || hasMultipleSuperCalls)) {
+          // The instance elements are initialized right after `super()` returns, so like TypeScript
+          // (TS2401), require a single place to initialize them, even if the constructor returns a
+          // value.
+          t.report(getContextNode().getParent(), MISSING_ROOT_LEVEL_CALL_TO_SUPER);
         }
         if (thisAccessedBeforeSuper != null) {
           t.report(thisAccessedBeforeSuper, THIS_BEFORE_SUPER);
@@ -462,7 +496,12 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
       // Tell the constructor context about this `super()` call in order to avoid confusing and
       // likely redundant error messages such as "missing super call" or "`this` accessed before
       // super()".
-      constructorContext.visitSuperConstructorCall(t, superNode);
+      if (constructorContext.firstSuperCall == null) {
+        constructorContext.firstSuperCall = superNode;
+      }
+      if (constructorContext.rootLevelSuperCall == null) {
+        constructorContext.rootLevelSuperCall = superNode;
+      }
     }
 
     @Override

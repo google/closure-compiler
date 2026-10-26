@@ -696,6 +696,25 @@ public final class NodeUtil {
     return null;
   }
 
+  /**
+   * Returns whether the class has instance elements: non-static fields or private members, which
+   * InitializeInstanceElements installs on `this` when the constructor's `super()` call returns (or
+   * when a base class constructor starts).
+   */
+  static boolean hasInstanceElements(Node classNode) {
+    for (Node member = getClassMembers(classNode).getFirstChild();
+        member != null;
+        member = member.getNext()) {
+      if (!member.isStaticMember()
+          && (member.isMemberFieldDef()
+              || member.isComputedFieldDef()
+              || member.isPrivateIdentifier())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** Returns true if this is an immutable value. */
   static boolean isImmutableValue(Node n) {
     // TODO(johnlenz): rename this function.  It is currently being used
@@ -5203,7 +5222,17 @@ public final class NodeUtil {
     do {
       Node parent = n.getParent();
       switch (parent.getToken()) {
-        case IF, HOOK, AND, OR, COALESCE, ASSIGN_OR, ASSIGN_AND, ASSIGN_COALESCE -> {
+        case IF,
+            HOOK,
+            AND,
+            OR,
+            COALESCE,
+            ASSIGN_OR,
+            ASSIGN_AND,
+            ASSIGN_COALESCE,
+            OPTCHAIN_GETELEM,
+            OPTCHAIN_CALL,
+            DEFAULT_VALUE -> {
           if (parent.getFirstChild() != n) {
             return false;
           }

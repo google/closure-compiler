@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_CALL;
 import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_CALL_WITH_SUGGESTION;
 import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_USAGE;
 import static com.google.javascript.jscomp.CheckSuper.MISSING_CALL_TO_SUPER;
+import static com.google.javascript.jscomp.CheckSuper.MISSING_ROOT_LEVEL_CALL_TO_SUPER;
 import static com.google.javascript.jscomp.CheckSuper.SUPER_ACCESS_BEFORE_SUPER_CONSTRUCTOR;
 import static com.google.javascript.jscomp.CheckSuper.SUPER_CALL_IN_ARROW;
 import static com.google.javascript.jscomp.CheckSuper.THIS_BEFORE_SUPER;
@@ -501,27 +502,118 @@ public final class CheckSuperTest extends CompilerTestCase {
 
   @Test
   public void testReturnWithoutSuperCall() {
-    // TODO(b/573596312): A derived class constructor should be required to call `super()` as a
-    // root-level statement, before any `return`, even when it returns a value. When class fields
-    // are transpiled, they are installed at the start of a constructor that never calls `super()`,
-    // where reading `this` throws a ReferenceError.
-    testNoWarning("class C extends D { x = 1; constructor() { return {}; } }");
-    testNoWarning("class C extends D { [k] = 1; constructor() { return {}; } }");
-    testNoWarning("class C extends D { #x = 1; constructor() { return {}; } }");
-    testNoWarning("class C extends D { #m() {} constructor() { return {}; } }");
+    // When a class has instance fields or private members, they are initialized right after
+    // `super()` returns, so a constructor that returns a value must still call `super()`.
+    testError(
+        "class C extends D { x = 1; constructor() { return {}; } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { [k] = 1; constructor() { return {}; } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { #x = 1; constructor() { return {}; } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { #m() {} constructor() { return {}; } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testNoWarning(
+        "class C extends D { x = 1; /** @suppress {missingCallToSuper} */ constructor() { return"
+            + " {}; } }");
+    // Static fields aren't instance elements.
     testNoWarning("class C extends D { static x = 1; constructor() { return {}; } }");
+    testError(
+        "class C extends D { x = 1; constructor(a) { if (a) { super(); } else { return {}; } } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor(a) { if (a) return {}; super(); } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor(w) { if (w) return; super(); } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    // Without instance fields or private members, a constructor that contains `super()` may also
+    // return an object or call `super()` conditionally.
     testNoWarning(
         "class C extends D { constructor(a) { if (a) { super(); } else { return {}; } } }");
     testNoWarning("class C extends D { constructor(a) { if (a) return {}; super(); } }");
   }
 
   @Test
+  public void testError_superCallNotInRootLevelStatement() {
+    // When a class has instance fields or private members, `super()` must be called once in a
+    // root-level statement, outside of any branch, loop, or conditionally evaluated expression,
+    // even if every path that returns calls it.
+    testError(
+        "class C extends D { x = 1; constructor(a) { if (a) { super(1); } else { super(2); } } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor(a) { if (a) { super(); } else { throw a; } } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor() { { super(); } } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor() { try { super(); } finally {} } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor(a) { a && super(); } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor(a) { a ? super(1) : super(2); } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor(a) { a ||= super(); } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor(a) { a?.(super()); } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor(a) { const {x = super()} = a; } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor(a = super()) {} }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor(a) { super(1); if (a) super(2); } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    testError(
+        "class C extends D { x = 1; constructor() { super(1); super(2); } }",
+        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+    // Without instance fields or private members, nested `super()` calls are allowed.
+    testNoWarning(
+        "class C extends D { constructor(a) { if (a) { super(1); } else { super(2); } } }");
+    testNoWarning(
+        "class C extends D { static x = 1; constructor(a) { if (a) { super(); } else { throw a; } }"
+            + " }");
+    testNoWarning(
+        """
+        class C extends D {
+          x = 1;
+          /** @suppress {missingCallToSuper} */
+          constructor(a) {
+            if (a) {
+              super(1);
+            } else {
+              super(2);
+            }
+          }
+        }
+        """);
+  }
+
+  @Test
   public void testNoWarning_rootLevelSuperCall() {
-    // `super()` is a root-level statement before any `return`, so every path that returns calls it.
+    // `super()` is called unconditionally in a root-level statement before any `return`, so every
+    // path that returns calls it.
     testNoWarning(
         "class C extends D { x = 1; constructor(a) { if (!a) throw new Error(); super(); } }");
     testNoWarning(
         "class C extends D { x = 1; constructor() { super(); return new Proxy(this, {}); } }");
+    testNoWarning("class C extends D { x = 1; constructor() { super(), this.y = 2; } }");
+    testNoWarning("class C extends D { x = 1; constructor() { const self = super(); } }");
+    testNoWarning("class C extends D { x = 1; constructor() { return super(); } }");
+    // The condition of a root-level `if` or `switch` statement is executed exactly once.
+    testNoWarning("class C extends D { x = 1; constructor(a) { if (super(a)) {} } }");
+    testNoWarning("class C extends D { x = 1; constructor(a) { switch (super(a)) {} } }");
   }
 
   @Test

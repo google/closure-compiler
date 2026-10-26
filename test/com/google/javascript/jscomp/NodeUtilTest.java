@@ -3041,6 +3041,16 @@ public final class NodeUtilTest {
 
       assertThat(executedOnceTestCase("1 && (x ? 1 : 2);")).isFalse();
 
+      assertThat(executedOnceTestCase("x?.y;")).isTrue();
+      assertThat(executedOnceTestCase("x?.y.z();")).isTrue();
+      assertThat(executedOnceTestCase("y?.[x];")).isFalse();
+      assertThat(executedOnceTestCase("y?.(x);")).isFalse();
+      assertThat(executedOnceTestCase("y?.z.w(x);")).isFalse();
+
+      assertThat(executedOnceTestCase("var {y = x} = {};")).isFalse();
+      assertThat(executedOnceTestCase("[y = x] = [];")).isFalse();
+      assertThat(executedOnceTestCase("function f(y = x) {}")).isFalse();
+
       assertThat(executedOnceTestCase("if (x) {}")).isTrue();
       assertThat(executedOnceTestCase("if (true) {x;}")).isFalse();
       assertThat(executedOnceTestCase("if (true) {} else {x;}")).isFalse();
@@ -4475,6 +4485,33 @@ public final class NodeUtilTest {
           NodeUtil.getEs6ClassConstructorMemberFunctionDef(
               parseFirst(CLASS, "class Foo { method() {} static constructor() {} }"));
       assertThat(constructorMemberFunctionDef).isNull();
+    }
+
+    @Test
+    public void testHasInstanceElements() {
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { x = 1; }"))).isTrue();
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { x; }"))).isTrue();
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { [k] = 1; }"))).isTrue();
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { #x = 1; }"))).isTrue();
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { #m() {} }"))).isTrue();
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { get #a() {} }")))
+          .isTrue();
+
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C {}"))).isFalse();
+      assertThat(
+              NodeUtil.hasInstanceElements(
+                  parseFirst(CLASS, "class C { m() {} constructor() {} }")))
+          .isFalse();
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { static x = 1; }")))
+          .isFalse();
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { static [k] = 1; }")))
+          .isFalse();
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { static #x = 1; }")))
+          .isFalse();
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { static #m() {} }")))
+          .isFalse();
+      assertThat(NodeUtil.hasInstanceElements(parseFirst(CLASS, "class C { static {} }")))
+          .isFalse();
     }
 
     @Test
