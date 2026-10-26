@@ -620,11 +620,17 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   public void testIteratorPolyfill() {
     addLibrary("Iterator", "es_next", "es3", "es6/iterator");
     addLibrary("Iterator.from", "es_next", "es3", "es6/iterator/from");
+    addLibrary("Iterator.prototype.forEach", "es_next", "es3", "es6/iterator/foreach");
+    addLibrary("Iterator.prototype.reduce", "es_next", "es3", "es6/iterator/reduce");
+    addLibrary("Iterator.prototype.toArray", "es_next", "es3", "es6/iterator/toarray");
 
     setLanguage(ES_2020, ES3);
     testInjects("Iterator;", "es6/iterator");
     testInjects("class MyIter extends Iterator {}", "es6/iterator");
     testInjects("Iterator.from(x);", "es6/iterator", "es6/iterator/from");
+    testInjects("x.forEach(fn);", "es6/iterator/foreach");
+    testInjects("x.reduce(fn, 0);", "es6/iterator/reduce");
+    testInjects("x.toArray();", "es6/iterator/toarray");
     testDoesNotInject("");
   }
 
