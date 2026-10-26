@@ -7487,4 +7487,182 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         """);
   }
+
+  @Test
+  public void testPrivateFieldAccessedBeforeItsInitializerRuns_wontFix() {
+    // Won't fix (b/236744850): Accessing `#b` before its initializer runs doesn't throw.
+    // Native behavior: accessing a private field before its initializer has run throws a
+    // TypeError. JS adds private fields one at a time, in order, each right after its initializer
+    // returns, and accessing a missing private field throws.
+    // Current behavior: the 3 accesses to `#b` in `poke()` only check that `this` has a private
+    //   record, which the constructor registers before any initializer runs. So `this.#b = 5`
+    //   adds `#b` to the record instead of throwing.
+    // Why it's a bug: natively `new C()` throws a TypeError at `this.#b = 5`; the compiled
+    //   `new C()` succeeds and sets `#a` to 6.
+    // Why we won't fix it: natively `new C()` always throws, so this code is already broken.
+    //   Throwing here would need a `Symbol` key and a check on every access, in methods, to each
+    //   field initialized after an initializer that may expose `this` (like `#a = this.poke()`),
+    //   which correct code would pay for too.
+    test(
+        """
+        class C {
+          #a = this.poke();
+          #b = 2;
+          poke() {
+            this.#b = 5;
+            this.#b += 1;
+            return this.#b;
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class C {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.a = this.poke();
+            PRIVATE$1.b = 2;
+          }
+          poke() {
+            PRIVATE_MAP$0.get(this).b = 5;
+            PRIVATE_MAP$0.get(this).b += 1;
+            return PRIVATE_MAP$0.get(this).b;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testStaticPrivateFieldAccessedBeforeItsInitializerRuns_wontFix() {
+    // Won't fix (b/236744850): Accessing static `#b` before its initializer runs doesn't throw.
+    // Native behavior: accessing a static private field before its initializer has run throws a
+    // TypeError, as for instance private fields.
+    // Current behavior: the 2 accesses to `#b` in `poke()` only check that `D` has a private
+    //   record, which is registered before any initializer runs. So `D.#b = 5` adds `#b` to the
+    //   record instead of throwing.
+    // Why it's a bug: natively the definition of `D` throws a TypeError at `D.#b = 5`; the
+    //   compiled code defines `D` and sets `#a` to 5.
+    // Why we won't fix it: natively the definition of `D` always throws, so this code is already
+    //   broken. Throwing here would need a `Symbol` key and a check on every access, in methods,
+    //   to each static field initialized after a side-effecting static initializer (like
+    //   `static #a = D.poke()`), which correct code would pay for too.
+    test(
+        """
+        class D {
+          static #a = D.poke();
+          static #b = 2;
+          static poke() {
+            D.#b = 5;
+            return D.#b;
+          }
+        }
+        """,
+        """
+        const STATIC_PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class D {
+          static poke() {
+            STATIC_PRIVATE_MAP$0.get(D).b = 5;
+            return STATIC_PRIVATE_MAP$0.get(D).b;
+          }
+          static STATIC_INIT$2() {
+            const PRIVATE$1 = Object.create(null);
+            STATIC_PRIVATE_MAP$0.set(D, PRIVATE$1);
+            PRIVATE$1.a = D.poke();
+            PRIVATE$1.b = 2;
+          }
+        }
+        D.STATIC_INIT$2();
+        """);
+  }
+
+  @Test
+  public void testPrivateFieldReadFromPartlyConstructedInstance_wontFix() {
+    // Won't fix (b/236744850): Reading `#later` from a partly constructed `E` doesn't throw.
+    // Native behavior: reading a private field from an instance whose constructor threw before the
+    // field's initializer ran throws a TypeError.
+    // Current behavior: `readLater()` only checks that `o` has a private record. `leaked` has
+    //   one, because the constructor registers it before the initializer of `#b` throws.
+    // Why it's a bug: natively `E.readLater(leaked)` throws a TypeError, because `leaked` has no
+    //   `#later`; the compiled code returns `undefined`.
+    // Why we won't fix it: `leaked` is left over from a `new E()` that threw, so this code is
+    //   already broken. Throwing here would need a `Symbol` key and a check on every access, in
+    //   methods, to each field initialized after an initializer that may expose `this` (like
+    //   `#a = (leaked = this, 1)`), which correct code would pay for too.
+    test(
+        """
+        let leaked;
+        class E {
+          #a = (leaked = this, 1);
+          #b = (() => { throw new Error(); })();
+          #later = 3;
+          static readLater(o) { return o.#later; }
+        }
+        """,
+        """
+        let leaked;
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        class E {
+          constructor() {
+            const PRIVATE$1 = Object.create(null);
+            PRIVATE_MAP$0.set(this, PRIVATE$1);
+            PRIVATE$1.a = (leaked = this, 1);
+            PRIVATE$1.b = (() => {
+              throw new Error();
+            })();
+            PRIVATE$1.later = 3;
+          }
+          static readLater(o) {
+            return PRIVATE_MAP$0.get(o).later;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateWriteEvaluationOrder_wontFix() {
+    // Won't fix (b/236744850): `o` is checked before `rhs()` is called.
+    // Native behavior: `o.#x = rhs()` calls `rhs()` before it checks that `o` has `#x`. JS
+    // evaluates the right-hand side of an assignment before the write, and only the write checks
+    // that `o` has the private member.
+    // Current behavior: both writes, to the field `#x` and through the setter `#acc`, look up the
+    //   private record of `o` before they call `rhs()`. The lookup throws a TypeError if `o` was
+    //   not constructed by `C`, so `rhs()` isn't called.
+    // Why it's a bug: natively `C.write({}, rhs)` calls `rhs()` and then throws a TypeError; the
+    //   compiled code throws without calling `rhs()`, so the side effects of `rhs()` are lost.
+    // Why we won't fix it: the order only matters when the write throws, so this code is already
+    //   broken, and it throws the same TypeError either way. Calling `rhs()` first would need a
+    //   temporary variable for its value in every private write whose receiver isn't `this` and
+    //   whose right side may have side effects.
+    test(
+        """
+        class C {
+          #x = 1;
+          set #acc(v) {}
+          static write(o, rhs) {
+            o.#x = rhs();
+            o.#acc = rhs();
+          }
+        }
+        """,
+        """
+        const PRIVATE_MAP$0 = new $jscomp.PrivateMap();
+        const PRIVATE_PROTO$1 = Object.create(null, {
+          acc: {
+            set: function(v) {}
+          }
+        });
+        class C {
+          constructor() {
+            const PRIVATE$2 = Object.create(PRIVATE_PROTO$1);
+            PRIVATE_MAP$0.set(this, PRIVATE$2);
+            PRIVATE$2.x = 1;
+          }
+          static write(o, rhs) {
+            PRIVATE_MAP$0.get(o).x = rhs();
+            PRIVATE_MAP$0.get(o).acc = rhs();
+          }
+        }
+        """);
+  }
 }

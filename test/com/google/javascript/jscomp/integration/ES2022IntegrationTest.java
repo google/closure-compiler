@@ -1325,4 +1325,32 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
     //   error, so valid code fails to compile.
     test(checkTypes, js, DiagnosticGroups.CHECK_TYPES);
   }
+
+  @Test
+  public void privateClassMembers_weakMapPolyfillInjection_wontFix() {
+    // Won't fix (b/236744850): The `WeakMap` polyfill is injected for output with native classes.
+    // Native behavior: every engine with native classes also has a native `WeakMap`, which backs
+    // `$jscomp.PrivateMap`, so only output without native classes needs the polyfill.
+    CompilerOptions options = createCompilerOptions();
+    options.setRewritePolyfills(true);
+    String src = "class C { #x = 1; }";
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    assertThat(compile(options, src).getRuntimeJsLibManager().getInjectedLibraries())
+        .containsAtLeast("es6/privatemap", "es6/weakmap");
+
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    ImmutableList<String> injected =
+        compile(options, src).getRuntimeJsLibManager().getInjectedLibraries();
+    assertThat(injected).contains("es6/privatemap");
+    // Current behavior: `privatemap.js` requires `es6/weakmap`, so the polyfill is injected
+    //   whenever `es6/privatemap` is, including for this ES2021 output.
+    // Why it's a bug: ES2021 output only runs on engines with a native `WeakMap`, so the polyfill
+    //   just makes the output bigger.
+    // Why we won't fix it: it only costs size (about 2 KB minified), not behavior. Without the
+    //   `require`, the compiler would need its own code to inject the polyfill for ES5 output;
+    //   if it does so only when `rewritePolyfills` is on, ES5 builds with it off would have to
+    //   provide `WeakMap` themselves.
+    assertThat(injected).contains("es6/weakmap");
+  }
 }
