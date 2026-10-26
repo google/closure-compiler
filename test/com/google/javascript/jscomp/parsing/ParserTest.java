@@ -4270,6 +4270,48 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testEscapedLineOrParagraphSeparatorInString_knownBug() {
+    strictMode = SLOPPY;
+    String unnecessaryLsEscape = "Unnecessary escape: '\\\u2028' is equivalent to just '\u2028'";
+    String unnecessaryPsEscape = "Unnecessary escape: '\\\u2029' is equivalent to just '\u2029'";
+
+    // TODO(b/576985780): Fixed in https://github.com/google/closure-compiler/pull/4361 to treat
+    // escaped <LS> and <PS> as ES5 line continuations.
+    mode = LanguageMode.ECMASCRIPT3;
+    ParseResult lsEs3 = doParse("'one\\\u2028two';", unnecessaryLsEscape);
+    assertThat(lsEs3.ast.getFirstFirstChild().getString()).isEqualTo("one\u2028two");
+    assertFS(lsEs3.features).doesNotHave(Feature.STRING_CONTINUATION);
+    assertFS(lsEs3.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
+
+    ParseResult psEs3 = doParse("'one\\\u2029two';", unnecessaryPsEscape);
+    assertThat(psEs3.ast.getFirstFirstChild().getString()).isEqualTo("one\u2029two");
+    assertFS(psEs3.features).doesNotHave(Feature.STRING_CONTINUATION);
+    assertFS(psEs3.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
+
+    mode = LanguageMode.ECMASCRIPT5;
+    ParseResult lsEs5 = doParse("'one\\\u2028two';", unnecessaryLsEscape);
+    assertThat(lsEs5.ast.getFirstFirstChild().getString()).isEqualTo("one\u2028two");
+    assertFS(lsEs5.features).doesNotHave(Feature.STRING_CONTINUATION);
+    assertFS(lsEs5.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
+
+    ParseResult psEs5 = doParse("'one\\\u2029two';", unnecessaryPsEscape);
+    assertThat(psEs5.ast.getFirstFirstChild().getString()).isEqualTo("one\u2029two");
+    assertFS(psEs5.features).doesNotHave(Feature.STRING_CONTINUATION);
+    assertFS(psEs5.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
+
+    mode = LanguageMode.ECMASCRIPT_2015;
+    ParseResult lsEs2015 = doParse("'one\\\u2028two';", unnecessaryLsEscape);
+    assertThat(lsEs2015.ast.getFirstFirstChild().getString()).isEqualTo("one\u2028two");
+    assertFS(lsEs2015.features).doesNotHave(Feature.STRING_CONTINUATION);
+    assertFS(lsEs2015.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
+
+    ParseResult psEs2015 = doParse("'one\\\u2029two';", unnecessaryPsEscape);
+    assertThat(psEs2015.ast.getFirstFirstChild().getString()).isEqualTo("one\u2029two");
+    assertFS(psEs2015.features).doesNotHave(Feature.STRING_CONTINUATION);
+    assertFS(psEs2015.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
+  }
+
+  @Test
   public void testStringLineContinuationNormalization() {
     expectFeatures(Feature.STRING_CONTINUATION);
     strictMode = SLOPPY;
