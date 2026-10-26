@@ -406,8 +406,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
   @Test
   public void publicClassFields_derivedConstructorReturnsObjectWithoutSuperCall() {
     // The fields of `Sub` are never initialized, since its constructor never calls `super()`.
-    // `CheckSuper` reports it, although the constructor returns a value, since the transpiled
-    // fields need a `super()` call to be installed after.
+    // Like TypeScript's TS2377, `CheckSuper` reports it, although the constructor returns a value.
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2021);
     options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
@@ -427,7 +426,7 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
     Compiler compiler = compile(options, src);
     checkUnexpectedErrorsOrWarnings(compiler, 1);
     assertThat(compiler.getErrors().get(0).type().key)
-        .isEqualTo("JSC_MISSING_ROOT_LEVEL_CALL_TO_SUPER");
+        .isEqualTo("JSC_RETURN_WITHOUT_CALL_TO_SUPER");
   }
 
   @Test

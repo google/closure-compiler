@@ -44,11 +44,17 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
   static final DiagnosticType MISSING_CALL_TO_SUPER =
       DiagnosticType.error("JSC_MISSING_CALL_TO_SUPER", "constructor is missing a call to super()");
 
-  // For a derived class with instance fields or private members whose constructor doesn't call
-  // `super()` exactly once in a root-level statement before any `return`, so there is no single
-  // place to initialize the instance elements when they are transpiled. Unlike
+  // For a derived class constructor that returns a value without a `super()` call anywhere. Unlike
   // MISSING_CALL_TO_SUPER, this can be suppressed, since the constructor might intentionally return
   // a different object.
+  static final DiagnosticType RETURN_WITHOUT_CALL_TO_SUPER =
+      DiagnosticType.error(
+          "JSC_RETURN_WITHOUT_CALL_TO_SUPER",
+          "constructor returns a value without calling super()");
+
+  // For a derived class with instance fields or private members whose constructor calls `super()`,
+  // but not exactly once in a root-level statement before any `return`, so there is no single place
+  // to initialize the instance elements when they are transpiled.
   static final DiagnosticType MISSING_ROOT_LEVEL_CALL_TO_SUPER =
       DiagnosticType.error(
           "JSC_MISSING_ROOT_LEVEL_CALL_TO_SUPER",
@@ -450,19 +456,20 @@ final class CheckSuper implements CompilerPass, NodeTraversal.Callback {
           t.report(firstSuperCall, INVALID_SUPER_CALL);
         }
       } else {
-        // There is a parent class, so a call to `super()` is required unless the constructor
-        // returns a value.
-        if (firstSuperCall == null && !returnsAValue) {
+        // There is a parent class, so a call to `super()` is required. Like TypeScript (TS2377), we
+        // require it even when the constructor returns a value.
+        if (firstSuperCall == null) {
           // The context node is the function itself , but ErrorToFixMapper expects the error to
           // be reported on the MEMBER_FUNCTION_DEF that is its parent.
-          t.report(getContextNode().getParent(), MISSING_CALL_TO_SUPER);
+          t.report(
+              getContextNode().getParent(),
+              returnsAValue ? RETURN_WITHOUT_CALL_TO_SUPER : MISSING_CALL_TO_SUPER);
         } else if (hasInstanceElements
             && (rootLevelSuperCall == null
                 || returnsBeforeRootLevelSuperCall
                 || hasMultipleSuperCalls)) {
           // The instance elements are initialized right after `super()` returns, so like TypeScript
-          // (TS2401), require a single place to initialize them, even if the constructor returns a
-          // value.
+          // (TS2401), require a single place to initialize them.
           t.report(getContextNode().getParent(), MISSING_ROOT_LEVEL_CALL_TO_SUPER);
         }
         if (thisAccessedBeforeSuper != null) {

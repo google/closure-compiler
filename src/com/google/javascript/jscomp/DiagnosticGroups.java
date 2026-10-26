@@ -263,7 +263,9 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup MISSING_CALL_TO_SUPER =
       DiagnosticGroups.registerGroup(
-          "missingCallToSuper", CheckSuper.MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+          "missingCallToSuper",
+          CheckSuper.RETURN_WITHOUT_CALL_TO_SUPER,
+          CheckSuper.MISSING_ROOT_LEVEL_CALL_TO_SUPER);
 
   public static final DiagnosticGroup MISSING_OVERRIDE =
       DiagnosticGroups.registerGroup(

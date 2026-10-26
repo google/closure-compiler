@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_CALL_WITH_SU
 import static com.google.javascript.jscomp.CheckSuper.INVALID_SUPER_USAGE;
 import static com.google.javascript.jscomp.CheckSuper.MISSING_CALL_TO_SUPER;
 import static com.google.javascript.jscomp.CheckSuper.MISSING_ROOT_LEVEL_CALL_TO_SUPER;
+import static com.google.javascript.jscomp.CheckSuper.RETURN_WITHOUT_CALL_TO_SUPER;
 import static com.google.javascript.jscomp.CheckSuper.SUPER_ACCESS_BEFORE_SUPER_CONSTRUCTOR;
 import static com.google.javascript.jscomp.CheckSuper.SUPER_CALL_IN_ARROW;
 import static com.google.javascript.jscomp.CheckSuper.THIS_BEFORE_SUPER;
@@ -135,13 +136,9 @@ public final class CheckSuperTest extends CompilerTestCase {
   public void testNoWarning_derivedConstructorCompletesWithUndefinedBeforeSuperCall() {
     // Won't fix (b/573571176): a derived class constructor that completes with `undefined` before
     // calling `super()` throws a ReferenceError natively, but for a class without instance fields
-    // or private members, `MISSING_CALL_TO_SUPER` is only reported for a constructor that has
-    // neither a `super()` call nor a `return` with a value. We decided not to report these
-    // constructors, since the compiler isn't required to preserve errors in code that is already
-    // broken.
-    testNoWarning("class C extends D { constructor() { return undefined; } }");
+    // or private members, `CheckSuper` only checks that `super()` appears somewhere in the
+    // constructor.
     testNoWarning("class C extends D { constructor(w) { if (w) return; super(); } }");
-    testNoWarning("class C extends D { constructor(w) { if (w) return {}; } }");
   }
 
   @Test
@@ -491,36 +488,34 @@ public final class CheckSuperTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_withExplicitReturnInConstructor() {
-    // TODO(b/573596312): Require `super()` unless `@suppress {missingCallToSuper}` is used.
-    testNoWarning("class C extends D { constructor() { return {}; } }");
-    testNoWarning("class C extends D { constructor() { return f(); } }");
-    // the following cases will error at runtime but we don't bother checking them.
-    testNoWarning("class C extends D { constructor() { return 3; } }");
-    testNoWarning("class C extends D { constructor() { if (false) return {}; } }");
+  public void testError_withExplicitReturnInConstructor() {
+    testError("class C extends D { constructor() { return {}; } }", RETURN_WITHOUT_CALL_TO_SUPER);
+    testError("class C extends D { constructor() { return f(); } }", RETURN_WITHOUT_CALL_TO_SUPER);
+    testError("class C extends D { constructor() { return 3; } }", RETURN_WITHOUT_CALL_TO_SUPER);
+    testError(
+        "class C extends D { constructor() { return undefined; } }", RETURN_WITHOUT_CALL_TO_SUPER);
+    testError(
+        "class C extends D { constructor() { if (false) return {}; } }",
+        RETURN_WITHOUT_CALL_TO_SUPER);
+    // A constructor may intentionally return a different object without calling `super()`.
+    testNoWarning(
+        "class C extends D { /** @suppress {missingCallToSuper} */ constructor() { return {}; } }");
   }
 
   @Test
   public void testReturnWithoutSuperCall() {
-    // When a class has instance fields or private members, they are initialized right after
-    // `super()` returns, so a constructor that returns a value must still call `super()`.
     testError(
-        "class C extends D { x = 1; constructor() { return {}; } }",
-        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+        "class C extends D { x = 1; constructor() { return {}; } }", RETURN_WITHOUT_CALL_TO_SUPER);
     testError(
         "class C extends D { [k] = 1; constructor() { return {}; } }",
-        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+        RETURN_WITHOUT_CALL_TO_SUPER);
     testError(
-        "class C extends D { #x = 1; constructor() { return {}; } }",
-        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
+        "class C extends D { #x = 1; constructor() { return {}; } }", RETURN_WITHOUT_CALL_TO_SUPER);
     testError(
-        "class C extends D { #m() {} constructor() { return {}; } }",
-        MISSING_ROOT_LEVEL_CALL_TO_SUPER);
-    testNoWarning(
-        "class C extends D { x = 1; /** @suppress {missingCallToSuper} */ constructor() { return"
-            + " {}; } }");
-    // Static fields aren't instance elements.
-    testNoWarning("class C extends D { static x = 1; constructor() { return {}; } }");
+        "class C extends D { #m() {} constructor() { return {}; } }", RETURN_WITHOUT_CALL_TO_SUPER);
+    testError(
+        "class C extends D { static x = 1; constructor() { return {}; } }",
+        RETURN_WITHOUT_CALL_TO_SUPER);
     testError(
         "class C extends D { x = 1; constructor(a) { if (a) { super(); } else { return {}; } } }",
         MISSING_ROOT_LEVEL_CALL_TO_SUPER);
@@ -635,9 +630,16 @@ public final class CheckSuperTest extends CompilerTestCase {
 
   @Test
   public void testThisReference_withExplicitReturnInConstructor() {
-    // You don't have to call `super()` when the constructor returns a value, but then you also
-    // cannot have references to `this` either.
-    testError("class C extends D { constructor() { this.x = 3; return {}; } }", THIS_BEFORE_SUPER);
+    test(
+        srcs("class C extends D { constructor() { this.x = 3; return {}; } }"),
+        error(RETURN_WITHOUT_CALL_TO_SUPER),
+        error(THIS_BEFORE_SUPER));
+    // Even if `missingCallToSuper` is suppressed when the constructor returns a value, it still
+    // cannot have references to `this`.
+    testError(
+        "class C extends D { /** @suppress {missingCallToSuper} */ constructor() { this.x = 3;"
+            + " return {}; } }",
+        THIS_BEFORE_SUPER);
   }
 
   @Test
