@@ -97,7 +97,8 @@ class IsolatePolyfills implements CompilerPass {
     ImmutableSet<String> injectedPolyfills = findAllInjectedPolyfills();
 
     List<PolyfillUsage> polyfillUsages = new ArrayList<>();
-    new PolyfillUsageFinder(compiler, this.polyfills)
+    boolean shouldDisambiguateProperties = compiler.getOptions().shouldDisambiguateProperties();
+    new PolyfillUsageFinder(compiler, this.polyfills, shouldDisambiguateProperties)
         .traverseIncludingGuarded(root, polyfillUsages::add);
 
     LinkedHashSet<Node> visitedNodes = new LinkedHashSet<>();

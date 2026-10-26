@@ -61,6 +61,7 @@ public class RewritePolyfills implements CompilerPass {
   private final boolean isolatePolyfills;
   private Set<String> libraries;
   private final LanguageMode injectPolyfillsNewerThan;
+  private final boolean disambiguateProperties;
 
   /**
    * @param injectPolyfills if true, injects $jscomp.polyfill initializations into the first input.
@@ -72,7 +73,8 @@ public class RewritePolyfills implements CompilerPass {
       AbstractCompiler compiler,
       boolean injectPolyfills,
       boolean isolatePolyfills,
-      LanguageMode injectPolyfillsNewerThan) {
+      LanguageMode injectPolyfillsNewerThan,
+      boolean disambiguateProperties) {
     this(
         compiler,
         compiler.getRuntimeJsLibManager(),
@@ -80,7 +82,8 @@ public class RewritePolyfills implements CompilerPass {
             ResourceLoader.loadTextResource(RewritePolyfills.class, "js/polyfills.txt")),
         injectPolyfills,
         isolatePolyfills,
-        injectPolyfillsNewerThan);
+        injectPolyfillsNewerThan,
+        disambiguateProperties);
   }
 
   /**
@@ -94,13 +97,15 @@ public class RewritePolyfills implements CompilerPass {
       Polyfills polyfills,
       boolean injectPolyfills,
       boolean isolatePolyfills,
-      LanguageMode injectPolyfillsNewerThan) {
+      LanguageMode injectPolyfillsNewerThan,
+      boolean disambiguateProperties) {
     this.compiler = compiler;
     this.runtimeJsLibManager = runtimeJsLibManager;
     this.polyfills = polyfills;
     this.injectPolyfills = injectPolyfills;
     this.isolatePolyfills = isolatePolyfills;
     this.injectPolyfillsNewerThan = injectPolyfillsNewerThan;
+    this.disambiguateProperties = disambiguateProperties;
   }
 
   @Override
@@ -124,7 +129,8 @@ public class RewritePolyfills implements CompilerPass {
     }
     if (this.injectPolyfills) {
       this.libraries = new LinkedHashSet<>();
-      new PolyfillUsageFinder(compiler, polyfills).traverseExcludingGuarded(root, this::inject);
+      new PolyfillUsageFinder(compiler, polyfills, disambiguateProperties)
+          .traverseExcludingGuarded(root, this::inject);
     }
 
     final ImmutableList<String> librariesToInject;

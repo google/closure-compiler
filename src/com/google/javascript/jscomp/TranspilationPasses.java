@@ -297,7 +297,8 @@ public class TranspilationPasses {
                       compiler,
                       compiler.getOptions().getRewritePolyfills(),
                       compiler.getOptions().getIsolatePolyfills(),
-                      compiler.getOptions().getInjectPolyfillsNewerThan()))
+                      compiler.getOptions().getInjectPolyfillsNewerThan(),
+                      compiler.getOptions().shouldDisambiguateProperties()))
           .build();
 
   static final PassFactory instrumentAsyncContext =

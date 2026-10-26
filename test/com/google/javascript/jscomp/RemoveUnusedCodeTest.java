@@ -94,6 +94,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
       $jscomp.patch = function(/** string */ name, /** Function */ func) {};
       """;
 
+  private boolean disambiguateProperties = false;
+
   @Override
   @Before
   public void setUp() throws Exception {
@@ -105,6 +107,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     enableGatherExternProperties();
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
+    disambiguateProperties = false;
   }
 
   @Override
@@ -122,6 +125,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             .removeGlobals(removeGlobal)
             .removeUnusedPolyfills(true)
             .preserveFunctionExpressionNames(preserveFunctionExpressionNames)
+            .disambiguateProperties(disambiguateProperties)
             .build()
             .process(externs, root);
       }
@@ -3051,6 +3055,209 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     enableTypeCheck();
     // We no longer use type information to make polyfill removal decisions.
     testRemoveUnusedPolyfills_globalWithPrototypePolyfill_untyped();
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_iteratorPrototypeMethod_typed() {
+    this.disambiguateProperties = true;
+    enableTypeCheck();
+    replaceTypesWithColors();
+    ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
+    final String forEachPolyfill =
+        "$jscomp.polyfill('Iterator.prototype.forEach', function() {}, 'es_next', 'es3');";
+    PolyfillRemovalTester tester =
+        new PolyfillRemovalTester()
+            .addExterns(
+                new TestExternsBuilder()
+                    .addExtra(JSCOMP_POLYFILL)
+                    .addConsole()
+                    .addArray()
+                    .addIterable()
+                    .build())
+            .addPolyfill(forEachPolyfill);
+
+    // [1, 2].forEach() has receiver type Array, not Iterator, so Iterator.prototype.forEach is
+    // removed!
+    tester.expectPolyfillsRemovedTest("[1, 2].forEach(() => {});", forEachPolyfill);
+
+    // Receiver is an unrelated custom class disjoint from Iterator: polyfill is removed!
+    tester
+        .inputSource(
+            """
+            class Foo { forEach(fn) { return fn; } }
+            console.log(new Foo().forEach(() => {}));
+            """)
+        .expectSource(
+            """
+            class Foo { forEach(fn) { return fn; } }
+            console.log(new Foo().forEach(() => {}));
+            """)
+        .expectPolyfillsRemoved(forEachPolyfill)
+        .test();
+
+    // Receiver is a union of concrete classes disjoint from Iterator: polyfill is removed!
+    tester
+        .inputSource(
+            """
+            class Foo { forEach(fn) { return fn; } }
+            class Bar { forEach(fn) { return fn; } }
+            /** @type {!Foo|!Bar} */ let col;
+            console.log(col.forEach(() => {}));
+            """)
+        .expectSource(
+            """
+            let col;
+            console.log(col.forEach(() => {}));
+            """)
+        .expectPolyfillsRemoved(forEachPolyfill)
+        .test();
+
+    // When called on an Iterator, the polyfill is retained!
+    tester
+        .inputSource(
+            "/** @type {!Iterator<number>} */ let iter; console.log(iter.forEach(() => {}));")
+        .expectSource("let iter;\nconsole.log(iter.forEach(() => {}));")
+        .expectNoPolyfillsRemoved()
+        .test();
+
+    // Receiver is a subclass of Iterator: polyfill is retained!
+    tester
+        .inputSource(
+            """
+            class MyIterator extends Iterator {}
+            const iter = new MyIterator();
+            console.log(iter.forEach(() => {}));
+            """)
+        .expectSource(
+            """
+            class MyIterator extends Iterator {}
+            const iter = new MyIterator();
+            console.log(iter.forEach(() => {}));
+            """)
+        .expectNoPolyfillsRemoved()
+        .test();
+
+    // Receiver is unknown (? or any): polyfill is retained!
+    tester
+        .inputSource("/** @type {?} */ let x; console.log(x.forEach(() => {}));")
+        .expectSource("let x;\nconsole.log(x.forEach(() => {}));")
+        .expectNoPolyfillsRemoved()
+        .test();
+
+    // Receiver is Object: polyfill is retained!
+    tester
+        .inputSource("/** @type {!Object} */ let obj; console.log(obj.forEach(() => {}));")
+        .expectSource("let obj;\nconsole.log(obj.forEach(() => {}));")
+        .expectNoPolyfillsRemoved()
+        .test();
+
+    // Receiver is a union containing an Iterator: polyfill is retained!
+    tester
+        .inputSource(
+            """
+            /** @type {!Array<number>|!Iterator<number>} */ let u;
+            console.log(u.forEach(() => {}));
+            """)
+        .expectSource(
+            """
+            let u;
+            console.log(u.forEach(() => {}));
+            """)
+        .expectNoPolyfillsRemoved()
+        .test();
+
+    // Receiver is a structural interface (@record): polyfill is retained!
+    tester
+        .inputSource(
+            """
+            /** @record */
+            function Structural() {}
+            /** @type {function(!Function): void} */
+            Structural.prototype.forEach;
+            /** @type {!Structural} */ let s;
+            console.log(s.forEach(() => {}));
+            """)
+        .expectSource(
+            """
+            let s;
+            console.log(s.forEach(() => {}));
+            """)
+        .expectNoPolyfillsRemoved()
+        .test();
+
+    // Receiver is an anonymous record / structural interface: polyfill is retained!
+    tester
+        .inputSource(
+            """
+            /** @type {{forEach: function(!Function)}} */ let s;
+            console.log(s.forEach(() => {}));
+            """)
+        .expectSource(
+            """
+            let s;
+            console.log(s.forEach(() => {}));
+            """)
+        .expectNoPolyfillsRemoved()
+        .test();
+
+    // Receiver is a Generator: polyfill is retained!
+    tester
+        .inputSource(
+            """
+            /** @type {!Generator<number>} */ let gen;
+            console.log(gen.forEach(() => {}));
+            """)
+        .expectSource(
+            """
+            let gen;
+            console.log(gen.forEach(() => {}));
+            """)
+        .expectNoPolyfillsRemoved()
+        .test();
+
+    // Receiver is a generator function invocation: polyfill is retained!
+    tester
+        .inputSource(
+            """
+            function* gen() { yield 1; }
+            console.log(gen().forEach(() => {}));
+            """)
+        .expectSource(
+            """
+            function* gen() { yield 1; }
+            console.log(gen().forEach(() => {}));
+            """)
+        .expectNoPolyfillsRemoved()
+        .test();
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_iteratorPrototypeMethod_disambiguatePropertiesDisabled() {
+    this.disambiguateProperties = false;
+    enableTypeCheck();
+    replaceTypesWithColors();
+    ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
+    final String forEachPolyfill =
+        "$jscomp.polyfill('Iterator.prototype.forEach', function() {}, 'es_next', 'es3');";
+    PolyfillRemovalTester tester =
+        new PolyfillRemovalTester()
+            .addExterns(
+                new TestExternsBuilder()
+                    .addExtra(JSCOMP_POLYFILL)
+                    .addConsole()
+                    .addArray()
+                    .addIterable()
+                    .build())
+            .addPolyfill(forEachPolyfill);
+
+    // When disambiguateProperties is disabled, even though optimization colors are present on the
+    // AST, we cannot prove [1, 2].forEach() is disjoint from Iterator.prototype.forEach, so the
+    // polyfill is retained!
+    tester
+        .inputSource("[1, 2].forEach(() => {});")
+        .expectSource("[1, 2].forEach(() => {});")
+        .expectNoPolyfillsRemoved()
+        .test();
   }
 
   @Test

@@ -48,6 +48,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   private boolean isolatePolyfills = false;
   private boolean injectPolyfills = true;
   private LanguageMode injectPolyfillsNewerThan = null;
+  private boolean disambiguateProperties = false;
 
   private void addLibrary(String name, String from, String to, @Nullable String library) {
     if (library != null) {
@@ -67,6 +68,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     polyfillTable.clear();
     injectPolyfillsNewerThan = null;
     setLanguageOut(LanguageMode.ECMASCRIPT5);
+    disambiguateProperties = false;
   }
 
   @Override
@@ -77,7 +79,8 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         Polyfills.fromTable(Joiner.on("\n").join(polyfillTable)),
         injectPolyfills,
         isolatePolyfills,
-        injectPolyfillsNewerThan);
+        injectPolyfillsNewerThan,
+        disambiguateProperties);
   }
 
   @Override
@@ -623,5 +626,169 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("class MyIter extends Iterator {}", "es6/iterator");
     testInjects("Iterator.from(x);", "es6/iterator", "es6/iterator/from");
     testDoesNotInject("");
+  }
+
+  @Test
+  public void testIteratorPolyfill_typedReceiver() {
+    this.disambiguateProperties = true;
+    addLibrary("Iterator", "es_next", "es3", "es6/iterator");
+    addLibrary("Iterator.prototype.toArray", "es_next", "es3", "es6/iterator/toarray");
+
+    setLanguage(ES_2020, ES3);
+    enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
+    ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+    ignoreWarnings(TypeValidator.TYPE_MISMATCH_WARNING);
+
+    // 1. Receiver is a concrete class (Array) disjoint from Iterator: DO NOT inject
+    testDoesNotInject("const arr = [1, 2, 3]; arr.toArray();");
+
+    // 2. Receiver is a union of concrete classes disjoint from Iterator: DO NOT inject
+    testDoesNotInject(
+        """
+        class Foo {}
+        class Bar {}
+        /** @type {!Foo|!Bar} */ let col;
+        col.toArray();
+        """);
+
+    // 3. Receiver is an unrelated custom class: DO NOT inject
+    testDoesNotInject(
+        """
+        class Foo { toArray() {} }
+        const f = new Foo();
+        f.toArray();
+        """);
+
+    // 4. Receiver is an Iterator: DO inject
+    testInjects(
+        "/** @type {!Iterator<number>} */ let iter; iter.toArray();", "es6/iterator/toarray");
+
+    // 5. Receiver is a subclass of Iterator: DO inject
+    testInjects(
+        """
+        class MyIterator extends Iterator {}
+        const iter = new MyIterator();
+        iter.toArray();
+        """,
+        "es6/iterator",
+        "es6/iterator/toarray");
+
+    // 6. Receiver is unknown (? or any): DO inject
+    testInjects("/** @type {?} */ let x; x.toArray();", "es6/iterator/toarray");
+
+    // 7. Receiver is Object (top object): DO inject
+    testInjects("/** @type {!Object} */ let obj; obj.toArray();", "es6/iterator/toarray");
+
+    // 8. Receiver is a union containing an unknown/potential Iterator: DO inject
+    testInjects(
+        """
+        /** @type {!Array<number>|!Iterator<number>} */ let u;
+        u.toArray();
+        """,
+        "es6/iterator/toarray");
+
+    // 9. Receiver is nullable Array with optional chaining: DO NOT inject
+    testDoesNotInject("/** @type {?Array<number>} */ let arr; arr?.toArray();");
+
+    // 10. Receiver is a primitive (e.g. number): DO NOT inject
+    testDoesNotInject("let n = 42; n.toArray();");
+
+    // 11. Receiver is a structural interface (@record): DO inject
+    testInjects(
+        """
+        /** @record */
+        function Structural() {}
+        /** @type {function(): void} */
+        Structural.prototype.toArray;
+        /** @type {!Structural} */ let s;
+        s.toArray();
+        """,
+        "es6/iterator/toarray");
+
+    // 12. Receiver is an anonymous record / structural interface: DO inject
+    testInjects(
+        """
+        /** @type {{toArray: function()}} */
+        let s;
+        s.toArray();
+        """,
+        "es6/iterator/toarray");
+
+    // 13. Receiver is an Array even if marked invalidating via type mismatch: DO NOT inject
+    testDoesNotInject(
+        """
+        /** @type {string} */ const s = [1, 2];
+        const arr = [1, 2, 3];
+        arr.toArray();
+        """);
+
+    // 14. Receiver is a Generator: DO inject (generators inherit from %IteratorPrototype% at
+    // runtime)
+    testInjects(
+        """
+        function* gen() {}
+        gen().toArray();
+        """,
+        "es6/iterator/toarray");
+
+    // 15. Receiver is an IteratorIterable (supertype of Iterator): DO inject
+    testInjects(
+        """
+        const arr = [1, 2, 3];
+        arr.values().toArray();
+        """,
+        "es6/iterator/toarray");
+    testInjects(
+        """
+        const map = new Map();
+        map.keys().toArray();
+        """,
+        "es6/iterator/toarray");
+
+    // 16. Receiver is an Iterable (supertype of Iterator via interface ancestor): DO inject
+    testInjects("/** @type {!Iterable<number>} */ let it; it.toArray();", "es6/iterator/toarray");
+
+    // 17. Receiver is Iterator.prototype (prototype object color): DO inject
+    testInjects(
+        """
+        const arr = [1, 2, 3];
+        Iterator.prototype.toArray.call(arr);
+        """,
+        "es6/iterator",
+        "es6/iterator/toarray");
+
+    // 18. Receiver is super: DO inject
+    testInjects(
+        """
+        class MyIter extends Iterator {
+          toArray() {
+            return super.toArray();
+          }
+        }
+        """,
+        "es6/iterator",
+        "es6/iterator/toarray");
+  }
+
+  @Test
+  public void testIteratorPolyfill_typedReceiver_disambiguatePropertiesDisabled_injects() {
+    this.disambiguateProperties = false;
+    addLibrary("Iterator", "es_next", "es3", "es6/iterator");
+    addLibrary("Iterator.prototype.toArray", "es_next", "es3", "es6/iterator/toarray");
+
+    setLanguage(ES_2020, ES3);
+    enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
+    ignoreWarnings(TypeCheck.INEXISTENT_PROPERTY);
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+    ignoreWarnings(TypeValidator.TYPE_MISMATCH_WARNING);
+
+    // When disambiguateProperties is disabled, even though optimization colors are present on the
+    // AST, we do not prune polyfills based on type disjointness:
+    testInjects("const arr = [1, 2, 3]; arr.toArray();", "es6/iterator/toarray");
   }
 }

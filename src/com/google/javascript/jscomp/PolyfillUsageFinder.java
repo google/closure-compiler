@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -27,10 +28,15 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorId;
+import com.google.javascript.jscomp.colors.ColorRegistry;
+import com.google.javascript.jscomp.colors.StandardColors;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -202,10 +208,15 @@ final class PolyfillUsageFinder {
 
   private final AbstractCompiler compiler;
   private final Polyfills polyfills;
+  private final boolean disambiguateProperties;
+  private final @Nullable ColorRegistry registry;
 
-  PolyfillUsageFinder(AbstractCompiler compiler, Polyfills polyfills) {
+  PolyfillUsageFinder(
+      AbstractCompiler compiler, Polyfills polyfills, boolean disambiguateProperties) {
     this.polyfills = polyfills;
     this.compiler = compiler;
+    this.disambiguateProperties = disambiguateProperties;
+    this.registry = compiler.hasOptimizationColors() ? compiler.getColorRegistry() : null;
   }
 
   /**
@@ -316,6 +327,11 @@ final class PolyfillUsageFinder {
         if (!methodPolyfills.isEmpty()
             && includeGuardedUsages.shouldInclude(isGuarded("." + propertyName))) {
           for (Polyfill polyfill : methodPolyfills) {
+            String ownerName = getMethodOwner(polyfill.nativeSymbol);
+            // isDisjointFromIterator check is guarded by the shouldDisambiguateProperties flag.
+            if (disambiguateProperties && isDisjointFromIterator(getPropNode, ownerName)) {
+              continue;
+            }
             this.polyfillConsumer.accept(
                 PolyfillUsage.createNonExplicit(polyfill, getPropNode, propertyName));
           }
@@ -410,4 +426,145 @@ final class PolyfillUsageFinder {
   private static final ImmutableSet<String> GLOBAL_NAMES =
       ImmutableSet.of("goog.global.", "window.", "goog$global.", "globalThis.");
 
+  private static final ImmutableSet<ColorId> STANDARD_COLLECTION_IDS =
+      ImmutableSet.of(
+          StandardColors.ARRAY_ID,
+          StandardColors.ARRAY_PROTOTYPE_ID,
+          StandardColors.READONLY_ARRAY_ID,
+          StandardColors.READONLY_ARRAY_PROTOTYPE_ID,
+          StandardColors.I_TEMPLATE_ARRAY_ID,
+          StandardColors.I_TEMPLATE_ARRAY_PROTOTYPE_ID,
+          StandardColors.MAP_ID,
+          StandardColors.MAP_PROTOTYPE_ID,
+          StandardColors.READONLY_MAP_ID,
+          StandardColors.READONLY_MAP_PROTOTYPE_ID,
+          StandardColors.SET_ID,
+          StandardColors.SET_PROTOTYPE_ID,
+          StandardColors.READONLY_SET_ID,
+          StandardColors.READONLY_SET_PROTOTYPE_ID);
+
+  private static @Nullable String getMethodOwner(String nativeSymbol) {
+    int protoIdx = nativeSymbol.indexOf(".prototype.");
+    if (protoIdx != -1) {
+      return nativeSymbol.substring(0, protoIdx);
+    }
+    return null;
+  }
+
+  boolean isDisjointFromIterator(Node getPropNode, @Nullable String ownerName) {
+    // Currently only checks "Iterator" because ES2025 Iterator helper methods (forEach, reduce,
+    // toArray) collide with very common Array/Collection method names, causing significant binary
+    // size regressions when polyfills cannot be pruned.
+    if (!"Iterator".equals(ownerName)) {
+      return false;
+    }
+    // Registry can be null in three supported scenarios:
+    // 1. Transpile only builds.
+    // 2. Monolithic builds without type checking.
+    // 3. Precompiled .typedast (stage 2) builds with type-based optimizations disabled.
+    if (this.registry == null) {
+      return false;
+    }
+    Color receiverColor = getPropNode.getFirstChild().getColor();
+    if (receiverColor == null) {
+      return false;
+    }
+    return isDisjointFromIterator(receiverColor);
+  }
+
+  @VisibleForTesting
+  boolean isDisjointFromIterator(Color receiver) {
+    Color iteratorColor = this.registry.get(StandardColors.ITERATOR_ID);
+    if (receiver.equals(iteratorColor)) {
+      return false;
+    }
+
+    // This generator check works around a bug in the externs:
+    // In javascript/externs/es6.js, Iterator is declared as
+    // @constructor @implements {IteratorIterable} and Generator is declared as
+    // @interface @extends {IteratorIterable}. Because the externs do not model Generator
+    // as a subtype of Iterator, neither is an ancestor of the other in the
+    // disambiguation graph, so they appear as unrelated siblings. However, in ECMAScript (ES2025),
+    // every Generator object inherits from %IteratorPrototype% at runtime, which means
+    // generator objects are runtime Iterators and support Iterator helper methods (e.g. toArray,
+    // forEach, reduce).
+    //
+    // TODO(b/576327592): Remove this workaround once Generator is related to Iterator in the
+    // externs.
+    if (receiver.getId().equals(StandardColors.GENERATOR_ID)) {
+      return false;
+    }
+    if (receiver.isUnion()) {
+      for (Color alt : receiver.getUnionElements()) {
+        if (!isDisjointFromIterator(alt)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    if (receiver.isPrimitive()) {
+      return true;
+    }
+    // Back off on invalidating colors that cannot be proven disjoint from Iterator via nominal
+    // supertype edges in ColorRegistry:
+    // - UNKNOWN (?/*) and TOP_OBJECT (Object), which can hold any runtime object (including an
+    //   Iterator) without explicit supertype edges in ColorRegistry.
+    // - Structural interfaces (@record) and record types ({...}) (per b/571244650): because
+    //   Iterator.prototype helper methods are declared on Iterator in the externs, a real runtime
+    //   Iterator (e.g. from `arr.values()` or `Iterator.from(x)`, which inherits from
+    //   Iterator.prototype) structurally satisfies a @record such as `{forEach: function(...)}`.
+    //   When passed to a function parameter typed as that @record, the `.forEach()` call site only
+    //   sees the @record receiver color (which has no nominal edge from Iterator in ColorRegistry),
+    //   and `Iterator.from` itself does not inject the separate per-method helper polyfills.
+    // - Nominal types invalidated by type mismatches elsewhere in the program.
+    //
+    // However, in large Google3 builds, native collection types (Array, Map, Set) and their
+    // prototypes are frequently marked isInvalidating due to dynamic property access or type
+    // mismatches elsewhere in the codebase. Because their nominal inheritance hierarchy is sound
+    // and provably disjoint from Iterator, we exempt them from isInvalidating backoff so that calls
+    // on Array/Map/Set do not inject polyfills.
+    if (receiver.isInvalidating() && !STANDARD_COLLECTION_IDS.contains(receiver.getId())) {
+      return false;
+    }
+
+    // Two types are non-disjoint if either is a supertype of the other:
+    // 1. hasInSupertypesList(receiver, iteratorColor): receiver is a subtype of Iterator
+    //    (e.g. `class MyIter extends Iterator`), which inherits Iterator.prototype methods.
+    // 2. hasInSupertypesList(iteratorColor, receiver): receiver is a supertype of Iterator
+    //    (e.g. `IteratorIterable` from `arr.values()`, or `Iterable`), which can hold an
+    //    Iterator instance at runtime.
+    return !hasInSupertypesList(receiver, iteratorColor)
+        && !hasInSupertypesList(iteratorColor, receiver);
+  }
+
+  private boolean hasInSupertypesList(Color subCtor, Color superCtor) {
+    if (!this.hasInSupertypesListSeenSet.add(subCtor)) {
+      return false;
+    }
+    try {
+      if (subCtor.equals(superCtor)) {
+        return true;
+      }
+      for (Color immediateSupertype : this.registry.getDisambiguationSupertypes(subCtor)) {
+        if (immediateSupertype.isUnion()) {
+          for (Color alt : immediateSupertype.getUnionElements()) {
+            if (hasInSupertypesList(alt, superCtor)) {
+              return true;
+            }
+          }
+        } else if (hasInSupertypesList(immediateSupertype, superCtor)) {
+          return true;
+        }
+      }
+      return false;
+    } finally {
+      this.hasInSupertypesListSeenSet.remove(subCtor);
+    }
+  }
+
+  // Safe as an instance field because PolyfillUsageFinder is single-threaded, hasInSupertypesList
+  // only re-enters via direct recursion, and every added element is removed in the finally block
+  // before returning, leaving the set empty between top-level calls (avoiding per-call allocation).
+  private final LinkedHashSet<Color> hasInSupertypesListSeenSet = new LinkedHashSet<>();
 }

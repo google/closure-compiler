@@ -115,7 +115,11 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             .setInternalFactory(
                 c ->
                     new RewritePolyfills(
-                        c, /* injectPolyfills= */ true, /* isolatePolyfills= */ false, null))
+                        c,
+                        /* injectPolyfills= */ true,
+                        /* isolatePolyfills= */ false,
+                        null,
+                        /* disambiguateProperties= */ false))
             .build());
 
     passes.maybeAdd(

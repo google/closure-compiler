@@ -131,6 +131,7 @@ class RemoveUnusedCode implements CompilerPass {
   private final Set<Node> guardedUsages = new LinkedHashSet<>();
 
   private final Polyfills polyfillsFromTable;
+  private final PolyfillUsageFinder polyfillUsageFinder;
 
   private final SyntacticScopeCreator scopeCreator;
 
@@ -139,6 +140,7 @@ class RemoveUnusedCode implements CompilerPass {
   private final boolean removeUnusedObjectDefinePropertiesDefinitions;
   private final boolean removeUnusedPolyfills;
   private final boolean assumeGettersArePure;
+  private final boolean disambiguateProperties;
 
   // Allocated & cleaned up by process()
   private @Nullable LogFile removalLog;
@@ -158,9 +160,12 @@ class RemoveUnusedCode implements CompilerPass {
     this.removeUnusedObjectDefinePropertiesDefinitions =
         builder.removeUnusedObjectDefinePropertiesDefinitions;
     this.removeUnusedPolyfills = builder.removeUnusedPolyfills;
+    this.disambiguateProperties = builder.disambiguateProperties;
     this.polyfillsFromTable =
         Polyfills.fromTable(
             ResourceLoader.loadTextResource(RemoveUnusedCode.class, "js/polyfills.txt"));
+    this.polyfillUsageFinder =
+        new PolyfillUsageFinder(compiler, this.polyfillsFromTable, this.disambiguateProperties);
     this.assumeGettersArePure = builder.assumeGettersArePure;
 
     // All Vars that are completely unremovable will share this VarInfo instance.
@@ -178,6 +183,7 @@ class RemoveUnusedCode implements CompilerPass {
     private boolean removeUnusedObjectDefinePropertiesDefinitions = false;
     private boolean removeUnusedPolyfills = false;
     private boolean assumeGettersArePure = false;
+    private boolean disambiguateProperties = false;
 
     Builder(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -228,6 +234,12 @@ class RemoveUnusedCode implements CompilerPass {
     @CanIgnoreReturnValue
     Builder assumeGettersArePure(boolean value) {
       this.assumeGettersArePure = value;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    Builder disambiguateProperties(boolean value) {
+      this.disambiguateProperties = value;
       return this;
     }
 
@@ -368,8 +380,7 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     // Accumulate guarded usages of polyfills before removal starts.
-    new PolyfillUsageFinder(compiler, polyfillsFromTable)
-        .traverseOnlyGuarded(root, this::storePolyfill);
+    polyfillUsageFinder.traverseOnlyGuarded(root, this::storePolyfill);
 
     worklist.add(new Continuation(root, scope));
     while (!worklist.isEmpty()) {
@@ -3182,6 +3193,11 @@ class RemoveUnusedCode implements CompilerPass {
     @Override
     void considerPossibleReferenceInternal(Node possiblyReferencingNode) {
       if (NodeUtil.isNormalOrOptChainGetProp(possiblyReferencingNode)) {
+        if (disambiguateProperties
+            && polyfillUsageFinder.isDisjointFromIterator(
+                possiblyReferencingNode, polyfillOwnerName)) {
+          return;
+        }
         // Prototype properties are simply not removable.
         isRemovable = false;
       }

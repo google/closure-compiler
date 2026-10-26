@@ -2424,6 +2424,7 @@ public final class DefaultPassConfig extends PassConfig {
                           options.getForceLibraryInjectionList().isEmpty()
                               && options.getInjectPolyfillsNewerThan() == null)
                       .assumeGettersArePure(options.getAssumeGettersArePure())
+                      .disambiguateProperties(options.shouldDisambiguateProperties())
                       .build())
           .build();
 
