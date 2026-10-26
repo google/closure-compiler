@@ -21,14 +21,17 @@
 
 /**
  * Throws a TypeError if `x` is not an ECMAScript Object (i.e. if `x` is null,
- * undefined, or a primitive other than a function).
+ * undefined, or a primitive other than a function), otherwise returns `x`.
  *
  * @see https://tc39.es/ecma262/#sec-ecmascript-language-types-object-type
  *
- * @param {*} x
+ * @param {T} x
+ * @return {T}
+ * @template T
  */
 $jscomp.checkIsObject = function(x) {
   if (Object(x) !== x) {
     throw new TypeError('Expected an object');
   }
+  return x;
 };
