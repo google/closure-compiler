@@ -20,10 +20,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,18 +37,27 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ReferenceCollectorTest extends CompilerTestCase {
   private @Nullable Behavior behavior;
+  private Predicate<Var> varFilter = Predicates.alwaysTrue();
+  private boolean collectHoistedFunctionsInReferenceOrder = true;
 
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
     behavior = null;
+    varFilter = Predicates.alwaysTrue();
+    collectHoistedFunctionsInReferenceOrder = true;
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     ScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
-    return new ReferenceCollector(compiler, this.behavior, scopeCreator);
+    return new ReferenceCollector(
+        compiler,
+        this.behavior,
+        scopeCreator,
+        this.varFilter,
+        this.collectHoistedFunctionsInReferenceOrder);
   }
 
   @Override
@@ -609,5 +622,106 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
     Scope globalScope = syntacticScopeCreator.createScope(root, null);
     Scope blockScope = syntacticScopeCreator.createScope(block, globalScope);
     referenceCollectingCallback.processScope(blockScope);
+  }
+
+  @Test
+  public void testBehavior_hoistedFunctionsInReferenceOrder_true() {
+    List<String> visitedReferenceNames = new ArrayList<>();
+    this.collectHoistedFunctionsInReferenceOrder = true;
+    testBehavior(
+        """
+        f();
+        var z = 1;
+        function f() {
+          return z;
+        }
+        """,
+        new Behavior() {
+          @Override
+          public void afterVisitNode(
+              NodeTraversal t, Node n, @Nullable Node parent, @Nullable Reference addedReference) {
+            if (addedReference != null) {
+              visitedReferenceNames.add(addedReference.getNode().getString());
+            }
+          }
+
+          @Override
+          public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {}
+        });
+
+    // When collectHoistedFunctionsInReferenceOrder is true:
+    // Visiting call `f()` jumps to hoisted function `f()` via maybeJumpToHoistedFunction.
+    // The declaration reference for `f` is added directly and does not pass through afterVisitNode.
+    // The body of `f()` is traversed, visiting `z` inside `return z;`.
+    // Then afterVisitNode runs for the referencing `f()` call.
+    // Then `var z = 1;` is visited.
+    // The declaration `function f() { ... }` is skipped in the outer traversal.
+    assertThat(visitedReferenceNames).containsExactly("z", "f", "z").inOrder();
+  }
+
+  @Test
+  public void testBehavior_hoistedFunctionsInReferenceOrder_false() {
+    List<String> visitedReferenceNames = new ArrayList<>();
+    this.collectHoistedFunctionsInReferenceOrder = false;
+    testBehavior(
+        """
+        f();
+        var z = 1;
+        function f() {
+          return z;
+        }
+        """,
+        new Behavior() {
+          @Override
+          public void afterVisitNode(
+              NodeTraversal t, Node n, @Nullable Node parent, @Nullable Reference addedReference) {
+            if (addedReference != null) {
+              visitedReferenceNames.add(addedReference.getNode().getString());
+            }
+          }
+
+          @Override
+          public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {}
+        });
+
+    // When collectHoistedFunctionsInReferenceOrder is false:
+    // Traversal proceeds in pure AST order without out-of-order jumping:
+    // 1. `f();` -> afterVisitNode for `f`
+    // 2. `var z = 1;` -> afterVisitNode for `z`
+    // 3. `function f() { return z; }` -> afterVisitNode for `f`, then afterVisitNode for `z`
+    assertThat(visitedReferenceNames).containsExactly("f", "z", "f", "z").inOrder();
+  }
+
+  @Test
+  public void testBehavior_afterVisitNode_nullReferenceWhenRejectedByVarFilter() {
+    List<String> nonNullReferenceNames = new ArrayList<>();
+    List<String> filteredOutNames = new ArrayList<>();
+    // Filter out variable "z"
+    this.varFilter = v -> !v.getName().equals("z");
+    this.collectHoistedFunctionsInReferenceOrder = false;
+    testBehavior(
+        """
+        var x = 1;
+        var z = 2;
+        """,
+        new Behavior() {
+          @Override
+          public void afterVisitNode(
+              NodeTraversal t, Node n, @Nullable Node parent, @Nullable Reference addedReference) {
+            if (n.isName()) {
+              if (addedReference != null) {
+                nonNullReferenceNames.add(n.getString());
+              } else {
+                filteredOutNames.add(n.getString());
+              }
+            }
+          }
+
+          @Override
+          public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {}
+        });
+
+    assertThat(nonNullReferenceNames).containsExactly("x");
+    assertThat(filteredOutNames).containsExactly("z");
   }
 }

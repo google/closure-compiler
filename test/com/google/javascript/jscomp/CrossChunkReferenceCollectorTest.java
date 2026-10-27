@@ -238,6 +238,86 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testHoistedFunctionReferencedBeforeDeclaration_bodyReferencesStayWithDeclaration() {
+    testSame(
+        """
+        var z = 1;
+        f();
+        function f() {
+          return z;
+        }
+        """);
+
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    ImmutableList<Reference> zReferences =
+        ImmutableList.copyOf(testedCollector.getReferences(globalVariableNamesMap.get("z")));
+    ImmutableList<Reference> fReferences =
+        ImmutableList.copyOf(testedCollector.getReferences(globalVariableNamesMap.get("f")));
+
+    List<TopLevelStatement> topLevelStatements = testedCollector.getTopLevelStatements();
+    assertThat(topLevelStatements).hasSize(3);
+
+    // f();
+    TopLevelStatement callStatement = topLevelStatements.get(1);
+    assertThat(callStatement.isDeclarationStatement()).isFalse();
+    assertThat(callStatement.getNonDeclarationReferences()).containsExactly(fReferences.get(0));
+
+    // function f() { return z; }
+    TopLevelStatement functionDeclaration = topLevelStatements.get(2);
+    assertThat(functionDeclaration.getDeclaredNameReference()).isEqualTo(fReferences.get(1));
+    assertThat(functionDeclaration.getNonDeclarationReferences())
+        .containsExactly(zReferences.get(1));
+  }
+
+  @Test
+  public void testDestructuringWithDefaultValueOrderMatchesExecutionOrder() {
+    testSame(
+        """
+        var b = 1;
+        var c = {};
+        const {a = b} = c;
+        """);
+
+    List<TopLevelStatement> statements = testedCollector.getTopLevelStatements();
+    assertThat(statements).hasSize(3);
+
+    // const {a = b} = c;
+    TopLevelStatement destructuringStatement = statements.get(2);
+    assertThat(destructuringStatement.isDeclarationStatement()).isFalse();
+
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    ReferenceCollection aRefs = testedCollector.getReferences(globalVariableNamesMap.get("a"));
+    ReferenceCollection bRefs = testedCollector.getReferences(globalVariableNamesMap.get("b"));
+    ReferenceCollection cRefs = testedCollector.getReferences(globalVariableNamesMap.get("c"));
+
+    // Traversal obeys destructuring and default value execution order:
+    // the destructured expression `c` is evaluated first, then the default value `b`,
+    // and finally the target `a`.
+    assertThat(destructuringStatement.getNonDeclarationReferences())
+        .containsExactly(cRefs.references.get(1), bRefs.references.get(1), aRefs.references.get(0))
+        .inOrder();
+  }
+
+  @Test
+  public void testExportedVariablesAreExcluded() {
+    testSame("var _exported = 1; var y = _exported;");
+
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    assertThat(globalVariableNamesMap.containsKey("_exported")).isFalse();
+    assertThat(globalVariableNamesMap.containsKey("y")).isTrue();
+
+    List<TopLevelStatement> topLevelStatements = testedCollector.getTopLevelStatements();
+    assertThat(topLevelStatements).hasSize(2);
+
+    // var _exported = 1; (not a declaration statement for movable globals)
+    assertThat(topLevelStatements.get(0).isDeclarationStatement()).isFalse();
+
+    // var y = _exported; (y is declared, but _exported is not collected as a movable reference)
+    assertThat(topLevelStatements.get(1).isDeclarationStatement()).isTrue();
+    assertThat(topLevelStatements.get(1).getNonDeclarationReferences()).isEmpty();
+  }
+
+  @Test
   public void testVarDeclarationStatement() {
     testSame("var x = 1;");
 

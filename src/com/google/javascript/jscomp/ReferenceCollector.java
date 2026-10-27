@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSymbolTable;
@@ -36,7 +37,8 @@ import org.jspecify.annotations.Nullable;
  * inlining, reordering, or generating warnings. Callers do this by providing {@link Behavior} and
  * then calling {@link #process(Node, Node)}.
  */
-public final class ReferenceCollector implements CompilerPass, StaticSymbolTable<Var, Reference> {
+public final class ReferenceCollector
+    implements CompilerPass, ReferenceMap, StaticSymbolTable<Var, Reference> {
 
   /**
    * Maps a given variable to a collection of references to that name. Note that
@@ -66,6 +68,12 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
    */
   private final Predicate<Var> varFilter;
 
+  /**
+   * If true, hoisted function declarations are traversed when the function is first referenced. If
+   * false, hoisted functions are traversed in statement order.
+   */
+  private final boolean collectHoistedFunctionsInReferenceOrder;
+
   private final CollectorCallback callback = new CollectorCallback();
 
   private final LinkedHashSet<Node> collectedHoistedFunctions = new LinkedHashSet<>();
@@ -88,10 +96,30 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
       Behavior behavior,
       ScopeCreator creator,
       Predicate<Var> varFilter) {
+    this(
+        compiler,
+        behavior,
+        creator,
+        varFilter,
+        /* collectHoistedFunctionsInReferenceOrder= */ true);
+  }
+
+  /**
+   * Like {@link #ReferenceCollector(AbstractCompiler, Behavior, ScopeCreator, Predicate)}, but if
+   * {@code collectHoistedFunctionsInReferenceOrder} is false, hoisted function declarations are
+   * traversed in statement order instead of when the function is first referenced.
+   */
+  ReferenceCollector(
+      AbstractCompiler compiler,
+      Behavior behavior,
+      ScopeCreator creator,
+      Predicate<Var> varFilter,
+      boolean collectHoistedFunctionsInReferenceOrder) {
     this.compiler = compiler;
     this.behavior = behavior;
     this.scopeCreator = creator;
     this.varFilter = varFilter;
+    this.collectHoistedFunctionsInReferenceOrder = collectHoistedFunctionsInReferenceOrder;
   }
 
   /**
@@ -205,16 +233,19 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
     /** Updates block stack. */
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      // We automatically traverse a hoisted function body when that function
-      // is first referenced, so that the reference lists are in the right order.
+      // When collectHoistedFunctionsInReferenceOrder is true, we automatically traverse a hoisted
+      // function body when that function is first referenced, so that the reference lists are in
+      // reference order.
       //
       // TODO(nicksantos): Maybe generalize this to a continuation mechanism
       // like in RemoveUnusedCode.
-      if (NodeUtil.isHoistedFunctionDeclaration(n)) {
+      if (collectHoistedFunctionsInReferenceOrder && NodeUtil.isHoistedFunctionDeclaration(n)) {
         if (!collectedHoistedFunctions.add(n)) {
           return false;
         }
       }
+
+      behavior.beforeTraverseNode(nodeTraversal, n, parent);
 
       // If node is a new basic block, put on basic block stack
       if (isBlockBoundary(n, parent)) {
@@ -241,31 +272,38 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
       if (t.isHoistScope()) {
         popLastBlock(t.getScopeRoot());
       }
-      behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
+      behavior.afterExitScope(t, ReferenceCollector.this);
     }
 
     /** For each node, update the block stack and reference collection as appropriate. */
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isName() || n.isImportStar()) {
-        if ((parent.isImportSpec() && n != parent.getLastChild())
-            || (parent.isExportSpec() && n != parent.getFirstChild())) {
-          // The n in `import {n as x}` or `export {x as n}` are not references, even though
-          // they are represented in the AST as NAME nodes.
-          return;
-        }
-
+      Reference addedReference = null;
+      if ((n.isName() || n.isImportStar()) && !isNonLocalModuleSpecifierName(n, parent)) {
         Var v = t.getScope().getVar(n.getString());
         if (v != null) {
-          addReference(v, n, t);
-          maybeJumpToHoistedFunction(v, t);
+          addedReference = addReference(v, n, t);
+          if (collectHoistedFunctionsInReferenceOrder) {
+            maybeJumpToHoistedFunction(v, t);
+          }
         }
       }
+
+      behavior.afterVisitNode(t, n, parent, addedReference);
 
       if (isBlockBoundary(n, parent)) {
         popLastBlock(n);
       }
     }
+  }
+
+  /**
+   * Returns true if {@code n} is the non-local name in {@code import {n as x}} or {@code export {x
+   * as n}}, which is not a reference even though it is a NAME node.
+   */
+  private static boolean isNonLocalModuleSpecifierName(Node n, Node parent) {
+    return (parent.isImportSpec() && !identical(n, parent.getLastChild()))
+        || (parent.isExportSpec() && !identical(n, parent.getFirstChild()));
   }
 
   private void pushNewBlock(Node root) {
@@ -281,7 +319,7 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
   /**
    * @return true if this node marks the start of a new basic block
    */
-  static boolean isBlockBoundary(Node n, Node parent) {
+  private static boolean isBlockBoundary(Node n, Node parent) {
     if (parent != null) {
       switch (parent.getToken()) {
         case DO, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, TRY, WHILE, WITH, CLASS, SWITCH_BODY -> {
@@ -316,9 +354,10 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
     return n.isCase();
   }
 
-  private void addReference(Var v, Node n, NodeTraversal t) {
+  @CanIgnoreReturnValue
+  private @Nullable Reference addReference(Var v, Node n, NodeTraversal t) {
     if (!this.varFilter.apply(v)) {
-      return;
+      return null;
     }
 
     // Create collection if none already
@@ -326,36 +365,47 @@ public final class ReferenceCollector implements CompilerPass, StaticSymbolTable
         referenceMap.computeIfAbsent(v, k -> new ReferenceCollection());
 
     // Add this particular reference
-    collection.add(new Reference(n, t, blockStack.getLast()));
-  }
-
-  static class ReferenceMapWrapper implements ReferenceMap {
-    private final Map<Var, ReferenceCollection> referenceMap;
-
-    public ReferenceMapWrapper(Map<Var, ReferenceCollection> referenceMap) {
-      this.referenceMap = referenceMap;
-    }
-
-    @Override
-    public ReferenceCollection getReferences(Var var) {
-      return referenceMap.get(var);
-    }
-
-    Map<Var, ReferenceCollection> getRawReferenceMap() {
-      return referenceMap;
-    }
-
-    @Override
-    public String toString() {
-      return referenceMap.toString();
-    }
+    Reference reference = new Reference(n, t, blockStack.getLast());
+    collection.add(reference);
+    return reference;
   }
 
   /**
-   * Way for callers to add specific behavior during traversal that
-   * utilizes the built-up reference information.
+   * Way for callers to add specific behavior during traversal that utilizes the built-up reference
+   * information.
+   *
+   * <p>Note: These hooks are called in AST order only when {@link
+   * ReferenceCollector#ReferenceCollector(AbstractCompiler, Behavior, ScopeCreator, Predicate,
+   * boolean)} is called with {@code collectHoistedFunctionsInReferenceOrder = false}. When {@code
+   * collectHoistedFunctionsInReferenceOrder} is true (the default), hoisted functions are
+   * traversed out-of-order upon first reference via {@code maybeJumpToHoistedFunction}:
+   *
+   * <ul>
+   *   <li>Hooks fire for the hoisted function and its body before {@code afterVisitNode} fires for
+   *       the referencing {@code NAME} node.
+   *   <li>No hooks fire when the outer traversal later reaches the hoisted function declaration.
+   *   <li>The function declaration reference added for the hoisted function does not pass through
+   *       {@code afterVisitNode}.
+   * </ul>
+   *
+   * Behaviors that rely on strict AST or statement order (such as grouping references by top-level
+   * statement) should ensure {@code collectHoistedFunctionsInReferenceOrder} is false.
    */
   public interface Behavior {
+    /** Called before traversing a node. */
+    default void beforeTraverseNode(NodeTraversal t, Node n, @Nullable Node parent) {}
+
+    /**
+     * Called after visiting a node, passing any reference recorded for {@code n}.
+     *
+     * <p>{@code addedReference} is non-null only if a {@link Reference} was recorded for {@code n}.
+     * If the variable for {@code n} was rejected by the {@code varFilter}, {@code addedReference}
+     * will be null. See {@link Behavior} class-level javadoc for execution order considerations
+     * when {@code collectHoistedFunctionsInReferenceOrder} is true.
+     */
+    default void afterVisitNode(
+        NodeTraversal t, Node n, @Nullable Node parent, @Nullable Reference addedReference) {}
+
     /**
      * Called after we finish with a scope.
      */
