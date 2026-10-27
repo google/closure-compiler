@@ -51,17 +51,6 @@ NetworkInformation.prototype.onchange;
  */
 NetworkInformation.prototype.saveData;
 
-/** @override */
-NetworkInformation.prototype.addEventListener = function(
-    type, listener, opt_options) {};
-
-/** @override */
-NetworkInformation.prototype.removeEventListener = function(
-    type, listener, opt_options) {};
-
-/** @override */
-NetworkInformation.prototype.dispatchEvent = function(evt) {};
-
 /**
  * @typedef {number}
  */
@@ -97,9 +86,15 @@ var ConnectionType;
  */
 var EffectiveConnectionType;
 
-/** @type {!NetworkInformation} */
+/**
+ * @type {!NetworkInformation}
+ * @see https://wicg.github.io/netinfo/#connection-attribute
+ */
 Navigator.prototype.connection;
 
-/** @type {!NetworkInformation} */
+/**
+ * @type {!NetworkInformation}
+ * @see https://wicg.github.io/netinfo/#connection-attribute
+ */
 WorkerNavigator.prototype.connection;
 
