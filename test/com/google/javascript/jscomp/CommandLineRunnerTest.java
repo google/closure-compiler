@@ -3579,9 +3579,146 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
           };
           return polyfill
         }, 'es6', 'es3');
+        $jscomp.arrayIteratorImpl = function(array) {
+          var index = 0;
+          return function() {
+            if (index < array.length) {
+              return {done: false, value: array[index++]};
+            } else {
+              return {done: true};
+            }
+          };
+        };
+        $jscomp.arrayIterator = function(array) {
+          return {next: $jscomp.arrayIteratorImpl(array)};
+        };
+        $jscomp.getIteratorPrototype = function() {
+          return typeof Iterator != 'undefined' &&
+              Iterator.prototype &&
+              !Iterator.prototype.next ?
+              Iterator.prototype :
+              null;
+        };
+        $jscomp.objectCreate =
+            $jscomp.ASSUME_ES5 || typeof Object.create == 'function' ?
+            Object.create :
+            function(prototype) {
+              var ctor = function() {};
+              ctor.prototype = prototype;
+              return new ctor;
+            };
+        $jscomp.initSymbol = function() {};
+        $jscomp.polyfill('Symbol', function(orig) {
+          if (orig) return orig;
+          var SymbolClass = function(id, opt_description) {
+            this.$jscomp$symbol$id_ = id;
+            this.description;
+            $jscomp.defineProperty(this, 'description', {
+              configurable: true,
+              writable: true,
+              value: opt_description
+            });
+          };
+          SymbolClass.prototype.toString = function() {
+            return this.$jscomp$symbol$id_;
+          };
+          var BIN_ID = Math.random() * 1E9 >>> 0;
+          var SYMBOL_PREFIX = 'jscomp_symbol_' + BIN_ID + '_';
+          var counter = 0;
+          var symbolPolyfill = function(opt_description) {
+            if (this instanceof symbolPolyfill) {
+              throw new TypeError('Symbol is not a constructor');
+            }
+            return new SymbolClass(
+                SYMBOL_PREFIX + (opt_description || '') + '_' + counter++,
+                opt_description);
+          };
+          return symbolPolyfill;
+        }, 'es6', 'es3');
+        $jscomp.polyfill('Symbol.iterator', function(orig) {
+          if (orig) return orig;
+          var symbolIterator = Symbol('Symbol.iterator');
+          $jscomp.defineProperty(Array.prototype, symbolIterator, {
+            configurable: true,
+            writable: true,
+            value: function() {
+              return $jscomp.iteratorPrototype($jscomp.arrayIteratorImpl(this));
+            }
+          });
+          return symbolIterator;
+        }, 'es6', 'es3');
+        $jscomp.iteratorPrototype = function(next) {
+          var parentProto = $jscomp.getIteratorPrototype() || Object.prototype;
+          var iterator = $jscomp.objectCreate(parentProto);
+          iterator.next = next;
+          if (!parentProto[Symbol.iterator]) {
+            iterator[Symbol.iterator] = function() {
+              return this;
+            };
+          }
+          return iterator;
+        };
+        $jscomp.iteratorClose = function(iterator, iterResult) {
+          var returnMethod;
+          if (iterResult && !iterResult.done && (returnMethod = iterator['return'])) {
+            returnMethod.call(iterator);
+          }
+        };
+        $jscomp.checkIsObject = function(x) {
+          if (Object(x) !== x) {
+            throw new TypeError('Expected an object');
+          }
+          return x;
+        };
+        $jscomp.iteratorDo = function(iterator, callback, step) {
+          $jscomp.checkIsObject(iterator);
+          if (typeof callback != 'function') {
+            var returnMethod = iterator['return'];
+            if (returnMethod != null) {
+              try {
+                returnMethod.call(iterator);
+              } catch (e) {
+              }
+            }
+            throw new TypeError;
+          }
+          var nextMethod = iterator.next;
+          var index = 0;
+          for (var nextResult;
+              !(nextResult = $jscomp.checkIsObject(nextMethod.call(iterator))).done;) {
+            try {
+              var stop = step(nextResult.value, index++);
+            } catch (e) {
+              try {
+                $jscomp.iteratorClose(iterator, nextResult);
+              } catch (ignored) {
+              }
+              throw e;
+            }
+            if (stop) {
+              returnMethod = iterator['return'];
+              if (returnMethod != null) {
+                $jscomp.checkIsObject(returnMethod.call(iterator));
+              }
+              return;
+            }
+          }
+        };
+        $jscomp.polyfill('Iterator.prototype.find', function(orig) {
+          return orig || function(fn) {
+            var res;
+            $jscomp.iteratorDo(this, fn, function(v, i) {
+              if (fn(v, i)) {
+                res = v;
+                return true;
+              }
+            });
+            return res;
+          };
+        }, 'es_next', 'es3');
         var arr = [1, 2, 3];
         var found = arr.find(function(element) {
-          return element > 10
+          return element > 10;
         });
         """);
   }

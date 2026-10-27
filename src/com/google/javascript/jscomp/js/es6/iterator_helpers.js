@@ -18,7 +18,10 @@
  * @fileoverview Brings in all ES2025 Iterator helper method polyfills.
  * @suppress {uselessCode}
  */
+'require es6/iterator/every';
+'require es6/iterator/find';
 'require es6/iterator/foreach';
 'require es6/iterator/from';
 'require es6/iterator/reduce';
+'require es6/iterator/some';
 'require es6/iterator/toarray';
