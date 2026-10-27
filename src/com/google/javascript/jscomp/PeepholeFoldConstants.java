@@ -1987,7 +1987,20 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node value = null;
     for (Node c = left.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
-        case SETTER_DEF -> {}
+        case SETTER_DEF -> {
+          if (c.getString().equals(name)) {
+            // A setter definition overrides any preceding property definition.
+            // If the preceding definition was a getter, ECMAScript combines them into an accessor
+            // with both getter and setter, retaining the getter. If it was a data property, the
+            // setter replaces it, leaving [[Get]] as undefined (void 0).
+            // If there was no preceding definition, we do not fold because the property might
+            // be defined on the prototype chain.
+            if (key != null && !isGetterProp(key)) {
+              key = c;
+              value = NodeUtil.newUndefinedNode(c);
+            }
+          }
+        }
         case OBJECT_SPREAD -> {
           // Reset the search because spread could overwrite any previous result.
           key = null;
@@ -1999,9 +2012,16 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           if (!prop.isStringLit()) {
             return n;
           }
-          if (prop.getString().equals(name) && !c.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
-            key = c;
-            value = c.getSecondChild();
+          if (prop.getString().equals(name)) {
+            if (c.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
+              if (key != null && !isGetterProp(key)) {
+                key = c;
+                value = NodeUtil.newUndefinedNode(c);
+              }
+            } else {
+              key = c;
+              value = c.getSecondChild();
+            }
           }
         }
         case GETTER_DEF, STRING_KEY, MEMBER_FUNCTION_DEF -> {
@@ -2030,15 +2050,24 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
      *
      * <p>We remove the value we're going to use because its side-effects will be preserved.
      */
-    Node tempValue = IR.nullNode();
-    value.replaceWith(tempValue);
-    boolean hasSideEffectBesidesValue = mayHaveSideEffects(left);
-    tempValue.replaceWith(value);
-    if (hasSideEffectBesidesValue) {
-      return n;
+    // When value is a newly created synthetic node (e.g. NodeUtil.newUndefinedNode from
+    // an overridden setter), it is not yet attached to left and has no parent. In that
+    // case, left can be checked for side effects directly without temporarily replacing value.
+    if (value.getParent() != null) {
+      Node tempValue = IR.nullNode();
+      value.replaceWith(tempValue);
+      boolean hasSideEffectBesidesValue = mayHaveSideEffects(left);
+      tempValue.replaceWith(value);
+      if (hasSideEffectBesidesValue) {
+        return n;
+      }
+    } else {
+      if (mayHaveSideEffects(left)) {
+        return n;
+      }
     }
 
-    boolean keyIsGetter = NodeUtil.isGetOrSetKey(key);
+    boolean keyIsGetter = isGetterProp(key);
     boolean nIsInvoked = NodeUtil.isInvocationTarget(n);
 
     if (keyIsGetter || nIsInvoked) {
@@ -2058,7 +2087,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
     }
 
-    value.detach();
+    // Detach value if it was part of left; synthetic nodes (e.g. newUndefinedNode) are unattached.
+    if (value.getParent() != null) {
+      value.detach();
+    }
 
     Node parent = n.getParent();
 
@@ -2100,6 +2132,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   private static Node bigintNode(BigInteger val, Node srcref) {
     Node tree = (val.signum() < 0) ? IR.neg(IR.bigint(val.negate())) : IR.bigint(val);
     return tree.srcrefTree(srcref);
+  }
+
+  private static boolean isGetterProp(Node key) {
+    return key != null
+        && (key.isGetterDef()
+            || (key.isComputedProp() && key.getBooleanProp(Node.COMPUTED_PROP_GETTER)));
   }
 
   private static boolean isSafeToFlattenObjectLitSpread(Node innerLit) {

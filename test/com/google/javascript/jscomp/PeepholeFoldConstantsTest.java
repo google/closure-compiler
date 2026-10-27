@@ -2248,8 +2248,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // setters by themselves don't provide a definition
     testSame("({}).a");
     testSame("({set a(b) {}}).a");
-    // sets don't hide other definitions.
-    test("({a:1,set a(b) {}}).a", "1");
+    // In ECMAScript, a setter replaces any preceding data property definition, leaving [[Get]] as
+    // undefined.
+    test("({a:1,set a(b) {}}).a", "void 0");
 
     // get is transformed to a call (gets don't have self referential names)
     test("({get a() {}}).a", "(function (){})()");
@@ -2258,6 +2259,30 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // a function remains a function not a call.
     test("var x = ({a:function(){return 1}}).a", "var x = function(){return 1}");
+
+    test("var x = ({ a: 1, set a(v) {} }).a", "var x = void 0");
+    test("var x = ({ a: 1, set ['a'](v) {} }).a", "var x = void 0");
+    test("({ a: 1, ['a'](v) {}, ['a'](w) {} }).a", "(function(w){})");
+    test("({ a: 1, set ['a'](u) {}, ['a'](v) {} }).a", "(function(v){})");
+    testSame("({ [foo()]: 1, a: 1, set a(v) {} }).a");
+    testSame("({ foo: bar(), a: 1, set a(v) {} }).a");
+    test("var x = ({ get a() { return 1; } }).a", "var x = (function() { return 1; })()");
+    test(
+        "var x = ({ get a() { return 1; }, set a(v) {} }).a",
+        "var x = (function() { return 1; })()");
+    test(
+        "var x = ({ get ['a']() { return 1; }, set ['a'](v) {} }).a",
+        "var x = (function() { return 1; })()");
+    test(
+        "var x = ({ get ['a']() { return 1; }, set a(v) {} }).a",
+        "var x = (function() { return 1; })()");
+    test(
+        "var x = ({ get a() { return 1; }, set ['a'](v) {} }).a",
+        "var x = (function() { return 1; })()");
+    test(
+        "var x = ({ a: 1, get a() { return 2; }, set a(v) {} }).a",
+        "var x = (function() { return 2; })()");
+    test("var x = ({ get a() { return 2; }, a: 1, set a(v) {} }).a", "var x = void 0");
 
     test("var x = ({a:1}).a", "var x = 1");
     test("var x = ({a:1, a:2}).a", "var x = 2");
@@ -2314,10 +2339,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testSetterDefIgnoredInObjectLiteralPropertyFolding() {
-    // Pre-fix: SETTER_DEF and computed setters do not clear previously tracked data properties,
-    // incorrectly folding the access to the superseded data property value.
-    test("var x = ({ a: 1, set a(v) {} }).a;", "var x = 1;");
-    test("var x = ({ a: 1, set ['a'](v) {} }).a;", "var x = 1;");
+    test("var x = ({ a: 1, set a(v) {} }).a;", "var x = void 0;");
+    test("var x = ({ a: 1, set ['a'](v) {} }).a;", "var x = void 0;");
     test("var x = ({ a: 1, set b(v) {} }).a;", "var x = 1;");
     test("var x = ({ set a(v) {}, a: 2 }).a;", "var x = 2;");
   }
