@@ -4684,6 +4684,34 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testLargeRadixLiteralsRoundOnce() {
+    // 443538294610663463 needs 59 bits, so it cannot be accumulated digit by digit without
+    // rounding at every step. Its nearest double is 443538294610663488; rounding at each step
+    // instead lands on the neighboring double 443538294610663424.
+    double expected = 443538294610663488.0;
+    mode = LanguageMode.ECMASCRIPT_2015;
+    assertNode(parseNumberLiteral("0x627c3ba9e8d1827;")).isNumber(expected);
+    assertNode(parseNumberLiteral("0o30476073523643214047;")).isNumber(expected);
+    assertNode(parseNumberLiteral("0b11000100111110000111011101010011110100011010001100000100111;"))
+        .isNumber(expected);
+
+    strictMode = SLOPPY;
+    Node legacyOctal =
+        parseWarning(
+                "030476073523643214047;",
+                "Octal integer literals are not supported in strict mode.")
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // NUMBER
+    assertNode(legacyOctal).isNumber(expected);
+  }
+
+  private Node parseNumberLiteral(String source) {
+    return parse(source) // SCRIPT
+        .getOnlyChild() // EXPR_RESULT
+        .getOnlyChild(); // NUMBER
+  }
+
+  @Test
   public void testOctalEscapes() {
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
