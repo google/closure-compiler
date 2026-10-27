@@ -4270,44 +4270,49 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testEscapedLineOrParagraphSeparatorInString_knownBug() {
+  public void testEscapedLineOrParagraphSeparatorInString() {
     strictMode = SLOPPY;
-    String unnecessaryLsEscape = "Unnecessary escape: '\\\u2028' is equivalent to just '\u2028'";
-    String unnecessaryPsEscape = "Unnecessary escape: '\\\u2029' is equivalent to just '\u2029'";
 
-    // TODO(b/576985780): Fixed in https://github.com/google/closure-compiler/pull/4361 to treat
-    // escaped <LS> and <PS> as ES5 line continuations.
+    // An escaped <LS>/<PS> is an ES5 line continuation, not the ES2019 JSON superset feature.
     mode = LanguageMode.ECMASCRIPT3;
-    ParseResult lsEs3 = doParse("'one\\\u2028two';", unnecessaryLsEscape);
-    assertThat(lsEs3.ast.getFirstFirstChild().getString()).isEqualTo("one\u2028two");
-    assertFS(lsEs3.features).doesNotHave(Feature.STRING_CONTINUATION);
+    ParseResult lsEs3 =
+        doParse(
+            "'one\\\u2028two';",
+            requiresLanguageModeMessage(Feature.STRING_CONTINUATION),
+            STRING_CONTINUATIONS_WARNING);
+    assertThat(lsEs3.ast.getFirstFirstChild().getString()).isEqualTo("onetwo");
+    assertFS(lsEs3.features).has(Feature.STRING_CONTINUATION);
     assertFS(lsEs3.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
 
-    ParseResult psEs3 = doParse("'one\\\u2029two';", unnecessaryPsEscape);
-    assertThat(psEs3.ast.getFirstFirstChild().getString()).isEqualTo("one\u2029two");
-    assertFS(psEs3.features).doesNotHave(Feature.STRING_CONTINUATION);
+    ParseResult psEs3 =
+        doParse(
+            "'one\\\u2029two';",
+            requiresLanguageModeMessage(Feature.STRING_CONTINUATION),
+            STRING_CONTINUATIONS_WARNING);
+    assertThat(psEs3.ast.getFirstFirstChild().getString()).isEqualTo("onetwo");
+    assertFS(psEs3.features).has(Feature.STRING_CONTINUATION);
     assertFS(psEs3.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
 
     mode = LanguageMode.ECMASCRIPT5;
-    ParseResult lsEs5 = doParse("'one\\\u2028two';", unnecessaryLsEscape);
-    assertThat(lsEs5.ast.getFirstFirstChild().getString()).isEqualTo("one\u2028two");
-    assertFS(lsEs5.features).doesNotHave(Feature.STRING_CONTINUATION);
+    ParseResult lsEs5 = doParse("'one\\\u2028two';", STRING_CONTINUATIONS_WARNING);
+    assertThat(lsEs5.ast.getFirstFirstChild().getString()).isEqualTo("onetwo");
+    assertFS(lsEs5.features).has(Feature.STRING_CONTINUATION);
     assertFS(lsEs5.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
 
-    ParseResult psEs5 = doParse("'one\\\u2029two';", unnecessaryPsEscape);
-    assertThat(psEs5.ast.getFirstFirstChild().getString()).isEqualTo("one\u2029two");
-    assertFS(psEs5.features).doesNotHave(Feature.STRING_CONTINUATION);
+    ParseResult psEs5 = doParse("'one\\\u2029two';", STRING_CONTINUATIONS_WARNING);
+    assertThat(psEs5.ast.getFirstFirstChild().getString()).isEqualTo("onetwo");
+    assertFS(psEs5.features).has(Feature.STRING_CONTINUATION);
     assertFS(psEs5.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
 
     mode = LanguageMode.ECMASCRIPT_2015;
-    ParseResult lsEs2015 = doParse("'one\\\u2028two';", unnecessaryLsEscape);
-    assertThat(lsEs2015.ast.getFirstFirstChild().getString()).isEqualTo("one\u2028two");
-    assertFS(lsEs2015.features).doesNotHave(Feature.STRING_CONTINUATION);
+    ParseResult lsEs2015 = doParse("'one\\\u2028two';", STRING_CONTINUATIONS_WARNING);
+    assertThat(lsEs2015.ast.getFirstFirstChild().getString()).isEqualTo("onetwo");
+    assertFS(lsEs2015.features).has(Feature.STRING_CONTINUATION);
     assertFS(lsEs2015.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
 
-    ParseResult psEs2015 = doParse("'one\\\u2029two';", unnecessaryPsEscape);
-    assertThat(psEs2015.ast.getFirstFirstChild().getString()).isEqualTo("one\u2029two");
-    assertFS(psEs2015.features).doesNotHave(Feature.STRING_CONTINUATION);
+    ParseResult psEs2015 = doParse("'one\\\u2029two';", STRING_CONTINUATIONS_WARNING);
+    assertThat(psEs2015.ast.getFirstFirstChild().getString()).isEqualTo("onetwo");
+    assertFS(psEs2015.features).has(Feature.STRING_CONTINUATION);
     assertFS(psEs2015.features).doesNotHave(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
   }
 
@@ -4330,6 +4335,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     n = parseWarning("'one\\\n two';", STRING_CONTINUATIONS_WARNING);
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("one two");
+
+    // <LS> and <PS> are line terminators too, so a backslash before them is a line continuation.
+    n = parseWarning("'one\\\u2028two';", STRING_CONTINUATIONS_WARNING);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
+
+    n = parseWarning("'one\\\u2029two';", STRING_CONTINUATIONS_WARNING);
+    assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
   }
 
   /** See https://github.com/google/closure-compiler/issues/3492 */
@@ -4444,6 +4456,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node stringNode = templateLiteral.getFirstChild();
     assertNode(stringNode).hasType(Token.TEMPLATELIT_STRING);
     assertThat(stringNode.getCookedString()).isEqualTo("string continuation");
+
+    n = parseWarning("`string \\\u2028continuation`", STRING_CONTINUATIONS_WARNING);
+    stringNode = n.getFirstFirstChild().getFirstChild();
+    assertThat(stringNode.getCookedString()).isEqualTo("string continuation");
+    assertThat(stringNode.getRawString()).isEqualTo("string \\\u2028continuation");
   }
 
   @Test
