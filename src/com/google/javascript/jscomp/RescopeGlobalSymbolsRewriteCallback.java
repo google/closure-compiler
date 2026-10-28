@@ -17,9 +17,11 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -119,21 +121,18 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
       new LinkedHashMap<>();
 
   /**
-   * Map from global wrapped symbols to the chunks that use them. Only populated if
-   * optimizeLocalAccess is ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS. This is used to determine
-   * which chunks to define the wrapper objects in. These symbols are wrapped in holder objects in
-   * that chunk (e.g. `_.a = {}`). Subsequent assignments look like `a._ = value`, where `a` is a
-   * local alias for `_.a`). These symbols may be reassigned anywhere or referenced in chunks that
-   * do not depend on their defining chunk.
+   * Map from cross-chunk global symbols to the chunks that reference them. Only populated if
+   * optimizeLocalAccess.shouldWrapReassignableSymbols() is true. This is used to determine which
+   * chunks to define wrapper objects in and when a symbol on the global namespace can be safely
+   * deleted after its last local alias is set.
    */
-  private final Map<String, Set<JSChunk>> chunksUsingWrappedReassignableSymbols =
-      new LinkedHashMap<>();
+  private final Map<String, Set<JSChunk>> chunksUsingCrossChunkSymbols = new LinkedHashMap<>();
 
   /**
    * Global symbols that are reassignable or referenced in a chunk that does not depend on their
    * defining chunk, and will be wrapped in an object. This allows for constant tracking and
    * inlining by the JavaScript runtime, and enables safe aliasing in all chunks. Only populated if
-   * optimizeLocalAccess is ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS.
+   * optimizeLocalAccess.shouldWrapReassignableSymbols() is true.
    */
   private final ImmutableSet<String> wrappedCrossChunkNames;
 
@@ -440,13 +439,14 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
     }
 
     JSChunk currentChunk = t.getChunk();
-
-    if (wrappedCrossChunkNames.contains(name)) {
-      // If the symbol is wrapped, record the chunk using the symbol to ensure the wrapper is
-      // initialized before use, and replace the symbol with an access to the wrapper.
-      chunksUsingWrappedReassignableSymbols
+    if (optimizeLocalAccess.shouldWrapReassignableSymbols()) {
+      chunksUsingCrossChunkSymbols
           .computeIfAbsent(name, k -> new LinkedHashSet<>())
           .add(currentChunk);
+    }
+
+    if (wrappedCrossChunkNames.contains(name)) {
+      // Replace the symbol with an access to the wrapper.
       Node replacement = IR.getprop(IR.name(name), "_");
       replaceSymbol(n, name, replacement);
       return;
@@ -609,7 +609,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
     if (!wrappedCrossChunkNames.isEmpty()) {
       for (String name : wrappedCrossChunkNames) {
         Set<JSChunk> usingChunks =
-            chunksUsingWrappedReassignableSymbols.getOrDefault(name, ImmutableSet.of());
+            chunksUsingCrossChunkSymbols.getOrDefault(name, ImmutableSet.of());
         JSChunk wrapperAssignmentChunk =
             usingChunks.isEmpty()
                 ? defaultRootChunk
@@ -619,24 +619,68 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
     }
 
     // Prepend local aliases and wrapper assignments to each chunk.
+    String cleanupHelperName = getCleanupHelperPropertyName();
+    boolean needsCleanupHelper = false;
     for (JSChunk chunk : chunkGraph.getAllChunks()) {
-      declareLocalAliasesAndWrappersForChunk(chunk, wrapperAssignmentChunks);
+      if (declareLocalAliasesAndWrappersForChunk(
+          chunk, wrapperAssignmentChunks, cleanupHelperName)) {
+        needsCleanupHelper = true;
+      }
     }
+    if (needsCleanupHelper) {
+      declareCleanupHelper(cleanupHelperName);
+    }
+  }
+
+  private String getCleanupHelperPropertyName() {
+    String name = "_";
+    while (chunksUsingCrossChunkSymbols.containsKey(name)) {
+      name += DISAMBIGUATION_SUFFIX;
+    }
+    return name;
+  }
+
+  /**
+   * Declares a helper function on the global namespace object in the root chunk to delete symbol
+   * entries by comma-separated name list, e.g.:
+   *
+   * <pre>{@code
+   * _._ = function(a) { for (let b of a.split(',')) { delete _[b]; } };
+   * }</pre>
+   */
+  private void declareCleanupHelper(String cleanupHelperName) {
+    Node script = compiler.getNodeForCodeInsertion(null);
+    String paramName = globalSymbolNamespace.equals("a") ? "b" : "a";
+    String loopVar = !paramName.equals("b") && !globalSymbolNamespace.equals("b") ? "b" : "c";
+    Node splitCall = IR.call(IR.getprop(IR.name(paramName), "split"), IR.string(","));
+    Node deleteStmt =
+        IR.exprResult(IR.delprop(IR.getelem(IR.name(globalSymbolNamespace), IR.name(loopVar))));
+    Node forOf = new Node(Token.FOR_OF, IR.let(IR.name(loopVar)), splitCall, IR.block(deleteStmt));
+    Node helperFn = IR.function(IR.name(""), IR.paramList(IR.name(paramName)), IR.block(forOf));
+    Node helperDecl =
+        IR.exprResult(
+            IR.assign(IR.getprop(IR.name(globalSymbolNamespace), cleanupHelperName), helperFn));
+    addDeclaration(script, script.getFirstChild(), helperDecl);
+    NodeUtil.markNewScopesChanged(helperFn, compiler);
+    NodeUtil.addFeatureToScript(script, Feature.FOR_OF, compiler);
+    NodeUtil.addFeatureToScript(script, Feature.LET_DECLARATIONS, compiler);
+    compiler.reportChangeToEnclosingScope(script);
   }
 
   /**
    * Declares all local aliases and wrapper assignments that need to be prepended to the given
-   * chunk.
+   * chunk. Returns true if the chunk emitted a call to the cleanup helper.
    */
-  private void declareLocalAliasesAndWrappersForChunk(
-      JSChunk chunk, Map<String, JSChunk> wrapperAssignmentChunks) {
+  private boolean declareLocalAliasesAndWrappersForChunk(
+      JSChunk chunk, Map<String, JSChunk> wrapperAssignmentChunks, String cleanupHelperName) {
     ImmutableList<CompilerInput> inputs = chunk.getInputs();
     if (inputs.isEmpty()) {
-      return;
+      return false;
     }
     Node script = inputs.get(0).getAstRoot(compiler);
     Node insertionPoint = script.getFirstChild();
     boolean changed = false;
+    boolean usedCleanupHelper = false;
 
     Set<String> wrappedReassignableLocalAliases = ImmutableSet.of();
     if (optimizeLocalAccess.shouldWrapReassignableSymbols()) {
@@ -644,7 +688,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
 
       for (String name : wrappedCrossChunkNames) {
         JSChunk assignmentChunk = wrapperAssignmentChunks.get(name);
-        Set<JSChunk> usingChunks = chunksUsingWrappedReassignableSymbols.get(name);
+        Set<JSChunk> usingChunks = chunksUsingCrossChunkSymbols.get(name);
         if (chunk.equals(assignmentChunk)) {
           // Define the wrapper object for the wrapped symbol in this chunk.
           if (usingChunks != null && usingChunks.contains(chunk)) {
@@ -677,12 +721,29 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
     // Combine all local aliases into a single destructuring assignment
     // (e.g. `var {a, b, c} = _;`) if output is ES2015+, otherwise declare
     // individual local aliases (e.g. `var a = _.a;`).
-    Iterable<String> localAliases =
+    Iterable<String> allLocalAliases =
         Iterables.concat(
             localAliasesForUnwrappedCrossChunkNames.getOrDefault(chunk, ImmutableSet.of()),
             wrappedReassignableLocalAliases);
-    if (!Iterables.isEmpty(localAliases)) {
-      if (compiler.getOptions().getOutputFeatureSet().contains(Feature.OBJECT_DESTRUCTURING)) {
+    if (!Iterables.isEmpty(allLocalAliases)) {
+      List<String> aliasesToKeep = new ArrayList<>();
+      List<String> aliasesToDelete = new ArrayList<>();
+      for (String name : allLocalAliases) {
+        if (optimizeLocalAccess.shouldDeleteGlobalsOnLastAccess()
+            && canDeleteFromGlobalNamespace(chunk, name)) {
+          aliasesToDelete.add(name);
+        } else {
+          aliasesToKeep.add(name);
+        }
+      }
+      // Place aliasesToDelete contiguously at the end of the destructuring assignment so that the
+      // comma-separated symbol list in `_._('x,y')` is an exact substring immediately following
+      // `var {..., x, y} = _;`, minimizing compressed binary size.
+      Iterable<String> localAliases = Iterables.concat(aliasesToKeep, aliasesToDelete);
+      FeatureSet outputFeatures = compiler.getOptions().getOutputFeatureSet();
+      if (outputFeatures.contains(Feature.OBJECT_DESTRUCTURING)
+          && outputFeatures.contains(Feature.FOR_OF)
+          && outputFeatures.contains(Feature.LET_DECLARATIONS)) {
         Node objectPattern = IR.objectPattern();
         for (String name : localAliases) {
           Node stringKey = IR.stringKey(name, IR.name(name));
@@ -692,12 +753,31 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
         addDeclaration(
             script, insertionPoint, IR.var(objectPattern, IR.name(globalSymbolNamespace)));
         NodeUtil.addFeatureToScript(script, Feature.OBJECT_DESTRUCTURING, compiler);
+        if (!aliasesToDelete.isEmpty()) {
+          Node cleanupCall =
+              IR.exprResult(
+                  IR.call(
+                      IR.getprop(IR.name(globalSymbolNamespace), cleanupHelperName),
+                      IR.string(Joiner.on(',').join(aliasesToDelete))));
+          addDeclaration(script, insertionPoint, cleanupCall);
+          usedCleanupHelper = true;
+        }
       } else {
-        for (String name : localAliases) {
+        for (String name : aliasesToKeep) {
           addDeclaration(
               script,
               insertionPoint,
               IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name)));
+        }
+        for (String name : aliasesToDelete) {
+          addDeclaration(
+              script,
+              insertionPoint,
+              IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name)));
+          addDeclaration(
+              script,
+              insertionPoint,
+              IR.exprResult(IR.delprop(IR.getprop(IR.name(globalSymbolNamespace), name))));
         }
       }
       changed = true;
@@ -706,6 +786,29 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
     if (changed) {
       compiler.reportChangeToEnclosingScope(script);
     }
+    return usedCleanupHelper;
+  }
+
+  /**
+   * Returns true if {@code name} can be safely deleted from the global symbol namespace in {@code
+   * currentChunk} right after its local alias is initialized, i.e. when all other chunks that
+   * reference {@code name} are transitive dependencies (parent chunks) of {@code currentChunk}.
+   */
+  private boolean canDeleteFromGlobalNamespace(JSChunk currentChunk, String name) {
+    if (compiler.getCodingConvention().isExported(name, /* local= */ false)) {
+      return false;
+    }
+    Set<JSChunk> usingChunks = chunksUsingCrossChunkSymbols.get(name);
+    if (usingChunks == null || !usingChunks.contains(currentChunk)) {
+      return false;
+    }
+    JSChunkGraph chunkGraph = compiler.getChunkGraph();
+    for (JSChunk otherChunk : usingChunks) {
+      if (!otherChunk.equals(currentChunk) && !chunkGraph.dependsOn(currentChunk, otherChunk)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static void addDeclaration(Node script, Node insertionPoint, Node decl) {

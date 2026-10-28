@@ -3650,7 +3650,14 @@ public class CompilerOptions {
      * remain local to their defining chunk instead of hoisting uninitialized {@code var}
      * declarations to the top of the chunk.
      */
-    ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED;
+    ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED,
+
+    /**
+     * In addition to {@link #ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED}, delete entries
+     * from the global symbol namespace right after the last local alias is set, when all other
+     * usages are in parent chunks and thus the symbol is guaranteed not to be accessed anymore.
+     */
+    DELETE_GLOBALS_ON_LAST_ACCESS;
 
     boolean shouldOptimize() {
       return this != DISABLED;
@@ -3666,6 +3673,10 @@ public class CompilerOptions {
 
     boolean shouldPreserveLocalVarDeclarations() {
       return this.ordinal() >= ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED.ordinal();
+    }
+
+    boolean shouldDeleteGlobalsOnLastAccess() {
+      return this == DELETE_GLOBALS_ON_LAST_ACCESS;
     }
   }
 

@@ -1696,4 +1696,75 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
             "var b = _.b = {}; var a; a = _.a = 1; a + 1; var f = function() { return b._; };",
             "var {a, b} = _; var c; b._ = 2; c = 3; a + b._ + c;"));
   }
+
+  @Test
+  public void testDeleteGlobalsOnLastAccess_chain() {
+    optimizeLocalAccess = CompilerOptions.OptimizeLocalAccess.DELETE_GLOBALS_ON_LAST_ACCESS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("var a = 1; a + 1; var b = 1; b + 1; var c = 1; c + 1;")
+                .addChunk("a; b; c;")
+                .addChunk("b;")
+                .build()),
+        expected(
+            "_._ = function(a) { for (let b of a.split(',')) { delete _[b]; } };"
+                + " var a = _.a = 1; a + 1; var b = _.b = 1; b + 1; var c = _.c = 1; c + 1;",
+            "var {b, a, c} = _; _._('a,c'); a; b; c;",
+            "var {b} = _; _._('b'); b;"));
+  }
+
+  @Test
+  public void testDeleteGlobalsOnLastAccess_es5() {
+    optimizeLocalAccess = CompilerOptions.OptimizeLocalAccess.DELETE_GLOBALS_ON_LAST_ACCESS;
+    assumeCrossChunkNames = false;
+    setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT5, CompilerOptions.LanguageMode.ECMASCRIPT5);
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("var a = 1; a + 1; var b = 1; b + 1;")
+                .addChunk("a; b;")
+                .addChunk("b;")
+                .build()),
+        expected(
+            "var a = _.a = 1; a + 1; var b = _.b = 1; b + 1;",
+            "var b = _.b; var a = _.a; delete _.a; a; b;",
+            "var b = _.b; delete _.b; b;"));
+  }
+
+  @Test
+  public void testDeleteGlobalsOnLastAccess_siblingChunksNotDeleted() {
+    optimizeLocalAccess = CompilerOptions.OptimizeLocalAccess.DELETE_GLOBALS_ON_LAST_ACCESS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forTree()
+                .addChunk("var a = 1; a + 1; var b = 1; b + 1;")
+                .addChunk("a; b;")
+                .addChunk("a;")
+                .build()),
+        expected(
+            "_._ = function(a) { for (let b of a.split(',')) { delete _[b]; } };"
+                + " var a = _.a = 1; a + 1; var b = _.b = 1; b + 1;",
+            "var {a, b} = _; _._('b'); a; b;",
+            "var {a} = _; a;"));
+  }
+
+  @Test
+  public void testDeleteGlobalsOnLastAccess_wrappedAndEarlyUsages() {
+    optimizeLocalAccess = CompilerOptions.OptimizeLocalAccess.DELETE_GLOBALS_ON_LAST_ACCESS;
+    assumeCrossChunkNames = false;
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("function f() { return a; } var b = 1; b + 1;")
+                .addChunk("var a = 1; a + 1; b = 2; b;")
+                .build()),
+        expected(
+            "_._ = function(a) { for (let b of a.split(',')) { delete _[b]; } };"
+                + " var b = _.b = {}; var a = _.a = {}; var f = function() { return a._; };"
+                + " b._ = 1; b._ + 1;",
+            "var {b, a} = _; _._('b,a');" + " a._ = 1; a._ + 1; b._ = 2; b._;"));
+  }
 }
