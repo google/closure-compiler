@@ -17,9 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -1921,11 +1919,32 @@ public final class NormalizeTest extends CompilerTestCase {
 
   @Test
   public void testLogicalAssignInLabeledLoop() {
-    // TODO(b/571641723): Property logical assignment in labeled loop crashes AstValidator.
-    RuntimeException e =
-        assertThrows(RuntimeException.class, () -> testSame("label: while (o.p ??= 1) {}"));
-    Throwable root = Throwables.getRootCause(e);
-    assertThat(root).isInstanceOf(IllegalStateException.class);
-    assertThat(root).hasMessageThat().contains("Expected 2 children, but was 3");
+    test(
+        "label: while (o.p ??= 1) {}",
+        """
+        let LA_TMP$0;
+        label: for (; (LA_TMP$0 = o).p ?? (LA_TMP$0.p = 1); ) {}
+        """);
+  }
+
+  @Test
+  public void testLogicalAssignInNestedLabeledLoop() {
+    test(
+        "a: b: do {} while (o[k] ||= 1)",
+        """
+        let LA_TMP$0;
+        let LA_TMP_INDEX$0;
+        a: b: do {} while ((LA_TMP$0 = o) [LA_TMP_INDEX$0 = k] || (LA_TMP$0[LA_TMP_INDEX$0] = 1))
+        """);
+  }
+
+  @Test
+  public void testLogicalAssignInLabeledForOfLoop() {
+    test(
+        "label: for (const x of (o.p &&= [])) {}",
+        """
+        let LA_TMP$0;
+        label: for (const x of (LA_TMP$0 = o).p && (LA_TMP$0.p = [])) {}
+        """);
   }
 }

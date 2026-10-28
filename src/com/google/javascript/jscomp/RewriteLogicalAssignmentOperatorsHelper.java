@@ -49,6 +49,11 @@ class RewriteLogicalAssignmentOperatorsHelper {
     }
 
     Node enclosingStatement = NodeUtil.getEnclosingStatement(logicalAssignment);
+    // A LABEL must have exactly one statement child, so any temporaries must be declared before
+    // the outermost label of a labeled statement (e.g. `label: while (o.p ??= 1) {}`).
+    while (enclosingStatement.getParent().isLabel()) {
+      enclosingStatement = enclosingStatement.getParent();
+    }
 
     Node left = logicalAssignment.removeFirstChild();
     Node right = logicalAssignment.getLastChild().detach();
