@@ -422,11 +422,14 @@ ServiceWorkerClient.prototype.id;
 ServiceWorkerClient.prototype.frameType;
 
 /**
+ * @see https://www.w3.org/TR/service-workers/#client-postmessage
  * @param {*} message
- * @param {(!Array<!Transferable>|undefined)=} opt_transfer
+ * @param {(!Array<!Transferable>|!StructuredSerializeOptions)=}
+ *     opt_transferOrOptions
  * @return {undefined}
  */
-ServiceWorkerClient.prototype.postMessage = function(message, opt_transfer) {};
+ServiceWorkerClient.prototype.postMessage = function(
+    message, opt_transferOrOptions) {};
 
 /** @return {!Promise} */
 ServiceWorkerClient.prototype.focus = function() {};
