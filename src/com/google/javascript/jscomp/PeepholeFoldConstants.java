@@ -832,7 +832,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           }
         }
         case MOD -> {
-          // BigInteger.mod() is always non-negative; JS % takes the sign of the dividend.
+          // Use BigInteger.remainder instead of BigInteger.mod because BigInteger.mod() always
+          // returns a non-negative result, whereas JS % keeps the sign of the dividend.
           if (!rVal.equals(BigInteger.ZERO)) {
             return bigintNode(lVal.remainder(rVal), n);
           } else {
