@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
@@ -43,6 +44,13 @@ public final class NormalizeTest extends CompilerTestCase {
 
   private static final String EXTERNS = "var window; var Arguments;";
 
+  private static final ImmutableMap<String, String> REPLACEMENTS_MAP =
+      ImmutableMap.of(
+          "LA_TMP_INDEX",
+          "$jscomp$logical$assign$tmpindex",
+          "LA_TMP",
+          "$jscomp$logical$assign$tmp");
+
   public NormalizeTest() {
     super(EXTERNS);
   }
@@ -65,6 +73,7 @@ public final class NormalizeTest extends CompilerTestCase {
     enableTypeInfoValidation();
     enableTypeCheck();
     replaceTypesWithColors();
+    setGenericNameReplacements(REPLACEMENTS_MAP);
   }
 
   @Test
@@ -691,19 +700,19 @@ public final class NormalizeTest extends CompilerTestCase {
         srcs("a.x ||= b"),
         expected(
             """
-            let $jscomp$logical$assign$tmpm1146332801$0;
-            ($jscomp$logical$assign$tmpm1146332801$0 = a).x
+            let LA_TMP$0;
+            (LA_TMP$0 = a).x
                ||
-            ($jscomp$logical$assign$tmpm1146332801$0.x = b);
+            (LA_TMP$0.x = b);
             """));
     test(
         srcs("a.foo &&= null"),
         expected(
             """
-            let $jscomp$logical$assign$tmpm1146332801$0;
-            ($jscomp$logical$assign$tmpm1146332801$0 = a).foo
+            let LA_TMP$0;
+            (LA_TMP$0 = a).foo
                &&
-            ($jscomp$logical$assign$tmpm1146332801$0.foo = null);
+            (LA_TMP$0.foo = null);
             """));
     test(
         srcs(
@@ -714,10 +723,10 @@ public final class NormalizeTest extends CompilerTestCase {
         expected(
             """
             foo().x = null;
-            let $jscomp$logical$assign$tmpm1146332801$0;
-            ($jscomp$logical$assign$tmpm1146332801$0 = foo()).x
+            let LA_TMP$0;
+            (LA_TMP$0 = foo()).x
                ??
-            ($jscomp$logical$assign$tmpm1146332801$0.x = y);
+            (LA_TMP$0.x = y);
             """));
   }
 
@@ -727,37 +736,37 @@ public final class NormalizeTest extends CompilerTestCase {
         srcs("a[x] ||= b"),
         expected(
             """
-            let $jscomp$logical$assign$tmpm1146332801$0;
-            let $jscomp$logical$assign$tmpindexm1146332801$0;
-            ($jscomp$logical$assign$tmpm1146332801$0 = a)
-            [$jscomp$logical$assign$tmpindexm1146332801$0 = x]
+            let LA_TMP$0;
+            let LA_TMP_INDEX$0;
+            (LA_TMP$0 = a)
+            [LA_TMP_INDEX$0 = x]
                ||
-            ($jscomp$logical$assign$tmpm1146332801$0
-            [$jscomp$logical$assign$tmpindexm1146332801$0] = b);
+            (LA_TMP$0
+            [LA_TMP_INDEX$0] = b);
             """));
     test(
         srcs("a[x + 5 + 's'] &&= b"),
         expected(
             """
-            let $jscomp$logical$assign$tmpm1146332801$0;
-            let $jscomp$logical$assign$tmpindexm1146332801$0;
-            ($jscomp$logical$assign$tmpm1146332801$0 = a)
-            [$jscomp$logical$assign$tmpindexm1146332801$0 = (x + 5 + 's')]
+            let LA_TMP$0;
+            let LA_TMP_INDEX$0;
+            (LA_TMP$0 = a)
+            [LA_TMP_INDEX$0 = (x + 5 + 's')]
                &&
-            ($jscomp$logical$assign$tmpm1146332801$0
-            [$jscomp$logical$assign$tmpindexm1146332801$0] = b);
+            (LA_TMP$0
+            [LA_TMP_INDEX$0] = b);
             """));
     test(
         srcs("foo[x] ??= bar[y]"),
         expected(
             """
-            let $jscomp$logical$assign$tmpm1146332801$0;
-            let $jscomp$logical$assign$tmpindexm1146332801$0;
-            ($jscomp$logical$assign$tmpm1146332801$0 = foo)
-            [$jscomp$logical$assign$tmpindexm1146332801$0 = x]
+            let LA_TMP$0;
+            let LA_TMP_INDEX$0;
+            (LA_TMP$0 = foo)
+            [LA_TMP_INDEX$0 = x]
                ??
-            ($jscomp$logical$assign$tmpm1146332801$0
-            [$jscomp$logical$assign$tmpindexm1146332801$0] = bar[y]);
+            (LA_TMP$0
+            [LA_TMP_INDEX$0] = bar[y]);
             """));
   }
 
@@ -777,17 +786,17 @@ public final class NormalizeTest extends CompilerTestCase {
         """,
         """
         const foo = {}; const bar = {};
-        let $jscomp$logical$assign$tmpm1146332801$0;
-        let $jscomp$logical$assign$tmpm1146332801$1;
-        let $jscomp$logical$assign$tmpm1146332801$2;
-        ($jscomp$logical$assign$tmpm1146332801$2 = foo).x
+        let LA_TMP$0;
+        let LA_TMP$1;
+        let LA_TMP$2;
+        (LA_TMP$2 = foo).x
            ||
-        ($jscomp$logical$assign$tmpm1146332801$2.x
-         = ($jscomp$logical$assign$tmpm1146332801$1 = foo).y
+        (LA_TMP$2.x
+         = (LA_TMP$1 = foo).y
            &&
-        ($jscomp$logical$assign$tmpm1146332801$1.y
-         = ($jscomp$logical$assign$tmpm1146332801$0 = bar).z
-           ?? ($jscomp$logical$assign$tmpm1146332801$0.z = 'something')));
+        (LA_TMP$1.y
+         = (LA_TMP$0 = bar).z
+           ?? (LA_TMP$0.z = 'something')));
         """);
   }
 
@@ -798,9 +807,9 @@ public final class NormalizeTest extends CompilerTestCase {
         expected(
             """
             const f = (a, b) => {
-              let $jscomp$logical$assign$tmpm1146332801$0;
-              return ($jscomp$logical$assign$tmpm1146332801$0 = a).x
-                  || ($jscomp$logical$assign$tmpm1146332801$0.x = b);
+              let LA_TMP$0;
+              return (LA_TMP$0 = a).x
+                  || (LA_TMP$0.x = b);
             };
             """));
 
@@ -809,13 +818,13 @@ public final class NormalizeTest extends CompilerTestCase {
         expected(
             """
             const f = (map, k, v) => {
-              let $jscomp$logical$assign$tmpm1146332801$0;
-              let $jscomp$logical$assign$tmpindexm1146332801$0;
-              return ($jscomp$logical$assign$tmpm1146332801$0 = map)
-                  [$jscomp$logical$assign$tmpindexm1146332801$0 = k]
+              let LA_TMP$0;
+              let LA_TMP_INDEX$0;
+              return (LA_TMP$0 = map)
+                  [LA_TMP_INDEX$0 = k]
                   ??
-                  ($jscomp$logical$assign$tmpm1146332801$0
-                  [$jscomp$logical$assign$tmpindexm1146332801$0] = v);
+                  (LA_TMP$0
+                  [LA_TMP_INDEX$0] = v);
             };
             """));
   }
@@ -1920,4 +1929,3 @@ public final class NormalizeTest extends CompilerTestCase {
     assertThat(root).hasMessageThat().contains("Expected 2 children, but was 3");
   }
 }
-
