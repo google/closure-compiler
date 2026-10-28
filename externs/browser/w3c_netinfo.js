@@ -16,12 +16,14 @@
 
 /**
  * @fileoverview Externs for the Network Information API.
+ * @see https://wicg.github.io/netinfo/
  * @externs
  */
 
 /**
- * @see http://wicg.github.io/netinfo/#-dfn-networkinformation-dfn-interface
- * @constructor
+ * @see https://wicg.github.io/netinfo/#networkinformation-interface
+ * @interface
+ * @extends {EventTarget}
  */
 function NetworkInformation() {}
 
@@ -40,10 +42,13 @@ NetworkInformation.prototype.downlink;
 /** @type {Millisecond} */
 NetworkInformation.prototype.rtt;
 
-/** @type {?function(Event)} */
+/** @type {?function(!Event)} */
 NetworkInformation.prototype.onchange;
 
-/** @type {boolean} */
+/**
+ * @type {boolean}
+ * @see https://wicg.github.io/savedata/
+ */
 NetworkInformation.prototype.saveData;
 
 /**
@@ -81,5 +86,15 @@ var ConnectionType;
  */
 var EffectiveConnectionType;
 
-/** @type {!NetworkInformation} */
+/**
+ * @type {!NetworkInformation}
+ * @see https://wicg.github.io/netinfo/#connection-attribute
+ */
 Navigator.prototype.connection;
+
+/**
+ * @type {!NetworkInformation}
+ * @see https://wicg.github.io/netinfo/#connection-attribute
+ */
+WorkerNavigator.prototype.connection;
+
