@@ -285,6 +285,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
           } else if (arg >= -0.5
               && (arg < 0.0 || (arg == 0.0 && Double.doubleToRawLongBits(arg) < 0))) {
             replacement = -0.0;
+          } else if (arg == Math.floor(arg)) {
+            // Already an integer. Math.round(double) saturates at the long range, so it would
+            // turn e.g. 1e20 into 2^63.
+            replacement = arg;
           } else {
             replacement = (double) Math.round(arg);
           }

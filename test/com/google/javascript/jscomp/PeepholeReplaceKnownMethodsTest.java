@@ -925,6 +925,11 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = Math.round(-0.0)", "x = -0.0");
     fold("x = Math.round(0.0)", "x = 0");
     fold("x = Math.round(-0.51)", "x = -1");
+    fold("x = Math.round(1e20)", "x = 1e20");
+    fold("x = Math.round(-1e20)", "x = -1e20");
+    fold("x = Math.round(9.3e18)", "x = 9.3e18");
+    fold("x = Math.round(1e300)", "x = 1e300");
+    fold("x = Math.round(4503599627370495.5)", "x = 4503599627370496");
   }
 
   @Test
