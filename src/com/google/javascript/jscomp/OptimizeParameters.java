@@ -584,7 +584,10 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     final Node templateLiteral = callee.getNext();
     final Node firstArg = IR.arraylit().srcref(templateLiteral);
     callee.detach();
-    final Node callNode = NodeUtil.newCallNode(callee, firstArg).srcref(ttlNode);
+    final Node callNode = IR.call(callee, firstArg).srcref(ttlNode);
+    callNode.putBooleanProp(
+        Node.FREE_CALL,
+        ttlNode.getBooleanProp(Node.FREE_CALL) || !NodeUtil.isNormalOrOptChainGet(callee));
     for (Node tlChild = templateLiteral.getFirstChild();
         tlChild != null;
         tlChild = tlChild.getNext()) {

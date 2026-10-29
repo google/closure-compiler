@@ -167,6 +167,81 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConvertTaggedTemplateLiteralToNormalCall_preservesFreeCallOnMethod() {
+    test(
+        externs(new TestExternsBuilder().addConsole().build()),
+        srcs(
+            """
+            class K {
+              m(strings) {
+                return this;
+              }
+            }
+            const k = new K();
+            console.log((0, k.m)`x` === void 0);
+            """),
+        expected(
+            """
+            class K {
+              m() {
+                [];
+                return this;
+              }
+            }
+            const k = new K();
+            console.log((0, k.m)() === void 0);
+            """));
+
+    test(
+        """
+        class K {
+          m(strings, val) {
+            return [this, val];
+          }
+        }
+        const k = new K();
+        use((0, k.m)`x${1}`);
+        use(k.m`y${2}`);
+        use(k.m());
+        """,
+        """
+        class K {
+          m(val) {
+            return [this, val];
+          }
+        }
+        const k = new K();
+        use((0, k.m)(1));
+        use(k.m(2));
+        use(k.m());
+        """);
+
+    test(
+        """
+        class K {
+          m(strings, val) {
+            return [this, val];
+          }
+        }
+        const k = new K();
+        use((0, k?.m)`x${1}`);
+        use((k?.m)`y${2}`);
+        use(k.m());
+        """,
+        """
+        class K {
+          m(val) {
+            return [this, val];
+          }
+        }
+        const k = new K();
+        use((0, k?.m)(1));
+        use((k?.m)(2));
+        use(k.m());
+        """);
+  }
+
+  @Test
   public void testInlineWindow() {
     test(
         """

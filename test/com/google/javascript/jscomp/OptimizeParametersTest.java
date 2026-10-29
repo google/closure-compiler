@@ -2082,6 +2082,133 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoRewriteTagged_computedMethodCall() {
+    testSame(
+        """
+        class K {
+          m() {
+            return this;
+          }
+        }
+        const k = new K();
+        alert((0, k['m'])`x` === void 0);
+        alert(k['m']`x` === k);
+        """);
+  }
+
+  @Test
+  public void testRewriteTagged_preservesFreeCallOnMethod() {
+    test(
+        """
+        class K {
+          m() {
+            return this;
+          }
+        }
+        const k = new K();
+        alert((0, k.m)`x` === void 0);
+        """,
+        """
+        class K {
+          m() {
+            [];
+            return this;
+          }
+        }
+        const k = new K();
+        alert((0, k.m)() === void 0);
+        """);
+
+    test(
+        """
+        class K {
+          m() {
+            return this;
+          }
+        }
+        const k = new K();
+        (0, k.m)`x${1}${alert()}`;
+        k.m();
+        """,
+        """
+        class K {
+          m() {
+            return this;
+          }
+        }
+        const k = new K();
+        (0, k.m)(alert());
+        k.m();
+        """);
+
+    test(
+        """
+        class K {
+          m() {
+            return this;
+          }
+        }
+        const k = new K();
+        alert((0, k?.m)`x` === void 0);
+        """,
+        """
+        class K {
+          m() {
+            [];
+            return this;
+          }
+        }
+        const k = new K();
+        alert((0, k?.m)() === void 0);
+        """);
+  }
+
+  @Test
+  public void testRewriteTagged_preservesBoundThisOnMethod() {
+    test(
+        """
+        class K {
+          m() {
+            return this;
+          }
+        }
+        const k = new K();
+        alert(k.m`x` === k);
+        """,
+        """
+        class K {
+          m() {
+            [];
+            return this;
+          }
+        }
+        const k = new K();
+        alert(k.m() === k);
+        """);
+
+    test(
+        """
+        class K {
+          m() {
+            return this;
+          }
+        }
+        const k = new K();
+        alert((k?.m)`x` === k);
+        """,
+        """
+        class K {
+          m() {
+            [];
+            return this;
+          }
+        }
+        const k = new K();
+        alert((k?.m)() === k);
+        """);
+  }
+
+  @Test
   public void testSuperInvocation_preventsParamInlining_whenImplicit() {
     testSame(
         """
