@@ -285,8 +285,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (trackLocalAccessSets
             && !t.inGlobalScope()
             && (input == null || input.getChunk() == t.getChunk())
-            && NodeUtil.isLValue(n)
-            && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
+            && NodeUtil.isLValueWrite(n)) {
           globalNamesWithInnerScopeWriteInDefiningChunk.add(name);
         }
 
@@ -304,7 +303,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
           if (trackLocalAccessSets) {
             // If tracking local access, track names with non-local writes separately. This includes
             // all L-value names except for declarations without children.
-            if (NodeUtil.isLValue(n) && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
+            if (NodeUtil.isLValueWrite(n)) {
               crossChunkNamesWithWriteFromOtherChunk.add(name);
             }
             if (!compiler.getChunkGraph().dependsOn(t.getChunk(), chunk)) {

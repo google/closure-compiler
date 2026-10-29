@@ -460,7 +460,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
           // If the cross-chunk variable is defined in this chunk, not re-assigned in any other
           // chunk, and not rewritten to wrapper access, then we skip the replacement and keep the
           // local name.
-          if (NodeUtil.isLValue(n) && (!NodeUtil.isNameDeclaration(parent) || n.hasChildren())) {
+          if (NodeUtil.isLValueWrite(n)) {
             // Any assignment needs to be also set on the global namespace symbol.
             addGlobalNamespaceAlias(n, name);
           }

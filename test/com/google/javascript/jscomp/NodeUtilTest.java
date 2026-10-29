@@ -3161,6 +3161,29 @@ public final class NodeUtilTest {
       assertNotLValueNamedX(x);
     }
 
+    @Test
+    public void testIsLValueWrite() {
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("var x = 1;"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("let x = 1;"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("const x = 1;"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("x = 1;"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("x += 1;"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("x++;"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("++x;"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("var [x] = arr;"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("([x] = arr);"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("for (var x of arr) {}"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("for (let x in obj) {}"), "x"))).isTrue();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("for (x of arr) {}"), "x"))).isTrue();
+
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("var x;"), "x"))).isFalse();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("let x;"), "x"))).isFalse();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("for (var x; ; ) {}"), "x"))).isFalse();
+      assertThat(NodeUtil.isLValueWrite(getNameNode(parse("var a = x;"), "x"))).isFalse();
+      // Detached declaration node where parent.getParent() is null.
+      assertThat(NodeUtil.isLValueWrite(IR.var(IR.name("x")).getFirstChild())).isFalse();
+    }
+
     private void assertDeclarationLValueNamedX(String js) {
       Node x = getNameNode(parse(js), "x");
       assertThat(NodeUtil.isDeclarationLValue(x)).isTrue();

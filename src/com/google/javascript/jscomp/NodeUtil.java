@@ -3073,6 +3073,22 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns whether {@code n} is an L-value write to a variable or property (including initialized
+   * declarations, assignments, increments/decrements, destructuring patterns, and enhanced {@code
+   * for}-loop headers, but excluding uninitialized variable declarations such as {@code var a;}).
+   */
+  public static boolean isLValueWrite(Node n) {
+    if (!isLValue(n)) {
+      return false;
+    }
+    Node parent = n.getParent();
+    Node grandparent = parent.getParent();
+    return !isNameDeclaration(parent)
+        || n.hasChildren()
+        || (grandparent != null && isEnhancedFor(grandparent));
+  }
+
+  /**
    * Determines whether this node is used as an L-value that is a declaration.
    *
    * <p><code>x = 5;</code> is an L-value but does not declare a variable.
