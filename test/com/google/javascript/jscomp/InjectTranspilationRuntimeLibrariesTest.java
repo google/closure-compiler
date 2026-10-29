@@ -71,15 +71,29 @@ public class InjectTranspilationRuntimeLibrariesTest {
   }
 
   @Test
-  public void testMakeIteratorAndObjectAssignInjectedForObjectPatternRest() {
+  public void testMakeIteratorAndAssignInjectedForObjectPatternRest() {
     ImmutableSet<String> injected = parseAndRunInjectionPass("const {a, ...rest} = something();");
-    assertThat(injected).containsExactly("es6/util/makeiterator", "es6/object/assign");
+    assertThat(injected).containsExactly("es6/util/makeiterator", "es6/util/assign");
   }
 
   @Test
-  public void testObjectAssignInjectedForObjectSpread() {
+  public void testMakeIteratorAndAssignInjectedForObjectPatternRest_es6Out_doesNotInjectAssign() {
+    languageOut = LanguageMode.ECMASCRIPT_2015;
+    ImmutableSet<String> injected = parseAndRunInjectionPass("const {a, ...rest} = something();");
+    assertThat(injected).containsExactly("es6/util/makeiterator");
+  }
+
+  @Test
+  public void testAssignInjectedForObjectSpread_es5Out() {
     ImmutableSet<String> injected = parseAndRunInjectionPass("const obj = {a, ...rest};");
-    assertThat(injected).containsExactly("es6/object/assign");
+    assertThat(injected).containsExactly("es6/util/assign");
+  }
+
+  @Test
+  public void testAssignInjectedForObjectSpread_es6Out_doesNotInjectAssign() {
+    languageOut = LanguageMode.ECMASCRIPT_2015;
+    ImmutableSet<String> injected = parseAndRunInjectionPass("const obj = {a, ...rest};");
+    assertThat(injected).isEmpty();
   }
 
   @Test

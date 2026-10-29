@@ -387,15 +387,13 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
                 return new Child();
                 """)),
         expected(
-            // Note that Object.assign doesn't need to be injected because it's a polyfill, not a
-            // runtime library field.
             """
             /** @fileoverview @closureUnaware */
             goog.module("test0");
             /** @closureUnaware */
-            (function() {
-              return Object.assign({}, obj);
-            }).call(undefined);
+            (function(a) {
+              return a({}, obj);
+            }).call(undefined, $jscomp.assign);
             """,
             """
             /** @fileoverview @closureUnaware */
@@ -423,7 +421,7 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             "es6/util/construct",
             "es6/util/inherits",
             "es6/util/arrayfromiterable",
-            "es6/object/assign");
+            "es6/util/assign");
   }
 
   @Test

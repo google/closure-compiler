@@ -1143,6 +1143,14 @@ final class AstFactory {
     return result;
   }
 
+  /** Creates a call to $jscomp.assign that returns the specified type. */
+  Node createJscompAssignCall(StaticScope scope, Type returnType, Node... args) {
+    var jscompAssign = runtimeJsLibManager.getJsLibField("$jscomp.assign");
+    var call = createCall(createQName(scope, jscompAssign), returnType, args);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
+  }
+
   Node createNewNode(Node target, Node... args) {
     Node result = IR.newNode(target, args);
     switch (this.typeMode) {

@@ -32,7 +32,7 @@ import org.junit.runners.JUnit4;
 public final class RewriteObjectSpreadTest extends CompilerTestCase {
 
   public RewriteObjectSpreadTest() {
-    super(new TestExternsBuilder().addObject().build());
+    super(new TestExternsBuilder().addObject().addJSCompLibraries().build());
   }
 
   @Before
@@ -53,7 +53,12 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteObjectSpread(compiler);
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "injectTranspilationRuntimeLibraries", InjectTranspilationRuntimeLibraries::new));
+    optimizer.addOneTimePass(makePassFactory("rewriteObjectSpread", RewriteObjectSpread::new));
+    return optimizer;
   }
 
   @Test
@@ -72,6 +77,12 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
     test(
         "({type : 'object', ...spread && spread});",
         "Object.assign({}, {type:'object'}, spread && spread);");
+  }
+
+  @Test
+  public void testObjectLiteralWithSpread_es5Out_emitsJscompAssign() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test("({first, ...spread});", "(0, $jscomp.assign)({}, {first}, spread)");
   }
 
   @Test

@@ -406,7 +406,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     externs =
         ImmutableList.of(
-            new TestExternsBuilder().addObject().addConsole().buildExternsFile("externs.js"));
+            new TestExternsBuilder()
+                .addObject()
+                .addConsole()
+                .addJSCompLibraries()
+                .buildExternsFile("externs.js"));
     test(
         options,
         """
@@ -421,12 +425,12 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             b = a.log,
             c = {a:1, b:2, c:3},
             d = c.a,
-            e = Object.assign({}, c),
+            e = (0, $jscomp.assign)({}, c),
             f = (delete e.a, e);
         b.call(a, {a:d, d:f});
         """);
     assertThat(lastCompiler.getRuntimeJsLibManager().getInjectedLibraries())
-        .contains("es6/object/assign");
+        .contains("es6/util/assign");
   }
 
   @Test
@@ -2365,6 +2369,13 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
+    externs =
+        ImmutableList.of(
+            defaultExternsBuilderwithoutClosure()
+                .addJSCompLibraries()
+                .addClosureExterns()
+                .buildExternsFile("externs"));
+
     // TODO(b/116532470): the compiler should compile this down to nothing.
     test(
         options,
@@ -2378,7 +2389,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         function a() {}
         a.prototype.a = function() {};
         (new a).a();
-        delete Object.assign({}, {a: 3}).a
+        delete (0, $jscomp.assign)({}, {a: 3}).a
         """);
   }
 

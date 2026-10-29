@@ -63,6 +63,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
   private final ObjectDestructuringRewriteMode rewriteMode;
   private final AstFactory astFactory;
   private final StaticScope namespace;
+  private final boolean useJscompAssign;
 
   private final FeatureSet featuresToTriggerRunningPass;
   private final FeatureSet featuresToMarkAsRemoved;
@@ -78,6 +79,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
     this.rewriteMode = builder.rewriteMode;
     this.astFactory = compiler.createAstFactory();
     this.namespace = compiler.getTranspilationNamespace();
+    this.useJscompAssign =
+        !this.compiler.getOptions().getOutputFeatureSet().contains(FeatureSet.ES2015);
 
     switch (this.rewriteMode) {
       case REWRITE_ALL_OBJECT_PATTERNS -> {
@@ -559,11 +562,17 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
         // then deleted, so getters for those properties may still be invoked during Object.assign.
         // TODO(b/116532470): see if casting this to a more specific type fixes disambiguation
         Node assignCall =
-            astFactory.createCall(
-                astFactory.createQName(this.namespace, "Object.assign"),
-                type(StandardColors.TOP_OBJECT));
-        assignCall.addChildToBack(astFactory.createObjectLit());
-        assignCall.addChildToBack(createTempVarNameNode(tempVarName, tempVarType));
+            useJscompAssign
+                ? astFactory.createJscompAssignCall(
+                    this.namespace,
+                    type(StandardColors.TOP_OBJECT),
+                    astFactory.createObjectLit(),
+                    createTempVarNameNode(tempVarName, tempVarType))
+                : astFactory.createObjectDotAssignCall(
+                    this.namespace,
+                    type(StandardColors.TOP_OBJECT),
+                    astFactory.createObjectLit(),
+                    createTempVarNameNode(tempVarName, tempVarType));
 
         Node restTempDecl = IR.var(createTempVarNameNode(restTempVarName, tempVarType), assignCall);
         restTempDecl.srcrefTreeIfMissing(objectPattern);
