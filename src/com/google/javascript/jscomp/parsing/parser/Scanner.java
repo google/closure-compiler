@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import java.util.ArrayList;
+import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -1009,10 +1010,13 @@ public class Scanner {
         case '`':
           return result;
         case '\\':
-          // There might be multiple errors. Take the first one but continue scanning
+          // There might be multiple errors or warnings. Take the first error, or the first
+          // warning if there are no errors, but continue scanning.
           SkipTemplateCharactersResult newError = skipTemplateLiteralEscapeSequence();
-          if (newError != null && !result.hasError()) {
-            result = newError;
+          if (newError != null) {
+            if (!result.hasMessage() || (!result.hasError() && newError.hasError())) {
+              result = newError;
+            }
           }
           break;
         case '$':
@@ -1362,19 +1366,20 @@ public class Scanner {
   private static class SkipTemplateCharactersResult {
     private final @Nullable String errorMessage;
     private final SourcePosition position;
-    private final ErrorLevel errorLevel;
+    private final @Nullable ErrorLevel errorLevel;
 
-    SkipTemplateCharactersResult(String message, ErrorLevel errorLevel, SourcePosition position) {
+    SkipTemplateCharactersResult(
+        @Nullable String message, @Nullable ErrorLevel errorLevel, SourcePosition position) {
       this.errorMessage = message;
       this.errorLevel = errorLevel;
       this.position = position;
     }
 
-    String getErrorMessage() {
+    @Nullable String getErrorMessage() {
       return this.errorMessage;
     }
 
-    ErrorLevel getErrorLevel() {
+    @Nullable ErrorLevel getErrorLevel() {
       return this.errorLevel;
     }
 
@@ -1382,8 +1387,12 @@ public class Scanner {
       return this.position;
     }
 
-    boolean hasError() {
+    boolean hasMessage() {
       return this.errorMessage != null;
+    }
+
+    boolean hasError() {
+      return Objects.equals(this.errorLevel, ErrorLevel.ERROR);
     }
   }
 }

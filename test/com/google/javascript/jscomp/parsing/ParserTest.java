@@ -5351,6 +5351,36 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testTemplateLiteralWithUnnecessaryEscapeFollowedByInvalidEscape() {
+    // b/576212117 (GitHub issue #4355): Unnecessary escape must not mask invalid escapes
+    // Tagged templates: invalid escape is allowed per ES2018, cooked string is null
+    Node n = parse("tag`\\a\\uc1`");
+    Node taggedTemplateLit = n.getFirstFirstChild();
+    assertNode(taggedTemplateLit).hasType(Token.TAGGED_TEMPLATELIT);
+    Node templateLit = taggedTemplateLit.getSecondChild();
+    assertNode(templateLit).hasType(Token.TEMPLATELIT);
+    Node templateLitString = templateLit.getFirstChild();
+    assertNode(templateLitString).hasType(Token.TEMPLATELIT_STRING);
+    assertThat(templateLitString.getCookedString()).isNull();
+    assertThat(templateLitString.getRawString()).isEqualTo("\\a\\uc1");
+
+    parse("tag`\\a\\xg`");
+    parse("tag`\\a\\u{zz}`");
+    parse("tag`\\q\\uc1`");
+    parse("String.raw`{\\rtf1\\adeflang1025\\ansi\\ansicpg1252\\uc1`");
+
+    // Multiple portions
+    parse("tag`\\a\\uc1${0}\\b\\uc2`");
+
+    // Untagged templates: parse error must be reported
+    parseError("var s = `\\a\\uc1`;", "Hex digit expected");
+    parseError("var s = `\\a\\xg`;", "Hex digit expected");
+    parseError("var s = `\\a\\u{zz}`;", "Hex digit expected");
+    parseError("var s = `\\a\\1`;", "Invalid escape sequence");
+    parseError("var s = `\\a\\u{}`;", "Empty unicode escape");
+  }
+
+  @Test
   public void testInvalidEscape() {
     parseError("var \\x39abc", "Invalid escape sequence");
     parseError("var abc\\t", "Invalid escape sequence");
