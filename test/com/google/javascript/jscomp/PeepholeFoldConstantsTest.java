@@ -1365,6 +1365,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = 2n * 3n", "x = 6n");
     test("x = 6n / 2n", "x = 3n");
     test("x = 3n % 2n", "x = 1n");
+    test("x = -5n % 3n", "x = -2n");
+    test("x = 5n % -3n", "x = 2n");
+    test("x = -5n % -3n", "x = -2n");
+    testSame("x = 1n % 0n");
+    test("x = 0n % -3n", "x = 0n");
+    testSame("x = 0n % 0n");
     test("x = 2n ** 3n", "x = 8n");
 
     // The compiler is not designed to fold expressions with an exponent > 2147483647
