@@ -1212,6 +1212,18 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .addChunk("a;")
                 .build()),
         expected("var a; a = _.a = 1; var f = function() { a = _.a = 2; }; a + 1;", "_.a;"));
+
+    // Writes inside an `if` block occur in a block scope (!t.inGlobalScope()), so other chunks do
+    // not alias `a` (`var {a} = _;`) and instead read `_.a` directly when `readA()` is called.
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("function readA() { return a; }")
+                .addChunk("var a = 1; if (a + 3) { a++; readA(); }")
+                .build()),
+        expected(
+            "_.readA = function() { return _.a; };",
+            "var {readA} = _; var a; a = _.a = 1; if (a + 3) { a++; _.a = a; readA(); }"));
   }
 
   @Test
@@ -1435,15 +1447,102 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .addChunk("a;")
                 .build()),
         expected("var localVar = 1, a; a + 1;", "var {a} = _; a;"));
+
+    // Standalone statement writes: compound assignments, prefix/postfix increments/decrements,
+    // and destructuring assignments.
     test(
         srcs(
             JSChunkGraphBuilder.forChain()
-                .addChunk("var a = 1; a++; a += 2; [a] = [3];")
+                .addChunk("var a = 1; a++; ++a; a--; --a; a += 2; [a] = [3]; var [b] = [4]; b;")
+                .addChunk("a; b;")
+                .build()),
+        expected(
+            "var a = _.a = 1, b; a++; _.a = a; ++a; _.a = a; a--; _.a = a; --a; _.a = a;"
+                + " a += 2; _.a = a; [a] = [3]; _.a = a; [b] = [4]; _.b = b; b;",
+            "var {a, b} = _; a; b;"));
+
+    // Top-level writes inside expression contexts (binary, ternary, and control-flow conditions).
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk(
+                    "var a = 1;"
+                        + " var x = (a++) + (++a) + (a--) + (--a) + (a += 2);"
+                        + " var y = a ? a++ : ++a;"
+                        + " if (a += 3) {}"
+                        + " while (a--) {}"
+                        + " do {} while (--a);"
+                        + " x + y;")
                 .addChunk("a;")
                 .build()),
         expected(
-            "var a = _.a = 1; a++; _.a = a; a += 2; _.a = a; [a] = [3]; _.a = a;",
+            "var a = _.a = 1;"
+                + " var x = a++ + ++a + a-- + --a + (a += 2);"
+                + " _.a = a; _.a = a; _.a = a; _.a = a; _.a = a;"
+                + " var y = a ? a++ : ++a;"
+                + " _.a = a; _.a = a;"
+                + " if (a += 3) {}"
+                + " _.a = a;"
+                + " while (a--) {}"
+                + " _.a = a;"
+                + " do {} while (--a);"
+                + " _.a = a;"
+                + " x + y;",
             "var {a} = _; a;"));
+
+    // Function-scoped writes inside expression contexts (return statements and concise arrow
+    // bodies): because these writes occur in a nested scope (!t.inGlobalScope()), the symbol is
+    // wrapped in a holder object (a._).
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk(
+                    "var a = 1;"
+                        + " function postInc() { return a++; }"
+                        + " function preInc() { return ++a; }"
+                        + " function postDec() { return a--; }"
+                        + " function preDec() { return --a; }"
+                        + " var addAssign = () => a += 1;"
+                        + " postInc() + preInc() + postDec() + preDec() + addAssign() + a;")
+                .addChunk("a;")
+                .build()),
+        expected(
+            "var a = _.a = {}; a._ = 1;"
+                + " var postInc = function() { return a._++; };"
+                + " var preInc = function() { return ++a._; };"
+                + " var postDec = function() { return a._--; };"
+                + " var preDec = function() { return --a._; };"
+                + " var addAssign = () => a._ += 1;"
+                + " postInc() + preInc() + postDec() + preDec() + addAssign() + a._;",
+            "var {a} = _; a._;"));
+
+    // Block-scoped writes (such as inside an `if` body) also have !t.inGlobalScope(), so the
+    // symbol is wrapped in a holder object (a._) and cross-chunk function calls inside the block
+    // observe the updated value.
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("var a = 1; if (a + 3) { a++; }")
+                .addChunk("a;")
+                .build()),
+        expected("var a = _.a = {}; a._ = 1; if (a._ + 3) { a._++; }", "var {a} = _; a._;"));
+    test(
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("function readA() { return a; }")
+                .addChunk("var a = 1; if (a + 3) { a++; readA(); }")
+                .build()),
+        expected(
+            "var a = _.a = {}; _.readA = function() { return a._; };",
+            "var {readA, a} = _; a._ = 1; if (a._ + 3) { a._++; readA(); }"));
+
+    // Uninitialized var declarations followed by top-level compound assignment or increment.
+    test(
+        srcs(JSChunkGraphBuilder.forChain().addChunk("var a; a += 2; a;").addChunk("a;").build()),
+        expected("var a; a += 2; _.a = a; a;", "var {a} = _; a;"));
+    test(
+        srcs(JSChunkGraphBuilder.forChain().addChunk("var a; a++; a;").addChunk("a;").build()),
+        expected("var a; a++; _.a = a; a;", "var {a} = _; a;"));
   }
 
   @Test
