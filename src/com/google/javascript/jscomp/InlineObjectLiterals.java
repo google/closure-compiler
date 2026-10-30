@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -400,12 +401,13 @@ class InlineObjectLiterals implements CompilerPass {
       // ASSIGN, then there's an EXPR_STATEMENT above it, if it's a
       // VAR then it should be directly replaced.
       Node vnode;
+      boolean isBlockScoped = v.isLet() || v.isConst();
       boolean defined =
           referenceInfo.isWellDefined() && NodeUtil.isNameDeclaration(init.getParent());
       if (defined) {
         vnode = init.getParent();
         fillInitialValues(init, initvals);
-      } else if (v.getParentNode().isLet() || v.getParentNode().isConst()) {
+      } else if (isBlockScoped) {
         // Find the beginning of the current scope.
         Node scopeRoot = v.getScope().getRootNode();
         // Assuming scopeRoot is a BLOCK, then we want to insert at the top of the block, before the
@@ -424,13 +426,22 @@ class InlineObjectLiterals implements CompilerPass {
 
       checkState(NodeUtil.isStatement(vnode), vnode);
 
+      if (isBlockScoped && !varmap.isEmpty()) {
+        Node script = NodeUtil.getEnclosingScript(vnode);
+        if (script != null) {
+          NodeUtil.addFeatureToScript(script, Feature.LET_DECLARATIONS, compiler);
+        }
+      }
+
       for (Map.Entry<String, String> entry : varmap.entrySet()) {
         Node val = initvals.get(entry.getKey());
-        Node newVarNode = NodeUtil.newVarNode(entry.getValue(), val);
+        Node lhs = IR.name(entry.getValue());
+        Token declarationType = isBlockScoped ? Token.LET : Token.VAR;
+        Node newVarNode;
         if (val == null) {
-          // is this right?
-          newVarNode.srcrefTreeIfMissing(vnode);
+          newVarNode = IR.declaration(lhs, declarationType).srcrefTreeIfMissing(vnode);
         } else {
+          newVarNode = IR.declaration(lhs, val, declarationType).srcrefTreeIfMissing(val);
           recordStaleVarReferencesInTree(val, v.getScope());
         }
         newVarNode.insertBefore(vnode);

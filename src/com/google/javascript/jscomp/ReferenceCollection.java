@@ -75,17 +75,29 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
     return true;
   }
 
-  /** Whether the variable is escaped into an inner function. */
+  /** Whether the variable is escaped into an inner function or deferred class field initializer. */
   boolean isEscaped() {
-    Scope hoistScope = null;
+    Scope closureScope = null;
     for (Reference ref : references) {
-      if (hoistScope == null) {
-        hoistScope = ref.getScope().getClosestHoistScope();
-      } else if (hoistScope != ref.getScope().getClosestHoistScope()) {
+      Scope refClosureScope = getEnclosingClosureScope(ref.getScope());
+      if (closureScope == null) {
+        closureScope = refClosureScope;
+      } else if (closureScope != refClosureScope) {
         return true;
       }
     }
     return false;
+  }
+
+  private static @Nullable Scope getEnclosingClosureScope(Scope scope) {
+    for (Scope s = scope; s != null; s = s.getParent()) {
+      if (s.isHoistScope()
+          || ((s.isMemberFieldDefScope() || s.isComputedFieldDefRhsScope())
+              && !s.getRootNode().isStaticMember())) {
+        return s;
+      }
+    }
+    return null;
   }
 
   /**

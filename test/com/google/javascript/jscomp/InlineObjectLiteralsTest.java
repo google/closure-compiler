@@ -135,7 +135,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
     String expected =
         """
         {
-          var JSCompiler_object_inline_x_0;
+          let JSCompiler_object_inline_x_0;
           if (Math.random()) {
             JSCompiler_object_inline_x_0 = '', true;
             console.log(JSCompiler_object_inline_x_0);
@@ -164,7 +164,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
     String expected =
         """
         {
-          var JSCompiler_object_inline_x_0;
+          let JSCompiler_object_inline_x_0;
           JSCompiler_object_inline_x_0 = "", true;
           console.log(JSCompiler_object_inline_x_0);
         }
@@ -240,8 +240,8 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         "for (let i = 0; i < 5; i++) { let a = {i:i,x:x}; f(a.i, a.x); }",
         """
         for (let i = 0; i < 5; i++) {
-          var JSCompiler_object_inline_i_0=i;
-          var JSCompiler_object_inline_x_1=x;
+          let JSCompiler_object_inline_i_0=i;
+          let JSCompiler_object_inline_x_1=x;
           f(JSCompiler_object_inline_i_0,JSCompiler_object_inline_x_1)
         }
         """);
@@ -273,8 +273,8 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         """,
         """
         let x;
-        var JSCompiler_object_inline_i_0;
-        var JSCompiler_object_inline_x_1;
+        let JSCompiler_object_inline_i_0;
+        let JSCompiler_object_inline_x_1;
          switch (x) {
            case 'h':
             if (Math.random() > .5) {
@@ -300,8 +300,8 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         """,
         """
         let x;
-        var JSCompiler_object_inline_i_0;
-        var JSCompiler_object_inline_x_1;
+        let JSCompiler_object_inline_i_0;
+        let JSCompiler_object_inline_x_1;
          switch (x) {
          case 'h':
          case 'i':
@@ -327,8 +327,8 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         """,
         """
         let x;
-        var JSCompiler_object_inline_i_0;
-        var JSCompiler_object_inline_x_1;
+        let JSCompiler_object_inline_i_0;
+        let JSCompiler_object_inline_x_1;
          switch (x) {
          case 'h':
           if (Math.random() > .5) {
@@ -354,8 +354,8 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         }
         """,
         """
-        var JSCompiler_object_inline_i_0;
-        var JSCompiler_object_inline_x_1;
+        let JSCompiler_object_inline_i_0;
+        let JSCompiler_object_inline_x_1;
         let x;
          switch (x) {
          case 'h':
@@ -686,8 +686,8 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
     testLocal(
         "let a = {x:x(), y:y()}; f(a.x, a.y);",
         """
-        var JSCompiler_object_inline_x_0=x();
-        var JSCompiler_object_inline_y_1=y();
+        let JSCompiler_object_inline_x_0=x();
+        let JSCompiler_object_inline_y_1=y();
         f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);
         """);
   }
@@ -697,8 +697,8 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
     testLocal(
         "const a = {x:x(), y:y()}; f(a.x, a.y);",
         """
-        var JSCompiler_object_inline_x_0=x();
-        var JSCompiler_object_inline_y_1=y();
+        let JSCompiler_object_inline_x_0=x();
+        let JSCompiler_object_inline_y_1=y();
         f(JSCompiler_object_inline_x_0, JSCompiler_object_inline_y_1);
         """);
   }
@@ -1079,7 +1079,6 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
   @Test
   public void testClassField_perIterationLetCapture() {
-    // TODO(b/572003863): let/const object literal in a loop body is split into function-scoped vars
     setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
     testLocal(
         """
@@ -1090,7 +1089,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         """,
         """
         for (let i = 0; i < 2; i++) {
-          var JSCompiler_object_inline_a_0 = i;
+          let JSCompiler_object_inline_a_0 = i;
           arr.push(class {
             x = JSCompiler_object_inline_a_0;
           });
@@ -1100,7 +1099,6 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
   @Test
   public void testClassField_perIterationLetCapture_arrowControl() {
-    // TODO(b/572003863): let/const object literal in a loop body is split into function-scoped vars
     setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
     testLocal(
         """
@@ -1111,12 +1109,83 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         """,
         """
         for (let i = 0; i < 2; i++) {
-          var JSCompiler_object_inline_a_0 = i;
+          let JSCompiler_object_inline_a_0 = i;
           arr.push(() => {
             return JSCompiler_object_inline_a_0;
           });
         }
         """);
   }
-}
 
+  @Test
+  public void testClassField_perIterationConstAndComputedFieldCapture() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
+    testLocal(
+        """
+        for (let i = 0; i < 2; i++) {
+          const o = {a: i};
+          arr.push(class { x = o.a; [k] = o.a; });
+        }
+        """,
+        """
+        for (let i = 0; i < 2; i++) {
+          let JSCompiler_object_inline_a_0 = i;
+          arr.push(class {
+            x = JSCompiler_object_inline_a_0;
+            [k] = JSCompiler_object_inline_a_0;
+          });
+        }
+        """);
+  }
+
+  @Test
+  public void testPerIterationConstMutatedAndAddedPropertyCapture() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
+    testLocal(
+        """
+        for (const i of items) {
+          const o = {a: i};
+          o.a = i + 1;
+          o.b = i + 2;
+          arr.push(function() { return o.a + o.b; });
+        }
+        """,
+        """
+        for (const i of items) {
+          let JSCompiler_object_inline_a_0 = i;
+          let JSCompiler_object_inline_b_1;
+          JSCompiler_object_inline_a_0 = i + 1;
+          JSCompiler_object_inline_b_1 = i + 2;
+          arr.push(function() {
+            return JSCompiler_object_inline_a_0 + JSCompiler_object_inline_b_1;
+          });
+        }
+        """);
+  }
+
+  @Test
+  public void testPerIterationUninitializedLetCapture() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
+    testLocal(
+        """
+        for (let i = 0; i < 2; i++) {
+          let o;
+          if (c) {
+            o = {a: i};
+          }
+          arr.push(class { x = o.a; });
+        }
+        """,
+        """
+        for (let i = 0; i < 2; i++) {
+          let JSCompiler_object_inline_a_0;
+          if (c) {
+            JSCompiler_object_inline_a_0 = i, true;
+          }
+          arr.push(class {
+            x = JSCompiler_object_inline_a_0;
+          });
+        }
+        """);
+  }
+}

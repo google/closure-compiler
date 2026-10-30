@@ -175,6 +175,41 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassField_referencingGlobalVariable_escapeIffInstanceFields() {
+    testBehavior(
+        """
+        const instance1 = 0;
+        const instance2 = 1;
+        const static1 = 2;
+        const static2 = 3;
+        const computedKeyRef = 4;
+        class Foo {
+          instance1 = instance1;
+          ['instance2'] = instance2;
+          static static1 = static1;
+          static ['static2'] = static2;
+          [computedKeyRef] = 0;
+        }
+        """,
+        (NodeTraversal t, ReferenceMap rm) -> {
+          if (t.getScope().isGlobal()) {
+            ReferenceCollection instance1 = rm.getReferences(t.getScope().getVar("instance1"));
+            ReferenceCollection instance2 = rm.getReferences(t.getScope().getVar("instance2"));
+            ReferenceCollection static1 = rm.getReferences(t.getScope().getVar("static1"));
+            ReferenceCollection static2 = rm.getReferences(t.getScope().getVar("static2"));
+            ReferenceCollection computedKeyRef =
+                rm.getReferences(t.getScope().getVar("computedKeyRef"));
+
+            assertThat(instance1.isEscaped()).isTrue();
+            assertThat(instance2.isEscaped()).isTrue();
+            assertThat(static1.isEscaped()).isFalse();
+            assertThat(static2.isEscaped()).isFalse();
+            assertThat(computedKeyRef.isEscaped()).isFalse();
+          }
+        });
+  }
+
+  @Test
   public void testImport1() {
     testBehavior(
         "import x from '/m';",
