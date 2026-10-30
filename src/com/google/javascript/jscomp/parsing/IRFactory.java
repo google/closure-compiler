@@ -4085,7 +4085,7 @@ class IRFactory {
           while (++c < length) {
             v = (v * 2) + binarydigit(value.charAt(c));
           }
-          yield v;
+          yield roundLargeRadixLiteral(v, value.substring(2), 2);
         }
         case 'o', 'O' -> {
           maybeWarnForFeature(token, Feature.OCTAL_LITERALS);
@@ -4094,7 +4094,7 @@ class IRFactory {
           while (++c < length) {
             v = (v * 8) + octaldigit(value.charAt(c));
           }
-          yield v;
+          yield roundLargeRadixLiteral(v, value.substring(2), 8);
         }
         case 'x', 'X' -> {
           double v = 0;
@@ -4102,7 +4102,7 @@ class IRFactory {
           while (++c < length) {
             v = (v * 0x10) + hexdigit(value.charAt(c));
           }
-          yield v;
+          yield roundLargeRadixLiteral(v, value.substring(2), 16);
         }
         case '0', '1', '2', '3', '4', '5', '6', '7' -> {
           double v = 0;
@@ -4130,7 +4130,7 @@ class IRFactory {
                 lineno(location.start),
                 charno(location.start));
           }
-          yield v;
+          yield roundLargeRadixLiteral(v, value.substring(1), 8);
         }
         case '8', '9' -> {
           errorReporter.error(
@@ -4180,6 +4180,18 @@ class IRFactory {
   private String removeNumericSeparators(String value, LiteralToken token) {
     maybeWarnForFeature(token, Feature.NUMERIC_SEPARATOR);
     return value.replace("_", "");
+  }
+
+  /**
+   * Returns the value of a binary, octal, or hex integer literal whose digits were accumulated into
+   * {@code v} one at a time.
+   *
+   * <p>That accumulation is exact while the value stays below 2^53. Past that, every step rounds
+   * and the error compounds, so the literal can land on a neighbor of the correctly rounded double.
+   * For those, parse the full integer and round it once, matching {@link #normalizeBigInt}.
+   */
+  private static double roundLargeRadixLiteral(double v, String digits, int radix) {
+    return v < 0x1p53 ? v : new BigInteger(digits, radix).doubleValue();
   }
 
   private static int binarydigit(char c) {
