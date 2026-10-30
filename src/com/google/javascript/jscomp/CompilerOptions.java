@@ -3675,6 +3675,10 @@ public class CompilerOptions {
       return this.ordinal() >= ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED.ordinal();
     }
 
+    boolean shouldRewriteCompoundAndIncrementWritesInPlace() {
+      return this.ordinal() >= ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED.ordinal();
+    }
+
     boolean shouldDeleteGlobalsOnLastAccess() {
       return this == DELETE_GLOBALS_ON_LAST_ACCESS;
     }

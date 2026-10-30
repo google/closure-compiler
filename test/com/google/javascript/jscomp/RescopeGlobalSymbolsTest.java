@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
+import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
@@ -1457,8 +1459,8 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .addChunk("a; b;")
                 .build()),
         expected(
-            "var a = _.a = 1, b; a++; _.a = a; ++a; _.a = a; a--; _.a = a; --a; _.a = a;"
-                + " a += 2; _.a = a; [a] = [3]; _.a = a; [b] = [4]; _.b = b; b;",
+            "var a = _.a = 1, b; ++_.a, a++; _.a = ++a; --_.a, a--; _.a = --a; _.a = a += 2;"
+                + " [a] = [3]; _.a = a; [b] = [4]; _.b = b; b;",
             "var {a, b} = _; a; b;"));
 
     // Top-level writes inside expression contexts (binary, ternary, and control-flow conditions).
@@ -1477,16 +1479,12 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
                 .build()),
         expected(
             "var a = _.a = 1;"
-                + " var x = a++ + ++a + a-- + --a + (a += 2);"
-                + " _.a = a; _.a = a; _.a = a; _.a = a; _.a = a;"
-                + " var y = a ? a++ : ++a;"
-                + " _.a = a; _.a = a;"
-                + " if (a += 3) {}"
-                + " _.a = a;"
-                + " while (a--) {}"
-                + " _.a = a;"
-                + " do {} while (--a);"
-                + " _.a = a;"
+                + " var x = (++_.a, a++) + (_.a = ++a) + (--_.a, a--) + (_.a = --a) + (_.a = a +="
+                + " 2);"
+                + " var y = a ? (++_.a, a++) : (_.a = ++a);"
+                + " if (_.a = a += 3) {}"
+                + " while (--_.a, a--) {}"
+                + " do {} while (_.a = --a);"
                 + " x + y;",
             "var {a} = _; a;"));
 
@@ -1539,10 +1537,52 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     // Uninitialized var declarations followed by top-level compound assignment or increment.
     test(
         srcs(JSChunkGraphBuilder.forChain().addChunk("var a; a += 2; a;").addChunk("a;").build()),
-        expected("var a; a += 2; _.a = a; a;", "var {a} = _; a;"));
+        expected("var a; _.a = a += 2; a;", "var {a} = _; a;"));
     test(
         srcs(JSChunkGraphBuilder.forChain().addChunk("var a; a++; a;").addChunk("a;").build()),
-        expected("var a; a++; _.a = a; a;", "var {a} = _; a;"));
+        expected("var a; ++_.a, a++; a;", "var {a} = _; a;"));
+  }
+
+  @Test
+  public void testLocalAccessOptimization_uninitializedDeclarationWriteThrows() {
+    optimizeLocalAccess = CompilerOptions.OptimizeLocalAccess.DEFINING_CHUNK_ONLY;
+    assumeCrossChunkNames = false;
+    Sources sources =
+        srcs(
+            JSChunkGraphBuilder.forChain()
+                .addChunk("for (var a of [1, 2]) {} a;")
+                .addChunk("a;")
+                .build());
+    Expected expected = expected("", "");
+    RuntimeException e = assertThrows(RuntimeException.class, () -> test(sources, expected));
+    assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
+    assertThat(e)
+        .hasCauseThat()
+        .hasMessageThat()
+        .contains("Expected initialized declaration for NAME a");
+  }
+
+  @Test
+  public void testAllChunksWithWrappingAndInitAssignment_unsafeWriteToLocalAliasThrows() {
+    optimizeLocalAccess =
+        CompilerOptions.OptimizeLocalAccess.ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED;
+    assumeCrossChunkNames = false;
+    for (String chunk0 :
+        new String[] {
+          "var a; label: [a] = [1]; a;",
+          "var a; (([a] = [1]), 2); a;",
+          "var a; if (([a] = [1])) {} a;"
+        }) {
+      Sources sources =
+          srcs(JSChunkGraphBuilder.forChain().addChunk(chunk0).addChunk("a;").build());
+      Expected expected = expected("", "");
+      RuntimeException e = assertThrows(RuntimeException.class, () -> test(sources, expected));
+      assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
+      assertThat(e)
+          .hasCauseThat()
+          .hasMessageThat()
+          .contains("Unexpected unsafe write to local alias: NAME a");
+    }
   }
 
   @Test

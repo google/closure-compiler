@@ -285,10 +285,12 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
       // becoming `var a = _.a = 1;`), RemoveGlobalVarCallback will leave the declaration node in
       // place, so convert its token to `VAR`. Uninitialized declarations with no rescoped variables
       // (e.g. `let a;`) are left untouched.
+      boolean changed = false;
       if (isGlobalDeclaration
           && !declaration.isVar()
           && containsRescopedOrInitializedVars(declaration, isGlobalDeclaration)) {
         declaration.setToken(Token.VAR);
+        changed = true;
       }
       for (Node child = declaration.getFirstChild(); child != null; ) {
         final Node next = child.getNext();
@@ -299,10 +301,12 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
               Node assign = IR.assign(child.cloneNode(), child.removeFirstChild());
               child.replaceWith(assign);
               assign.setJSDocInfo(declaration.getJSDocInfo());
+              changed = true;
             } else if (isExternVar(name, t)) {
               // Detach uninitialized extern redeclarations (e.g. `var externVar, a = 1;`) so
               // RemoveGlobalVarCallback does not treat the remaining NAME node as a local variable.
               child.detach();
+              changed = true;
             }
           }
         } else if (child.isDestructuringLhs()) {
@@ -320,10 +324,13 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
           Node assign = IR.assign(child.removeFirstChild(), child.removeFirstChild());
           child.replaceWith(assign);
           assign.setJSDocInfo(declaration.getJSDocInfo());
+          changed = true;
         }
         child = next;
       }
-      compiler.reportChangeToEnclosingScope(declaration);
+      if (changed) {
+        compiler.reportChangeToEnclosingScope(declaration);
+      }
       return;
     }
 
@@ -523,48 +530,106 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
    * Aliases the local variable's value to the global namespace, so that it can be accessed from
    * other chunks.
    *
-   * <p>For simple assignments and variable declarations with initializers, this chains the
-   * assignment to avoid an extra statement (e.g. converts {@code a = x} to {@code a = _.a = x} and
-   * {@code var a = x} to {@code var a = _.a = x}). For other writes (e.g. compound assignments,
-   * destructuring, increments), it inserts a separate assignment statement after the current one
-   * (e.g. appends {@code _.a = a;}).
+   * <p>For assignments, variable declarations with initializers, and increments/decrements, this
+   * rewrites the expression in place to avoid an extra statement (e.g. converts {@code a = x} to
+   * {@code a = _.a = x}, {@code var a = x} to {@code var a = _.a = x}, {@code a += x} to {@code _.a
+   * = a += x}, {@code ++a} to {@code _.a = ++a}, and {@code a++} to {@code (++_.a, a++)}). For
+   * other writes (e.g. destructuring), it inserts a separate assignment statement after the current
+   * one (e.g. appends {@code _.a = a;}).
    */
   private void addGlobalNamespaceAlias(Node n, String name) {
     Node stmt = NodeUtil.getEnclosingStatement(n);
     if (stmt == null) {
       return;
     }
+    Node globalTarget = IR.getprop(IR.name(globalSymbolNamespace), name);
     Node parent = n.getParent();
     if (parent.isAssign() && parent.getFirstChild() == n) {
       // Optimized path for simple assignments (e.g. `a = x`).
       // We chain the assignment to the global namespace to reduce output size:
       // `a = _.a = x` instead of `a = x; _.a = a;`.
       Node rhs = parent.getSecondChild();
-      Node globalNamespaceAssign =
-          IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), rhs.detach());
+      Node globalNamespaceAssign = IR.assign(globalTarget, rhs.detach());
       globalNamespaceAssign.srcrefTree(n);
       parent.addChildToBack(globalNamespaceAssign);
       compiler.reportChangeToEnclosingScope(parent);
     } else if (NodeUtil.isNameDeclaration(parent)) {
       // Optimized path for variable declarations with initializers (e.g. `var a = x`).
       // We chain the assignment to the global namespace: `var a = _.a = x`.
+      checkState(n.hasChildren(), "Expected initialized declaration for %s", n);
       Node rhs = n.removeFirstChild();
-      Node globalNamespaceAssign = IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), rhs);
+      Node globalNamespaceAssign = IR.assign(globalTarget, rhs);
       globalNamespaceAssign.srcrefTree(n);
       n.addChildToBack(globalNamespaceAssign);
       compiler.reportChangeToEnclosingScope(n);
-    } else {
-      // Fallback path for other writes (e.g. `a++`, `a += x`, destructuring).
-      // In these cases, we cannot easily chain the assignment without changing semantics
-      // or making the code overly complex. Instead, we append a separate assignment
-      // statement (`_.a = a;`).
-      Node globalNamespaceAssign =
-          IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), IR.name(name));
+    } else if (optimizeLocalAccess.shouldRewriteCompoundAndIncrementWritesInPlace()
+        && NodeUtil.isCompoundAssignmentOp(parent)
+        && parent.getFirstChild() == n) {
+      // Compound assignments (e.g. `a += x`) evaluate to the updated value of the local variable,
+      // so we can chain an assignment to the global namespace in place: `_.a = a += x`.
+      Node placeholder = IR.empty();
+      parent.replaceWith(placeholder);
+      Node globalNamespaceAssign = IR.assign(globalTarget.srcrefTree(n), parent).srcref(n);
+      placeholder.replaceWith(globalNamespaceAssign);
+      compiler.reportChangeToEnclosingScope(globalNamespaceAssign);
+    } else if (optimizeLocalAccess.shouldRewriteCompoundAndIncrementWritesInPlace()
+        && (parent.isInc() || parent.isDec())) {
+      if (!parent.getBooleanProp(Node.INCRDECR_PROP)) {
+        // Prefix increments/decrements (e.g. `++a`) evaluate to the updated value of the local
+        // variable, so we can chain an assignment to the global namespace in place: `_.a = ++a`.
+        Node placeholder = IR.empty();
+        parent.replaceWith(placeholder);
+        Node globalNamespaceAssign = IR.assign(globalTarget.srcrefTree(n), parent).srcref(n);
+        placeholder.replaceWith(globalNamespaceAssign);
+        compiler.reportChangeToEnclosingScope(globalNamespaceAssign);
+      } else {
+        // Postfix increments/decrements (e.g. `a++`) evaluate to the pre-update value of the local
+        // variable, so chaining `_.a = a++` would assign the old value to `_.a`. Instead, mirror
+        // the increment/decrement on the global namespace target in a comma expression:
+        // `(++_.a, a++)`.
+        Node placeholder = IR.empty();
+        parent.replaceWith(placeholder);
+        Node globalUpdate =
+            (parent.isInc() ? IR.inc(globalTarget, false) : IR.dec(globalTarget, false))
+                .srcrefTree(n);
+        Node comma = IR.comma(globalUpdate, parent).srcref(n);
+        placeholder.replaceWith(comma);
+        compiler.reportChangeToEnclosingScope(comma);
+      }
+    } else if (!optimizeLocalAccess.shouldRewriteCompoundAndIncrementWritesInPlace()
+        || isSafeDestructuringWrite(n, stmt)) {
+      // Fallback path for destructuring writes (e.g. `var [a] = x;` or `[a] = x;`), or for
+      // compound assignments and increments/decrements when in-place rewriting is disabled.
+      // In these cases, we cannot chain the assignment in place without changing semantics.
+      // Instead, we append a separate assignment statement (`_.a = a;`).
+      Node globalNamespaceAssign = IR.assign(globalTarget, IR.name(name));
       Node aliasStatement = IR.exprResult(globalNamespaceAssign);
       aliasStatement.srcrefTree(n);
       aliasStatement.insertAfter(stmt);
       compiler.reportChangeToEnclosingScope(stmt.getParent());
+    } else {
+      throw new IllegalStateException("Unexpected unsafe write to local alias: " + n);
     }
+  }
+
+  /**
+   * Returns whether {@code n} is a destructuring write whose updated local variable can be safely
+   * mirrored by inserting a separate assignment statement immediately after {@code stmt}.
+   *
+   * <p>Note that {@link #rewriteNameDeclaration} has already converted {@code DESTRUCTURING_LHS}
+   * children of non-enhanced-for declarations into {@code ASSIGN} nodes before {@link #visitName}
+   * is called.
+   */
+  private static boolean isSafeDestructuringWrite(Node n, Node stmt) {
+    if (!NodeUtil.isLhsByDestructuring(n) || !NodeUtil.isStatementBlock(stmt.getParent())) {
+      return false;
+    }
+    Node rootTarget = NodeUtil.getRootTarget(n);
+    Node rootTargetParent = rootTarget.getParent();
+    if (!rootTargetParent.isAssign() || rootTargetParent.getParent() != stmt) {
+      return false;
+    }
+    return stmt.isExprResult() || NodeUtil.isNameDeclaration(stmt);
   }
 
   /**
