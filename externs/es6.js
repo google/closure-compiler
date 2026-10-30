@@ -327,6 +327,12 @@ Math.f16round = function(x) {};
  */
 RegExp.escape = function(string) {};
 
+/**
+ * @type {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/unicodeSets
+ */
+RegExp.prototype.unicodeSets;
+
 // Well-known symbols
 
 /**
