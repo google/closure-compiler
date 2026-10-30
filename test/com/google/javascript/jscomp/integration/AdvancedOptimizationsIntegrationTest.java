@@ -571,7 +571,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
           "",
           """
           const $module$contents$base_problemFunc$$ = () => 1;
-          var $module$exports$base$Base$$ = class {
+          class $module$contents$grandchild_GrandChild$$ extends class extends class {
             constructor(
                 {
                   $paramProblemFunc$:$paramProblemFunc$$ =
@@ -579,7 +579,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
                 } = {}) {
               this.$a$ = $paramProblemFunc$$();
             }
-          }, $module$exports$child$Child$$ = class extends $module$exports$base$Base$$ {
+          } {
             constructor(
                 {
                   $paramProblemFunc$:$paramProblemFunc$jscomp$1$$ =
@@ -587,9 +587,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
                 } = {}) {
               super({$paramProblemFunc$:$paramProblemFunc$jscomp$1$$});
             }
-          };
-          class $module$contents$grandchild_GrandChild$$
-              extends $module$exports$child$Child$$ {
+          } {
             constructor() {
           // TODO(b/196083761): Fix this!
           // NOTE the call to `null()` here!
@@ -849,7 +847,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
 
-    testSame(
+    test(
         options,
         """
         function Super() { } // A pure function that *might* be used as a constructor.
@@ -865,6 +863,15 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         }
 
         // We have to use the class somehow or the entire this is removable.
+        alert(new Sub());
+        """,
+        """
+        class Sub extends function() {} {
+          constructor() {
+            super();
+            alert('hi');
+          }
+        }
         alert(new Sub());
         """);
   }

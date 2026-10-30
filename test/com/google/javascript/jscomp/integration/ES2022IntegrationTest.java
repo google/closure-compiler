@@ -555,10 +555,11 @@ public final class ES2022IntegrationTest extends IntegrationTestCase {
         """;
     String expected =
         """
-        const $$jscomp$classExtends$98447280$0$$ = class {};
-        class __PRIVATE_WebChannelConnection extends $$jscomp$classExtends$98447280$0$$ {
-          constructor() {
-            super();
+        class __PRIVATE_WebChannelConnection extends class {
+          constructor() {}
+        } {
+          constructor($e$jscomp$1$$) {
+            super($e$jscomp$1$$);
             console.log("test");
           }
         }

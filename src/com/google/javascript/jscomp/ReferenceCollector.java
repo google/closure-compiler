@@ -312,17 +312,19 @@ public final class ReferenceCollector
 
   private void popLastBlock(Node root) {
     BasicBlock last = this.blockStack.removeLast();
-    // Verfiy that the stack is unwound correctly.
+    // Verify that the stack is unwound correctly.
     checkState(identical(root, last.getRoot()), root);
   }
 
   /**
+   * Returns whether this node marks the start of a new basic block.
+   *
    * @return true if this node marks the start of a new basic block
    */
   private static boolean isBlockBoundary(Node n, Node parent) {
     if (parent != null) {
       switch (parent.getToken()) {
-        case DO, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, TRY, WHILE, WITH, CLASS, SWITCH_BODY -> {
+        case DO, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, TRY, WHILE, WITH, SWITCH_BODY -> {
           // NOTE: TRY has up to 3 child blocks:
           // TRY
           //   BLOCK
@@ -333,6 +335,9 @@ public final class ReferenceCollector
           // FINALLY token. For simplicity, we consider each BLOCK
           // a separate basic BLOCK.
           return true;
+        }
+        case CLASS -> {
+          return n.isClassMembers();
         }
         case AND,
             HOOK,

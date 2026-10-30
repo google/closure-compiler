@@ -130,8 +130,7 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
             ReferenceCollection x = rm.getReferences(t.getScope().getVar("Foo"));
 
             assertThat(x.isAssignedOnceInLifetime()).isTrue();
-            // TODO(lharker): we should consider this well-defined.
-            assertThat(x.isWellDefined()).isFalse();
+            assertThat(x.isWellDefined()).isTrue();
             assertThat(x)
                 .comparingElementsUsing(IS_DECLARATION)
                 .containsExactly(true, false)
