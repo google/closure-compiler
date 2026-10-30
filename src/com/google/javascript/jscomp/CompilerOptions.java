@@ -3648,7 +3648,9 @@ public class CompilerOptions {
      * In addition to {@link #ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS}, preserve {@code var}
      * declarations with initializers in place (e.g. {@code var a = _.a = 1;}) for variables that
      * remain local to their defining chunk instead of hoisting uninitialized {@code var}
-     * declarations to the top of the chunk.
+     * declarations to the top of the chunk, and keep a disambiguated local alias (e.g. {@code var
+     * _a = _.a._ = 1;}) in the defining chunk for wrapped reassignable symbols that are read in
+     * their defining chunk and not written in other chunks.
      */
     ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED,
 
@@ -3676,6 +3678,10 @@ public class CompilerOptions {
     }
 
     boolean shouldRewriteCompoundAndIncrementWritesInPlace() {
+      return this.ordinal() >= ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED.ordinal();
+    }
+
+    boolean shouldKeepLocalAliasForWrappedReassignables() {
       return this.ordinal() >= ALL_CHUNKS_WITH_WRAPPED_REASSIGNABLE_SYMBOLS_IMPROVED.ordinal();
     }
 

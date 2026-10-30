@@ -124,11 +124,18 @@ final class RescopeGlobalSymbols implements CompilerPass {
         root,
         new RewriteGlobalClassFunctionDeclarationsToVarAssignmentsCallback(compiler));
 
+    RescopeGlobalSymbolsRenameHelper.HelperBuilder renameHelperBuilder =
+        new RescopeGlobalSymbolsRenameHelper.HelperBuilder(
+            compiler, globalSymbolNamespace, optimizeLocalAccess);
+
     // Find global names that are used in more than one chunk. Those that
     // are have to be rewritten.
     FindCrossChunkNamesCallback findCrossChunkNames =
         new FindCrossChunkNamesCallback(
-            compiler, assumeCrossChunkNames, optimizeLocalAccess.shouldOptimize());
+            compiler,
+            assumeCrossChunkNames,
+            optimizeLocalAccess.shouldOptimize(),
+            renameHelperBuilder);
 
     // And find names that may refer to functions that reference this.
     FindNamesReferencingThis findNamesReferencingThis = new FindNamesReferencingThis();
@@ -147,10 +154,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
             findCrossChunkNames.crossChunkNamesUsedInNonDependentChunk,
             findCrossChunkNames.globalNamesWithReadInDefiningChunk,
             findCrossChunkNames.globalNamesWithInnerScopeWriteInDefiningChunk,
+            findCrossChunkNames.globalNamesWithUnsafeWriteForLocalAliasInDefiningChunk,
             findNamesReferencingThis.maybeReferencesThis);
 
-    RescopeGlobalSymbolsRenameHelper renameHelper =
-        new RescopeGlobalSymbolsRenameHelper(compiler, globalSymbolNamespace);
+    RescopeGlobalSymbolsRenameHelper renameHelper = renameHelperBuilder.build(symbolInfo);
 
     // Rewrite all references to be property accesses of the single symbol.
     RescopeGlobalSymbolsRewriteCallback rewriteScope =
@@ -267,11 +274,26 @@ final class RescopeGlobalSymbols implements CompilerPass {
      */
     final Set<String> globalNamesWithInnerScopeWriteInDefiningChunk = new LinkedHashSet<>();
 
+    /**
+     * Global identifiers that have an L-value write in their defining chunk that cannot be safely
+     * mirrored by {@link RescopeGlobalSymbolsRewriteCallback#addGlobalNamespaceAlias} (such as a
+     * destructuring assignment in an expression context or a {@code for-in}/{@code for-of} loop
+     * header). Only populated if trackLocalAccessSets is true.
+     */
+    final Set<String> globalNamesWithUnsafeWriteForLocalAliasInDefiningChunk =
+        new LinkedHashSet<>();
+
+    private final RescopeGlobalSymbolsRenameHelper.HelperBuilder renameHelperBuilder;
+
     FindCrossChunkNamesCallback(
-        AbstractCompiler compiler, boolean assumeCrossChunkNames, boolean trackLocalAccessSets) {
+        AbstractCompiler compiler,
+        boolean assumeCrossChunkNames,
+        boolean trackLocalAccessSets,
+        RescopeGlobalSymbolsRenameHelper.HelperBuilder renameHelperBuilder) {
       this.compiler = compiler;
       this.assumeCrossChunkNames = assumeCrossChunkNames;
       this.trackLocalAccessSets = trackLocalAccessSets;
+      this.renameHelperBuilder = renameHelperBuilder;
     }
 
     @Override
@@ -281,6 +303,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (name.isEmpty() || (!trackLocalAccessSets && crossChunkNames.contains(name))) {
           return;
         }
+        renameHelperBuilder.recordExistingName(name);
         Scope s = t.getScope();
         Var v = s.getVar(name);
         if (v == null || !v.isGlobal()) {
@@ -322,10 +345,64 @@ final class RescopeGlobalSymbols implements CompilerPass {
               crossChunkNamesUsedInNonDependentChunk.add(name);
             }
           }
-        } else if (trackLocalAccessSets && n != v.getNameNode()) {
-          globalNamesWithReadInDefiningChunk.add(name);
+        } else if (trackLocalAccessSets) {
+          if (isReadReference(n)) {
+            globalNamesWithReadInDefiningChunk.add(name);
+          }
+          if (NodeUtil.isLValueWrite(n) && !isWriteSafeForLocalAliasMirroring(n, parent)) {
+            globalNamesWithUnsafeWriteForLocalAliasInDefiningChunk.add(name);
+          }
         }
       }
+    }
+
+    /**
+     * Returns whether the {@code NAME} node {@code n} reads the variable's value (either as a
+     * non-L-value reference or as the target of a read-modify-write operation such as {@code a +=
+     * 1} or {@code a++}).
+     */
+    private static boolean isReadReference(Node n) {
+      if (!NodeUtil.isLValue(n)) {
+        return true;
+      }
+      Node parent = n.getParent();
+      return NodeUtil.isCompoundAssignmentOp(parent) || parent.isInc() || parent.isDec();
+    }
+
+    /**
+     * Returns whether an L-value write {@code n} in its defining chunk can be safely mirrored to
+     * the global namespace or wrapper object by {@link
+     * RescopeGlobalSymbolsRewriteCallback#addGlobalNamespaceAlias}.
+     *
+     * <p>{@code addGlobalNamespaceAlias} rewrites assignments ({@code a = x}, {@code a += x}),
+     * initialized declarations ({@code var a = x}), and increments/decrements ({@code ++a}, {@code
+     * a++}) in place as expressions, which works in any expression context. For destructuring
+     * writes, it appends a separate {@code _.a._ = _a;} statement after the enclosing statement,
+     * which is only sound when the write is a top-level destructuring assignment statement or a
+     * non-for-loop destructuring declaration.
+     */
+    private static boolean isWriteSafeForLocalAliasMirroring(Node n, Node parent) {
+      if ((NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
+          || parent.isInc()
+          || parent.isDec()) {
+        return true;
+      }
+      if (NodeUtil.isNameDeclaration(parent)) {
+        return !NodeUtil.isEnhancedFor(parent.getParent());
+      }
+      if (NodeUtil.isLhsByDestructuring(n)) {
+        Node rootTarget = NodeUtil.getRootTarget(n);
+        Node rootTargetParent = rootTarget.getParent();
+        if (rootTargetParent.isDestructuringLhs()) {
+          Node declaration = rootTargetParent.getParent();
+          return NodeUtil.isStatementBlock(declaration.getParent());
+        }
+        if (rootTargetParent.isAssign() && rootTargetParent.getFirstChild() == rootTarget) {
+          Node exprResult = rootTargetParent.getParent();
+          return exprResult.isExprResult() && NodeUtil.isStatementBlock(exprResult.getParent());
+        }
+      }
+      return false;
     }
   }
 

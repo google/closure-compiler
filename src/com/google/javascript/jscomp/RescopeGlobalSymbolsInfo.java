@@ -31,6 +31,7 @@ record RescopeGlobalSymbolsInfo(
     ImmutableSet<String> crossChunkNamesUsedInNonDependentChunk,
     ImmutableSet<String> globalNamesWithReadInDefiningChunk,
     ImmutableSet<String> globalNamesWithInnerScopeWriteInDefiningChunk,
+    ImmutableSet<String> globalNamesWithUnsafeWriteForLocalAliasInDefiningChunk,
     ImmutableSet<String> maybeReferencesThis,
     ImmutableSet<String> wrappedCrossChunkNames) {
 
@@ -42,6 +43,7 @@ record RescopeGlobalSymbolsInfo(
       Set<String> crossChunkNamesUsedInNonDependentChunk,
       Set<String> globalNamesWithReadInDefiningChunk,
       Set<String> globalNamesWithInnerScopeWriteInDefiningChunk,
+      Set<String> globalNamesWithUnsafeWriteForLocalAliasInDefiningChunk,
       Set<String> maybeReferencesThis) {
     this(
         globalSymbolNamespace,
@@ -51,6 +53,7 @@ record RescopeGlobalSymbolsInfo(
         ImmutableSet.copyOf(crossChunkNamesUsedInNonDependentChunk),
         ImmutableSet.copyOf(globalNamesWithReadInDefiningChunk),
         ImmutableSet.copyOf(globalNamesWithInnerScopeWriteInDefiningChunk),
+        ImmutableSet.copyOf(globalNamesWithUnsafeWriteForLocalAliasInDefiningChunk),
         ImmutableSet.copyOf(maybeReferencesThis),
         collectWrappedCrossChunkNames(
             externNames,
