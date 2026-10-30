@@ -20,23 +20,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.base.JSCompObjects.identical;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ReferenceCollector.Behavior;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /** Collects global variable references for use by {@link CrossChunkCodeMotion}. */
 public final class CrossChunkReferenceCollector implements CompilerPass {
-
-  /** Maps global variable name to the corresponding {@link Var} object. */
-  private final Map<String, Var> varsByName = new LinkedHashMap<>();
 
   /** List of all top-level statements in the order they appear in the AST. */
   private final List<TopLevelStatement> topLevelStatements = new ArrayList<>();
@@ -85,8 +80,13 @@ public final class CrossChunkReferenceCollector implements CompilerPass {
     return referenceCollector.getReferences(v);
   }
 
+  @VisibleForTesting
   ImmutableMap<String, Var> getGlobalVariableNamesMap() {
-    return ImmutableMap.copyOf(varsByName);
+    ImmutableMap.Builder<String, Var> builder = ImmutableMap.builder();
+    for (Var v : referenceCollector.getAllSymbols()) {
+      builder.put(v.getName(), v);
+    }
+    return builder.buildOrThrow();
   }
 
   private final class TopLevelStatementCollectingBehavior implements Behavior {
@@ -108,13 +108,6 @@ public final class CrossChunkReferenceCollector implements CompilerPass {
         topLevelStatements.add(new TopLevelStatement(topLevelStatementDraft));
         topLevelStatementDraft = null;
       } else if (addedReference != null && n.isName()) {
-        String varName = n.getString();
-        Var v = addedReference.getSymbol();
-        if (varsByName.containsKey(varName)) {
-          checkState(Objects.equals(varsByName.get(varName), v));
-        } else {
-          varsByName.put(varName, v);
-        }
         if (identical(addedReference.getNode(), topLevelStatementDraft.declaredNameNode)) {
           topLevelStatementDraft.declaredNameReference = addedReference;
         } else {
