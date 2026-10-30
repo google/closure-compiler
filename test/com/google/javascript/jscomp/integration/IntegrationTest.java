@@ -2808,6 +2808,48 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testExtractPrototypeMemberDeclarationsAndAmbiguateProperties() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setExtractPrototypeMemberDeclarations(true);
+    options.setAmbiguateProperties(true);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setVariableRenaming(VariableRenamingPolicy.ALL);
+
+    StringBuilder code = new StringBuilder();
+    code.append("/** @constructor */ function Foo() {}\n");
+    for (int i = 0; i < 7; i++) {
+      code.append("Foo.prototype.fooM").append(i).append(" = function() {};\n");
+    }
+    code.append("/** @constructor */ function Bar() {}\n");
+    for (int i = 0; i < 7; i++) {
+      code.append("Bar.prototype.barM").append(i).append(" = function() {};\n");
+    }
+
+    // TODO(b/575626948): AmbiguateProperties should ambiguate Foo and Bar prototype methods to the
+    // same property names (a..g) instead of distinct names (a..g and h..n).
+    StringBuilder expected = new StringBuilder();
+    expected.append("var a; function b() {} a = b.prototype;");
+    expected.append("a.h=function(){};");
+    expected.append("a.i=function(){};");
+    expected.append("a.j=function(){};");
+    expected.append("a.k=function(){};");
+    expected.append("a.l=function(){};");
+    expected.append("a.m=function(){};");
+    expected.append("a.n=function(){};");
+    expected.append("function c() {} a = c.prototype;");
+    expected.append("a.a=function(){};");
+    expected.append("a.b=function(){};");
+    expected.append("a.c=function(){};");
+    expected.append("a.d=function(){};");
+    expected.append("a.e=function(){};");
+    expected.append("a.f=function(){};");
+    expected.append("a.g=function(){};");
+
+    test(options, code.toString(), expected.toString());
+  }
+
+  @Test
   public void testDevirtualizationAndExtractPrototypeMemberDeclarations() {
     CompilerOptions options = createCompilerOptions();
     options.setDevirtualizeMethods(true);
