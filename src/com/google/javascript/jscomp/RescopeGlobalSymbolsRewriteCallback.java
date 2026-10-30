@@ -72,40 +72,10 @@ import java.util.Set;
  */
 final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callback {
 
-  // Appended to variables names that conflict with globalSymbolNamespace.
-  private static final String DISAMBIGUATION_SUFFIX = "$";
-
-  static record SymbolInformation(
-      ImmutableSet<String> crossChunkNames,
-      ImmutableSet<String> crossChunkNamesWithWriteFromOtherChunk,
-      ImmutableSet<String> crossChunkNamesUsedInNonDependentChunk,
-      ImmutableSet<String> globalNamesWithReadInDefiningChunk,
-      ImmutableSet<String> globalNamesWithInnerScopeWriteInDefiningChunk,
-      ImmutableSet<String> maybeReferencesThis) {
-
-    SymbolInformation(
-        Set<String> crossChunkNames,
-        Set<String> crossChunkNamesWithWriteFromOtherChunk,
-        Set<String> crossChunkNamesUsedInNonDependentChunk,
-        Set<String> globalNamesWithReadInDefiningChunk,
-        Set<String> globalNamesWithInnerScopeWriteInDefiningChunk,
-        Set<String> maybeReferencesThis) {
-      this(
-          ImmutableSet.copyOf(crossChunkNames),
-          ImmutableSet.copyOf(crossChunkNamesWithWriteFromOtherChunk),
-          ImmutableSet.copyOf(crossChunkNamesUsedInNonDependentChunk),
-          ImmutableSet.copyOf(globalNamesWithReadInDefiningChunk),
-          ImmutableSet.copyOf(globalNamesWithInnerScopeWriteInDefiningChunk),
-          ImmutableSet.copyOf(maybeReferencesThis));
-    }
-  }
-
   private final AbstractCompiler compiler;
-  private final String globalSymbolNamespace;
-  private final boolean assumeCrossChunkNames;
   private final CompilerOptions.OptimizeLocalAccess optimizeLocalAccess;
-  private final ImmutableSet<String> externNames;
-  private final SymbolInformation symbolInfo;
+  private final RescopeGlobalSymbolsInfo symbolInfo;
+  private final RescopeGlobalSymbolsRenameHelper renameHelper;
 
   private final List<ChunkGlobal> preDeclarations = new ArrayList<>();
 
@@ -128,34 +98,24 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
    */
   private final Map<String, Set<JSChunk>> chunksUsingCrossChunkSymbols = new LinkedHashMap<>();
 
-  /**
-   * Global symbols that are reassignable or referenced in a chunk that does not depend on their
-   * defining chunk, and will be wrapped in an object. This allows for constant tracking and
-   * inlining by the JavaScript runtime, and enables safe aliasing in all chunks. Only populated if
-   * optimizeLocalAccess.shouldWrapReassignableSymbols() is true.
-   */
-  private final ImmutableSet<String> wrappedCrossChunkNames;
-
   RescopeGlobalSymbolsRewriteCallback(
       AbstractCompiler compiler,
-      String globalSymbolNamespace,
-      boolean assumeCrossChunkNames,
       CompilerOptions.OptimizeLocalAccess optimizeLocalAccess,
-      Node externs,
-      SymbolInformation symbolInfo) {
+      RescopeGlobalSymbolsInfo symbolInfo,
+      RescopeGlobalSymbolsRenameHelper renameHelper) {
     this.compiler = compiler;
-    this.globalSymbolNamespace = globalSymbolNamespace;
-    this.assumeCrossChunkNames = assumeCrossChunkNames;
     this.optimizeLocalAccess = optimizeLocalAccess;
-    this.externNames = NodeUtil.collectExternVariableNames(compiler, externs);
     this.symbolInfo = symbolInfo;
-    this.wrappedCrossChunkNames = collectWrappedCrossChunkNames();
+    this.renameHelper = renameHelper;
   }
 
   private boolean isCrossChunkName(String name) {
-    return assumeCrossChunkNames
-        || symbolInfo.crossChunkNames().contains(name)
-        || compiler.getCodingConvention().isExported(name, /* local= */ false);
+    return symbolInfo.crossChunkNames().contains(name);
+  }
+
+  private boolean isWrappedCrossChunkName(String name) {
+    return optimizeLocalAccess.shouldWrapReassignableSymbols()
+        && symbolInfo.wrappedCrossChunkNames().contains(name);
   }
 
   private boolean isExternVar(String varname, NodeTraversal t) {
@@ -163,24 +123,9 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
       return false;
     }
     Var v = t.getScope().getVar(varname);
-    return v == null || v.isExtern() || (v.getScope().isGlobal() && externNames.contains(varname));
-  }
-
-  private ImmutableSet<String> collectWrappedCrossChunkNames() {
-    if (!optimizeLocalAccess.shouldWrapReassignableSymbols()) {
-      return ImmutableSet.of();
-    }
-
-    Set<String> candidates = new LinkedHashSet<>();
-    candidates.addAll(symbolInfo.crossChunkNamesWithWriteFromOtherChunk());
-    candidates.addAll(symbolInfo.crossChunkNamesUsedInNonDependentChunk());
-    for (String name : symbolInfo.globalNamesWithInnerScopeWriteInDefiningChunk()) {
-      if (isCrossChunkName(name)) {
-        candidates.add(name);
-      }
-    }
-    candidates.removeAll(externNames);
-    return ImmutableSet.copyOf(candidates);
+    return v == null
+        || v.isExtern()
+        || (v.getScope().isGlobal() && symbolInfo.externNames().contains(varname));
   }
 
   @Override
@@ -248,7 +193,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
       return false;
     }
     return !symbolInfo.crossChunkNamesWithWriteFromOtherChunk().contains(name)
-        && !wrappedCrossChunkNames.contains(name)
+        && !isWrappedCrossChunkName(name)
         && symbolInfo.globalNamesWithReadInDefiningChunk().contains(name);
   }
 
@@ -406,7 +351,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
       if (isGlobalDeclaration
           && child.isName()
           && (symbolInfo.crossChunkNamesWithWriteFromOtherChunk().contains(child.getString())
-              || wrappedCrossChunkNames.contains(child.getString()))) {
+              || isWrappedCrossChunkName(child.getString()))) {
         return true;
       }
       if (child.hasChildren() || child.isDestructuringLhs()) {
@@ -433,12 +378,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
     // if a name starts with the name of the globalSymbolNamespace and
     // the suffix.
     Var var = t.getScope().getVar(name);
-    if (!var.isGlobal()
-        && (name.equals(globalSymbolNamespace)
-            || name.startsWith(globalSymbolNamespace + DISAMBIGUATION_SUFFIX))) {
-      n.setString(name + DISAMBIGUATION_SUFFIX);
-      compiler.reportChangeToEnclosingScope(n);
-    }
+    renameHelper.maybeDisambiguateLocalVar(n, var);
 
     // We only care about global vars.
     if (!(var.isGlobal() && isCrossChunkName(name))) {
@@ -452,7 +392,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
           .add(currentChunk);
     }
 
-    if (wrappedCrossChunkNames.contains(name)) {
+    if (isWrappedCrossChunkName(name)) {
       // Replace the symbol with an access to the wrapper.
       Node replacement = IR.getprop(IR.name(name), "_");
       replaceSymbol(n, name, replacement);
@@ -477,7 +417,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
         // If the variable is only initialized in its defining chunk and never read there, replace
         // it directly with an access on the global namespace symbol instead of keeping an unused
         // local variable.
-        Node replacement = IR.getprop(IR.name(globalSymbolNamespace), name);
+        Node replacement = IR.getprop(IR.name(symbolInfo.globalSymbolNamespace()), name);
         replaceSymbol(n, name, replacement);
         return;
       } else if (optimizeLocalAccess.shouldOptimizeAllChunks()) {
@@ -507,7 +447,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
     }
 
     // Otherwise replace the symbol with an access on the global namespace symbol.
-    Node replacement = IR.getprop(IR.name(globalSymbolNamespace), name);
+    Node replacement = IR.getprop(IR.name(symbolInfo.globalSymbolNamespace()), name);
     replaceSymbol(n, name, replacement);
   }
 
@@ -542,7 +482,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
     if (stmt == null) {
       return;
     }
-    Node globalTarget = IR.getprop(IR.name(globalSymbolNamespace), name);
+    Node globalTarget = IR.getprop(IR.name(symbolInfo.globalSymbolNamespace()), name);
     Node parent = n.getParent();
     if (parent.isAssign() && parent.getFirstChild() == n) {
       // Optimized path for simple assignments (e.g. `a = x`).
@@ -671,8 +611,9 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
 
     // Compute the chunk in which to define the wrapper for each wrapped symbol.
     Map<String, JSChunk> wrapperAssignmentChunks = new LinkedHashMap<>();
-    if (!wrappedCrossChunkNames.isEmpty()) {
-      for (String name : wrappedCrossChunkNames) {
+    if (optimizeLocalAccess.shouldWrapReassignableSymbols()
+        && !symbolInfo.wrappedCrossChunkNames().isEmpty()) {
+      for (String name : symbolInfo.wrappedCrossChunkNames()) {
         Set<JSChunk> usingChunks =
             chunksUsingCrossChunkSymbols.getOrDefault(name, ImmutableSet.of());
         JSChunk wrapperAssignmentChunk =
@@ -700,7 +641,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
   private String getCleanupHelperPropertyName() {
     String name = "_";
     while (chunksUsingCrossChunkSymbols.containsKey(name)) {
-      name += DISAMBIGUATION_SUFFIX;
+      name += "$";
     }
     return name;
   }
@@ -715,6 +656,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
    */
   private void declareCleanupHelper(String cleanupHelperName) {
     Node script = compiler.getNodeForCodeInsertion(null);
+    String globalSymbolNamespace = symbolInfo.globalSymbolNamespace();
     String paramName = globalSymbolNamespace.equals("a") ? "b" : "a";
     String loopVar = !paramName.equals("b") && !globalSymbolNamespace.equals("b") ? "b" : "c";
     Node splitCall = IR.call(IR.getprop(IR.name(paramName), "split"), IR.string(","));
@@ -751,7 +693,7 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
     if (optimizeLocalAccess.shouldWrapReassignableSymbols()) {
       wrappedReassignableLocalAliases = new LinkedHashSet<>();
 
-      for (String name : wrappedCrossChunkNames) {
+      for (String name : symbolInfo.wrappedCrossChunkNames()) {
         JSChunk assignmentChunk = wrapperAssignmentChunks.get(name);
         Set<JSChunk> usingChunks = chunksUsingCrossChunkSymbols.get(name);
         if (chunk.equals(assignmentChunk)) {
@@ -764,7 +706,9 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
                 insertionPoint,
                 IR.var(
                     IR.name(name),
-                    IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), IR.objectlit())));
+                    IR.assign(
+                        IR.getprop(IR.name(symbolInfo.globalSymbolNamespace()), name),
+                        IR.objectlit())));
           } else {
             // The symbol is not used in this chunk, so we only define the wrapper object:
             // `_.name = {};`.
@@ -772,7 +716,9 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
                 script,
                 insertionPoint,
                 IR.exprResult(
-                    IR.assign(IR.getprop(IR.name(globalSymbolNamespace), name), IR.objectlit())));
+                    IR.assign(
+                        IR.getprop(IR.name(symbolInfo.globalSymbolNamespace()), name),
+                        IR.objectlit())));
           }
           changed = true;
         } else if (usingChunks != null && usingChunks.contains(chunk)) {
@@ -816,13 +762,15 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
           objectPattern.addChildToBack(stringKey);
         }
         addDeclaration(
-            script, insertionPoint, IR.var(objectPattern, IR.name(globalSymbolNamespace)));
+            script,
+            insertionPoint,
+            IR.var(objectPattern, IR.name(symbolInfo.globalSymbolNamespace())));
         NodeUtil.addFeatureToScript(script, Feature.OBJECT_DESTRUCTURING, compiler);
         if (!aliasesToDelete.isEmpty()) {
           Node cleanupCall =
               IR.exprResult(
                   IR.call(
-                      IR.getprop(IR.name(globalSymbolNamespace), cleanupHelperName),
+                      IR.getprop(IR.name(symbolInfo.globalSymbolNamespace()), cleanupHelperName),
                       IR.string(Joiner.on(',').join(aliasesToDelete))));
           addDeclaration(script, insertionPoint, cleanupCall);
           usedCleanupHelper = true;
@@ -832,17 +780,18 @@ final class RescopeGlobalSymbolsRewriteCallback implements NodeTraversal.Callbac
           addDeclaration(
               script,
               insertionPoint,
-              IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name)));
+              IR.var(IR.name(name), IR.getprop(IR.name(symbolInfo.globalSymbolNamespace()), name)));
         }
         for (String name : aliasesToDelete) {
           addDeclaration(
               script,
               insertionPoint,
-              IR.var(IR.name(name), IR.getprop(IR.name(globalSymbolNamespace), name)));
+              IR.var(IR.name(name), IR.getprop(IR.name(symbolInfo.globalSymbolNamespace()), name)));
           addDeclaration(
               script,
               insertionPoint,
-              IR.exprResult(IR.delprop(IR.getprop(IR.name(globalSymbolNamespace), name))));
+              IR.exprResult(
+                  IR.delprop(IR.getprop(IR.name(symbolInfo.globalSymbolNamespace()), name))));
         }
       }
       changed = true;

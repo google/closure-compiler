@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.rhino.IR;
@@ -126,7 +127,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
     // Find global names that are used in more than one chunk. Those that
     // are have to be rewritten.
     FindCrossChunkNamesCallback findCrossChunkNames =
-        new FindCrossChunkNamesCallback(compiler, optimizeLocalAccess.shouldOptimize());
+        new FindCrossChunkNamesCallback(
+            compiler, assumeCrossChunkNames, optimizeLocalAccess.shouldOptimize());
 
     // And find names that may refer to functions that reference this.
     FindNamesReferencingThis findNamesReferencingThis = new FindNamesReferencingThis();
@@ -134,8 +136,12 @@ final class RescopeGlobalSymbols implements CompilerPass {
     CombinedCompilerPass.traverse(
         compiler, root, ImmutableList.of(findCrossChunkNames, findNamesReferencingThis));
 
-    RescopeGlobalSymbolsRewriteCallback.SymbolInformation symbolInfo =
-        new RescopeGlobalSymbolsRewriteCallback.SymbolInformation(
+    ImmutableSet<String> externNames = NodeUtil.collectExternVariableNames(compiler, externs);
+
+    RescopeGlobalSymbolsInfo symbolInfo =
+        new RescopeGlobalSymbolsInfo(
+            globalSymbolNamespace,
+            externNames,
             findCrossChunkNames.crossChunkNames,
             findCrossChunkNames.crossChunkNamesWithWriteFromOtherChunk,
             findCrossChunkNames.crossChunkNamesUsedInNonDependentChunk,
@@ -143,15 +149,13 @@ final class RescopeGlobalSymbols implements CompilerPass {
             findCrossChunkNames.globalNamesWithInnerScopeWriteInDefiningChunk,
             findNamesReferencingThis.maybeReferencesThis);
 
+    RescopeGlobalSymbolsRenameHelper renameHelper =
+        new RescopeGlobalSymbolsRenameHelper(compiler, globalSymbolNamespace);
+
     // Rewrite all references to be property accesses of the single symbol.
     RescopeGlobalSymbolsRewriteCallback rewriteScope =
         new RescopeGlobalSymbolsRewriteCallback(
-            compiler,
-            globalSymbolNamespace,
-            assumeCrossChunkNames,
-            optimizeLocalAccess,
-            externs,
-            symbolInfo);
+            compiler, optimizeLocalAccess, symbolInfo, renameHelper);
     NodeTraversal.traverse(compiler, root, rewriteScope);
 
     // Remove the var from statements in global scope if the declared names have been rewritten
@@ -235,6 +239,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
    */
   private static class FindCrossChunkNamesCallback extends AbstractPostOrderCallback {
     private final AbstractCompiler compiler;
+    private final boolean assumeCrossChunkNames;
     private final boolean trackLocalAccessSets;
     final Set<String> crossChunkNames = new LinkedHashSet<>();
 
@@ -262,8 +267,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
      */
     final Set<String> globalNamesWithInnerScopeWriteInDefiningChunk = new LinkedHashSet<>();
 
-    FindCrossChunkNamesCallback(AbstractCompiler compiler, boolean trackLocalAccessSets) {
+    FindCrossChunkNamesCallback(
+        AbstractCompiler compiler, boolean assumeCrossChunkNames, boolean trackLocalAccessSets) {
       this.compiler = compiler;
+      this.assumeCrossChunkNames = assumeCrossChunkNames;
       this.trackLocalAccessSets = trackLocalAccessSets;
     }
 
@@ -278,6 +285,11 @@ final class RescopeGlobalSymbols implements CompilerPass {
         Var v = s.getVar(name);
         if (v == null || !v.isGlobal()) {
           return;
+        }
+
+        if (assumeCrossChunkNames
+            || compiler.getCodingConvention().isExported(name, /* local= */ false)) {
+          crossChunkNames.add(name);
         }
 
         CompilerInput input = v.getInput();
