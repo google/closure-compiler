@@ -15,8 +15,8 @@
  */
 
 /**
- * @fileoverview Validates that `iterator` is an Object and converts `limit`
- * to a non-negative integer (or +Infinity) per ECMA-262.
+ * @fileoverview Shared limit validation utility for ES2025 Iterator.prototype.take
+ * and drop.
  *
  * @see https://tc39.es/ecma262/#sec-iterator.prototype.take
  * @see https://tc39.es/ecma262/#sec-iterator.prototype.drop
@@ -50,3 +50,4 @@ $jscomp.toIteratorLimit = function(iterator, limit) {
   }
   return integerLimit;
 };
+

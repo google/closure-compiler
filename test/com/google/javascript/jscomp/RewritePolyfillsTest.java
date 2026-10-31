@@ -620,6 +620,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   public void testIteratorPolyfill() {
     addLibrary("Iterator", "es_next", "es3", "es6/iterator");
     addLibrary("Iterator.from", "es_next", "es3", "es6/iterator/from");
+    addLibrary("Iterator.prototype.drop", "es_next", "es3", "es6/iterator/drop");
     addLibrary("Iterator.prototype.every", "es_next", "es3", "es6/iterator/every");
     addLibrary("Iterator.prototype.filter", "es_next", "es3", "es6/iterator/filter");
     addLibrary("Iterator.prototype.find", "es_next", "es3", "es6/iterator/find");
@@ -627,12 +628,14 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     addLibrary("Iterator.prototype.map", "es_next", "es3", "es6/iterator/map");
     addLibrary("Iterator.prototype.reduce", "es_next", "es3", "es6/iterator/reduce");
     addLibrary("Iterator.prototype.some", "es_next", "es3", "es6/iterator/some");
+    addLibrary("Iterator.prototype.take", "es_next", "es3", "es6/iterator/take");
     addLibrary("Iterator.prototype.toArray", "es_next", "es3", "es6/iterator/toarray");
 
     setLanguage(ES_2020, ES3);
     testInjects("Iterator;", "es6/iterator");
     testInjects("class MyIter extends Iterator {}", "es6/iterator");
     testInjects("Iterator.from(x);", "es6/iterator", "es6/iterator/from");
+    testInjects("x.drop(1);", "es6/iterator/drop");
     testInjects("x.every(fn);", "es6/iterator/every");
     testInjects("x.filter(fn);", "es6/iterator/filter");
     testInjects("x.find(fn);", "es6/iterator/find");
@@ -640,6 +643,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("x.map(fn);", "es6/iterator/map");
     testInjects("x.reduce(fn, 0);", "es6/iterator/reduce");
     testInjects("x.some(fn);", "es6/iterator/some");
+    testInjects("x.take(1);", "es6/iterator/take");
     testInjects("x.toArray();", "es6/iterator/toarray");
     testDoesNotInject("");
   }
@@ -648,11 +652,13 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   public void testIteratorPolyfill_typedReceiver() {
     this.disambiguateProperties = true;
     addLibrary("Iterator", "es_next", "es3", "es6/iterator");
+    addLibrary("Iterator.prototype.drop", "es_next", "es3", "es6/iterator/drop");
     addLibrary("Iterator.prototype.every", "es_next", "es3", "es6/iterator/every");
     addLibrary("Iterator.prototype.filter", "es_next", "es3", "es6/iterator/filter");
     addLibrary("Iterator.prototype.find", "es_next", "es3", "es6/iterator/find");
     addLibrary("Iterator.prototype.map", "es_next", "es3", "es6/iterator/map");
     addLibrary("Iterator.prototype.some", "es_next", "es3", "es6/iterator/some");
+    addLibrary("Iterator.prototype.take", "es_next", "es3", "es6/iterator/take");
     addLibrary("Iterator.prototype.toArray", "es_next", "es3", "es6/iterator/toarray");
 
     setLanguage(ES_2020, ES3);
@@ -667,7 +673,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testDoesNotInject("const arr = [1, 2, 3]; arr.toArray();");
     testDoesNotInject(
         "const arr = [1, 2, 3]; arr.some(fn); arr.every(fn); arr.find(fn); arr.map(fn);"
-            + " arr.filter(fn);");
+            + " arr.filter(fn); arr.take(1); arr.drop(1);");
 
     // 2. Receiver is a union of concrete classes disjoint from Iterator: DO NOT inject
     testDoesNotInject(
