@@ -624,6 +624,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     addLibrary("Iterator.prototype.every", "es_next", "es3", "es6/iterator/every");
     addLibrary("Iterator.prototype.filter", "es_next", "es3", "es6/iterator/filter");
     addLibrary("Iterator.prototype.find", "es_next", "es3", "es6/iterator/find");
+    addLibrary("Iterator.prototype.flatMap", "es_next", "es3", "es6/iterator/flatmap");
     addLibrary("Iterator.prototype.forEach", "es_next", "es3", "es6/iterator/foreach");
     addLibrary("Iterator.prototype.map", "es_next", "es3", "es6/iterator/map");
     addLibrary("Iterator.prototype.reduce", "es_next", "es3", "es6/iterator/reduce");
@@ -639,6 +640,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("x.every(fn);", "es6/iterator/every");
     testInjects("x.filter(fn);", "es6/iterator/filter");
     testInjects("x.find(fn);", "es6/iterator/find");
+    testInjects("x.flatMap(fn);", "es6/iterator/flatmap");
     testInjects("x.forEach(fn);", "es6/iterator/foreach");
     testInjects("x.map(fn);", "es6/iterator/map");
     testInjects("x.reduce(fn, 0);", "es6/iterator/reduce");
@@ -656,6 +658,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     addLibrary("Iterator.prototype.every", "es_next", "es3", "es6/iterator/every");
     addLibrary("Iterator.prototype.filter", "es_next", "es3", "es6/iterator/filter");
     addLibrary("Iterator.prototype.find", "es_next", "es3", "es6/iterator/find");
+    addLibrary("Iterator.prototype.flatMap", "es_next", "es3", "es6/iterator/flatmap");
     addLibrary("Iterator.prototype.map", "es_next", "es3", "es6/iterator/map");
     addLibrary("Iterator.prototype.some", "es_next", "es3", "es6/iterator/some");
     addLibrary("Iterator.prototype.take", "es_next", "es3", "es6/iterator/take");
@@ -673,7 +676,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testDoesNotInject("const arr = [1, 2, 3]; arr.toArray();");
     testDoesNotInject(
         "const arr = [1, 2, 3]; arr.some(fn); arr.every(fn); arr.find(fn); arr.map(fn);"
-            + " arr.filter(fn); arr.take(1); arr.drop(1);");
+            + " arr.filter(fn); arr.flatMap(fn); arr.take(1); arr.drop(1);");
 
     // 2. Receiver is a union of concrete classes disjoint from Iterator: DO NOT inject
     testDoesNotInject(

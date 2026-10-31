@@ -22,6 +22,7 @@
 'require es6/iterator/every';
 'require es6/iterator/filter';
 'require es6/iterator/find';
+'require es6/iterator/flatmap';
 'require es6/iterator/foreach';
 'require es6/iterator/from';
 'require es6/iterator/map';

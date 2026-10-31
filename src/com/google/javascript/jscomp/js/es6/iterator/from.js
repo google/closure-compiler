@@ -18,9 +18,7 @@
  * @fileoverview Polyfill for the ES2025 Iterator.from static method.
  */
 'require es6/iterator';
-'require es6/symbol';
-'require es6/util/arrayiterator';
-'require util/checkisobject';
+'require es6/util/getiteratorflattenable';
 'require util/objectcreate';
 'require util/polyfill';
 
@@ -66,30 +64,7 @@ $jscomp.polyfill('Iterator.from', function(orig) {
    * @suppress {reportUnknownTypes}
    */
   var from = function(iterable) {
-    if (typeof iterable != 'string') $jscomp.checkIsObject(iterable);
-
-    var /** !IteratorLike<T> */ iterator;
-    var iteratorMethod = /** @type {?} */ (iterable)[Symbol.iterator];
-    if (iteratorMethod != null) {
-      if (typeof iteratorMethod !== 'function') {
-        throw new TypeError('[Symbol.iterator] is not a function');
-      }
-      iterator = iteratorMethod.call(iterable);
-      $jscomp.checkIsObject(iterator);
-    } else if (typeof iterable === 'string' || iterable instanceof String) {
-      // In ES3/ES5 or when Symbol.iterator is polyfilled, String.prototype
-      // lacks a Symbol.iterator property. Per GetIteratorFlattenable spec,
-      // strings (both primitives and String wrapper objects) are explicitly
-      // converted to iterators here.
-      // Note: when Symbol is polyfilled, arrayIteratorImpl yields UTF-16 code
-      // units rather than unicode code points (same limitation as $jscomp.makeIterator).
-      return /** @type {!Iterator<T>} */ ($jscomp.iteratorPrototype(
-          $jscomp.arrayIteratorImpl(
-              /** @type {!IArrayLike<?>} */ (/** @type {?} */ (iterable)))));
-    } else {
-      iterator = /** @type {!IteratorLike<T>} */ (iterable);
-    }
-
+    var iterator = $jscomp.getIteratorFlattenable(iterable, true);
     var nextMethod = iterator.next;
 
     if (iterator instanceof Iterator) {
