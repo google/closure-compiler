@@ -20,6 +20,7 @@
  */
 'require base';
 'require es6/util/iteratorclose';
+'require es6/util/validateiteratorcallback';
 'require util/checkisobject';
 
 /**
@@ -34,19 +35,7 @@
  * @suppress {reportUnknownTypes}
  */
 $jscomp.iteratorDo = function(iterator, callback, step) {
-  $jscomp.checkIsObject(iterator);
-  if (typeof callback != 'function') {
-    var returnMethod = iterator['return'];
-    if (returnMethod != null) {
-      try {
-        returnMethod.call(iterator);
-      } catch (e) {
-        // Ignored per ECMA-262 7.4.11 step 5 (IteratorClose):
-        // If completion.[[Type]] is throw, return ? completion.
-      }
-    }
-    throw new TypeError();
-  }
+  $jscomp.validateIteratorCallback(iterator, callback);
   var nextMethod = iterator.next;
   var index = 0;
   var /** !IIterableResult<?> */ nextResult;

@@ -3647,6 +3647,10 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
           });
           return symbolIterator;
         }, 'es6', 'es3');
+        $jscomp.polyfill('Symbol.toStringTag', function(orig) {
+          if (orig) return orig;
+          return Symbol('Symbol.toStringTag');
+        }, 'es6', 'es3');
         $jscomp.iteratorPrototype = function(next) {
           var parentProto = $jscomp.getIteratorPrototype() || Object.prototype;
           var iterator = $jscomp.objectCreate(parentProto);
@@ -3658,6 +3662,33 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
           }
           return iterator;
         };
+        $jscomp.polyfill('Iterator', function(localIterator) {
+          var getPrototypeOf = Object.getPrototypeOf;
+          var arrIterator = typeof Symbol != 'undefined' && Symbol.iterator && [][Symbol.iterator] ?
+              [][Symbol.iterator]() :
+              null;
+          var ArrayIteratorProto = arrIterator && getPrototypeOf ? getPrototypeOf(arrIterator) : null;
+          var IteratorPrototype = ArrayIteratorProto && getPrototypeOf ? getPrototypeOf(ArrayIteratorProto) : null;
+          if (IteratorPrototype === Object.prototype) IteratorPrototype = null;
+          if (localIterator && IteratorPrototype && localIterator.prototype === IteratorPrototype) return localIterator;
+          var Iterator = function() {
+            if (!(this instanceof Iterator) || this.constructor === Iterator) {
+              throw new TypeError('Abstract Iterator not directly constructable');
+            }
+          };
+          if (IteratorPrototype) Iterator.prototype = IteratorPrototype;
+          $jscomp.defineProperty(Iterator.prototype, 'constructor', {
+            configurable: true,
+            writable: true,
+            value: Iterator
+          });
+          if (!Iterator.prototype[Symbol.iterator]) {
+            Iterator.prototype[Symbol.iterator] = function() {
+              return this;
+            };
+          }
+          return Iterator;
+        }, 'es_next', 'es3');
         $jscomp.iteratorClose = function(iterator, iterResult) {
           var returnMethod;
           if (iterResult && !iterResult.done && (returnMethod = iterator['return'])) {
@@ -3670,18 +3701,98 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
           }
           return x;
         };
-        $jscomp.iteratorDo = function(iterator, callback, step) {
+        $jscomp.iteratorCloseAbrupt = function(iterator) {
+          try {
+            var returnMethod = iterator['return'];
+            if (typeof returnMethod == 'function') {
+              returnMethod.call(iterator);
+            }
+          } catch (ignored) {
+          }
+        };
+        $jscomp.iteratorCloseNormal = function(iterator) {
+          var returnMethod = iterator['return'];
+          if (returnMethod != null) {
+            if (typeof returnMethod != 'function') {
+              throw new TypeError('Iterator return is not a function');
+            }
+            $jscomp.checkIsObject(returnMethod.call(iterator));
+          }
+        };
+        $jscomp.iteratorResult = function(opt_value, opt_done) {
+          if (opt_done == null) opt_done = true;
+          return {value: opt_value, done: opt_done};
+        };
+        $jscomp.ITERATOR_STATE_SUSPENDED_START = 1;
+        $jscomp.ITERATOR_STATE_SUSPENDED_YIELD = 2;
+        $jscomp.ITERATOR_STATE_EXECUTING = 3;
+        $jscomp.ITERATOR_STATE_COMPLETED = 4;
+        $jscomp.getLazyIteratorState = function(iterator) {
+          if (!iterator || iterator.self_ !== iterator) {
+            throw new TypeError('Method called on incompatible object');
+          }
+          var state = iterator.state_;
+          if (state === $jscomp.ITERATOR_STATE_EXECUTING) {
+            throw new TypeError('Generator is already running');
+          }
+          return state;
+        };
+        $jscomp.lazyIteratorPrototype = null;
+        $jscomp.createLazyIterator = function(iterator, stepFn) {
+          var prototype = $jscomp.lazyIteratorPrototype;
+          if (!prototype) {
+            var resume = function(helper, isReturn) {
+              var state = $jscomp.getLazyIteratorState(helper);
+              if (state != $jscomp.ITERATOR_STATE_COMPLETED) {
+                helper.state_ =
+                    isReturn && state == $jscomp.ITERATOR_STATE_SUSPENDED_START ?
+                    $jscomp.ITERATOR_STATE_COMPLETED :
+                    $jscomp.ITERATOR_STATE_EXECUTING;
+                try {
+                  if (isReturn) {
+                    $jscomp.iteratorCloseNormal(helper.iter_);
+                  } else {
+                    var res = helper.step_();
+                    if (res) {
+                      helper.state_ = $jscomp.ITERATOR_STATE_SUSPENDED_YIELD;
+                      return res;
+                    }
+                  }
+                } finally {
+                  if (helper.state_ != $jscomp.ITERATOR_STATE_SUSPENDED_YIELD) {
+                    helper.state_ = $jscomp.ITERATOR_STATE_COMPLETED;
+                    helper.step_ = helper.iter_ = null;
+                  }
+                }
+              }
+              return $jscomp.iteratorResult();
+            };
+            prototype = $jscomp.lazyIteratorPrototype =
+                $jscomp.objectCreate(Iterator.prototype);
+            prototype.next = function() {
+              return resume(this, false);
+            };
+            prototype.return = function() {
+              return resume(this, true);
+            };
+            prototype[Symbol.toStringTag] = 'Iterator Helper';
+          }
+          var lazyIterator = $jscomp.objectCreate(prototype);
+          lazyIterator.self_ = lazyIterator;
+          lazyIterator.state_ = $jscomp.ITERATOR_STATE_SUSPENDED_START;
+          lazyIterator.iter_ = iterator;
+          lazyIterator.step_ = stepFn;
+          return lazyIterator;
+        };
+        $jscomp.validateIteratorCallback = function(iterator, callback) {
           $jscomp.checkIsObject(iterator);
           if (typeof callback != 'function') {
-            var returnMethod = iterator['return'];
-            if (returnMethod != null) {
-              try {
-                returnMethod.call(iterator);
-              } catch (e) {
-              }
-            }
-            throw new TypeError;
+            $jscomp.iteratorCloseAbrupt(iterator);
+            throw new TypeError('callback must be a function');
           }
+        };
+        $jscomp.iteratorDo = function(iterator, callback, step) {
+          $jscomp.validateIteratorCallback(iterator, callback);
           var nextMethod = iterator.next;
           var index = 0;
           for (var nextResult;
@@ -3696,7 +3807,7 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
               throw e;
             }
             if (stop) {
-              returnMethod = iterator['return'];
+              var returnMethod = iterator['return'];
               if (returnMethod != null) {
                 $jscomp.checkIsObject(returnMethod.call(iterator));
               }
