@@ -38,5 +38,11 @@ final class J2clSourceUtils {
     return isJ2clSource(scriptNode);
   }
 
+  public static boolean isJ2clHeaderSource(String sourceFileName) {
+    return sourceFileName != null
+        && sourceFileName.endsWith(".java.js")
+        && !sourceFileName.endsWith(".impl.java.js");
+  }
+
   private J2clSourceUtils() {}
 }

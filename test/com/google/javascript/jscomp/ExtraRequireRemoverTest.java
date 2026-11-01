@@ -288,4 +288,44 @@ public final class ExtraRequireRemoverTest extends CompilerTestCase {
                 const Foo = goog.require('some.message');
                 """)));
   }
+
+  @Test
+  public void testJ2clHeader_unaliasedGoogRequireIsPruned() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "foo/Bar.java.js",
+                """
+                goog.module('foo.Bar');
+
+                goog.require('a.b.C');
+                goog.require('x.y.Z');
+
+                const Bar = goog.require('foo.Bar$impl');
+                exports = Bar;
+                """)),
+        expected(
+            """
+            goog.module('foo.Bar');
+
+            const Bar = goog.require('foo.Bar$impl');
+            exports = Bar;
+            """));
+  }
+
+  @Test
+  public void testJ2clImpl_unaliasedGoogRequireIsNotPruned() {
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "foo/Bar.impl.java.js",
+                """
+                goog.module('foo.Bar$impl');
+
+                goog.require('a.b.C');
+
+                const Bar = goog.require('foo.Bar$impl');
+                exports = Bar;
+                """)));
+  }
 }

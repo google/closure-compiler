@@ -457,6 +457,7 @@ public class CompilerInput implements DependencyInfo {
                 return;
 
               case "requireType":
+              case "forwardDeclare":
                 if (!argument.isStringLit()) {
                   return;
                 }

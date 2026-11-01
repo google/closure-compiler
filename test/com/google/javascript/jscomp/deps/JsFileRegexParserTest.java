@@ -204,12 +204,13 @@ public final class JsFileRegexParserTest {
           D,
           E
         }=goog.requireType("a.b.d");
+        let F=goog.forwardDeclare("a.b.F");
         """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
             .setProvides(ImmutableList.of("yes1"))
-            .setTypeRequires(ImmutableList.of("yes2", "a.b.C", "a.b.d"))
+            .setTypeRequires(ImmutableList.of("yes2", "a.b.C", "a.b.d", "a.b.F"))
             .setLoadFlags(ImmutableMap.of("module", "goog"))
             .build();
 
@@ -224,12 +225,13 @@ public final class JsFileRegexParserTest {
         """
         goog.provide('yes1');
         goog.requireType('a.b.C');
+        goog.forwardDeclare('a.b.D');
         """;
 
     DependencyInfo expected =
         SimpleDependencyInfo.builder(CLOSURE_PATH, SRC_PATH)
             .setProvides(ImmutableList.of("yes1"))
-            .setTypeRequires(ImmutableList.of("a.b.C"))
+            .setTypeRequires(ImmutableList.of("a.b.C", "a.b.D"))
             .build();
 
     DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);

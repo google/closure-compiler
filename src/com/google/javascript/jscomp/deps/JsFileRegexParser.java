@@ -49,7 +49,7 @@ public final class JsFileRegexParser extends JsFileLineParser {
       // but fails to match without "use strict"; since we look for semicolon, not open brace.
       Pattern.compile(
           "(?:^|;)(?:[\\p{L}\\p{Nl}\\p{Nd}$_,:{}\\s]+=)?\\s*"
-              + "goog\\.(?<func>provide|module|require|requireType|addDependency|declareModuleId)"
+              + "goog\\.(?<func>provide|module|require|requireType|forwardDeclare|addDependency|declareModuleId)"
               // TODO(johnplaisted): Remove declareNamespace.
               + "\\s*\\(\\s*(?<args>.*?)\\s*\\)");
 
@@ -302,7 +302,7 @@ public final class JsFileRegexParser extends JsFileLineParser {
       boolean isModule = !isDeclareModuleNamespace && firstChar == 'm';
       boolean isProvide = firstChar == 'p';
       boolean providesNamespace = isProvide || isModule || isDeclareModuleNamespace;
-      boolean isRequire = firstChar == 'r';
+      boolean isRequire = firstChar == 'r' || firstChar == 'f';
 
       if (isModule && !seenLoadModule) {
         providesNamespace = setModuleType(ModuleType.GOOG_MODULE);
@@ -317,7 +317,7 @@ public final class JsFileRegexParser extends JsFileLineParser {
         String arg = parseJsString(googMatcher.group("args"));
         // Add the dependency.
         if (isRequire) {
-          if ("requireType".equals(methodName)) {
+          if ("requireType".equals(methodName) || "forwardDeclare".equals(methodName)) {
             typeRequires.add(arg);
           } else if (!"goog".equals(arg)) {
             // goog is always implicit.
@@ -345,6 +345,7 @@ public final class JsFileRegexParser extends JsFileLineParser {
     boolean lineHasProvidesOrRequiresWords =
         line.contains("provide")
             || line.contains("require")
+            || line.contains("forwardDeclare")
             || line.contains("module")
             || line.contains("addDependency")
             || line.contains("declareModuleId");

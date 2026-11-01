@@ -185,8 +185,9 @@ public final class ExtraRequireRemover implements CompilerPass, NodeTraversal.Ca
     // ex: goog.require('foo');
     if (call.getParent().isExprResult()) {
       // all unaliased imports in goog.module are not pruned regardless of if they are used or
-      // not
-      if (!call.getGrandparent().isModuleBody()) {
+      // not, except in J2CL header files where they only exist for load ordering.
+      if (!call.getGrandparent().isModuleBody()
+          || J2clSourceUtils.isJ2clHeaderSource(call.getSourceFileName())) {
         compiler.reportChangeToEnclosingScope(call.getParent());
         call.getParent().detach();
       }

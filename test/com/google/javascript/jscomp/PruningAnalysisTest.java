@@ -82,15 +82,17 @@ public final class PruningAnalysisTest {
   }
 
   @Test
-  public void testForwardDeclare_notIncluded() {
-    // goog.forwardDeclare is NOT captured by JsFileRegexParser as a dependency.
+  public void testForwardDeclare_included() {
     CompilerInput root1 =
-        createInput("root1.js", "goog.provide('root1'); goog.forwardDeclare('missing');");
+        createInput(
+            "root1.js",
+            "goog.provide('root1'); goog.forwardDeclare('fwdDeclared');"
+                + " goog.forwardDeclare('missing');");
     CompilerInput fwdDeclared = createInput("fwdDeclared.js", "goog.provide('fwdDeclared');");
 
     PruningAnalysis.Result result = analyze(ImmutableList.of(root1), root1, fwdDeclared);
 
-    assertThat(result.entryPointDependencyCount()).containsAtLeast("root1.js", 1);
+    assertThat(result.entryPointDependencyCount()).containsAtLeast("root1.js", 2);
   }
 
   @Test
