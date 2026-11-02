@@ -1001,10 +1001,9 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLocalEs6ClassAliasInLoopCondition_knownBug() {
+  public void testLocalEs6ClassAliasInLoopCondition() {
     // Regression test for b/476221453: `while (Main.prop ??= {})` normalizes `let tmp;`
     // outside the loop and `(tmp = Main).prop ?? (tmp.prop = {})` inside the loop condition.
-    // TODO: b/476221453 - `tmp` should be inlined to `Main`.
     test(
         """
         class Main {}
@@ -1021,7 +1020,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         Main.prop = 1;
         function f() {
           let tmp;
-          for (; (tmp = Main).prop ?? (tmp.prop = {});) {
+          for (; Main.prop ?? (Main.prop = {});) {
             break;
           }
         }
@@ -1048,10 +1047,9 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLocalEs6ClassAliasInForDoWhileAndForOfHeaders_knownBug() {
-    // Pre-fix baseline for b/476221453 across `for` condition+update, `do-while`, and `for-of`.
-    // TODO: b/476221453 - `t1`, `t2`, `t3`, and `t4` should be inlined to `Main`.
-    testSame(
+  public void testLocalEs6ClassAliasInForDoWhileAndForOfHeaders() {
+    // Regression test for b/476221453 across `for` condition+update, `do-while`, and `for-of`.
+    test(
         """
         class Main {}
         Main.a = 1;
@@ -1072,17 +1070,37 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             use(x);
           }
         }
+        """,
+        """
+        class Main {}
+        Main.a = 1;
+        Main.b = 2;
+        Main.items = [];
+        function f() {
+          let t1;
+          let t2;
+          let t3;
+          let t4;
+          for (; Main.a ?? (Main.a = 10); Main.b || (Main.b = 20)) {
+            break;
+          }
+          do {
+            break;
+          } while (Main.a && (Main.a = 30));
+          for (const x of (Main.items ?? (Main.items = [1]))) {
+            use(x);
+          }
+        }
         """);
   }
 
   @Test
-  public void testUnsafeCtorAliasingOnEs6ClassAndEnumInLoop_knownBug() {
-    // Pre-fix baseline for b/476221453: before `Name.isConstructor()` checks
-    // `NameProp.CONSTRUCTOR_TYPE`, ES6 classes in loops do not enter `partiallyInlineAlias` or
-    // report `UNSAFE_CTOR_ALIASING` when read before their loop assignment.
-    // TODO: b/476221453 - The ES6 class case should report
-    // `InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING`, whereas the `@enum` case should not.
-    testSame(
+  public void testUnsafeCtorAliasingOnEs6ClassAndEnumInLoop() {
+    // Regression test for b/476221453: `name.isConstructor()` in `inlineAliasIfPossible` checks
+    // `referencesCollapsibleProperty` and reports `UNSAFE_CTOR_ALIASING` for ES6 classes (but not
+    // `@enum`s, which keep their object literal keys when aliased) when `partiallyInlineAlias`
+    // backs off due to a read before the loop assignment.
+    testWarning(
         """
         class Main {
           static doSomething(x) {}
@@ -1094,7 +1112,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             (tmp = Main).doSomething(5);
           }
         }
-        """);
+        """,
+        InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING);
     test(
         """
         /** @enum {number} */

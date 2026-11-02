@@ -2240,13 +2240,7 @@ class GlobalNamespace
     }
 
     boolean isConstructor() {
-      Node declNode = declaration.node;
-      Node rvalueNode = NodeUtil.getRValueOfLValue(declNode);
-      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
-      return rvalueNode != null
-          && rvalueNode.isFunction()
-          && jsdoc != null
-          && jsdoc.isConstructor();
+      return getBooleanProperty(NameProp.CONSTRUCTOR_TYPE);
     }
 
     /**

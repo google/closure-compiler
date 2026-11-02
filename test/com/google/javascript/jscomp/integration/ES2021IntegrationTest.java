@@ -466,11 +466,9 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void logicalAssignmentStaticClassPropertyInLoopNotTranspiledOutput_knownBug() {
+  public void logicalAssignmentStaticClassPropertyInLoopNotTranspiledOutput() {
     CompilerOptions options = optimizedWithoutTranspilationCompilerOptions();
 
-    // TODO: b/476221453 - `(a = b).a ?? (a.a = {})` should be collapsed, preventing
-    // `MyClass.myField` from being constant-inlined as `1` in `alert(1)`.
     test(
         options,
         """
@@ -484,23 +482,20 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         alert(MyClass.myField);
         """,
         """
-        class b {}
+        var a = 1;
         alert(() => {
-          for (var a; (a = b).a ?? (a.a = {});) {
+          for (; a ??= {};) {
             break;
           }
         });
-        alert(1);
+        alert(a);
         """);
   }
 
   @Test
-  public void logicalAssignmentStaticClassPropertyInForDoWhileForOfTranspiledOutput_knownBug() {
+  public void logicalAssignmentStaticClassPropertyInForDoWhileForOfTranspiledOutput() {
     CompilerOptions options = fullyOptimizedCompilerOptions();
 
-    // TODO: b/476221453 - Before the fix, `MyClass.a`, `MyClass.b`, and `MyClass.items` are
-    // collapsed and constant-inlined as `[1, 2, [1]]` outside the loops, while `(c = b)` inside
-    // the loop headers reads/writes properties on the empty `class b {}` constructor.
     test(
         options,
         """
@@ -522,19 +517,17 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         alert([MyClass.a, MyClass.b, MyClass.items]);
         """,
         """
-        class b {}
+        var b = 1, c = 2, d = [1];
         alert(() => {
-          for (var c, d; ((c = b).a ?? (c.a = 10)) && !window.a; (d = b).b || (d.b = 20)) {}
-          var e;
+          for (; (b ?? (b = 10)) && !window.a; c || (c = 20)) {}
           do {
             if (window.a) break;
-          } while ((e = b).a && (e.a = 30));
-          var f;
-          for (let g of (f = b).c ?? (f.c = [])) {
-            alert(g);
+          } while (b && (b = 30));
+          for (let e of d ?? (d = [])) {
+            alert(e);
           }
         });
-        alert([1, 2, [1]]);
+        alert([b, c, d]);
         """);
   }
 }

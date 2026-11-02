@@ -1386,9 +1386,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLocalEs6ClassAliasInLoopCondition_knownBug() {
+  public void testLocalEs6ClassAliasInLoopCondition() {
     // Regression test for b/476221453
-    // TODO: b/476221453 - `(tmp = Main).prop` and `tmp.prop` should be collapsed to `Main$prop`.
     test(
         """
         class Main {}
@@ -1405,7 +1404,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         var Main$prop = 1;
         function f() {
           let tmp;
-          for (; (tmp = Main).prop ?? (tmp.prop = {});) {
+          for (; Main$prop ?? (Main$prop = {});) {
             break;
           }
         }
@@ -1438,10 +1437,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLocalEs6ClassAliasInForDoWhileAndForOfHeaders_knownBug() {
-    // Pre-fix baseline for b/476221453: `Main.a`, `Main.b`, and `Main.items` collapse outside the
-    // loops while the loop-header aliases `(t = Main)` remain un-inlined and uncollapsed.
-    // TODO: b/476221453 - The loop-header aliases should also be inlined and collapsed.
+  public void testLocalEs6ClassAliasInForDoWhileAndForOfHeaders() {
+    // Regression test for b/476221453 across `for` condition+update, `do-while`, and `for-of`.
     test(
         """
         class Main {}
@@ -1475,13 +1472,13 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
           let t2;
           let t3;
           let t4;
-          for (; (t1 = Main).a ?? (t1.a = 10); (t2 = Main).b || (t2.b = 20)) {
+          for (; Main$a ?? (Main$a = 10); Main$b || (Main$b = 20)) {
             break;
           }
           do {
             break;
-          } while ((t3 = Main).a && (t3.a = 30));
-          for (const x of ((t4 = Main).items ?? (t4.items = [1]))) {
+          } while (Main$a && (Main$a = 30));
+          for (const x of (Main$items ?? (Main$items = [1]))) {
             use(x);
           }
         }
