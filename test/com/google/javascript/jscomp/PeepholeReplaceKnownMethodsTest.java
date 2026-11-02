@@ -713,6 +713,11 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("x = 'a b c d e'.split(' ', 1)", "x = ['a']");
     fold("x = 'a b c d e'.split(' ', 3)", "x = ['a','b','c']");
     fold("x = 'a b c d e'.split(null, 1)", "x = ['a b c d e']");
+    // A null separator is converted with ToString, so it splits on the text "null".
+    fold("x = 'anullb'.split(null)", "x = ['a','b']");
+    fold("x = 'null'.split(null)", "x = ['','']");
+    fold("x = 'anullbnullc'.split(null, 2)", "x = ['a','b']");
+    foldSame("x = 'anullb'.split(undefined)");
     fold("x = 'aaaaa'.split('a')", "x = ['', '', '', '', '', '']");
     fold("x = 'xyx'.split('x')", "x = ['', 'y', '']");
 
