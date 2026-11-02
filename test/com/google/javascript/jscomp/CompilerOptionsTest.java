@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.BrowserFeaturesetYear;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -29,7 +30,9 @@ import com.google.javascript.rhino.Token;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -247,5 +250,141 @@ public final class CompilerOptionsTest {
     options.setRemoveAbstractMethods(false);
     options.setRemoveClosureAsserts(true);
     assertThat(options.requiresTypesForOptimization()).isTrue();
+  }
+
+  @Test
+  // Safe to ignore: verifying backward compatibility and determinism of deprecated strip options.
+  @SuppressWarnings("deprecation")
+  public void testCollectionFieldsPreserveInsertionOrder() {
+    CompilerOptions options = new CompilerOptions();
+
+    Set<String> types = new LinkedHashSet<>();
+    types.add("typeB");
+    types.add("typeA");
+    types.add("typeC");
+    options.setStripTypes(types);
+    assertThat(options.getStripTypes()).containsExactly("typeB", "typeA", "typeC").inOrder();
+
+    Set<String> suffixes = new LinkedHashSet<>();
+    suffixes.add("suffixB");
+    suffixes.add("suffixA");
+    suffixes.add("suffixC");
+    options.setStripNameSuffixes(suffixes);
+    assertThat(options.getStripNameSuffixes())
+        .containsExactly("suffixB", "suffixA", "suffixC")
+        .inOrder();
+
+    Set<String> prefixes = new LinkedHashSet<>();
+    prefixes.add("prefixB");
+    prefixes.add("prefixA");
+    prefixes.add("prefixC");
+    options.setStripNamePrefixes(prefixes);
+    assertThat(options.getStripNamePrefixes())
+        .containsExactly("prefixB", "prefixA", "prefixC")
+        .inOrder();
+
+    CompilerPass pass1 = (externs, root) -> {};
+    CompilerPass pass2 = (externs, root) -> {};
+    options.addCustomPass(CustomPassExecutionTime.BEFORE_CHECKS, pass1);
+    options.addCustomPass(CustomPassExecutionTime.BEFORE_CHECKS, pass2);
+    assertThat(options.getCustomPassesAt(CustomPassExecutionTime.BEFORE_CHECKS))
+        .containsExactly(pass1, pass2)
+        .inOrder();
+  }
+
+  @Test
+  // Safe to ignore: verifying backward compatibility and determinism of deprecated strip options.
+  @SuppressWarnings("deprecation")
+  public void testToStringDeterministicFormat() {
+    CompilerOptions options1 = new CompilerOptions();
+    options1.setDefineToBooleanLiteral("defineA", true);
+    options1.setDefineToBooleanLiteral("defineB", false);
+    options1.setStripTypes(ImmutableSet.of("typeA", "typeB"));
+    options1.setStripNameSuffixes(ImmutableSet.of("suffixA", "suffixB"));
+    options1.setStripNamePrefixes(ImmutableSet.of("prefixA", "prefixB"));
+    options1.setIdGenerators(ImmutableSet.of("idGenA", "idGenB"));
+
+    CompilerOptions options2 = new CompilerOptions();
+    options2.setDefineToBooleanLiteral("defineA", true);
+    options2.setDefineToBooleanLiteral("defineB", false);
+    options2.setStripTypes(ImmutableSet.of("typeA", "typeB"));
+    options2.setStripNameSuffixes(ImmutableSet.of("suffixA", "suffixB"));
+    options2.setStripNamePrefixes(ImmutableSet.of("prefixA", "prefixB"));
+    options2.setIdGenerators(ImmutableSet.of("idGenA", "idGenB"));
+
+    String s1 = options1.toString();
+    String s2 = options2.toString();
+
+    assertThat(s1).startsWith("CompilerOptions{");
+    assertThat(s1).endsWith("}");
+    assertThat(s1).doesNotContain("@"); // No identity hash codes
+    assertThat(s1).isEqualTo(s2);
+
+    String expected =
+        "CompilerOptions{aliasStringsMode=NONE, ambiguateProperties=false, angularPass=false,"
+            + " assumeGettersArePure=true,"
+            + " assumePropertiesAreStaticallyAnalyzable=true, assumeStrictThis=false,"
+            + " browserResolverPrefixReplacements={}, checkDeterminism=false,"
+            + " checkSuspiciousCode=false, checkSymbols=false, checkTypes=false, checksOnly=false,"
+            + " chunksToPrintAfterEachPassRegexList=[], closurePass=false,"
+            + " coalesceVariableNames=false, collapseAnonymousFunctions=false,"
+            + " collapseObjectLiterals=false, collapseProperties=NONE,"
+            + " collapseVariableDeclarations=false, colorizeErrorOutput=false,"
+            + " computeFunctionSideEffects=false, conformanceConfigs=[],"
+            + " conformanceRemoveRegexFromPath=Optional.of(^((.*/)?google3/)?(/?(blaze|bazel)-out/[^/]+/(bin|genfiles)/)?),"
+            + " conformanceReportingMode=IGNORE_LIBRARY_LEVEL_BEHAVIOR_SPECIFIED_IN_CONFIG,"
+            + " continueAfterErrors=false, convertToDottedProperties=false,"
+            + " crossChunkCodeMotion=false, crossChunkCodeMotionNoStubMethods=false,"
+            + " crossChunkMethodMotion=false, deadAssignmentElimination=false,"
+            + " defineReplacements={defineA=TRUE, defineB=FALSE},"
+            + " dependencyOptions=DependencyOptions[mode=NONE, entryPoints=[]], devMode=OFF,"
+            + " devirtualizeMethods=false, disambiguateProperties=false,"
+            + " emitUseStrict=Optional.absent(), enableModuleRewriting=true, environment=BROWSER,"
+            + " errorFormat=FULL, es6ModuleTranspilation=COMPILE,"
+            + " es6SubclassTranspilation=CONCISE_UNSAFE, exportLocalPropertyDefinitions=true,"
+            + " exportTestFunctions=false, extractPrototypeMemberDeclarations=OFF,"
+            + " filesToPrintAfterEachPassRegexList=[], flowSensitiveInlineVariables=false,"
+            + " foldConstants=false, forceLibraryInjection=[], gatherCssNames=false,"
+            + " generateExports=true, generatePseudoNames=false, generateTypedExterns=false,"
+            + " idGenerators={idGenA=INCONSISTENT, idGenB=INCONSISTENT}, incrementalCheckMode=OFF,"
+            + " inferConsts=true, inferTypes=false, inlineConstantVars=false,"
+            + " inlineFunctionsLevel=NONE, inlineGetters=false, inlineLocalVariables=false,"
+            + " inlineProperties=false, inlineVariables=false, inputDelimiter=// Input %num%,"
+            + " inputSourceMaps={}, instrumentForCoverageOnly=false,"
+            + " instrumentForCoverageOption=NONE, isolatePolyfills=false, j2clMinifierEnabled=true,"
+            + " j2clPassMode=AUTO, labelRenaming=false, languageIn=ECMASCRIPT_NEXT,"
+            + " languageOutIsDefaultStrict=Optional.absent(), lineBreak=false,"
+            + " lineLengthThreshold=500, markAsCompiled=false, maxFunctionSizeAfterInlining=-1,"
+            + " moduleRoots=[./], nameGenerator=com.google.javascript.jscomp.DefaultNameGenerator,"
+            + " numParallelThreads=1, optimizeCalls=false, optimizeESClassConstructors=false,"
+            + " optimizeLocalAccessForGlobalSymbolNamespace=DISABLED,"
+            + " outputFeatureSet=Optional.absent(), outputJs=NORMAL, outputJsStringUsage=false,"
+            + " parentChunkCanSeeSymbolsDeclaredInChildren=false,"
+            + " parseJsDocDocumentation=TYPES_ONLY, pathEscaper=ESCAPE, polymerPass=false,"
+            + " preferSingleQuotes=false, preferStableNames=false,"
+            + " preserveDetailedSourceInfo=false, preserveGoogProvidesAndRequires=false,"
+            + " preserveNonJSDocComments=false, preserveTypeAnnotations=false, prettyPrint=false,"
+            + " printConfig=false, printInputDelimiter=false, printSourceAfterEachPass=false,"
+            + " processCommonJSModules=false, productionInstrumentationArrayName=,"
+            + " propertiesThatMustDisambiguate=[], propertyRenaming=OFF,"
+            + " propertyRenamingOnlyCompilationMode=false, protectHiddenSideEffects=false,"
+            + " qnameUsesToPrintAfterEachPassRegexList=[], quoteKeywordProperties=false,"
+            + " removeAbstractMethods=false, removeClosureAsserts=false, removeJ2clAsserts=true,"
+            + " removeUnusedClassProperties=false, removeUnusedLocalVars=false,"
+            + " removeUnusedPrototypeProperties=false, removeUnusedVars=false,"
+            + " renamePrefixNamespaceAssumeCrossChunkNames=false, replaceIdGenerators=true,"
+            + " replaceMessagesWithChromeI18n=false, replaceStringsFunctionDescriptions=[],"
+            + " replaceStringsPlaceholderToken=, reserveRawExports=false,"
+            + " rewriteFunctionExpressions=false,"
+            + " rewriteGlobalDeclarationsForTryCatchWrapping=false,"
+            + " rewriteModulesBeforeTypechecking=false, rewritePolyfills=false,"
+            + " runtimeLibraryMode=INJECT, skipNonTranspilationPasses=false,"
+            + " smartNameRemoval=false, sourceMapDetailLevel=ALL, sourceMapFormat=DEFAULT,"
+            + " sourceMapLocationMappings=[], strictMessageReplacement=false,"
+            + " stripNamePrefixes=[prefixA, prefixB], stripNameSuffixes=[suffixA, suffixB],"
+            + " stripTypes=[typeA, typeB], summaryDetailLevel=1, tracer=OFF, trustedStrings=false,"
+            + " tweakProcessing=OFF, useTypesForLocalOptimization=false, variableRenaming=OFF,"
+            + " warningsGuard=, wrapGoogModulesForWhitespaceOnly=true}";
+    assertThat(s1).isEqualTo(expected);
   }
 }

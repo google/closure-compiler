@@ -3499,7 +3499,7 @@ public class CompilerOptions {
         .add("maxFunctionSizeAfterInlining", maxFunctionSizeAfterInlining)
         .add("messageBundle", messageBundle)
         .add("moduleRoots", moduleRoots)
-        .add("nameGenerator", nameGenerator)
+        .add("nameGenerator", nameGenerator == null ? null : nameGenerator.getClass().getName())
         .add("numParallelThreads", numParallelThreads)
         .add("optimizeCalls", optimizeCalls)
         .add("optimizeESClassConstructors", optimizeESClassConstructors)
