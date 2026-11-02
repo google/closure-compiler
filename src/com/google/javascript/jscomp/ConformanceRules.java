@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.ConformanceConfig.LibraryLevelNonAllowlisted
 import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.jscomp.base.LinkedIdentityHashSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -611,6 +612,7 @@ public final class ConformanceRules {
         (Node n) ->
             switch (n.getToken()) {
               case GETPROP -> n.getFirstChild().isQualifiedName();
+              case OPTCHAIN_GETPROP -> true;
               case NAME -> !n.getString().isEmpty();
               default -> false;
             };
@@ -643,12 +645,15 @@ public final class ConformanceRules {
        * <p>These could be a precondition, but they don't usually need to be checked. Since they're
        * kind of expensive, it's cheaper overall to defer them.
        */
-      if (NodeUtil.isInSyntheticScript(n) || !isRootOfQualifiedNameGlobal(t, n)) {
+      Node qname = ConformanceUtil.asQualifiedName(n);
+      if (qname == null
+          || NodeUtil.isInSyntheticScript(n)
+          || !isRootOfQualifiedNameGlobal(t, qname)) {
         return ConformanceResult.CONFORMANCE;
       }
 
       for (int i = this.qualifiedNames.size() - 1; i >= 0; i--) {
-        if (n.matchesQualifiedName(this.qualifiedNames.get(i))) {
+        if (qname.matchesQualifiedName(this.qualifiedNames.get(i))) {
           return ConformanceResult.VIOLATION;
         }
       }
@@ -672,7 +677,8 @@ public final class ConformanceRules {
         @Override
         public boolean shouldCheck(Node n) {
           return switch (n.getToken()) {
-            case STRING_KEY, GETPROP, GETELEM, COMPUTED_PROP -> true;
+            case STRING_KEY, GETPROP, OPTCHAIN_GETPROP, GETELEM, OPTCHAIN_GETELEM, COMPUTED_PROP ->
+                true;
             default -> false;
           };
         }
@@ -840,7 +846,7 @@ public final class ConformanceRules {
 
     private @Nullable JSType extractType(Node n) {
       return switch (n.getToken()) {
-        case GETELEM, GETPROP -> n.getFirstChild().getJSType();
+        case GETELEM, OPTCHAIN_GETELEM, GETPROP, OPTCHAIN_GETPROP -> n.getFirstChild().getJSType();
         case STRING_KEY, COMPUTED_PROP -> {
           Node parent = n.getParent();
           yield switch (parent.getToken()) {
@@ -856,8 +862,8 @@ public final class ConformanceRules {
     private @Nullable String extractName(Node n) {
 
       return switch (n.getToken()) {
-        case GETPROP, STRING_KEY -> n.getString();
-        case GETELEM -> {
+        case GETPROP, OPTCHAIN_GETPROP, STRING_KEY -> n.getString();
+        case GETELEM, OPTCHAIN_GETELEM -> {
           Node string = n.getSecondChild();
           yield string.isStringLit() ? string.getString() : null;
         }
@@ -938,7 +944,23 @@ public final class ConformanceRules {
 
     static boolean isCallTarget(Node n) {
       Node parent = n.getParent();
-      return (parent.isCall() || parent.isNew()) && parent.getFirstChild() == n;
+      return (NodeUtil.isNormalOrOptChainCall(parent) || parent.isNew())
+          && parent.getFirstChild() == n;
+    }
+
+    /**
+     * Returns {@code n} if it is a qualified name, a detached copy of the name it reads with any
+     * optional chaining removed (e.g. {@code a.b.c} for {@code a?.b.c}), or null if it is neither.
+     */
+    static @Nullable Node asQualifiedName(Node n) {
+      if (n.isQualifiedName()) {
+        return n;
+      }
+      if (!n.isOptChainGetProp()) {
+        return null;
+      }
+      Node owner = asQualifiedName(n.getFirstChild());
+      return owner == null ? null : IR.getprop(owner.cloneTree(), n.getString());
     }
 
     static boolean isLooseType(JSType type) {
@@ -965,7 +987,7 @@ public final class ConformanceRules {
         Node callOrNew,
         FunctionType functionType,
         boolean isCallInvocation) {
-      checkState(callOrNew.isCall() || callOrNew.isNew());
+      checkState(NodeUtil.isNormalOrOptChainCall(callOrNew) || callOrNew.isNew());
 
       return validateParameterList(compiler, callOrNew, functionType, isCallInvocation)
           && validateThis(callOrNew, functionType, isCallInvocation);
@@ -1185,19 +1207,20 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (ConformanceUtil.isCallTarget(n) && n.isQualifiedName()) {
+      Node target = ConformanceUtil.isCallTarget(n) ? ConformanceUtil.asQualifiedName(n) : null;
+      if (target != null) {
         // TODO(johnlenz): restrict to global names
         for (int i = 0; i < restrictions.size(); i++) {
           Restriction r = restrictions.get(i);
 
-          if (n.matchesQualifiedName(r.name)) {
+          if (target.matchesQualifiedName(r.name)) {
             if (!ConformanceUtil.validateCall(
                 compiler, n.getParent(), r.restrictedCallType, false)) {
               return ConformanceResult.VIOLATION;
             }
-          } else if (n.isGetProp()
-              && n.getString().equals("call")
-              && n.getFirstChild().matchesQualifiedName(r.name)) {
+          } else if (target.isGetProp()
+              && target.getString().equals("call")
+              && target.getFirstChild().matchesQualifiedName(r.name)) {
             if (!ConformanceUtil.validateCall(
                 compiler, n.getParent(), r.restrictedCallType, true)) {
               return ConformanceResult.VIOLATION;
@@ -1266,7 +1289,7 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (!n.isGetProp() || !ConformanceUtil.isCallTarget(n)) {
+      if (!NodeUtil.isNormalOrOptChainGetProp(n) || !ConformanceUtil.isCallTarget(n)) {
         return ConformanceResult.CONFORMANCE;
       }
 
@@ -1314,7 +1337,7 @@ public final class ConformanceRules {
     }
 
     private boolean matchesProp(Node n, Restriction r) {
-      return n.isGetProp() && n.getString().equals(r.property);
+      return NodeUtil.isNormalOrOptChainGetProp(n) && n.getString().equals(r.property);
     }
   }
 
@@ -2062,7 +2085,7 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (n.isCall()) {
+      if (NodeUtil.isNormalOrOptChainCall(n)) {
         Node tag = n.getSecondChild();
         if (tag != null
             && tag.isStringLit()
@@ -2075,7 +2098,7 @@ public final class ConformanceRules {
 
     private ConformanceResult checkCreateElement(Node n) {
       Node target = n.getFirstChild();
-      if (!target.isGetProp()) {
+      if (!NodeUtil.isNormalOrOptChainGetProp(target)) {
         return ConformanceResult.CONFORMANCE;
       }
       String functionName = target.getString();
@@ -2319,11 +2342,11 @@ public final class ConformanceRules {
             .build();
 
     private boolean isCreateDomCall(Node n) {
-      if (!n.isCall()) {
+      if (!NodeUtil.isNormalOrOptChainCall(n)) {
         return false;
       }
       Node target = n.getFirstChild();
-      if (!target.isGetProp()) {
+      if (!NodeUtil.isNormalOrOptChainGetProp(target)) {
         return false;
       }
       if (!"createDom".equals(target.getString())) {
@@ -2338,7 +2361,7 @@ public final class ConformanceRules {
       if (type == null) {
         return false;
       }
-      if (type.equals(domHelperType)) {
+      if (type.restrictByNotNullOrUndefined().equals(domHelperType)) {
         return true;
       }
       return false;
@@ -2513,7 +2536,7 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
-      if (node.isCall()) {
+      if (NodeUtil.isNormalOrOptChainCall(node)) {
         return checkConformanceOnPropertyCall(traversal, node);
       } else if (node.isGetElem() && NodeUtil.isLValue(node)) {
         return checkConformanceOnGetElement(traversal, node);
@@ -2570,7 +2593,7 @@ public final class ConformanceRules {
 
     private Optional<String> getBannedPropertyName(Node callNode) {
       Node target = callNode.getFirstChild();
-      if (!target.isGetProp()) {
+      if (!NodeUtil.isNormalOrOptChainGetProp(target)) {
         return Optional.absent();
       }
       String propertyName = target.getString();
@@ -2709,7 +2732,7 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal traversal, Node node) {
-      if (node.isCall()) {
+      if (NodeUtil.isNormalOrOptChainCall(node)) {
         return checkConformanceOnPropertyCall(traversal, node);
       }
       return ConformanceResult.CONFORMANCE;
@@ -2732,7 +2755,7 @@ public final class ConformanceRules {
 
     private Optional<String> getBannedPropertyName(Node node) {
       Node target = node.getFirstChild();
-      if (!target.isGetProp()) {
+      if (!NodeUtil.isNormalOrOptChainGetProp(target)) {
         return Optional.absent();
       }
       JSType type = target.getFirstChild().getJSType();
@@ -2743,7 +2766,7 @@ public final class ConformanceRules {
       for (AttributeSettingRestriction restricted : restrictions) {
         if (propertyName.equals(restricted.property)
             && restricted.type != null
-            && type.isSubtypeOf(restricted.type)) {
+            && type.restrictByNotNullOrUndefined().isSubtypeOf(restricted.type)) {
           return Optional.of(propertyName);
         }
       }
@@ -2799,11 +2822,11 @@ public final class ConformanceRules {
     }
 
     private boolean isBannedProperty(Node node) {
-      if (!node.isCall()) {
+      if (!NodeUtil.isNormalOrOptChainCall(node)) {
         return false;
       }
       Node target = node.getFirstChild();
-      if (!target.isGetProp()) {
+      if (!NodeUtil.isNormalOrOptChainGetProp(target)) {
         return false;
       }
       String propertyName = target.getString();
