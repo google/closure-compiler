@@ -1747,17 +1747,30 @@ public class CodeGenerator {
     }
   }
 
-  private static boolean isLogicalAndOrLogicalOrChildOfNullishCoalesce(Node n) {
+  private boolean isLogicalAndOrLogicalOrChildOfNullishCoalesce(Node n) {
+    Node expr = skipTransparentCasts(n);
     Node parent = n.getParent();
-    boolean logicalAndOrLogicalOr = n.isAnd() || n.isOr();
+    boolean logicalAndOrLogicalOr = expr.isAnd() || expr.isOr();
     boolean childOfNullishCoalesce = parent != null && parent.isNullishCoalesce();
     return logicalAndOrLogicalOr && childOfNullishCoalesce;
   }
 
-  private static boolean isNullishCoalesceChildOfLogicalAndOrLogicalOr(Node n) {
+  private boolean isNullishCoalesceChildOfLogicalAndOrLogicalOr(Node n) {
+    Node expr = skipTransparentCasts(n);
     Node parent = n.getParent();
     boolean childOfLogicalAndOrLogicalOr = parent != null && (parent.isAnd() || parent.isOr());
-    return n.isNullishCoalesce() && childOfLogicalAndOrLogicalOr;
+    return expr.isNullishCoalesce() && childOfLogicalAndOrLogicalOr;
+  }
+
+  /**
+   * Returns the expression printed for {@code n}, looking through CAST nodes that are printed
+   * without their own parentheses (i.e. when type annotations are not preserved).
+   */
+  private Node skipTransparentCasts(Node n) {
+    while (!preserveTypeAnnotations && n.isCast()) {
+      n = n.getFirstChild();
+    }
+    return n;
   }
 
   private boolean isFirstOperandOfExponentiationExpression(Node n) {

@@ -4688,10 +4688,23 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testNullishCoalesceCastInOr() {
-    // TODO(b/571641705): CodeGenerator omits required parentheses around ?? in CAST-wrapped logical expressions
     assertPrintNode(
-        "x??y||z",
+        "(x??y)||z",
         IR.or(new Node(Token.CAST, IR.coalesce(IR.name("x"), IR.name("y"))), IR.name("z")));
+  }
+
+  @Test
+  public void testNullishCoalesceCastInAnd() {
+    assertPrintNode(
+        "z&&(x??y)",
+        IR.and(IR.name("z"), new Node(Token.CAST, IR.coalesce(IR.name("x"), IR.name("y")))));
+  }
+
+  @Test
+  public void testOrCastInNullishCoalesce() {
+    assertPrintNode(
+        "(x||y)??z",
+        IR.coalesce(new Node(Token.CAST, IR.or(IR.name("x"), IR.name("y"))), IR.name("z")));
   }
 
   @Test
