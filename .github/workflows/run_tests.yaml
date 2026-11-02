@@ -64,7 +64,7 @@ jobs:
           persist-credentials: false
 
       # https://github.com/bazel-contrib/setup-bazel
-      - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+      - uses: bazel-contrib/setup-bazel@104e3eea9447cdaa4b00d0fb46191a3985d26ab3 # 0.19.1
         with:
           # Avoid downloading Bazel every time.
           bazelisk-cache: true
