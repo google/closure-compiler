@@ -934,6 +934,355 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLocalAliasInGetPropReceiver_knownBug() {
+    // Regression test for b/476221453: logical assignment `Main.prop ??= ...` normalizes to
+    // `let tmp; (tmp = Main).prop ?? (tmp.prop = ...);`.
+    // TODO: b/476221453 - `(tmp = Main).prop` should also be inlined to `Main.prop`.
+    test(
+        """
+        class Main {}
+        Main.prop = 1;
+        function f() {
+          let tmp;
+          return (tmp = Main).prop ?? (tmp.prop = {});
+        }
+        """,
+        """
+        class Main {}
+        Main.prop = 1;
+        function f() {
+          let tmp;
+          return (tmp = Main).prop ?? (Main.prop = {});
+        }
+        """);
+  }
+
+  @Test
+  public void testLocalAliasInGetPropReceiverWithZeroReadsNested_knownBug() {
+    // Pre-fix baseline for b/476221453: `t1` has 0 separate read references (its only use is the
+    // `(t1 = ...)` assignment expression result), and inlining `t1` exposes `(t2 = A).b.p` for
+    // the next iteration.
+    // TODO: b/476221453 - `(t1 = (t2 = A).b).p` should be inlined to `A.b.p`.
+    testSame(
+        """
+        const A = {b: {p: 1}};
+        function f() {
+          let t1;
+          let t2;
+          use((t1 = (t2 = A).b).p);
+        }
+        """);
+  }
+
+  @Test
+  public void testGlobalAliasInConditionalGetPropReceiver_knownBug() {
+    // Regression test for b/476221453: in global scope, `window.cond && (Main.prop ??= {})`
+    // normalizes to `let tmp; window.cond && ((tmp = Main).prop ?? (tmp.prop = {}));`.
+    // TODO: b/476221453 - `tmp` should be inlined to `Main`.
+    test(
+        """
+        class Main {}
+        Main.prop = 1;
+        let tmp;
+        window.cond && ((tmp = Main).prop ?? (tmp.prop = {}));
+        """,
+        """
+        class Main {}
+        Main.prop = 1;
+        let tmp;
+        window.cond && ((tmp = Main).prop ?? (tmp.prop = {}));
+        """);
+  }
+
+  @Test
+  public void testLocalEs6ClassAliasInLoopCondition_knownBug() {
+    // Regression test for b/476221453: `while (Main.prop ??= {})` normalizes `let tmp;`
+    // outside the loop and `(tmp = Main).prop ?? (tmp.prop = {})` inside the loop condition.
+    // TODO: b/476221453 - `tmp` should be inlined to `Main`.
+    test(
+        """
+        class Main {}
+        Main.prop = 1;
+        function f() {
+          let tmp;
+          while ((tmp = Main).prop ?? (tmp.prop = {})) {
+            break;
+          }
+        }
+        """,
+        """
+        class Main {}
+        Main.prop = 1;
+        function f() {
+          let tmp;
+          for (; (tmp = Main).prop ?? (tmp.prop = {});) {
+            break;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testUnsafeCtorAliasingInGetPropReceiverInLoop_knownBug() {
+    // Regression test for b/476221453: `referencesCollapsibleProperty` should unwrap `ASSIGN` when
+    // checking `(tmp = Main).doSomething(5)` after `partiallyInlineAlias` backs off.
+    // TODO: b/476221453 - This should report `InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING`.
+    testSame(
+        """
+        /** @constructor */ var Main = function() {};
+        Main.doSomething = function() {};
+        function f() {
+          var tmp;
+          for (let i = 0; i < n(); i++) {
+            use(tmp);
+            (tmp = Main).doSomething(5);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testLocalEs6ClassAliasInForDoWhileAndForOfHeaders_knownBug() {
+    // Pre-fix baseline for b/476221453 across `for` condition+update, `do-while`, and `for-of`.
+    // TODO: b/476221453 - `t1`, `t2`, `t3`, and `t4` should be inlined to `Main`.
+    testSame(
+        """
+        class Main {}
+        Main.a = 1;
+        Main.b = 2;
+        Main.items = [];
+        function f() {
+          let t1;
+          let t2;
+          let t3;
+          let t4;
+          for (; (t1 = Main).a ?? (t1.a = 10); (t2 = Main).b || (t2.b = 20)) {
+            break;
+          }
+          do {
+            break;
+          } while ((t3 = Main).a && (t3.a = 30));
+          for (const x of ((t4 = Main).items ?? (t4.items = [1]))) {
+            use(x);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testUnsafeCtorAliasingOnEs6ClassAndEnumInLoop_knownBug() {
+    // Pre-fix baseline for b/476221453: before `Name.isConstructor()` checks
+    // `NameProp.CONSTRUCTOR_TYPE`, ES6 classes in loops do not enter `partiallyInlineAlias` or
+    // report `UNSAFE_CTOR_ALIASING` when read before their loop assignment.
+    // TODO: b/476221453 - The ES6 class case should report
+    // `InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING`, whereas the `@enum` case should not.
+    testSame(
+        """
+        class Main {
+          static doSomething(x) {}
+        }
+        function f() {
+          var tmp;
+          for (let i = 0; i < n(); i++) {
+            use(tmp);
+            (tmp = Main).doSomething(5);
+          }
+        }
+        """);
+    test(
+        """
+        /** @enum {number} */
+        const MyEnum = { A: 1 };
+        function f() {
+          var tmp;
+          for (let i = 0; i < n(); i++) {
+            use(tmp);
+            use((tmp = MyEnum).A);
+          }
+        }
+        """,
+        """
+        /** @enum {JSDocSerializer_placeholder_type} */
+        const MyEnum = { A: 1 };
+        function f() {
+          var tmp;
+          for (let i = 0; i < n(); i++) {
+            use(tmp);
+            use((tmp = MyEnum).A);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testGlobalConditionalCtorAliasReadBeforeAssignment() {
+    // If a global variable `tmp` is read BEFORE a conditional constructor assignment
+    // `window.cond && ((tmp = Main).prop = 2)`, it must not be inlined into the earlier read.
+    testSame(
+        """
+        class Main {}
+        Main.prop = 1;
+        let tmp;
+        use(tmp);
+        window.cond && ((tmp = Main).prop = 2);
+        """);
+  }
+
+  @Test
+  public void testGlobalConditionalConstNamespaceAlias_knownBug() {
+    // Regression test for b/476221453: Global conditional logical assignment on a `@const`
+    // namespace.
+    // TODO: b/476221453 - `tmp` should be inlined to `ns`.
+    testSame(
+        """
+        /** @const */ const ns = {prop: 1};
+        let tmp;
+        window.cond && ((tmp = ns).prop ?? (tmp.prop = 2));
+        """);
+  }
+
+  @Test
+  public void testGlobalConditionalPropertyLhsAliasNotInlined() {
+    // Covers `if (!lvalue.isName()) { return false; }` in `isConditionallyInlineableGlobalAlias`.
+    testSame(
+        """
+        class Main {}
+        Main.prop = 1;
+        const holder = {};
+        window.cond && ((holder.tmp = Main).prop ?? (holder.tmp.prop = 2));
+        """);
+  }
+
+  @Test
+  public void testGlobalNonDeclaredTypeAliasInLoopNotInlined() {
+    // Covers `if (!allowLoop && NodeUtil.isLoopStructure(curr)) { return false; }` in
+    // `isConditionallyInlineableGlobalAlias`.
+    test(
+        """
+        /** @const */ const ns = {prop: 1};
+        let tmp;
+        while ((tmp = ns).prop ?? (tmp.prop = 2)) {
+          break;
+        }
+        """,
+        """
+        /** @const */ const ns = {prop: 1};
+        let tmp;
+        for (; (tmp = ns).prop ?? (tmp.prop = 2);) {
+          break;
+        }
+        """);
+  }
+
+  @Test
+  public void testGlobalConditionalAliasEscapedInNestedFunctionNotInlined() {
+    // Covers `ref.scope.getClosestHoistScope() != aliasHoistScope` in
+    // `areAllRefsExecutedAfterInitInBlock` (both on a direct ref and on a property ref).
+    testSame(
+        """
+        class Main {}
+        Main.prop = 1;
+        let tmp;
+        function readTmp() {
+          return tmp;
+        }
+        window.cond && ((tmp = Main).prop ?? (tmp.prop = 2));
+        readTmp();
+        """);
+    testSame(
+        """
+        class Main {}
+        Main.prop = 1;
+        let tmp;
+        function readTmpProp() {
+          return tmp.prop;
+        }
+        window.cond && ((tmp = Main).prop ?? (tmp.prop = 2));
+        readTmpProp();
+        """);
+  }
+
+  @Test
+  public void testGlobalConditionalAliasReadInSubsequentStatementNotInlined() {
+    // Covers `ReferenceCollector.isBlockBoundary` being true on the first hop
+    // (`window.inner && (tmp = Main)`) and `isExecutedAfterInitInBlock` scanning past an
+    // intermediate statement (`alert(1)`) before encountering `use(tmp.prop)` outside the
+    // conditional.
+    testSame(
+        """
+        class Main {}
+        Main.prop = 1;
+        let tmp;
+        if (window.cond) {
+          window.inner && (tmp = Main);
+          alert(1);
+          use(tmp.prop);
+        }
+        """);
+  }
+
+  @Test
+  public void testGlobalConditionalAliasAcrossBasicBlockBoundariesNotInlined() {
+    // Covers destructuring RHS-before-LHS evaluation order in `isExecutedAfterInitInBlock` and
+    // `SWITCH_BODY` in `ReferenceCollector.isBlockBoundary`: an alias assigned inside a computed
+    // destructuring key or switch `case` expression does not dominate sibling evaluations in the
+    // outer block.
+    testSame(
+        """
+        class Main {}
+        Main.key = 'a';
+        Main.prop = 1;
+        let tmp;
+        if (window.cond) {
+          let {[(tmp = Main).key]: x = tmp.prop} = {a: tmp.prop};
+          use(x);
+        }
+        """);
+    testSame(
+        """
+        class Main {}
+        Main.key = 'a';
+        Main.prop = 1;
+        let tmp;
+        let x;
+        if (window.cond) {
+          ({[(tmp = Main).key]: x} = {a: tmp.prop});
+          use(x);
+        }
+        """);
+    testSame(
+        """
+        class Main {}
+        Main.prop = 1;
+        let tmp;
+        switch (window.x) {
+          case (tmp = Main).prop:
+          case 2:
+            use(tmp.prop);
+            break;
+        }
+        """);
+  }
+
+  @Test
+  public void testGlobalConditionalAliasWithIntermediateStatementInBlock_knownBug() {
+    // Covers `for (Node sibling = initChild.getNext(); ...)` advancing past an intermediate
+    // sibling statement when `initChild` is an unconditional statement in a conditional block.
+    // TODO: b/476221453 - `(tmp = Main)` and `tmp.prop` should be inlined to `Main.prop`.
+    testSame(
+        """
+        class Main {}
+        Main.prop = 1;
+        let tmp;
+        if (window.cond) {
+          (tmp = Main).prop = 2;
+          alert(1);
+          use(tmp.prop);
+        }
+        """);
+  }
+
+  @Test
   public void testLocalCtorAliasAssignedInLoop1() {
     testWarning(
         """
@@ -3387,6 +3736,15 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
       assertWithMessage("%s: canCollapseOrInlineChildNames()", fullName)
           .that(actualName.canCollapseOrInlineChildNames())
           .isEqualTo(expectedName.canCollapseOrInlineChildNames());
+      if (expectedName.getDeclaration() == null) {
+        assertWithMessage("%s: getDeclaration()", fullName)
+            .that(actualName.getDeclaration())
+            .isNull();
+      } else {
+        assertWithMessage("%s: getDeclaration().getNode()", fullName)
+            .that(actualName.getDeclaration().getNode())
+            .isEqualTo(expectedName.getDeclaration().getNode());
+      }
     }
     // Verify that no names in the actual name forest are not present in the expected name forest
     for (Name actualName : passGlobalNamespace.getNameForest()) {

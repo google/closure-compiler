@@ -1345,6 +1345,225 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLocalAliasInGetPropReceiver_knownBug() {
+    // Regression test for b/476221453
+    // TODO: b/476221453 - `(tmp = Main).prop` should also be collapsed to `Main$prop`.
+    test(
+        """
+        class Main {}
+        Main.prop = 1;
+        function f() {
+          let tmp;
+          return (tmp = Main).prop ?? (tmp.prop = {});
+        }
+        """,
+        """
+        class Main {}
+        var Main$prop = 1;
+        function f() {
+          let tmp;
+          return (tmp = Main).prop ?? (Main$prop = {});
+        }
+        """);
+  }
+
+  @Test
+  public void testGlobalAliasInConditionalGetPropReceiver_knownBug() {
+    // Regression test for b/476221453
+    // TODO: b/476221453 - `(tmp = Main).prop` and `tmp.prop` should be collapsed to `Main$prop`.
+    test(
+        """
+        class Main {}
+        Main.prop = 1;
+        let tmp;
+        window.cond && ((tmp = Main).prop ?? (tmp.prop = {}));
+        """,
+        """
+        class Main {}
+        var Main$prop = 1;
+        let tmp;
+        window.cond && ((tmp = Main).prop ?? (tmp.prop = {}));
+        """);
+  }
+
+  @Test
+  public void testLocalEs6ClassAliasInLoopCondition_knownBug() {
+    // Regression test for b/476221453
+    // TODO: b/476221453 - `(tmp = Main).prop` and `tmp.prop` should be collapsed to `Main$prop`.
+    test(
+        """
+        class Main {}
+        Main.prop = 1;
+        function f() {
+          let tmp;
+          while ((tmp = Main).prop ?? (tmp.prop = {})) {
+            break;
+          }
+        }
+        """,
+        """
+        class Main {}
+        var Main$prop = 1;
+        function f() {
+          let tmp;
+          for (; (tmp = Main).prop ?? (tmp.prop = {});) {
+            break;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testTopLevelBlockTwinAssignmentPreservesDeclarationOrder_knownBug() {
+    // Regression test for b/476221453: when `(tmp = ns).sub = {x: 1}` is inlined to
+    // `ns.sub = {x: 1}`, `GlobalNamespace` must scan it before `tmp.sub = tmp.sub || {}` so that
+    // `var ns$sub = {x: 1}` is treated as the declaration of `ns$sub`.
+    // TODO: b/476221453 - `(tmp = ns).sub` should be inlined and collapsed to `var ns$sub = {x:
+    // 1}`.
+    test(
+        """
+        var ns = {};
+        {
+          let tmp;
+          (tmp = ns).sub = {x: 1};
+          tmp.sub = tmp.sub || {};
+        }
+        use(ns.sub.x);
+        """,
+        """
+        var ns = {};
+        {
+          let tmp;
+          (tmp = ns).sub = {x: 1};
+          ns.sub = ns.sub || {};
+        }
+        use(ns.sub.x);
+        """);
+  }
+
+  @Test
+  public void testLocalEs6ClassAliasInForDoWhileAndForOfHeaders_knownBug() {
+    // Pre-fix baseline for b/476221453: `Main.a`, `Main.b`, and `Main.items` collapse outside the
+    // loops while the loop-header aliases `(t = Main)` remain un-inlined and uncollapsed.
+    // TODO: b/476221453 - The loop-header aliases should also be inlined and collapsed.
+    test(
+        """
+        class Main {}
+        Main.a = 1;
+        Main.b = 2;
+        Main.items = [];
+        function f() {
+          let t1;
+          let t2;
+          let t3;
+          let t4;
+          for (; (t1 = Main).a ?? (t1.a = 10); (t2 = Main).b || (t2.b = 20)) {
+            break;
+          }
+          do {
+            break;
+          } while ((t3 = Main).a && (t3.a = 30));
+          for (const x of ((t4 = Main).items ?? (t4.items = [1]))) {
+            use(x);
+          }
+        }
+        use(Main.a, Main.b, Main.items);
+        """,
+        """
+        class Main {}
+        var Main$a = 1;
+        var Main$b = 2;
+        var Main$items = [];
+        function f() {
+          let t1;
+          let t2;
+          let t3;
+          let t4;
+          for (; (t1 = Main).a ?? (t1.a = 10); (t2 = Main).b || (t2.b = 20)) {
+            break;
+          }
+          do {
+            break;
+          } while ((t3 = Main).a && (t3.a = 30));
+          for (const x of ((t4 = Main).items ?? (t4.items = [1]))) {
+            use(x);
+          }
+        }
+        use(Main$a, Main$b, Main$items);
+        """);
+  }
+
+  @Test
+  public void testConstNamespaceAliasInLoopConditionBacksOffCollapse() {
+    // Unlike constructors/classes, a `@const` namespace in a loop header is not inlined, so
+    // GlobalNamespace sees the aliasing get on `ns`, emits `PARTIAL_NAMESPACE_WARNING` when `ns`
+    // contains a declared type, and backs off collapsing `ns.prop` everywhere (avoiding
+    // split-brain).
+    test(
+        srcs(
+            """
+            /** @const */ var ns = {prop: 1};
+            ns.Sub = class {};
+            function f() {
+              let tmp;
+              while ((tmp = ns).prop ?? (tmp.prop = 2)) {
+                break;
+              }
+            }
+            use(ns.prop, new ns.Sub());
+            """),
+        expected(
+            """
+            /** @const */ var ns = {prop: 1};
+            ns.Sub = class {};
+            function f() {
+              let tmp;
+              for (; (tmp = ns).prop ?? (tmp.prop = 2); ) {
+                break;
+              }
+            }
+            use(ns.prop, new ns.Sub());
+            """),
+        warning(InlineAndCollapseProperties.PARTIAL_NAMESPACE_WARNING));
+  }
+
+  @Test
+  public void testStaticGetterSetterAndSideEffectingReceiverLogicalAssignment_knownBug() {
+    // Static getters/setters on a class must not be collapsed into plain variables, and a
+    // non-qualified receiver `(tmp = getMain())` must keep its single-evaluation temporary `tmp`.
+    // TODO: b/476221453 - `(tmp = Main).prop` should be inlined to `Main.prop`.
+    test(
+        """
+        class Main {
+          static get prop() { return 1; }
+          static set prop(v) {}
+        }
+        function f() {
+          let tmp;
+          return (tmp = Main).prop ?? (tmp.prop = 2);
+        }
+        """,
+        """
+        class Main {
+          static get prop() { return 1; }
+          static set prop(v) {}
+        }
+        function f() {
+          let tmp;
+          return (tmp = Main).prop ?? (Main.prop = 2);
+        }
+        """);
+    testSame(
+        """
+        function getMain() { return {}; }
+        function f() {
+          let tmp;
+          return (tmp = getMain()).prop ?? (tmp.prop = 2);
+        }
+        """);
+  }
+
+  @Test
   public void testLocalAlias2() {
     test(
         "var a   = {b: 3,       c : 4}; function f() { var x =    a; f(x.b); f(x.c);}",

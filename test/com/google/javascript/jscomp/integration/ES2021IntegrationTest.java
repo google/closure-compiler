@@ -376,4 +376,170 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         (a = foo)[b = x] ?? (a[b] = 5)
         """);
   }
+
+  @Test
+  public void logicalAssignmentStaticClassPropertyNotTranspiledOutput_knownBug() {
+    CompilerOptions options = optimizedWithoutTranspilationCompilerOptions();
+
+    // TODO: b/476221453 - `a.a` should be collapsed to `b` (`alert(() => b ??= {})`).
+    test(
+        options,
+        """
+        class MyClass {}
+        MyClass.myField = 1;
+        alert(() => {
+          return (MyClass.myField ??= {});
+        });
+        alert(MyClass.myField);
+        """,
+        """
+        class a {}
+        var b = 1;
+        alert(() => a.a ?? (b = {}));
+        alert(b);
+        """);
+  }
+
+  @Test
+  public void logicalAssignmentStaticClassPropertyTranspiledOutput_knownBug() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    // TODO: b/476221453 - `a.a` should be collapsed to `b` (`alert(() => b ?? (b = {}))`).
+    test(
+        options,
+        """
+        class MyClass {}
+        MyClass.myField = 1;
+        alert(() => {
+          return (MyClass.myField ??= {});
+        });
+        alert(MyClass.myField);
+        """,
+        """
+        class a {}
+        var b = 1;
+        alert(() => a.a ?? (b = {}));
+        alert(b);
+        """);
+  }
+
+  @Test
+  public void logicalAssignmentNamespacedStaticClassPropertyTranspiledOutput_knownBug() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    // TODO: b/476221453 - `a.a` should be collapsed to `b` (`alert(() => b ?? (b = {}))`).
+    test(
+        options,
+        """
+        const MyNs = {};
+        MyNs.MyClass = class {};
+        MyNs.MyClass.myField = 1;
+        alert(() => {
+          return (MyNs.MyClass.myField ??= {});
+        });
+        alert(MyNs.MyClass.myField);
+        """,
+        """
+        var a = class {}, b = 1;
+        alert(() => a.a ?? (b = {}));
+        alert(b);
+        """);
+  }
+
+  @Test
+  public void logicalAssignmentStaticClassPropertyGlobalConditionalOutput_knownBug() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    // TODO: b/476221453 - `(c = a).a ?? (c.a = 3)` should be collapsed, preventing `MyClass.b`
+    // from being constant-inlined as `2` in `alert(2)`.
+    test(
+        options,
+        """
+        class MyClass {}
+        MyClass.a = 1;
+        MyClass.b = 2;
+        alert(MyClass.a ||= (MyClass.b ??= 3));
+        alert(MyClass.b);
+        """,
+        """
+        class a {}
+        var b = 1;
+        let c;
+        alert(b || (b = (c = a).a ?? (c.a = 3)));
+        alert(2);
+        """);
+  }
+
+  @Test
+  public void logicalAssignmentStaticClassPropertyInLoopNotTranspiledOutput_knownBug() {
+    CompilerOptions options = optimizedWithoutTranspilationCompilerOptions();
+
+    // TODO: b/476221453 - `(a = b).a ?? (a.a = {})` should be collapsed, preventing
+    // `MyClass.myField` from being constant-inlined as `1` in `alert(1)`.
+    test(
+        options,
+        """
+        class MyClass {}
+        MyClass.myField = 1;
+        alert(() => {
+          while (MyClass.myField ??= {}) {
+            break;
+          }
+        });
+        alert(MyClass.myField);
+        """,
+        """
+        class b {}
+        alert(() => {
+          for (var a; (a = b).a ?? (a.a = {});) {
+            break;
+          }
+        });
+        alert(1);
+        """);
+  }
+
+  @Test
+  public void logicalAssignmentStaticClassPropertyInForDoWhileForOfTranspiledOutput_knownBug() {
+    CompilerOptions options = fullyOptimizedCompilerOptions();
+
+    // TODO: b/476221453 - Before the fix, `MyClass.a`, `MyClass.b`, and `MyClass.items` are
+    // collapsed and constant-inlined as `[1, 2, [1]]` outside the loops, while `(c = b)` inside
+    // the loop headers reads/writes properties on the empty `class b {}` constructor.
+    test(
+        options,
+        """
+        class MyClass {}
+        MyClass.a = 1;
+        MyClass.b = 2;
+        MyClass.items = [1];
+        alert(() => {
+          for (; MyClass.a ??= 10; MyClass.b ||= 20) {
+            if (window.stop) break;
+          }
+          do {
+            if (window.stop) break;
+          } while (MyClass.a &&= 30);
+          for (const x of (MyClass.items ??= [])) {
+            alert(x);
+          }
+        });
+        alert([MyClass.a, MyClass.b, MyClass.items]);
+        """,
+        """
+        class b {}
+        alert(() => {
+          for (var c, d; ((c = b).a ?? (c.a = 10)) && !window.a; (d = b).b || (d.b = 20)) {}
+          var e;
+          do {
+            if (window.a) break;
+          } while ((e = b).a && (e.a = 30));
+          var f;
+          for (let g of (f = b).c ?? (f.c = [])) {
+            alert(g);
+          }
+        });
+        alert([1, 2, [1]]);
+        """);
+  }
 }
