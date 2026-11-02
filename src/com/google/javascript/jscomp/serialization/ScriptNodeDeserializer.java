@@ -85,7 +85,7 @@ final class ScriptNodeDeserializer {
                 AstNode.parseFrom(astStream, ExtensionRegistry.getEmptyRegistry()),
                 contextStack,
                 this.owner().createSourceInfoTemplate(this.owner().sourceFile));
-        scriptNode.putProp(Node.FEATURE_SET, featureCollector.allFeatures());
+        scriptNode.setFeatureSet(featureCollector.allFeatures());
         return scriptNode;
       } catch (IOException ex) {
         throw new MalformedTypedAstException(this.owner().sourceFile, ex);

@@ -1106,4 +1106,40 @@ public class NodeTest {
     assertThat(child.getCharno()).isEqualTo(-1);
     assertThat(child.getSourceFileName()).isNull();
   }
+
+  @Test
+  public void testObjectValuedProps() {
+    Node n = new Node(Token.NAME);
+
+    Object reflected = new Object();
+    n.setReflectedObject(reflected);
+    assertThat(n.getReflectedObject()).isSameInstanceAs(reflected);
+
+    Node genericType = new Node(Token.NAME);
+    n.setGenericType(genericType);
+    assertThat(n.getGenericType()).isSameInstanceAs(genericType);
+
+    Node implementsNode = new Node(Token.NAME);
+    n.setImplements(implementsNode);
+    assertThat(n.getImplements()).isSameInstanceAs(implementsNode);
+
+    n.setConstructSignature(true);
+    assertThat(n.getConstructSignature()).isTrue();
+    n.setConstructSignature(false);
+    assertThat(n.getConstructSignature()).isFalse();
+
+    JSDocInfo.Visibility access = JSDocInfo.Visibility.PRIVATE;
+    n.setAccessModifier(access);
+    assertThat(n.getAccessModifier()).isEqualTo(access);
+
+    Object features = new Object();
+    n.setFeatureSet(features);
+    assertThat(n.getFeatureSet()).isSameInstanceAs(features);
+
+    Node evalNode = IR.name("eval");
+    evalNode.putBooleanProp(Node.DIRECT_EVAL, true);
+    assertThat(evalNode.getBooleanProp(Node.DIRECT_EVAL)).isTrue();
+    evalNode.removeDirectEvalProp();
+    assertThat(evalNode.getBooleanProp(Node.DIRECT_EVAL)).isFalse();
+  }
 }

@@ -140,7 +140,7 @@ public final class ParserRunner {
         IRFactory factory = IRFactory.transformTree(tree, sourceFile, config, errorReporter, file);
         root = factory.getResultNode();
         features = features.union(factory.getFeatures());
-        root.putProp(Node.FEATURE_SET, features);
+        root.setFeatureSet(features);
 
         if (config.jsDocParsingMode().shouldParseDescriptions()) {
           comments = p.getComments();

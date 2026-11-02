@@ -1662,7 +1662,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     n.srcrefTree(n);
     expectInvalid(n, Check.SCRIPT);
 
-    n.putProp(Node.FEATURE_SET, FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS));
+    n.setFeatureSet(FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS));
     expectValid(n, Check.SCRIPT);
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT3); // resets compiler's allowable featureSet
@@ -1839,7 +1839,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     FeatureSet currentFeatures = NodeUtil.getFeatureSetOfScript(script);
     assertThat(currentFeatures.contains(feature)).isTrue();
 
-    script.putProp(Node.FEATURE_SET, currentFeatures.without(feature));
+    script.setFeatureSet(currentFeatures.without(feature));
     expectInvalid(script, Check.SCRIPT);
   }
 

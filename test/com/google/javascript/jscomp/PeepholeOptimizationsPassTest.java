@@ -269,7 +269,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
     testSame("(3 + 4); function sub() { return 3 - 4; }");
     Compiler compiler = getLastCompiler();
     Node script = checkNotNull(compiler.getScriptNode("testcode"));
-    assertThat(script.getProp(Node.FEATURE_SET))
+    assertThat(script.getFeatureSet())
         .isEqualTo(
             FeatureSet.BARE_MINIMUM.with(
                 Feature.LET_DECLARATIONS, Feature.CLASSES, Feature.CONST_DECLARATIONS));

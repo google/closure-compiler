@@ -403,7 +403,7 @@ public final class TypedAstDeserializer {
   private static Supplier<Node> createStubWeakScriptNode(SourceFile file) {
     return () -> {
       Node stubScript = IR.script().setStaticSourceFile(file);
-      stubScript.putProp(Node.FEATURE_SET, FeatureSet.BARE_MINIMUM);
+      stubScript.setFeatureSet(FeatureSet.BARE_MINIMUM);
       return stubScript;
     };
   }

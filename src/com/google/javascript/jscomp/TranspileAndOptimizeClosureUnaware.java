@@ -146,7 +146,7 @@ class TranspileAndOptimizeClosureUnaware implements CompilerPass {
       Node shadowScript = shadowAst.script();
       FeatureCollector collector = new FeatureCollector();
       collector.visitScript(shadowScript);
-      shadowScript.putProp(Node.FEATURE_SET, collector.allFeatures());
+      shadowScript.setFeatureSet(collector.allFeatures());
     }
   }
 

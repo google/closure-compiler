@@ -128,7 +128,7 @@ final class PolymerBehaviorExtractor {
                 getBehaviorFunctionsToCopy(behaviorName),
                 getNonPropertyMembersToCopy(behaviorName),
                 /* isGlobalDeclaration= */ NodeUtil.getEnclosingScopeRoot(behaviorName).isRoot(),
-                (FeatureSet) NodeUtil.getEnclosingScript(behaviorName).getProp(Node.FEATURE_SET),
+                ((FeatureSet) NodeUtil.getEnclosingScript(behaviorName).getFeatureSet()),
                 behaviorModule));
         continue;
       }
@@ -166,7 +166,7 @@ final class PolymerBehaviorExtractor {
                 getBehaviorFunctionsToCopy(behaviorValue),
                 getNonPropertyMembersToCopy(behaviorValue),
                 resolveResult.isGlobalDeclaration,
-                (FeatureSet) NodeUtil.getEnclosingScript(behaviorValue).getProp(Node.FEATURE_SET),
+                ((FeatureSet) NodeUtil.getEnclosingScript(behaviorValue).getFeatureSet()),
                 behaviorModule));
       } else {
         compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));

@@ -555,7 +555,7 @@ public class CodeGenerator {
             addExpr(superClass, 1, Context.OTHER);
           }
 
-          Node interfaces = (Node) node.getProp(Node.IMPLEMENTS);
+          Node interfaces = node.getImplements();
           if (interfaces != null) {
             add("implements");
             Node child = interfaces.getFirstChild();
@@ -1537,7 +1537,7 @@ public class CodeGenerator {
   }
 
   private void maybeAddAccessibilityModifier(Node n) {
-    Visibility access = (Visibility) n.getProp(Node.ACCESS_MODIFIER);
+    Visibility access = n.getAccessModifier();
     if (access != null) {
       add(Ascii.toLowerCase(access.toString()) + " ");
     }
@@ -1552,7 +1552,7 @@ public class CodeGenerator {
   }
 
   private void maybeAddGenericTypes(Node n) {
-    Node generics = (Node) n.getProp(Node.GENERIC_TYPE_LIST);
+    Node generics = n.getGenericType();
     if (generics != null) {
       add(generics);
     }

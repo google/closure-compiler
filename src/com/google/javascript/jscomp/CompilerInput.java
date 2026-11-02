@@ -410,7 +410,7 @@ public class CompilerInput implements DependencyInfo {
     void visitTree(Node n) {
       visitSubtree(n, null);
       checkArgument(n.isScript());
-      FeatureSet features = (FeatureSet) n.getProp(Node.FEATURE_SET);
+      FeatureSet features = (FeatureSet) n.getFeatureSet();
       if (features != null) {
         // Only add the "lang" load flag if it's not the default (es3), so that
         // legacy deps files will remain unchanged (i.e. load flags omitted).
@@ -649,7 +649,7 @@ public class CompilerInput implements DependencyInfo {
       Supplier<Node> astRootSource = compiler.getTypedAstDeserializer(sourceFile);
       if (astRootSource != null) {
         this.root = astRootSource.get();
-        this.features = (FeatureSet) this.root.getProp(Node.FEATURE_SET);
+        this.features = (FeatureSet) this.root.getFeatureSet();
       } else {
         this.parse(compiler);
       }

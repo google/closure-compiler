@@ -331,7 +331,7 @@ class OptionalChainRewriter {
     String tempVarName = declareTempVarName(subExpr);
     Node placeholder = IR.empty();
     subExpr.replaceWith(placeholder);
-    subExpr.removeProp(Node.DIRECT_EVAL);
+    subExpr.removeDirectEvalProp();
     Node replacement = astFactory.createAssign(tempVarName, subExpr).srcrefTreeIfMissing(subExpr);
     placeholder.replaceWith(replacement);
     return replacement.getFirstChild().cloneNode();

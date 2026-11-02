@@ -882,9 +882,9 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     // At present, the main advantage of doing so seems to be a potential performance gain because
     // transpilation passes on the main AST can skip any features only in the shadow AST, but we
     // don't expect that performance gain to be significant.
-    assertThat(mainScript.getProp(Node.FEATURE_SET))
+    assertThat(mainScript.getFeatureSet())
         .isEqualTo(FeatureSet.BARE_MINIMUM.with(Feature.CONST_DECLARATIONS));
-    assertThat(shadowScript.getProp(Node.FEATURE_SET)).isNull();
+    assertThat(shadowScript.getFeatureSet()).isNull();
   }
 
   @Test
@@ -1043,13 +1043,11 @@ public final class SerializeAndDeserializeAstTest extends CompilerTestCase {
     Node sourceRoot = root.getSecondChild();
     for (Node script = externsRoot.getFirstChild(); script != null; script = script.getNext()) {
       checkState(script.isScript());
-      builder.put(
-          (SourceFile) script.getStaticSourceFile(), (FeatureSet) script.getProp(Node.FEATURE_SET));
+      builder.put((SourceFile) script.getStaticSourceFile(), (FeatureSet) script.getFeatureSet());
     }
     for (Node script = sourceRoot.getFirstChild(); script != null; script = script.getNext()) {
       checkState(script.isScript());
-      builder.put(
-          (SourceFile) script.getStaticSourceFile(), (FeatureSet) script.getProp(Node.FEATURE_SET));
+      builder.put((SourceFile) script.getStaticSourceFile(), (FeatureSet) script.getFeatureSet());
     }
     return builder.buildOrThrow();
   }

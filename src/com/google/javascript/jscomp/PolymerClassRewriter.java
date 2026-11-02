@@ -325,10 +325,10 @@ final class PolymerClassRewriter {
     // we might need to update the FeatureSet.
     if (cls.features != null) {
       Node scriptNode = NodeUtil.getEnclosingScript(parent);
-      FeatureSet oldFeatures = (FeatureSet) scriptNode.getProp(Node.FEATURE_SET);
+      FeatureSet oldFeatures = (FeatureSet) scriptNode.getFeatureSet();
       FeatureSet newFeatures = oldFeatures.union(cls.features);
       if (!newFeatures.equals(oldFeatures)) {
-        scriptNode.putProp(Node.FEATURE_SET, newFeatures);
+        scriptNode.setFeatureSet(newFeatures);
         compiler.reportChangeToChangeScope(scriptNode);
       }
     }

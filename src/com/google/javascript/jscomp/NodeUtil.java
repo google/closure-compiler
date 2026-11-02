@@ -5862,7 +5862,7 @@ public final class NodeUtil {
    */
   static @Nullable FeatureSet getFeatureSetOfScript(Node scriptNode) {
     checkState(scriptNode.isScript(), scriptNode);
-    return (FeatureSet) scriptNode.getProp(Node.FEATURE_SET);
+    return (FeatureSet) scriptNode.getFeatureSet();
   }
 
   /**
@@ -5877,7 +5877,7 @@ public final class NodeUtil {
         currentFeatures != null
             ? currentFeatures.with(feature)
             : FeatureSet.BARE_MINIMUM.with(feature);
-    scriptNode.putProp(Node.FEATURE_SET, newFeatures);
+    scriptNode.setFeatureSet(newFeatures);
     if (feature != Feature.MODULES) {
       // Except MODULES (which can get reintroduced later in ConvertChunksToEsModules pass),
       // prohibit passes from reintroducing any feature that already got transpiled.
@@ -5904,7 +5904,7 @@ public final class NodeUtil {
     if (currentFeatures != null) {
       currentFeatures = currentFeatures.without(feature);
     }
-    scriptNode.putProp(Node.FEATURE_SET, currentFeatures);
+    scriptNode.setFeatureSet(currentFeatures);
   }
 
   /**
@@ -5919,7 +5919,7 @@ public final class NodeUtil {
     FeatureSet currentFeatures = getFeatureSetOfScript(scriptNode);
     if (currentFeatures != null) {
       currentFeatures = currentFeatures.without(featureSet);
-      scriptNode.putProp(Node.FEATURE_SET, currentFeatures);
+      scriptNode.setFeatureSet(currentFeatures);
     }
   }
 

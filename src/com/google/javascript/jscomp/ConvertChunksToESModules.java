@@ -145,7 +145,7 @@ final class ConvertChunksToESModules implements CompilerPass {
         if (firstInput == null) {
           firstInput = input;
           scriptFeatures = scriptFeatures.union(FeatureSet.ES2015_MODULES);
-          astRoot.putProp(Node.FEATURE_SET, scriptFeatures);
+          astRoot.setFeatureSet(scriptFeatures);
           Node moduleBody = new Node(Token.MODULE_BODY);
           moduleBody.srcref(astRoot);
           moduleBody.addChildrenToFront(astRoot.removeChildren());
@@ -156,7 +156,7 @@ final class ConvertChunksToESModules implements CompilerPass {
           FeatureSet firstInputScriptFeatures = NodeUtil.getFeatureSetOfScript(firstInputAstRoot);
           FeatureSet combinedFeatureSet =
               firstInputScriptFeatures.union(NodeUtil.getFeatureSetOfScript(astRoot));
-          astRoot.putProp(Node.FEATURE_SET, combinedFeatureSet);
+          astRoot.setFeatureSet(combinedFeatureSet);
           Node moduleBody = firstInputAstRoot.getFirstChild();
           checkState(moduleBody != null && moduleBody.isModuleBody());
           moduleBody.addChildrenToBack(astRoot.removeChildren());

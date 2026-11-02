@@ -1160,6 +1160,13 @@ public class Node {
     }
   }
 
+  /**
+   * Returns the object property value for the given property type, or null if not set.
+   *
+   * @deprecated Use the specific typed property accessor (e.g. {@link #getGenericType()}, {@link
+   *     #getImplements()}, {@link #getReflectedObject()}, etc.) instead.
+   */
+  @Deprecated
   public final @Nullable Object getProp(Prop propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
@@ -1181,6 +1188,13 @@ public class Node {
     return item.getIntValue();
   }
 
+  /**
+   * Sets the object property value for the given property type.
+   *
+   * @deprecated Use the specific typed property accessor (e.g. {@link #setGenericType(Node)},
+   *     {@link #setImplements(Node)}, {@link #setReflectedObject(Object)}, etc.) instead.
+   */
+  @Deprecated
   @SuppressWarnings("EnumOrdinal") // performance tuning
   public final void putProp(Prop prop, @Nullable Object value) {
     this.propListHead = rebuildListWithoutProp(this.propListHead, prop);
@@ -1371,6 +1385,58 @@ public class Node {
   /** Sets the syntactical type specified on this node. */
   public final void setDeclaredTypeExpression(Node typeExpression) {
     putProp(Prop.DECLARED_TYPE_EXPR, typeExpression);
+  }
+
+  public final @Nullable Object getReflectedObject() {
+    return getProp(Prop.REFLECTED_OBJECT);
+  }
+
+  public final void setReflectedObject(Object object) {
+    putProp(Prop.REFLECTED_OBJECT, object);
+  }
+
+  public final @Nullable Node getGenericType() {
+    return (Node) getProp(Prop.GENERIC_TYPE);
+  }
+
+  public final void setGenericType(Node node) {
+    putProp(Prop.GENERIC_TYPE, node);
+  }
+
+  public final @Nullable Node getImplements() {
+    return (Node) getProp(Prop.IMPLEMENTS);
+  }
+
+  public final void setImplements(Node node) {
+    putProp(Prop.IMPLEMENTS, node);
+  }
+
+  public final boolean getConstructSignature() {
+    return getBooleanProp(Prop.CONSTRUCT_SIGNATURE);
+  }
+
+  public final void setConstructSignature(boolean value) {
+    putBooleanProp(Prop.CONSTRUCT_SIGNATURE, value);
+  }
+
+  public final JSDocInfo.@Nullable Visibility getAccessModifier() {
+    return (JSDocInfo.Visibility) getProp(Prop.ACCESS_MODIFIER);
+  }
+
+  public final void setAccessModifier(JSDocInfo.Visibility visibility) {
+    putProp(Prop.ACCESS_MODIFIER, visibility);
+  }
+
+  public final @Nullable Object getFeatureSet() {
+    return getProp(Prop.FEATURE_SET);
+  }
+
+  public final void setFeatureSet(Object featureSet) {
+    putProp(Prop.FEATURE_SET, featureSet);
+  }
+
+  public final void removeDirectEvalProp() {
+    removeProp(Prop.DIRECT_EVAL);
   }
 
   /**

@@ -254,7 +254,7 @@ public class NestedCompilerRunnerTest {
     script.setStaticSourceFile(file);
     script.setIsInClosureUnawareSubtree(true);
     FeatureSet features = NodeUtil.getFeatureSetOfScript(parsed);
-    script.putProp(Node.FEATURE_SET, features != null ? features : FeatureSet.BARE_MINIMUM);
+    script.setFeatureSet(features != null ? features : FeatureSet.BARE_MINIMUM);
 
     script.addChildrenToFront(parsed.removeChildren());
     return script;
