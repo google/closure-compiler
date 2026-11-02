@@ -45,7 +45,7 @@ public class CodeGenerator {
 
   private final boolean preferSingleQuotes;
   private final boolean preserveTypeAnnotations;
-  private final boolean printNonJSDocComments;
+  private final boolean printNonJsDocComments;
 
   /**
    * To distinguish between gents and non-gents mode so that we can turn off checking the sanity of
@@ -66,7 +66,7 @@ public class CodeGenerator {
     preferSingleQuotes = false;
     trustedStrings = true;
     preserveTypeAnnotations = false;
-    printNonJSDocComments = false;
+    printNonJsDocComments = false;
     gentsMode = false;
     quoteKeywordProperties = false;
     useOriginalName = false;
@@ -81,7 +81,7 @@ public class CodeGenerator {
     this.preferSingleQuotes = options.shouldPreferSingleQuotes();
     this.trustedStrings = options.assumeTrustedStrings();
     this.preserveTypeAnnotations = options.shouldPreserveTypeAnnotations();
-    this.printNonJSDocComments = options.getPreserveNonJSDocComments();
+    this.printNonJsDocComments = options.getPreserveNonJSDocComments();
     this.gentsMode = options.getGentsMode();
     this.quoteKeywordProperties = options.shouldQuoteKeywordProperties();
     this.useOriginalName = options.getUseOriginalNamesInOutput();
@@ -104,7 +104,7 @@ public class CodeGenerator {
     cc.endLine();
   }
 
-  private void printJSDocComment(Node node, JSDocInfo jsDocInfo) {
+  private void printJsDocComment(Node node, JSDocInfo jsDocInfo) {
     String jsdocAsString;
     // In gents mode, we print NonJSDocInfo without special handling, as we already have
     // pre-filtered the comments properly.
@@ -122,10 +122,10 @@ public class CodeGenerator {
     }
   }
 
-  private void printNonJSDocComment(Node node, NonJSDocComment nonJSDocComment) {
-    String nonJSDocCommentString = nonJSDocComment.getCommentString();
-    if (!nonJSDocCommentString.isEmpty()) {
-      addNonJsDoc_nonTrailing(node, nonJSDocComment);
+  private void printNonJsDocComment(Node node, NonJSDocComment nonJsDocComment) {
+    String nonJsDocCommentString = nonJsDocComment.getCommentString();
+    if (!nonJsDocCommentString.isEmpty()) {
+      addNonJsDocNonTrailing(node, nonJsDocComment);
     }
   }
 
@@ -135,35 +135,35 @@ public class CodeGenerator {
    */
   protected void printLeadingCommentsInOrder(Node node) {
     JSDocInfo jsDocInfo = node.getJSDocInfo();
-    NonJSDocComment nonJSDocComment = node.getNonJSDocComment();
+    NonJSDocComment nonJsDocComment = node.getNonJSDocComment();
 
-    boolean printJSDoc = preserveTypeAnnotations && jsDocInfo != null;
-    boolean printNonJSDoc = printNonJSDocComments && nonJSDocComment != null;
-    if (printJSDoc && printNonJSDoc) {
-      if (jsDocInfo.getOriginalCommentPosition() < nonJSDocComment.getStartPosition().getOffset()) {
-        printJSDocComment(node, jsDocInfo);
-        printNonJSDocComment(node, nonJSDocComment);
+    boolean printJsDoc = preserveTypeAnnotations && jsDocInfo != null;
+    boolean printNonJsDoc = printNonJsDocComments && nonJsDocComment != null;
+    if (printJsDoc && printNonJsDoc) {
+      if (jsDocInfo.getOriginalCommentPosition() < nonJsDocComment.getStartPosition().getOffset()) {
+        printJsDocComment(node, jsDocInfo);
+        printNonJsDocComment(node, nonJsDocComment);
       } else {
-        printNonJSDocComment(node, nonJSDocComment);
-        printJSDocComment(node, jsDocInfo);
+        printNonJsDocComment(node, nonJsDocComment);
+        printJsDocComment(node, jsDocInfo);
       }
       return;
     }
 
-    if (printJSDoc) {
-      printJSDocComment(node, jsDocInfo);
+    if (printJsDoc) {
+      printJsDocComment(node, jsDocInfo);
       return;
     }
 
-    if (printNonJSDoc) {
-      printNonJSDocComment(node, nonJSDocComment);
+    if (printNonJsDoc) {
+      printNonJsDocComment(node, nonJsDocComment);
       return;
     }
   }
 
   /** Returns true when a node has a trailing comment. */
   private boolean hasTrailingCommentOnSameLine(Node node) {
-    if (!printNonJSDocComments) {
+    if (!printNonJsDocComments) {
       return false;
     }
     return !node.getTrailingNonJSDocCommentString().isEmpty();
@@ -171,14 +171,14 @@ public class CodeGenerator {
 
   protected void printTrailingComment(Node node) {
     // print any trailing nonJSDoc comment attached to this node
-    if (!printNonJSDocComments) {
+    if (!printNonJsDocComments) {
       return;
     }
-    NonJSDocComment nonJSDocComment = node.getTrailingNonJSDocComment();
-    if (nonJSDocComment != null) {
-      String nonJSDocCommentString = node.getTrailingNonJSDocCommentString();
-      if (!nonJSDocCommentString.isEmpty()) {
-        addNonJsDoctrailing(nonJSDocComment, hasTrailingCommentOnSameLine(node));
+    NonJSDocComment nonJsDocComment = node.getTrailingNonJSDocComment();
+    if (nonJsDocComment != null) {
+      String nonJsDocCommentString = node.getTrailingNonJSDocCommentString();
+      if (!nonJsDocCommentString.isEmpty()) {
+        addNonJsDoctrailing(nonJsDocComment, hasTrailingCommentOnSameLine(node));
       }
     }
   }
@@ -1734,8 +1734,8 @@ public class CodeGenerator {
       // ExponentiationExpression cannot expand to
       //     UnaryExpression ** ExponentiationExpression
       return true;
-    } else if (isLogicalANDorLogicalORChildOfNullishCoalesce(n)
-        || isNullishCoalesceChildOfLogicalANDorLogicalOR(n)) {
+    } else if (isLogicalAndOrLogicalOrChildOfNullishCoalesce(n)
+        || isNullishCoalesceChildOfLogicalAndOrLogicalOr(n)) {
       // precedence is not enough here since using && or || with ?? without parentheses
       // is a syntax error as ?? expands directly to |
       return true;
@@ -1747,17 +1747,17 @@ public class CodeGenerator {
     }
   }
 
-  private static boolean isLogicalANDorLogicalORChildOfNullishCoalesce(Node n) {
+  private static boolean isLogicalAndOrLogicalOrChildOfNullishCoalesce(Node n) {
     Node parent = n.getParent();
-    boolean logicalANDorLogicalOR = n.isAnd() || n.isOr();
+    boolean logicalAndOrLogicalOr = n.isAnd() || n.isOr();
     boolean childOfNullishCoalesce = parent != null && parent.isNullishCoalesce();
-    return logicalANDorLogicalOR && childOfNullishCoalesce;
+    return logicalAndOrLogicalOr && childOfNullishCoalesce;
   }
 
-  private static boolean isNullishCoalesceChildOfLogicalANDorLogicalOR(Node n) {
+  private static boolean isNullishCoalesceChildOfLogicalAndOrLogicalOr(Node n) {
     Node parent = n.getParent();
-    boolean childOfLogicalANDorLogicalOR = parent != null && (parent.isAnd() || parent.isOr());
-    return n.isNullishCoalesce() && childOfLogicalANDorLogicalOR;
+    boolean childOfLogicalAndOrLogicalOr = parent != null && (parent.isAnd() || parent.isOr());
+    return n.isNullishCoalesce() && childOfLogicalAndOrLogicalOr;
   }
 
   private boolean isFirstOperandOfExponentiationExpression(Node n) {
@@ -1881,13 +1881,13 @@ public class CodeGenerator {
     }
   }
 
-  private void addNonJsDoc_nonTrailing(Node node, NonJSDocComment nonJSDocComment) {
-    String content = nonJSDocComment.getCommentString();
-    SourcePosition commentEndPosition = nonJSDocComment.getEndPosition();
+  private void addNonJsDocNonTrailing(Node node, NonJSDocComment nonJsDocComment) {
+    String content = nonJsDocComment.getCommentString();
+    SourcePosition commentEndPosition = nonJsDocComment.getEndPosition();
 
     int nodeLineNumber = node.getLineno() - 1; // source lines are 1-indexed
 
-    if (nonJSDocComment.isEndingAsLineComment()) {
+    if (nonJsDocComment.isEndingAsLineComment()) {
       // Non trailing line comments can not be on the same line as the node.
       checkState(
           gentsMode || commentEndPosition.line < nodeLineNumber,
@@ -1908,16 +1908,16 @@ public class CodeGenerator {
     }
   }
 
-  private void addNonJsDoctrailing(NonJSDocComment nonJSDocComment, boolean sameLine) {
-    String content = nonJSDocComment.getCommentString();
-    if (nonJSDocComment.isEndingAsLineComment()) {
+  private void addNonJsDoctrailing(NonJSDocComment nonJsDocComment, boolean sameLine) {
+    String content = nonJsDocComment.getCommentString();
+    if (nonJsDocComment.isEndingAsLineComment()) {
       // Trailing line comments *must* end with a `\n`. E.g.. `let x; //comment\n`
       add(" " + content);
       if (sameLine) {
         cc.startNewLine();
       }
     } else {
-      if (nonJSDocComment.isInline()) {
+      if (nonJsDocComment.isInline()) {
         // e.g. `foo(x /*comment*/);` is inline
         add(" " + content);
       } else {
