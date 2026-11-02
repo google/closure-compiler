@@ -900,7 +900,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         /** @constructor */ var Main = function() {};
         Main.doSomething = function(i) {}
         function f() {
-          if (tmp = Main) { // Don't set "tmp = null" because that would change control flow.
+          if (Main) {
             Main.doSomething(6);
           }
           var tmp;
@@ -925,19 +925,18 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         /** @constructor */ var Main = function() {};
         Main.doSomething = function(i) {}
         function f() {
-          var a = tmp = Main; // Don't set "tmp = null" because that would mess up a's value.
+          var a = null;
           Main.doSomething(6);
-          a.doSomething(7); // Main doesn't get inlined here, which makes collapsing unsafe.
+          Main.doSomething(7);
           var tmp;
         }
         """);
   }
 
   @Test
-  public void testLocalAliasInGetPropReceiver_knownBug() {
+  public void testLocalAliasInGetPropReceiver() {
     // Regression test for b/476221453: logical assignment `Main.prop ??= ...` normalizes to
     // `let tmp; (tmp = Main).prop ?? (tmp.prop = ...);`.
-    // TODO: b/476221453 - `(tmp = Main).prop` should also be inlined to `Main.prop`.
     test(
         """
         class Main {}
@@ -952,24 +951,31 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         Main.prop = 1;
         function f() {
           let tmp;
-          return (tmp = Main).prop ?? (Main.prop = {});
+          return Main.prop ?? (Main.prop = {});
         }
         """);
   }
 
   @Test
-  public void testLocalAliasInGetPropReceiverWithZeroReadsNested_knownBug() {
-    // Pre-fix baseline for b/476221453: `t1` has 0 separate read references (its only use is the
+  public void testLocalAliasInGetPropReceiverWithZeroReadsNested() {
+    // Regression test for b/476221453: `t1` has 0 separate read references (its only use is the
     // `(t1 = ...)` assignment expression result), and inlining `t1` exposes `(t2 = A).b.p` for
     // the next iteration.
-    // TODO: b/476221453 - `(t1 = (t2 = A).b).p` should be inlined to `A.b.p`.
-    testSame(
+    test(
         """
         const A = {b: {p: 1}};
         function f() {
           let t1;
           let t2;
           use((t1 = (t2 = A).b).p);
+        }
+        """,
+        """
+        const A = {b: {p: 1}};
+        function f() {
+          let t1;
+          let t2;
+          use(A.b.p);
         }
         """);
   }
@@ -1023,11 +1029,10 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testUnsafeCtorAliasingInGetPropReceiverInLoop_knownBug() {
+  public void testUnsafeCtorAliasingInGetPropReceiverInLoop() {
     // Regression test for b/476221453: `referencesCollapsibleProperty` should unwrap `ASSIGN` when
     // checking `(tmp = Main).doSomething(5)` after `partiallyInlineAlias` backs off.
-    // TODO: b/476221453 - This should report `InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING`.
-    testSame(
+    testWarning(
         """
         /** @constructor */ var Main = function() {};
         Main.doSomething = function() {};
@@ -1038,7 +1043,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             (tmp = Main).doSomething(5);
           }
         }
-        """);
+        """,
+        InlineAndCollapseProperties.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
@@ -2112,7 +2118,9 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testLocalAliasInChainedAssignment() {
-    testSame("var a = { b: 3 }; function f() { var c; var d = c = a; a.b; d.b; }");
+    test(
+        "var a = { b: 3 }; function f() { var c; var d = c = a; a.b; d.b; }",
+        "var a = { b: 3 }; function f() { var c; var d = null; a.b; a.b; }");
   }
 
   @Test

@@ -159,7 +159,7 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         """,
         """
         const a = {}, b = {};
-        alert(a.a || (a.a = a.b && (a.b = b.c ?? (b.c = 'something'))))
+        alert(a.a || (a.a = a.b && (a.b = b.c ?? (b.c = 'something'))));
         """);
   }
 
@@ -237,7 +237,7 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         """,
         """
         const a = {}, b = {};
-        alert(a.a || (a.a = a.b && (a.b = b.c ?? (b.c = 'something'))))
+        alert(a.a || (a.a = a.b && (a.b = b.c ?? (b.c = 'something'))));
         """);
   }
 
@@ -378,10 +378,9 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void logicalAssignmentStaticClassPropertyNotTranspiledOutput_knownBug() {
+  public void logicalAssignmentStaticClassPropertyNotTranspiledOutput() {
     CompilerOptions options = optimizedWithoutTranspilationCompilerOptions();
 
-    // TODO: b/476221453 - `a.a` should be collapsed to `b` (`alert(() => b ??= {})`).
     test(
         options,
         """
@@ -393,18 +392,16 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         alert(MyClass.myField);
         """,
         """
-        class a {}
-        var b = 1;
-        alert(() => a.a ?? (b = {}));
-        alert(b);
+        var a = 1;
+        alert(() => a ??= {});
+        alert(a);
         """);
   }
 
   @Test
-  public void logicalAssignmentStaticClassPropertyTranspiledOutput_knownBug() {
+  public void logicalAssignmentStaticClassPropertyTranspiledOutput() {
     CompilerOptions options = fullyOptimizedCompilerOptions();
 
-    // TODO: b/476221453 - `a.a` should be collapsed to `b` (`alert(() => b ?? (b = {}))`).
     test(
         options,
         """
@@ -416,18 +413,16 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         alert(MyClass.myField);
         """,
         """
-        class a {}
-        var b = 1;
-        alert(() => a.a ?? (b = {}));
-        alert(b);
+        var a = 1;
+        alert(() => a ?? (a = {}));
+        alert(a);
         """);
   }
 
   @Test
-  public void logicalAssignmentNamespacedStaticClassPropertyTranspiledOutput_knownBug() {
+  public void logicalAssignmentNamespacedStaticClassPropertyTranspiledOutput() {
     CompilerOptions options = fullyOptimizedCompilerOptions();
 
-    // TODO: b/476221453 - `a.a` should be collapsed to `b` (`alert(() => b ?? (b = {}))`).
     test(
         options,
         """
@@ -440,9 +435,9 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         alert(MyNs.MyClass.myField);
         """,
         """
-        var a = class {}, b = 1;
-        alert(() => a.a ?? (b = {}));
-        alert(b);
+        var a = 1;
+        alert(() => a ?? (a = {}));
+        alert(a);
         """);
   }
 

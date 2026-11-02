@@ -594,16 +594,19 @@ class InlineAndCollapseProperties implements CompilerPass {
             && (aliasRefs.isAssignedOnceInLifetime()
                 || isInlineableModuleExportsAlias(name, aliasRefs))) {
           // The alias is well-formed, so do the inlining now.
+          Set<AstChange> readNodes = new LinkedHashSet<>();
           int size = aliasRefs.references.size();
           // It's initialized on either the first or second reference.
           int firstRead = aliasRefs.references.get(0).isInitializingDeclaration() ? 1 : 2;
           for (int i = firstRead; i < size; i++) {
             Reference aliasRef = aliasRefs.references.get(i);
-            newNodes.add(replaceAliasReference(alias, aliasRef));
+            readNodes.add(replaceAliasReference(alias, aliasRef));
           }
 
-          // just set the original alias to null.
-          tryReplacingAliasingAssignment(alias, name, aliasLhsNode);
+          // Replace the aliasing assignment before scanning readNodes so that any new reference
+          // at the initialization site is scanned into GlobalNamespace before subsequent reads.
+          replaceAliasingAssignment(alias, name, aliasLhsNode, newNodes);
+          newNodes.addAll(readNodes);
 
           // Inlining the variable may have introduced new references
           // to descendants of {@code name}. So those need to be collected now.
@@ -662,7 +665,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         }
       }
 
-      Set<AstChange> newNodes = new LinkedHashSet<>();
+      Set<AstChange> readNodes = new LinkedHashSet<>();
       boolean alreadySeenInitialAlias = false;
       boolean foundNonReplaceableAlias = false;
       // Do a second iteration through all the alias references, and replace any inlinable
@@ -684,16 +687,18 @@ class InlineAndCollapseProperties implements CompilerPass {
           // the aliasing assignment takes place before the reference, and the alias is
           // never reassigned.
           codeChanged = true;
-          newNodes.add(replaceAliasReference(alias, aliasRef));
+          readNodes.add(replaceAliasReference(alias, aliasRef));
         } else {
           foundNonReplaceableAlias = true;
         }
       }
 
+      Set<AstChange> newNodes = new LinkedHashSet<>();
       // We removed all references to the alias, so remove the original aliasing assignment.
       if (!foundNonReplaceableAlias) {
-        tryReplacingAliasingAssignment(alias, aliasingName, aliasLhsNode);
+        replaceAliasingAssignment(alias, aliasingName, aliasLhsNode, newNodes);
       }
+      newNodes.addAll(readNodes);
 
       if (codeChanged) {
         // Inlining the variable may have introduced new references
@@ -705,24 +710,28 @@ class InlineAndCollapseProperties implements CompilerPass {
 
     /**
      * Replaces the rhs of an aliasing assignment with null, unless the assignment result is used in
-     * a complex expression.
+     * a complex expression, in which case it replaces the entire assignment with the rhs.
      */
-    @CanIgnoreReturnValue
-    private boolean tryReplacingAliasingAssignment(Ref alias, Name aliasName, Node aliasLhsNode) {
+    private void replaceAliasingAssignment(
+        Ref alias, Name aliasName, Node aliasLhsNode, Set<AstChange> newNodes) {
       // either VAR/CONST/LET or ASSIGN.
       Node assignment = aliasLhsNode.getParent();
       if (!NodeUtil.isNameDeclaration(assignment) && NodeUtil.isExpressionResultUsed(assignment)) {
-        // e.g. don't change "if (alias = someVariable)" to "if (alias = null)"
-        // TODO(lharker): instead replace the entire assignment with the RHS - "alias = x" becomes
-        // "x"
-        return false;
+        // e.g. change "if (alias = someVariable)" to "if (someVariable)", or
+        // "(alias = someVariable).prop" to "someVariable.prop"
+        checkState(assignment.isAssign(), assignment);
+        Node assignmentParent = assignment.getParent();
+        Node rhs = alias.getNode().detach();
+        assignment.replaceWith(rhs);
+        newNodes.add(new RefBasedAstChange(alias, rhs));
+        compiler.reportChangeToEnclosingScope(assignmentParent);
+      } else {
+        Node aliasParent = alias.getNode().getParent();
+        alias.getNode().replaceWith(IR.nullNode());
+        compiler.reportChangeToEnclosingScope(aliasParent);
       }
-      Node aliasParent = alias.getNode().getParent();
-      alias.getNode().replaceWith(IR.nullNode());
       aliasName.removeRef(alias);
       codeChanged = true;
-      compiler.reportChangeToEnclosingScope(aliasParent);
-      return true;
     }
 
     /**
@@ -796,8 +805,9 @@ class InlineAndCollapseProperties implements CompilerPass {
 
         // Rewrite all references to the aliasing name, except for the initialization & any cross-
         // chunk references if they exist.
-        Set<AstChange> newNodes = rewriteAliasReferences(aliasingName, alias, aliasInlinability);
-        rewriteAliasProps(aliasingName, alias.getNode(), 0, newNodes);
+        Set<AstChange> readNodes = rewriteAliasReferences(aliasingName, alias, aliasInlinability);
+        rewriteAliasProps(aliasingName, alias.getNode(), 0, readNodes);
+        Set<AstChange> newNodes = new LinkedHashSet<>();
 
         if (aliasInlinability.shouldRemoveDeclaration()) {
           // Rewrite the initialization of the alias.
@@ -814,7 +824,7 @@ class InlineAndCollapseProperties implements CompilerPass {
             // Remove the ref to 'aliasing.name' entirely
             aliasingName.removeRef(aliasInitialization);
             // Force GlobalNamespace to revisit the new reference to 'aliased.name' and update its
-            // internal state.
+            // internal state before scanning subsequent read references.
             newNodes.add(new RefBasedAstChange(alias, alias.getNode()));
             compiler.reportChangeToEnclosingScope(aliasGrandparent);
           } else {
@@ -830,6 +840,7 @@ class InlineAndCollapseProperties implements CompilerPass {
           name.removeRef(alias);
         }
 
+        newNodes.addAll(readNodes);
         // Inlining the variable may have introduced new references
         // to descendants of {@code name}. So those need to be collected now.
         namespace.scanNewNodes(newNodes);
@@ -1202,9 +1213,13 @@ class InlineAndCollapseProperties implements CompilerPass {
       if (ref.getParent() == null) {
         continue;
       }
-      if (NodeUtil.isNormalOrOptChainGetProp(ref.getParent())) {
+      Node parent = ref.getParent();
+      if (parent.isAssign()) {
+        parent = parent.getParent();
+      }
+      if (NodeUtil.isNormalOrOptChainGetProp(parent)) {
         // e.g. if the reference is "alias.b.someProp", this will be "b".
-        String propertyName = ref.getParent().getString();
+        String propertyName = parent.getString();
         // e.g. if the aliased name is "originalName", this will be "originalName.b".
         String originalPropertyName = aliasedName.getName() + "." + propertyName;
         Name originalProperty = namespace.getOwnSlot(originalPropertyName);

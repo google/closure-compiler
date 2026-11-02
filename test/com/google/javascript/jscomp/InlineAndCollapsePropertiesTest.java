@@ -1345,9 +1345,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLocalAliasInGetPropReceiver_knownBug() {
+  public void testLocalAliasInGetPropReceiver() {
     // Regression test for b/476221453
-    // TODO: b/476221453 - `(tmp = Main).prop` should also be collapsed to `Main$prop`.
     test(
         """
         class Main {}
@@ -1362,7 +1361,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         var Main$prop = 1;
         function f() {
           let tmp;
-          return (tmp = Main).prop ?? (Main$prop = {});
+          return Main$prop ?? (Main$prop = {});
         }
         """);
   }
@@ -1414,12 +1413,10 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testTopLevelBlockTwinAssignmentPreservesDeclarationOrder_knownBug() {
+  public void testTopLevelBlockTwinAssignmentPreservesDeclarationOrder() {
     // Regression test for b/476221453: when `(tmp = ns).sub = {x: 1}` is inlined to
     // `ns.sub = {x: 1}`, `GlobalNamespace` must scan it before `tmp.sub = tmp.sub || {}` so that
     // `var ns$sub = {x: 1}` is treated as the declaration of `ns$sub`.
-    // TODO: b/476221453 - `(tmp = ns).sub` should be inlined and collapsed to `var ns$sub = {x:
-    // 1}`.
     test(
         """
         var ns = {};
@@ -1431,13 +1428,12 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         use(ns.sub.x);
         """,
         """
-        var ns = {};
         {
           let tmp;
-          (tmp = ns).sub = {x: 1};
-          ns.sub = ns.sub || {};
+          var ns$sub = {x: 1};
+          ns$sub = ns$sub || {};
         }
-        use(ns.sub.x);
+        use(ns$sub.x);
         """);
   }
 
@@ -1528,10 +1524,9 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testStaticGetterSetterAndSideEffectingReceiverLogicalAssignment_knownBug() {
+  public void testStaticGetterSetterAndSideEffectingReceiverLogicalAssignment() {
     // Static getters/setters on a class must not be collapsed into plain variables, and a
     // non-qualified receiver `(tmp = getMain())` must keep its single-evaluation temporary `tmp`.
-    // TODO: b/476221453 - `(tmp = Main).prop` should be inlined to `Main.prop`.
     test(
         """
         class Main {
@@ -1550,7 +1545,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         }
         function f() {
           let tmp;
-          return (tmp = Main).prop ?? (Main.prop = 2);
+          return Main.prop ?? (Main.prop = 2);
         }
         """);
     testSame(
@@ -2717,7 +2712,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalAliasWithLet3() {
-    // Back off since in general we don't check that ns2 is only ever accessed within the if block.
+    // We don't do any sort of branch prediction, so can't collapse here.
     testSame(
         """
         let ns = {};
