@@ -74,10 +74,11 @@ jobs:
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           .github/ci_support/tag_release_version.sh \
-              "${{ fromJson(env.piperJson).piper_cut_cl }}" \
-              "${{ fromJson(env.piperJson).version_id }}";
+              "${PIPER_CUT_CL}" \
+              "${VERSION_ID}";
       env:
-        piperJson: ${{ steps.set_piper_json_vars.outputs.piperJson }}
+        PIPER_CUT_CL: ${{ fromJson(steps.set_piper_json_vars.outputs.piperJson).piper_cut_cl }}
+        VERSION_ID: ${{ fromJson(steps.set_piper_json_vars.outputs.piperJson).version_id }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   run-tests:
