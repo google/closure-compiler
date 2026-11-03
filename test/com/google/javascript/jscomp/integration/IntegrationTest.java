@@ -5996,5 +5996,80 @@ async function abc() {
         window.res = "42".replace("foo", "bar");
         """);
   }
+
+  @Test
+  public void testUnusedTestOnlyOverride_compileToZeroDependsOnDeclarationOrder() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setDefineToBooleanLiteral("DEBUG", false);
+
+    // When `let debugOverride;` precedes `isDebugMode()` and `assertInRealm()`, RemoveUnusedCode
+    // strips `TEST_ONLY`, InlineVariables folds `debugOverride` to `void 0`, `assertInRealm`
+    // simplifies to an empty function, and the entire bundle compiles to zero bytes.
+    test(
+        options,
+        """
+        /** @define {boolean} */
+        const DEBUG = true;
+        let debugOverride;
+        function isDebugMode() {
+          return debugOverride ?? DEBUG;
+        }
+        function assertInRealm(name) {
+          if (isDebugMode() && !window['inRealm']) {
+            throw new Error(`Assertion failed for ${name}: must run inside child realm.`);
+          }
+        }
+        const TEST_ONLY = {
+          setDebug(val) {
+            debugOverride = val;
+          },
+        };
+        assertInRealm('ext-a');
+        assertInRealm('ext-b');
+        """,
+        "");
+
+    // TODO(b/581117790): Moving `let debugOverride;` below `assertInRealm()` (above `TEST_ONLY`)
+    // deadlocks InlineFunctions and InlineVariables even though `TEST_ONLY` is completely stripped
+    // by RemoveUnusedCode and `debugOverride` has zero remaining assignments: multi-call
+    // `assertInRealm` is too large for InlineFunctions to inline before its body shrinks, while
+    // InlineVariables refuses to fold `debugOverride` to `void 0` because ReferenceCollector
+    // visits `assertInRealm` (declared above `let debugOverride;`) before `let debugOverride;`.
+    test(
+        options,
+        """
+        /** @define {boolean} */
+        const DEBUG = true;
+        function isDebugMode() {
+          return debugOverride ?? DEBUG;
+        }
+        function assertInRealm(name) {
+          if (isDebugMode() && !window['inRealm']) {
+            throw new Error(`Assertion failed for ${name}: must run inside child realm.`);
+          }
+        }
+        let debugOverride;
+        const TEST_ONLY = {
+          setDebug(val) {
+            debugOverride = val;
+          },
+        };
+        assertInRealm('ext-a');
+        assertInRealm('ext-b');
+        """,
+        """
+        function a(b) {
+          if ((c ?? !1) && !window.inRealm) {
+            throw Error(`Assertion failed for ${b}: must run inside child realm.`);
+          }
+        }
+        let c;
+        a("ext-a");
+        a("ext-b");
+        """);
+  }
 }
 

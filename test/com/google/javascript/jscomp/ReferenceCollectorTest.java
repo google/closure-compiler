@@ -695,6 +695,47 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBehavior_hoistedFunctionsInReferenceOrder_declaredBeforeFirstCall() {
+    List<String> visitedReferenceNames = new ArrayList<>();
+    this.collectHoistedFunctionsInReferenceOrder = true;
+    testBehavior(
+        """
+        function f() {
+          return z;
+        }
+        let z;
+        f();
+        """,
+        new Behavior() {
+          @Override
+          public void afterVisitNode(
+              NodeTraversal t, Node n, @Nullable Node parent, @Nullable Reference addedReference) {
+            if (addedReference != null) {
+              visitedReferenceNames.add(addedReference.getNode().getString());
+            }
+          }
+
+          @Override
+          public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
+            if (t.getScope().isGlobal()) {
+              ReferenceCollection z = referenceMap.getReferences(t.getScope().getVar("z"));
+              // TODO(b/581117790): Even with collectHoistedFunctionsInReferenceOrder = true,
+              // shouldTraverse() traverses `function f()` immediately on first AST encounter when
+              // `f` has not been referenced yet, recording the read of `z` inside `f()` before
+              // `let z;` rather than deferring traversal of `f()` until its first reference at
+              // `f();`.
+              assertThat(z)
+                  .comparingElementsUsing(IS_DECLARATION)
+                  .containsExactly(false, true)
+                  .inOrder();
+            }
+          }
+        });
+
+    assertThat(visitedReferenceNames).containsExactly("f", "z", "z", "f").inOrder();
+  }
+
+  @Test
   public void testBehavior_hoistedFunctionsInReferenceOrder_false() {
     List<String> visitedReferenceNames = new ArrayList<>();
     this.collectHoistedFunctionsInReferenceOrder = false;
