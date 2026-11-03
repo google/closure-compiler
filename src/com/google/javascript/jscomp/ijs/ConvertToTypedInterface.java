@@ -123,7 +123,8 @@ public class ConvertToTypedInterface implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+    for (Node script = root.getFirstChild(), next; script != null; script = next) {
+      next = script.getNext();
       processFile(script);
     }
   }
@@ -133,6 +134,8 @@ public class ConvertToTypedInterface implements CompilerPass {
     String sourceFileName = scriptNode.getSourceFileName();
     if (AbstractCompiler.isFillFileName(sourceFileName)) {
       scriptNode.detach();
+      compiler.reportChangeToChangeScope(scriptNode);
+      scriptNode.setDeleted(true);
       return;
     }
 

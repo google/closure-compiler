@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Streams;
 import com.google.common.io.BaseEncoding;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
@@ -196,6 +197,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private final Map<InputId, CompilerInput> inputsById = new ConcurrentHashMap<>();
 
   private final Map<String, Node> scriptNodeByFilename = new ConcurrentHashMap<>();
+
+  private final SetMultimap<JSChunk, CompilerInput> hoistedExternsByChunk =
+      LinkedHashMultimap.create();
 
   private ImmutableMap<String, String> inputPathByWebpackId;
 
@@ -2445,6 +2449,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
       JSChunk chunk = input.getChunk();
       if (chunk != null) {
+        hoistedExternsByChunk.put(chunk, input);
         chunk.remove(input);
       }
 
@@ -2687,17 +2692,29 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return runInCompilerThread(
         () -> {
           ImmutableList<CompilerInput> inputs = chunk.getInputs();
-          int numInputs = inputs.size();
-          if (numInputs == 0) {
+          Set<CompilerInput> chunkExterns =
+              options.shouldPrintExterns() ? hoistedExternsByChunk.get(chunk) : ImmutableSet.of();
+          if (inputs.isEmpty() && chunkExterns.isEmpty()) {
             return "";
           }
           CodeBuilder cb = new CodeBuilder();
-          for (int i = 0; i < numInputs; i++) {
+          int seq = 0;
+          for (CompilerInput externInput : chunkExterns) {
+            Node scriptNode = externInput.getAstRoot(Compiler.this);
+            if (scriptNode == null) {
+              throw new IllegalArgumentException("Bad chunk: " + chunk.getName());
+            }
+            toSource(cb, licenseTracker, seq++, scriptNode);
+          }
+          for (int i = 0; i < inputs.size(); i++) {
+            if (!chunkExterns.isEmpty() && Compiler.isFillFileName(inputs.get(i).getName())) {
+              continue;
+            }
             Node scriptNode = inputs.get(i).getAstRoot(Compiler.this);
             if (scriptNode == null) {
               throw new IllegalArgumentException("Bad chunk: " + chunk.getName());
             }
-            toSource(cb, licenseTracker, i, scriptNode);
+            toSource(cb, licenseTracker, seq++, scriptNode);
           }
           return cb.toString();
         });

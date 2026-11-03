@@ -45,6 +45,7 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroupWarningsGuard;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.JSChunk;
 import com.google.javascript.jscomp.ModuleIdentifier;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.RenamingMap;
@@ -4350,6 +4351,40 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.GENERATE_IJS);
     testNoWarnings(options, "const r = /hello/s;");
+  }
+
+  @Test
+  public void testGenerateIjsWithHoistedExternsInChunks() {
+    CompilerOptions options = createCompilerOptions();
+    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.GENERATE_IJS);
+
+    Compiler compiler =
+        compile(
+            options,
+            new String[] {
+              "/** @externs */ /** @constructor */ function MyExternType() {}",
+              "/** @type {!MyExternType} */ var x = new MyExternType();"
+            });
+    checkUnexpectedErrorsOrWarnings(compiler, 0);
+
+    ImmutableList<JSChunk> chunks = ImmutableList.copyOf(compiler.getChunks());
+    assertThat(compiler.toSource(chunks.get(0)))
+        .isEqualTo(
+            """
+            /** @fileoverview @typeSummary */
+            /** @externs */ \n\
+            /** @constructor */ \n\
+            function MyExternType() {
+            }
+            ;\
+            """);
+    assertThat(compiler.toSource(chunks.get(1)))
+        .isEqualTo(
+            """
+            /** @fileoverview @typeSummary */
+            /** @type {!MyExternType} */ \n\
+            var x;
+            """);
   }
 
   @Test
