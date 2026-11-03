@@ -3022,6 +3022,24 @@ VTTCue.prototype.getCueAsHTML = function() {};
 
 
 /**
+ * @see https://wicg.github.io/datacue/#datacue-interface
+ * @constructor
+ * @extends {TextTrackCue}
+ * @param {number} startTime
+ * @param {number} endTime
+ * @param {*} value
+ * @param {string=} type
+ */
+function DataCue(startTime, endTime, value, type) {}
+
+/** @type {*} */
+DataCue.prototype.value;
+
+/** @type {string} */
+DataCue.prototype.type;
+
+
+/**
  * @constructor
  * @extends {HTMLMediaElement}
  */
