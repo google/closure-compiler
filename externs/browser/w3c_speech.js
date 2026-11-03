@@ -105,6 +105,12 @@ SpeechRecognition.prototype.maxAlternatives;
 /** @type {string} */
 SpeechRecognition.prototype.serviceURI;
 
+/**
+ * @type {boolean}
+ * @see https://webaudio.github.io/web-speech-api/#dom-speechrecognition-processlocally
+ */
+SpeechRecognition.prototype.processLocally;
+
 /** @type {function()} */
 SpeechRecognition.prototype.start;
 
@@ -146,6 +152,39 @@ SpeechRecognition.prototype.onstart;
 
 /** @type {?function(!Event)} */
 SpeechRecognition.prototype.onend;
+
+/**
+ * @record
+ * @see https://webaudio.github.io/web-speech-api/#dictdef-speechrecognitionoptions
+ */
+function SpeechRecognitionOptions() {}
+
+/** @type {!Array<string>} */
+SpeechRecognitionOptions.prototype.langs;
+
+/** @type {boolean|undefined} */
+SpeechRecognitionOptions.prototype.processLocally;
+
+/**
+ * @typedef {string}
+ * Valid values: 'unavailable', 'downloadable', 'downloading', 'available'.
+ * @see https://webaudio.github.io/web-speech-api/#enumdef-availabilitystatus
+ */
+var AvailabilityStatus;
+
+/**
+ * @param {!SpeechRecognitionOptions} options
+ * @return {!Promise<!AvailabilityStatus>}
+ * @see https://webaudio.github.io/web-speech-api/#dom-speechrecognition-available
+ */
+SpeechRecognition.available = function(options) {};
+
+/**
+ * @param {!SpeechRecognitionOptions} options
+ * @return {!Promise<boolean>}
+ * @see https://webaudio.github.io/web-speech-api/#dom-speechrecognition-install
+ */
+SpeechRecognition.install = function(options) {};
 
 /**
  * @typedef {string}
