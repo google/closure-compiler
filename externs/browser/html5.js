@@ -2705,6 +2705,18 @@ HTMLMediaElement.prototype.addTextTrack = function(
 HTMLMediaElement.prototype.textTracks;
 
 /**
+ * @type {!AudioTrackList}
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-audiotracks
+ */
+HTMLMediaElement.prototype.audioTracks;
+
+/**
+ * @type {!VideoTrackList}
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-videotracks
+ */
+HTMLMediaElement.prototype.videoTracks;
+
+/**
  * The ID of the audio device through which output is being delivered, or an
  * empty string if using the default device.
  *
@@ -2874,6 +2886,191 @@ TextTrack.prototype.dispatchEvent = function(evt) {};
 /** @override */
 TextTrack.prototype.removeEventListener = function(
     type, listener, opt_options) {};
+
+
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#audiotracklist
+ * @constructor
+ * @implements {EventTarget}
+ * @implements {IArrayLike<!AudioTrack>}
+ * @implements {Iterable<!AudioTrack>}
+ */
+function AudioTrackList() {}
+
+/** @override */
+AudioTrackList.prototype[Symbol.iterator] = function() {};
+
+/** @type {number} */
+AudioTrackList.prototype.length;
+
+/**
+ * @param {string} id
+ * @return {?AudioTrack}
+ */
+AudioTrackList.prototype.getTrackById = function(id) {};
+
+/** @type {?function(!Event)} */
+AudioTrackList.prototype.onchange;
+
+/** @type {?function(!TrackEvent)} */
+AudioTrackList.prototype.onaddtrack;
+
+/** @type {?function(!TrackEvent)} */
+AudioTrackList.prototype.onremovetrack;
+
+/** @override */
+AudioTrackList.prototype.addEventListener = function(
+    type, listener, opt_useCapture) {};
+
+/** @override */
+AudioTrackList.prototype.dispatchEvent = function(evt) {};
+
+/** @override */
+AudioTrackList.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#audiotrack
+ * @constructor
+ */
+function AudioTrack() {}
+
+/** @const {string} */
+AudioTrack.prototype.id;
+
+/** @const {string} */
+AudioTrack.prototype.kind;
+
+/** @const {string} */
+AudioTrack.prototype.label;
+
+/** @const {string} */
+AudioTrack.prototype.language;
+
+/** @type {boolean} */
+AudioTrack.prototype.enabled;
+
+/**
+ * @const {?AudioTrackConfiguration}
+ * @see https://github.com/WebKit/explainers/tree/main/TrackConfiguration
+ */
+AudioTrack.prototype.configuration;
+
+/**
+ * @see https://github.com/WebKit/explainers/tree/main/TrackConfiguration
+ * @constructor
+ */
+function AudioTrackConfiguration() {}
+
+/** @const {string} */
+AudioTrackConfiguration.prototype.codec;
+
+/** @const {number} */
+AudioTrackConfiguration.prototype.bitrate;
+
+/** @const {number} */
+AudioTrackConfiguration.prototype.sampleRate;
+
+/** @const {number} */
+AudioTrackConfiguration.prototype.numberOfChannels;
+
+
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#videotracklist
+ * @constructor
+ * @implements {EventTarget}
+ * @implements {IArrayLike<!VideoTrack>}
+ * @implements {Iterable<!VideoTrack>}
+ */
+function VideoTrackList() {}
+
+/** @override */
+VideoTrackList.prototype[Symbol.iterator] = function() {};
+
+/** @type {number} */
+VideoTrackList.prototype.length;
+
+/** @type {number} */
+VideoTrackList.prototype.selectedIndex;
+
+/**
+ * @param {string} id
+ * @return {?VideoTrack}
+ */
+VideoTrackList.prototype.getTrackById = function(id) {};
+
+/** @type {?function(!Event)} */
+VideoTrackList.prototype.onchange;
+
+/** @type {?function(!TrackEvent)} */
+VideoTrackList.prototype.onaddtrack;
+
+/** @type {?function(!TrackEvent)} */
+VideoTrackList.prototype.onremovetrack;
+
+/** @override */
+VideoTrackList.prototype.addEventListener = function(
+    type, listener, opt_useCapture) {};
+
+/** @override */
+VideoTrackList.prototype.dispatchEvent = function(evt) {};
+
+/** @override */
+VideoTrackList.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#videotrack
+ * @constructor
+ */
+function VideoTrack() {}
+
+/** @const {string} */
+VideoTrack.prototype.id;
+
+/** @const {string} */
+VideoTrack.prototype.kind;
+
+/** @const {string} */
+VideoTrack.prototype.label;
+
+/** @const {string} */
+VideoTrack.prototype.language;
+
+/** @type {boolean} */
+VideoTrack.prototype.selected;
+
+/**
+ * @const {?VideoTrackConfiguration}
+ * @see https://github.com/WebKit/explainers/tree/main/TrackConfiguration
+ */
+VideoTrack.prototype.configuration;
+
+/**
+ * @see https://github.com/WebKit/explainers/tree/main/TrackConfiguration
+ * @constructor
+ */
+function VideoTrackConfiguration() {}
+
+/** @const {string} */
+VideoTrackConfiguration.prototype.codec;
+
+/** @const {number} */
+VideoTrackConfiguration.prototype.bitrate;
+
+/** @const {number} */
+VideoTrackConfiguration.prototype.framerate;
+
+/** @const {number} */
+VideoTrackConfiguration.prototype.width;
+
+/** @const {number} */
+VideoTrackConfiguration.prototype.height;
+
+/** @const {!VideoColorSpace} */
+VideoTrackConfiguration.prototype.colorSpace;
 
 
 

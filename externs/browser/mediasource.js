@@ -218,3 +218,15 @@ SourceBufferList.prototype.removeEventListener = function(
 
 /** @override */
 SourceBufferList.prototype.dispatchEvent = function(evt) {};
+
+/**
+ * @type {?SourceBuffer}
+ * @see https://w3c.github.io/media-source/#dom-audiotrack-sourcebuffer
+ */
+AudioTrack.prototype.sourceBuffer;
+
+/**
+ * @type {?SourceBuffer}
+ * @see https://w3c.github.io/media-source/#dom-videotrack-sourcebuffer
+ */
+VideoTrack.prototype.sourceBuffer;
