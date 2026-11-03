@@ -1268,6 +1268,26 @@ public class CompilerOptions {
     return assumeStaticInheritanceIsNotUsed;
   }
 
+  /**
+   * Assume that code does not depend on iterators being closed (i.e. having their {@code return()}
+   * method called) when a {@code for-of} loop exits early via {@code break}, {@code return}, or a
+   * thrown exception.
+   *
+   * <p>When {@code true}, transpiled {@code for-of} loops are not wrapped in a {@code try/finally}
+   * that calls {@code $jscomp.iteratorClose}, which reduces code size. This is only observable for
+   * iterators that define a {@code return()} method, such as generators and some user-defined
+   * iterables; array and string iterators are unaffected.
+   */
+  private boolean assumeForOfIteratorCloseIsNotNeeded = false;
+
+  public void setAssumeForOfIteratorCloseIsNotNeeded(boolean x) {
+    this.assumeForOfIteratorCloseIsNotNeeded = x;
+  }
+
+  public boolean getAssumeForOfIteratorCloseIsNotNeeded() {
+    return assumeForOfIteratorCloseIsNotNeeded;
+  }
+
   /** Handler for compiler warnings and errors. */
   private transient @Nullable ErrorHandler errorHandler;
 
@@ -3411,6 +3431,7 @@ public class CompilerOptions {
         .add("aliasStringsMode", getAliasStringsMode())
         .add("ambiguateProperties", ambiguateProperties)
         .add("angularPass", angularPass)
+        .add("assumeForOfIteratorCloseIsNotNeeded", assumeForOfIteratorCloseIsNotNeeded)
         .add("assumeGettersArePure", assumeGettersArePure)
         .add("assumePropertiesAreStaticallyAnalyzable", assumePropertiesAreStaticallyAnalyzable)
         .add("assumeStrictThis", assumeStrictThis())

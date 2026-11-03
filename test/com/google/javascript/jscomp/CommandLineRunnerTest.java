@@ -3314,6 +3314,15 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
   }
 
   @Test
+  public void testAssumeForOfIteratorCloseIsNotNeeded() {
+    testSame("");
+    assertThat(lastCompiler.getOptions().getAssumeForOfIteratorCloseIsNotNeeded()).isFalse();
+    args.add("--assume_for_of_iterator_close_is_not_needed");
+    testSame("");
+    assertThat(lastCompiler.getOptions().getAssumeForOfIteratorCloseIsNotNeeded()).isTrue();
+  }
+
+  @Test
   public void testRewriteAndIsolatePolyfills() {
     testSame("");
 
