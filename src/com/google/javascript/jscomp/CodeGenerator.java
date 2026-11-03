@@ -2022,6 +2022,7 @@ public class CodeGenerator {
         case '&' -> appendEscapedAmp(sb, isRegexp);
         case '>' -> appendEscapedGt(sb, s, i, isRegexp);
         case '<' -> appendEscapedLt(sb, s, i, isRegexp);
+        case '-' -> appendEscapedHyphen(sb, s, i, isRegexp);
         default -> {
           if (isRegexp
               || !outputFeatureSet.contains(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP)) {
@@ -2106,14 +2107,27 @@ public class CodeGenerator {
     final String endStyle = "/style";
 
     // Break <!-- into <\!--
+    // In a regex the '<' may be lookbehind syntax, as in (?<!--), so appendEscapedHyphen breaks
+    // it at the second '-' instead.
     final String startComment = "!--";
 
     if (s.regionMatches(true, index + 1, endScript, 0, endScript.length())
         || s.regionMatches(true, index + 1, endStyle, 0, endStyle.length())
-        || s.regionMatches(false, index + 1, startComment, 0, startComment.length())) {
+        || (!isRegexp
+            && s.regionMatches(false, index + 1, startComment, 0, startComment.length()))) {
       sb.append(LT_ESCAPED);
     } else {
       sb.append('<');
+    }
+  }
+
+  private static void appendEscapedHyphen(StringBuilder sb, String s, int index, boolean isRegexp) {
+    // Break <!-- in a regex into <!-\x2d. That hyphen is always a literal or a class range end,
+    // where \x2d matches the same character.
+    if (isRegexp && s.startsWith("<!--", index - 3)) {
+      sb.append("\\x2d");
+    } else {
+      sb.append('-');
     }
   }
 
