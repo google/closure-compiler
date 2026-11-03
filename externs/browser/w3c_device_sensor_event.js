@@ -76,6 +76,13 @@ DeviceOrientationEvent.prototype.webkitCompassAccuracy;
 DeviceOrientationEvent.prototype.webkitCompassHeading;
 
 /**
+ * @param {boolean=} opt_absolute
+ * @return {!Promise<string>}
+ * @see https://w3c.github.io/deviceorientation/#dom-deviceorientationevent-requestpermission
+ */
+DeviceOrientationEvent.requestPermission = function(opt_absolute) {};
+
+/**
  * @constructor
  */
 function DeviceAcceleration() {}
@@ -120,3 +127,9 @@ DeviceMotionEvent.prototype.rotationRate;
 
 /** @type {?number} */
 DeviceMotionEvent.prototype.interval;
+
+/**
+ * @return {!Promise<string>}
+ * @see https://w3c.github.io/deviceorientation/#dom-devicemotionevent-requestpermission
+ */
+DeviceMotionEvent.requestPermission = function() {};
