@@ -344,6 +344,10 @@ public final class JSDocInfoPrinter {
       parts.add("@ngInject");
     }
 
+    if (info.isLegacyNamedTsExport()) {
+      parts.add("@legacyNamedTsExport");
+    }
+
     for (String tsType : info.getTsTypes()) {
       parts.add("@tsType " + tsType);
     }

@@ -1207,6 +1207,22 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLegacyNamedTsExport() {
+    testSame("/** @legacyNamedTsExport */ goog.module('a');");
+    testSame("/** @legacyNamedTsExport */ goog.provide('a');");
+    testWarning(
+        "goog.module('a'); /** @legacyNamedTsExport */ exports = {};", MISPLACED_ANNOTATION);
+    testWarning("/** @legacyNamedTsExport */ var x = {};", MISPLACED_ANNOTATION);
+    testWarning("/** @legacyNamedTsExport */ function f() {}", MISPLACED_ANNOTATION);
+    testWarning(
+        """
+        /** @fileoverview @legacyNamedTsExport */
+        goog.module('a');
+        """,
+        MISPLACED_ANNOTATION);
+  }
+
+  @Test
   public void testJsDocOnReturn() {
     // JSDoc on a class defined in return statement is a warning.
     testWarning(

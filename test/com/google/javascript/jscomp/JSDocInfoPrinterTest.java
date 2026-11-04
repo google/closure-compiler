@@ -758,6 +758,13 @@ public final class JSDocInfoPrinterTest {
   }
 
   @Test
+  public void testLegacyNamedTsExport() {
+    assertThat(builder.recordLegacyNamedTsExport()).isTrue();
+    JSDocInfo info = builder.buildAndReset();
+    assertThat(jsDocInfoPrinter.print(info)).isEqualTo("/** @legacyNamedTsExport */ ");
+  }
+
+  @Test
   public void testTsType() {
     builder.recordTsType("():string");
     JSDocInfo info = builder.buildAndReset();

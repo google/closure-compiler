@@ -48,6 +48,7 @@ enum Annotation {
   INTERFACE,
   JSX,
   JSX_FRAGMENT,
+  LEGACY_NAMED_TS_EXPORT,
   LENDS,
   LICENSE, // same as preserve
   LOG_TYPE_IN_COMPILER,
@@ -142,6 +143,7 @@ enum Annotation {
           .put("inheritDoc", Annotation.INHERIT_DOC)
           .put("interface", Annotation.INTERFACE)
           .put("record", Annotation.RECORD)
+          .put("legacyNamedTsExport", Annotation.LEGACY_NAMED_TS_EXPORT)
           .put("lends", Annotation.LENDS)
           .put("license", Annotation.LICENSE)
           .put("logTypeInCompiler", Annotation.LOG_TYPE_IN_COMPILER)

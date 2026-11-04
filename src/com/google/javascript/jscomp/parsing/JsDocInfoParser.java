@@ -744,6 +744,12 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
         }
+        case LEGACY_NAMED_TS_EXPORT -> {
+          if (!jsdocBuilder.recordLegacyNamedTsExport()) {
+            addParserWarning(Msg.JSDOC_LEGACY_TS_EXPORT);
+          }
+          return eatUntilEOLIfNotAnnotation();
+        }
         case NO_COLLAPSE -> {
           if (!jsdocBuilder.recordNoCollapse()) {
             addParserWarning(Msg.JSDOC_NOCOLLAPSE);

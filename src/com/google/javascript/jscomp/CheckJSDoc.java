@@ -165,6 +165,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     validateTsType(n, info);
     validateJsDocTypeNames(info);
     validateIsUsedViaDotConstructor(n, info);
+    validateLegacyNamedTsExport(n, info);
   }
 
   private void validateSuppress(Node n, JSDocInfo info) {
@@ -795,6 +796,21 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     if (!(n.isFunction() && info.isConstructor())
         && !NodeUtil.isEs6ConstructorMemberFunctionDef(n)) {
       report(n, MISPLACED_ANNOTATION, "usedViaDotConstructor", "must be on a constructor");
+    }
+  }
+
+  /** Checks that @legacyNamedTsExport is only used on a goog.module or goog.provide call. */
+  private void validateLegacyNamedTsExport(Node n, JSDocInfo info) {
+    if (info == null || !info.isLegacyNamedTsExport()) {
+      return;
+    }
+    Node parent = n.getParent();
+    if (!n.isCall() || !(NodeUtil.isGoogModuleCall(parent) || NodeUtil.isGoogProvideCall(parent))) {
+      report(
+          n,
+          MISPLACED_ANNOTATION,
+          "@legacyNamedTsExport",
+          "must be on a goog.module or goog.provide call");
     }
   }
 }

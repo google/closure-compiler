@@ -353,7 +353,11 @@ public class JSDocInfo implements Serializable {
 
     WIZ_CALLBACK,
     LOG_TYPE_IN_COMPILER,
-    CLOSURE_UNAWARE_CONFIG;
+    CLOSURE_UNAWARE_CONFIG,
+
+    // Overrides the syntactic classification of a goog.module/goog.provide namespace as named
+    // exports for TypeScript.
+    LEGACY_NAMED_TS_EXPORT;
 
     final String name;
     final long mask;
@@ -872,6 +876,18 @@ public class JSDocInfo implements Serializable {
   /** Returns whether the {@code @nodts} annotation is present on this {@link JSDocInfo}. */
   public boolean isNoDts() {
     return checkBit(Bit.NODTS);
+  }
+
+  /**
+   * Returns whether the {@code @legacyNamedTsExport} annotation is present on this {@link
+   * JSDocInfo}.
+   *
+   * <p>On a goog.module or goog.provide call, this overrides the syntactic classification of the
+   * namespace as a set of named exports for TypeScript, for code where it can't match Clutz's
+   * type-based classification. It has no effect elsewhere.
+   */
+  public boolean isLegacyNamedTsExport() {
+    return checkBit(Bit.LEGACY_NAMED_TS_EXPORT);
   }
 
   /** Returns whether the {@code @nocollapse} annotation is present on this {@link JSDocInfo}. */
@@ -2368,6 +2384,16 @@ public class JSDocInfo implements Serializable {
      */
     public boolean recordNoDts() {
       return populateBit(Bit.NODTS, true);
+    }
+
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isLegacyNamedTsExport()} flag set to {@code true}.
+     *
+     * @return {@code true} if the flag was recorded and {@code false} if it was already recorded
+     */
+    public boolean recordLegacyNamedTsExport() {
+      return populateBit(Bit.LEGACY_NAMED_TS_EXPORT, true);
     }
 
     /**

@@ -2434,6 +2434,19 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseLegacyNamedTsExport() {
+    JSDocInfo doc = parse("@legacyNamedTsExport*/");
+    assertThat(doc.isLegacyNamedTsExport()).isTrue();
+  }
+
+  @Test
+  public void testParseLegacyNamedTsExport_duplicate() {
+    JSDocInfo doc =
+        parse("@legacyNamedTsExport\n@legacyNamedTsExport*/", "extra @legacyNamedTsExport tag");
+    assertThat(doc.isLegacyNamedTsExport()).isTrue();
+  }
+
+  @Test
   public void testBugAnnotation() {
     parse("@bug */");
   }

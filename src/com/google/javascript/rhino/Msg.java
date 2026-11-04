@@ -86,6 +86,7 @@ public enum Msg {
   JSDOC_INCOMPAT_INLINING(
       "@requireInlining, @encourageInlining, and @noinline are mutually exclusive."),
   JSDOC_INTERFACE_CONSTRUCTOR("cannot be both an interface and a constructor."),
+  JSDOC_LEGACY_TS_EXPORT("extra @legacyNamedTsExport tag"),
   JSDOC_LENDS_INCOMPATIBLE("@lends tag incompatible with other annotations."),
   JSDOC_LENDS_MISSING("missing object name in @lends tag."),
   JSDOC_LOCALEFILE("extra @localeFile tag"),
