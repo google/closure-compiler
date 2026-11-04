@@ -161,6 +161,29 @@ public final class ClosureExportTypeClassifierTest extends CompilerTestCase {
           {"castToNamedType", DEFAULT, module("exports = /** @type {!Foo} */ ({a: 1});")},
           {"selfReferentialAliasTerminates", DEFAULT, module("let a = b; let b = a; exports = a;")},
 
+          // @legacyNamedTsExport
+          {
+            // The annotation only has an effect on the goog.module call.
+            "overrideOnExportsAssignment_hasNoEffect",
+            DEFAULT,
+            module(
+                """
+                const Other = goog.require('other');
+                /** @legacyNamedTsExport */
+                exports = Other;
+                """)
+          },
+          {
+            "overrideOnGoogModuleCall",
+            NAMED,
+            """
+            /** @legacyNamedTsExport */
+            goog.module('m');
+            const a = goog.require('x');
+            exports = a;
+            """
+          },
+
           // Patterns found while comparing against Clutz on real code.
           {
             // No named own properties.
@@ -348,7 +371,7 @@ public final class ClosureExportTypeClassifierTest extends CompilerTestCase {
         getLastCompiler().getModuleMetadataMap().getModulesByGoogNamespace().get("m");
     assertWithMessage("no module for m").that(m).isNotNull();
     assertWithMessage("export type of m in:\n%s", code)
-        .that(ClosureExportTypeClassifier.classify(m.rootNode()))
+        .that(ClosureExportTypeClassifier.classify(m.rootNode(), "m"))
         .isEqualTo(expected);
   }
 }

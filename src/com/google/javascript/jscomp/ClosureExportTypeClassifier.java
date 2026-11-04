@@ -23,7 +23,9 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
 
@@ -44,6 +46,9 @@ import org.jspecify.annotations.Nullable;
  *   <li>{@code exports = {a, b};} in a goog.module is NAMED even with a declared type, since module
  *       rewriting turns it into {@code exports.a = a; exports.b = b;} and drops the JSDoc.
  * </ul>
+ *
+ * <p>Users can make a namespace `named` with {@code @legacyNamedTsExport} on its {@code
+ * goog.module} call. The annotation has no effect elsewhere.
  */
 final class ClosureExportTypeClassifier {
 
@@ -101,6 +106,9 @@ final class ClosureExportTypeClassifier {
 
   private final Map<String, NameInfo> topLevelNames = new LinkedHashMap<>();
 
+  /** Namespaces whose goog.module call is annotated {@code @legacyNamedTsExport}. */
+  private final Set<String> forcedNamedExport = new LinkedHashSet<>();
+
   enum TsExportType {
     /** The module exports a single default value. */
     DEFAULT,
@@ -112,14 +120,16 @@ final class ClosureExportTypeClassifier {
    * Classifies a single {@code goog.module} namespace as named or default.
    *
    * @param moduleRoot the SCRIPT node for this module
+   * @param googNamespace the namespace of this module
    */
-  static TsExportType classify(Node moduleRoot) {
+  static TsExportType classify(Node moduleRoot, String googNamespace) {
     ClosureExportTypeClassifier classifier = new ClosureExportTypeClassifier();
     classifier.addGoogModuleExports();
     forEachTopLevelStatement(moduleRoot, classifier::visitStatement);
 
     NameInfo info = classifier.topLevelNames.get(EXPORTS);
-    if (classifier.kindOfName(info, 0) == Kind.NAMESPACE) {
+    if (classifier.forcedNamedExport.contains(googNamespace)
+        || classifier.kindOfName(info, 0) == Kind.NAMESPACE) {
       return TsExportType.NAMED;
     }
     return TsExportType.DEFAULT;
@@ -154,9 +164,25 @@ final class ClosureExportTypeClassifier {
         NameInfo info = getOrCreate(name.getString());
         info.isNeverNamespace = true;
       }
-      case EXPR_RESULT -> visitExpression(statement.getFirstChild());
+      case EXPR_RESULT -> {
+        maybeRecordLegacyNamedTsExport(statement);
+        visitExpression(statement.getFirstChild());
+      }
       default -> {}
     }
+  }
+
+  /** Records an explicit @legacyNamedTsExport annotation on a goog.module call statement. */
+  private void maybeRecordLegacyNamedTsExport(Node statement) {
+    if (!NodeUtil.isGoogModuleCall(statement)) {
+      return;
+    }
+    Node call = statement.getFirstChild();
+    JSDocInfo jsdoc = call.getJSDocInfo();
+    if (jsdoc == null || !jsdoc.isLegacyNamedTsExport()) {
+      return;
+    }
+    forcedNamedExport.add(call.getSecondChild().getString());
   }
 
   private void visitNameDeclaration(Node declaration) {
