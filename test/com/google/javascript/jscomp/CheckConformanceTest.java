@@ -4699,6 +4699,355 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBannedProperty_optionalChain() {
+    String externs =
+        DEFAULT_EXTERNS
+            + """
+            /** @constructor */ function C() {}
+            /** @type {string} */
+            C.prototype.p;
+            /** @return {string} */
+            C.prototype.m = function() { return ''; };
+            /** @constructor */ function D() {}
+            /** @type {string} */
+            D.prototype.p;
+            function use(a) {};
+            """;
+
+    configuration =
+        """
+        requirement: {
+          type: BANNED_PROPERTY
+          value: 'C.prototype.p'
+          error_message: 'Use of C.p is not allowed'
+        }
+        """;
+
+    testWarning(
+        externs(externs),
+        srcs("use(new C()?.p);"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: Use of C.p is not allowed");
+
+    testWarning(
+        externs(externs),
+        srcs("use(new C()?.['p']);"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: Use of C.p is not allowed");
+
+    testNoWarning(externs(externs), srcs("use(new D()?.p);"));
+
+    configuration =
+        """
+        requirement: {
+          type: BANNED_PROPERTY_READ
+          value: 'C.prototype.p'
+          error_message: 'Use of C.p is not allowed'
+        }
+        """;
+
+    testWarning(
+        externs(externs),
+        srcs("use(new C()?.p);"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: Use of C.p is not allowed");
+
+    testNoWarning(externs(externs), srcs("use(new D()?.p);"));
+
+    configuration =
+        """
+        requirement: {
+          type: BANNED_PROPERTY_CALL
+          value: 'C.prototype.m'
+          error_message: 'Use of C.m is not allowed'
+        }
+        """;
+
+    testWarning(
+        externs(externs),
+        srcs("new C()?.m();"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: Use of C.m is not allowed");
+
+    testWarning(
+        externs(externs),
+        srcs("new C().m?.();"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: Use of C.m is not allowed");
+
+    testNoWarning(externs(externs), srcs("use(new C()?.m);"));
+  }
+
+  @Test
+  public void testBannedName_optionalChain() {
+    configuration =
+        """
+        requirement: {
+          type: BANNED_NAME
+          value: 'foo.bar.baz'
+          error_message: 'foo.bar.baz is not allowed'
+        }
+        """;
+
+    String externs =
+        DEFAULT_EXTERNS
+            + """
+            /** @const */ var foo = {};
+            /** @const */ foo.bar = {};
+            foo.bar.baz = function() {};
+            foo.bar.qux = function() {};
+            function getFoo() { return foo; }
+            """;
+
+    testWarning(
+        externs(externs),
+        srcs("foo?.bar.baz();"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: foo.bar.baz is not allowed");
+
+    testWarning(
+        externs(externs),
+        srcs("foo.bar?.baz();"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: foo.bar.baz is not allowed");
+
+    testNoWarning(externs(externs), srcs("foo?.bar.qux();"));
+    testNoWarning(externs(externs), srcs("getFoo()?.bar.baz();"));
+    testNoWarning(externs(externs), srcs("function f(foo) { foo?.bar.baz(); }"));
+
+    configuration =
+        """
+        requirement: {
+          type: BANNED_NAME_CALL
+          value: 'Function'
+          error_message: 'Calling Function is not allowed.'
+        }
+        """;
+
+    testNoWarning("f instanceof Function");
+    testWarning("Function?.(str);", CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
+  public void testRestrictedCall_optionalChain() {
+    configuration =
+        """
+        requirement: {
+          type: RESTRICTED_METHOD_CALL
+          value: 'C.prototype.m:function(number)'
+          error_message: 'm method param must be number'
+        }
+        """;
+
+    String code =
+        """
+        /** @constructor */ function C() {}
+        /** @param {*} a */
+        C.prototype.m = function(a){}
+        """;
+
+    testNoWarning(code + "new C()?.m(1);");
+    testWarning(code + "new C()?.m('str');", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "new C().m?.('str');", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "new C()?.m.call(new C(), 'str');", CheckConformance.CONFORMANCE_VIOLATION);
+
+    configuration =
+        """
+        requirement: {
+          type: RESTRICTED_NAME_CALL
+          value: 'ns.f:function(number)'
+          error_message: 'f param must be number'
+        }
+        """;
+
+    code =
+        """
+        /** @const */ var ns = {};
+        /** @param {*} a */
+        ns.f = function(a) {};
+        """;
+
+    testNoWarning(code + "ns?.f(1);");
+    testWarning(code + "ns?.f('str');", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "ns.f?.('str');", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "ns?.f.call(null, 'str');", CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
+  public void testBanCreateElement_optionalChain() {
+    configuration =
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateElement'
+          error_message: 'BanCreateElement Message'
+          value: 'script'
+        }
+        """;
+
+    String externs =
+        DEFAULT_EXTERNS
+            + """
+            /** @constructor */ function Document() {}
+            /** @const {!Document} */ var document;
+            """;
+
+    testWarning(
+        externs(externs),
+        srcs("document?.createElement('script');"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testWarning(
+        externs(externs),
+        srcs("document.createElement?.('script');"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testNoWarning(externs(externs), srcs("document?.createElement('div');"));
+  }
+
+  @Test
+  public void testBanCreateDom_optionalChain() {
+    configuration =
+        """
+        requirement: {
+          type: CUSTOM
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'
+          error_message: 'BanCreateDom Message'
+          value: 'iframe.src'
+        }
+        """;
+
+    String externs =
+        DEFAULT_EXTERNS
+            + """
+            /** @const */ goog.dom = {};
+            /** @constructor */ goog.dom.DomHelper = function() {};
+            """;
+
+    testWarning(
+        externs(externs),
+        srcs("goog.dom.createDom?.('iframe', {'src': src});"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testWarning(
+        externs(externs),
+        srcs(
+            """
+            /** @param {?goog.dom.DomHelper} helper */
+            function f(helper) { helper?.createDom('iframe', {'src': src}); }
+            """),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testNoWarning(
+        externs(externs),
+        srcs(
+            """
+            /** @param {?goog.dom.DomHelper} helper */
+            function f(helper) { helper?.createDom('iframe', {'class': src}); }
+            """));
+  }
+
+  @Test
+  public void testBanElementSetAttribute_optionalChain() {
+    configuration =
+        """
+        requirement: {
+          type: CUSTOM
+          value: 'src'
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanElementSetAttribute'
+          report_loose_type_violations: false
+          error_message: 'BanSetAttribute Message'
+        }
+        """;
+
+    String externs = DEFAULT_EXTERNS + "/** @constructor */ function Element() {}";
+
+    testWarning(
+        externs(externs),
+        srcs(
+            """
+            /** @param {?Element} e */
+            function f(e) { e?.setAttribute('src', 'xxx'); }
+            """),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testWarning(
+        externs(externs),
+        srcs("(new Element).setAttribute?.('src', 'xxx');"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSetAttribute Message");
+
+    testNoWarning(externs(externs), srcs("(new Element)?.setAttribute('id', 'xxx');"));
+  }
+
+  @Test
+  public void testBanSettingAttributes_optionalChain() {
+    configuration =
+        """
+        requirement: {
+          type: CUSTOM
+          value: 'Element.prototype.attr'
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanSettingAttributes'
+          error_message: 'BanSettingAttributes Message'
+        }
+        """;
+
+    String externs = DEFAULT_EXTERNS + "/** @constructor */ function Element() {}";
+
+    testWarning(
+        externs(externs),
+        srcs(
+            """
+            /** @param {?Element} e */
+            function f(e) { e?.attr('src', 'xxx'); }
+            """),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSettingAttributes Message");
+
+    testWarning(
+        externs(externs),
+        srcs("(new Element).attr?.('src', 'xxx');"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanSettingAttributes Message");
+
+    testNoWarning(externs(externs), srcs("(new Element)?.attr('id', 'xxx');"));
+  }
+
+  @Test
+  public void testBanExecCommand_optionalChain() {
+    configuration =
+        """
+        requirement: {
+          type: CUSTOM
+          value: 'insertHTML'
+          java_class: 'com.google.javascript.jscomp.ConformanceRules$BanExecCommand'
+          error_message: 'BanExecCommand message'
+        }
+        """;
+
+    String externs = DEFAULT_EXTERNS + "/** @constructor */ function Document() {}";
+
+    testWarning(
+        externs(externs),
+        srcs("(new Document)?.execCommand('insertHtml', false, 'xxx')"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanExecCommand message");
+
+    testWarning(
+        externs(externs),
+        srcs("(new Document).execCommand?.('insertHtml', false, 'xxx')"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanExecCommand message");
+
+    testNoWarning(externs(externs), srcs("(new Document)?.execCommand('bold')"));
+  }
+
+  @Test
   public void testBanStaticThis() {
     configuration =
         """
