@@ -653,8 +653,14 @@ public class CodeGenerator {
           Node body = fn.getLastChild();
 
           // Add the property name.
-          if (!node.isQuotedStringKey()
-              && (TokenStream.isJSIdentifier(name) || node.isPrivateIdentifier())
+          if (node.isPrivateIdentifier()) {
+            // Never quote a private name (falling through to `addJsString` when `!isLatin(name)`
+            // would turn `#π() {}` into a quoted public method `"\u03c0"() {}`). Non-Latin
+            // characters are Unicode-escaped via `addIdentifier`.
+            addIdentifier(name);
+            maybeAddGenericTypes(fn.getFirstChild());
+          } else if (!node.isQuotedStringKey()
+              && TokenStream.isJSIdentifier(name)
               &&
               // do not encode literally any non-literal characters that were
               // Unicode escaped.
@@ -684,8 +690,8 @@ public class CodeGenerator {
         Node init = null;
         switch (type) {
           case MEMBER_FIELD_DEF:
-            String propertyName = node.getString();
-            add(propertyName);
+            // Escape non-Latin characters as in other identifiers.
+            addIdentifier(node.getString());
             init = first;
             break;
           case COMPUTED_FIELD_DEF:

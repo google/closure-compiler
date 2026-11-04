@@ -53,6 +53,11 @@ final class ClassUtil {
     if (!getprop.isGetProp() || !getprop.getFirstChild().isThis()) {
       return null;
     }
+    if (getprop.isPrivateIdentifier()) {
+      // `C.prototype.#x` would be a SyntaxError, because a private name is valid only inside the
+      // class body.
+      return null;
+    }
     Node function = NodeUtil.getEnclosingFunction(getprop);
     if (function == null) {
       return null;
