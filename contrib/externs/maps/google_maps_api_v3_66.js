@@ -8596,6 +8596,11 @@ google.maps.PlacesLibrary.prototype.PlacePinIcon;
 google.maps.PlacesLibrary.prototype.PlacePlusCodeElement;
 
 /**
+ * @type {typeof google.maps.places.PlacePopularTimesElement}
+ */
+google.maps.PlacesLibrary.prototype.PlacePopularTimesElement;
+
+/**
  * @type {typeof google.maps.places.PlacePrediction}
  */
 google.maps.PlacesLibrary.prototype.PlacePrediction;
@@ -24329,6 +24334,44 @@ google.maps.places.PlacePlusCodeElement = function() {};
  * @record
  */
 google.maps.places.PlacePlusCodeElementOptions = function() {};
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsElement} or {@link
+ * google.maps.places.AdvancedPlaceDetailsElement} to show a place&#39;s popular
+ * times: a chart of how busy the place usually is throughout the day, along
+ * with live busyness information when available. Nothing is shown for places
+ * without popular times data. Append this element as a child of the place
+ * details element to use it. For example: <pre><code>
+ * &lt;gmp-place-details&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-details-place-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;place="<var>PLACE_ID</var>"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-details-place-request&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-popular-times&gt;&lt;/gmp-place-popular-times&gt;<br>
+ * &lt;/gmp-place-details&gt; </code></pre>
+ *
+ * Access by calling `const {PlacePopularTimesElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlacePopularTimesElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlacePopularTimesElement = function() {};
+
+/**
+ * Read only. True if the element is showing popular times for the place. False
+ * if the place has no popular times data, or if the element isn&#39;t a child
+ * of a supported place details element. Set before the parent element&#39;s
+ * <code>gmp-load</code> event fires.
+ * @type {boolean}
+ */
+google.maps.places.PlacePopularTimesElement.prototype.rendered;
+
+/**
+ * Options for <code>PlacePopularTimesElement</code>.
+ * @record
+ */
+google.maps.places.PlacePopularTimesElementOptions = function() {};
 
 /**
  * Prediction results for a Place Autocomplete prediction.
