@@ -1323,7 +1323,9 @@ var GetHTMLOptions;
 /**
  * @constructor
  * @extends {Node}
+ * @implements {ARIAMixin}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-745549614
+ * @see https://www.w3.org/TR/wai-aria-1.2/#ARIAMixin
  */
 function Element() {}
 
