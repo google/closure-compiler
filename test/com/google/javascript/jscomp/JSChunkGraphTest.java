@@ -900,6 +900,46 @@ public final class JSChunkGraphTest {
         .containsExactly(strong1);
   }
 
+  @Test
+  public void testWeaklyReachableExternSourcesNotMovedToWeakChunk() throws Exception {
+    makeDeps();
+
+    SourceFile directWeakExtern =
+        SourceFile.fromCode(
+            "directWeakExtern", "goog.provide('directWeakExtern');", SourceKind.EXTERN);
+    SourceFile transitiveWeakExtern =
+        SourceFile.fromCode(
+            "transitiveWeakExtern", "goog.provide('transitiveWeakExtern');", SourceKind.EXTERN);
+    SourceFile weak1 =
+        SourceFile.fromCode(
+            "weak1", "goog.provide('weak1'); goog.require('transitiveWeakExtern');");
+    SourceFile strong1 =
+        SourceFile.fromCode(
+            "strong1", "goog.requireType('weak1'); goog.requireType('directWeakExtern');");
+
+    chunkA.add(directWeakExtern);
+    chunkA.add(transitiveWeakExtern);
+    chunkA.add(weak1);
+    chunkA.add(strong1);
+
+    for (CompilerInput input : chunkA.getInputs()) {
+      input.setCompiler(compiler);
+    }
+
+    makeGraph();
+    graph.manageDependencies(
+        compiler,
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forFile("strong1"))));
+
+    assertThat(getWeakChunk().getInputs().stream().map(CompilerInput::getSourceFile))
+        .containsExactly(weak1);
+    assertThat(chunkA.getInputs().stream().map(CompilerInput::getSourceFile))
+        .containsExactly(strong1);
+    assertThat(directWeakExtern.getKind()).isEqualTo(SourceKind.EXTERN);
+    assertThat(transitiveWeakExtern.getKind()).isEqualTo(SourceKind.EXTERN);
+  }
+
   private void assertInputs(JSChunk chunk, String... sourceNames) {
     assertThat(sourceNames(chunk.getInputs())).isEqualTo(ImmutableList.copyOf(sourceNames));
   }

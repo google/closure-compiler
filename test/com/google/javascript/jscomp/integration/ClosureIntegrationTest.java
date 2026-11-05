@@ -1340,6 +1340,59 @@ goog.exportSymbol('foo.example.ClassName', module$contents$foo$example$ClassName
         (String[]) null);
   }
 
+  @Test
+  public void testWeakRequireChainToCombinedExternsAndTypeSummary() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setChecksOnly(true);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("a.Top"))));
+
+    testNoWarnings(
+        options,
+        new String[] {
+          """
+          /** @fileoverview @typeSummary */
+          /** @externs */
+          /** @constructor */ function MyExternType() {}
+          /** @fileoverview @typeSummary */
+          goog.loadModule(function(exports) {
+            "use strict";
+            goog.module('a.C');
+            class C {
+              /** @return {!MyExternType} */
+              create() {}
+            }
+            exports = C;
+            return exports;
+          });
+          """,
+          """
+          /** @fileoverview @typeSummary */
+          goog.loadModule(function(exports) {
+            "use strict";
+            goog.module('a.Mid');
+            const C = goog.require('a.C');
+            class Mid {
+              /** @return {!C} */
+              getC() {}
+            }
+            exports = Mid;
+            return exports;
+          });
+          """,
+          """
+          goog.module('a.Top');
+          const Mid = goog.requireType('a.Mid');
+          /** @type {?Mid} */
+          const mid = null;
+          exports = {mid};
+          """
+        });
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();

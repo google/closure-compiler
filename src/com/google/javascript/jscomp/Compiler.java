@@ -2421,7 +2421,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  /** Hoists inputs with the @externs annotation into the externs list. */
+  /** Hoists inputs marked as externs into the externs list. */
   void hoistExterns(ImmutableList<CompilerInput> originalInputs) {
     boolean staleInputs = false;
 
@@ -2436,11 +2436,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Hoists a compiler input to externs if it contains the @externs annotation. Return whether or
-   * not the given input was hoisted.
+   * Hoists a compiler input to externs if it was marked as an extern. Return whether or not the
+   * given input was hoisted.
    */
   private boolean hoistIfExtern(CompilerInput input) {
-    if (input.getHasExternsAnnotation()) {
+    if (input.isExtern()) {
       // If the input file is explicitly marked as an externs file, then move it out of the main
       // JS root and put it with the other externs.
       Node root = input.getAstRoot(this);

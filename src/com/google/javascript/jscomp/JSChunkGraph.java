@@ -633,6 +633,11 @@ public final class JSChunkGraph implements Serializable {
     if (dependencyOptions.shouldPrune()) {
       ImmutableList<CompilerInput> weakInputs = sorter.getSortedWeakDependenciesOf(orderedInputs);
       for (CompilerInput i : weakInputs) {
+        if (i.isExtern()) {
+          // Extern inputs will be hoisted into externsRoot after manageDependencies; do not
+          // overwrite SourceKind.EXTERN or place them in the weak chunk.
+          continue;
+        }
         // Add weak inputs to the weak chunk in dependency order. moveMarkedWeakSources will move
         // in command line flag order.
         checkState(i.getChunk() == null);
