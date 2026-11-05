@@ -7330,12 +7330,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testComputedPropertyReferencingPrivateField_knownBug() {
-    // Expected behavior: `[o.#x] = 1` is lowered like any other computed field. It is a public
-    // field of the inner class whose key is the value of `o.#x`, not a private member, although
-    // its key reads the private field `#x` of `C`. The key is computed once, when the inner class
-    // is defined.
-    String js =
+  public void testComputedPropertyReferencingPrivateField() {
+    test(
         """
         class C {
           #x = 'key';
@@ -7345,8 +7341,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             };
           }
         }
-        """;
-    String expected =
+        """,
         """
         const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
         class C {
@@ -7365,15 +7360,7 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             return CLASS_DECL$0;
           }
         }
-        """;
-    // TODO(b/236744850): `Es6NormalizeClasses` crashes on a computed field whose key reads `#x`.
-    // Current behavior: `Es6NormalizeClasses` takes `[o.#x] = 1` for a private member of the
-    //   inner class, and fails a `checkArgument` in `recordPrivateMember`. `test(js, expected)`
-    //   throws an internal compiler error caused by an IllegalArgumentException.
-    // Why it's a bug: the compiler crashes on valid code.
-    var ex = assertThrows(RuntimeException.class, () -> test(js, expected));
-    assertThat(ex).hasMessageThat().contains("INTERNAL COMPILER ERROR");
-    assertThat(ex).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        """);
   }
 
   @Test

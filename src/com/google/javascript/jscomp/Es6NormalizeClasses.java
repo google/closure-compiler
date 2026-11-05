@@ -236,7 +236,10 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
           for (Node member = classMembers.getFirstChild();
               member != null;
               member = member.getNext()) {
-            if (isPrivateMember(member)) {
+            // Private class members have PRIVATE_IDENTIFIER set on the member node itself (whereas
+            // a computed member like `[this.#key] = 1` has a private identifier inside its first
+            // child).
+            if (member.isPrivateIdentifier()) {
               record.recordPrivateMember(member);
             }
           }
@@ -2399,13 +2402,5 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       return enclosingStmt.getParent();
     }
     return t.getScopeRoot();
-  }
-
-  /**
-   * Returns true if the node represents a private member declaration (field, method, or accessor)
-   * with a private identifier starting with '#'.
-   */
-  private static boolean isPrivateMember(Node n) {
-    return n.isPrivateIdentifier() || (n.hasChildren() && n.getFirstChild().isPrivateIdentifier());
   }
 }
