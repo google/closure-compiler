@@ -3301,6 +3301,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("/\\k<group>/");
     assertPrintSame("/(?<group>a)\\k<group>/");
     assertPrintSame("/\\x0B/"); // Don't print this as \v (as is done in strings)
+    // A raw backspace must not print as \b, which is a word boundary outside a class.
+    assertPrint("/a\bb/", "/a\\x08b/");
+    assertPrint("/[\b]/", "/[\\x08]/");
   }
 
   @Test

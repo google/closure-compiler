@@ -2014,7 +2014,14 @@ public class CodeGenerator {
           }
           // From the SingleEscapeCharacter grammar production.
         }
-        case '\b' -> sb.append("\\b");
+        case '\b' -> {
+          if (!isRegexp) {
+            sb.append("\\b");
+          } else {
+            // \b is a word boundary in a regular expression.
+            sb.append("\\x08");
+          }
+        }
         case '\f' -> sb.append("\\f");
         case '\n' -> sb.append("\\n");
         case '\r' -> sb.append("\\r");
