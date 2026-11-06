@@ -76,6 +76,9 @@ WebTransport.prototype.incomingBidirectionalStreams;
 /** @type {!ReadableStream} */
 WebTransport.prototype.incomingUnidirectionalStreams;
 
+/** @type {string} */
+WebTransport.prototype.protocol;
+
 /** @type {!Promise<undefined>} */
 WebTransport.prototype.ready;
 
