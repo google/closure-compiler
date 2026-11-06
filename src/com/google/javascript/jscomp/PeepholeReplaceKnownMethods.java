@@ -1410,9 +1410,11 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     int limit = stringValue.length() + 1;
 
     if (arg1 != null) {
-      if (arg1.isStringLit()) {
-        separator = arg1.getString();
-      } else if (!arg1.isNull()) {
+      if (arg1.isStringLit() || arg1.isNull()) {
+        // Only `undefined` means "no separator"; any other value is converted with ToString, so
+        // `str.split(null)` splits on the text "null".
+        separator = NodeUtil.getStringValue(arg1);
+      } else {
         return n;
       }
 
