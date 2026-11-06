@@ -137,6 +137,15 @@ public class JSTypeRegistryTest {
   }
 
   @Test
+  public void testGeneratorExtendsIterator() {
+    assertThat(
+            registry
+                .getNativeType(GENERATOR_TYPE)
+                .isSubtypeOf(registry.getNativeType(ITERATOR_TYPE)))
+        .isTrue();
+  }
+
+  @Test
   public void testGetBuiltInType_async_iterable() {
     assertType(registry.getGlobalType("AsyncIterable"))
         .isEqualTo(registry.getNativeType(ASYNC_ITERABLE_TYPE));

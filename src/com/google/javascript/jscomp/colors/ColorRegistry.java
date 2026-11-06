@@ -117,6 +117,14 @@ public final class ColorRegistry {
       for (ColorId id : REQUIRED_IDS) {
         this.setNativeColor(Color.singleBuilder().setId(id).build());
       }
+      // In ES2025 and externs, Generator extends Iterator (inheriting from %IteratorPrototype%).
+      // In real compilations this subtyping edge is populated by ColorPool from the type system;
+      // for testing, we record it explicitly so that passes checking native subtyping (such as
+      // PolyfillUsageFinder or property disambiguation) reflect that Generator is an Iterator
+      // subtype.
+      this.addDisambiguationEdge(
+          this.nativeColors.get(StandardColors.GENERATOR_ID),
+          this.nativeColors.get(StandardColors.ITERATOR_ID));
       return this;
     }
 

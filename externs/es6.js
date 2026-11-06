@@ -140,27 +140,28 @@ Iterator.prototype.find = function(predicate) {};
  */
 Iterator.prototype[Symbol.iterator] = function() {};
 
-/** @typedef {!IteratorIterable} */
+/** @typedef {!Iterator} */
 var ArrayIterator;
 
-/** @typedef {!IteratorIterable} */
+/** @typedef {!Iterator} */
 var MapIterator;
 
-/** @typedef {!IteratorIterable} */
+/** @typedef {!Iterator} */
 var SetIterator;
 
-/** @typedef {!IteratorIterable} */
+/** @typedef {!Iterator} */
 var StringIterator;
 
-/** @typedef {!IteratorIterable} */
+/** @typedef {!Iterator} */
 var TypedArrayIterator;
 
 /**
  * TODO(b/142881197): TReturn and TNext are not yet used for anything.
  * https://github.com/google/closure-compiler/issues/3489
- * @interface
+ * @constructor
+ * @abstract
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
- * @extends {IteratorIterable<T, ?, *>}
+ * @extends {Iterator<T, ?, *>}
  * @template T, TReturn, TNext
  */
 function Generator() {}
@@ -173,12 +174,14 @@ function Generator() {}
 Generator.prototype.next = function(opt_value) {};
 
 /**
+ * @override
  * @param {T=} opt_value
  * @return {!IIterableResult<T>}
  */
 Generator.prototype.return = function(opt_value) {};
 
 /**
+ * @override
  * @param {?=} opt_exception
  * @return {!IIterableResult<T>}
  */
@@ -596,6 +599,15 @@ String.prototype.matchAll = function(regexp) {};
 
 
 /**
+ * @override
+ * @return {!StringIterator<string>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/Symbol.iterator
+ */
+String.prototype[Symbol.iterator];
+
+
+/**
  * @see http://dev.w3.org/html5/postmsg/
  * @interface
  */
@@ -686,8 +698,6 @@ var BufferSource;
  * @typedef {!ArrayBuffer|!ArrayBufferView}
  */
 var AllowSharedBufferSource;
-
-
 
 
 
@@ -857,7 +867,8 @@ DataView.prototype.setUint32 = function(byteOffset, value, opt_littleEndian) {};
  * @return {undefined}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/setFloat16
  */
-DataView.prototype.setFloat16 = function(byteOffset, value, opt_littleEndian) {};
+DataView.prototype.setFloat16 = function(
+    byteOffset, value, opt_littleEndian) {};
 
 /**
  * @param {number} byteOffset
@@ -1235,6 +1246,15 @@ Array.prototype.entries;
 
 /**
  * @override
+ * @return {!ArrayIterator<T>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Symbol.iterator
+ */
+Array.prototype[Symbol.iterator];
+
+
+/**
+ * @override
  * @param {function(this:S, T, number, !Array<T>): *} predicateFn
  * @param {S=} opt_this
  * @return {T|undefined}
@@ -1435,6 +1455,14 @@ ReadonlyArray.prototype.values;
  * @return {!ArrayIterator<!Array<number|T>>} Iterator of [key, value] pairs.
  */
 ReadonlyArray.prototype.entries;
+
+
+/**
+ * @return {!ArrayIterator<T>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Symbol.iterator
+ */
+ReadonlyArray.prototype[Symbol.iterator];
 
 
 /**
@@ -2195,7 +2223,7 @@ DisposableStack.prototype.dispose = function() {};
 /**
  * @return {void}
  */
-DisposableStack.prototype[Symbol.dispose] = function () {};
+DisposableStack.prototype[Symbol.dispose] = function() {};
 /**
  * @param {!Disposable|null|undefined} disposable
  * @return {!Disposable|null|undefined}
@@ -2249,7 +2277,7 @@ AsyncDisposableStack.prototype.disposeAsync = function() {};
 /**
  * @return {!Promise<void>}
  */
-AsyncDisposableStack.prototype[Symbol.asyncDispose] = function () {};
+AsyncDisposableStack.prototype[Symbol.asyncDispose] = function() {};
 /**
  * @param {!AsyncDisposable|!Disposable|null|undefined} disposable
  * @return {!AsyncDisposable|!Disposable|null|undefined}

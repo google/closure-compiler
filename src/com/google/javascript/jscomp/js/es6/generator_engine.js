@@ -908,9 +908,9 @@ $jscomp.generator.Engine_.prototype.nextStep_ = function() {
  * @template VALUE
  * @constructor
  * @final
- * @implements {Generator<VALUE>}
+ * @extends {Generator<VALUE>}
  * @param {!$jscomp.generator.Engine_<VALUE>} engine
- * @suppress {reportUnknownTypes}
+ * @suppress {checkTypes,reportUnknownTypes}
  */
 $jscomp.generator.Generator_ = function(engine) {
   /** @const @override */

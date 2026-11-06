@@ -651,8 +651,7 @@ public final class JSTypeRegistry {
     FunctionType iteratorFunctionType =
         nativeConstructorBuilder("Iterator")
             .withParameters()
-            .withTemplateKeys(
-                iteratorValueTemplate, iteratorReturnTemplate, iteratorNextTemplate)
+            .withTemplateKeys(iteratorValueTemplate, iteratorReturnTemplate, iteratorNextTemplate)
             .build();
     registerNativeType(JSTypeNative.ITERATOR_FUNCTION_TYPE, iteratorFunctionType);
     iteratorFunctionType.getPrototype(); // Force initialization
@@ -726,15 +725,22 @@ public final class JSTypeRegistry {
     generatorReturnTemplate = new TemplateType(this, "TReturn");
     TemplateType generatorNextTemplate = new TemplateType(this, "TNext");
     FunctionType generatorFunctionType =
-        nativeInterface(
-            "Generator", generatorValueTemplate, generatorReturnTemplate, generatorNextTemplate);
-    generatorFunctionType.setExtendedInterfaces(
-        ImmutableList.of(
-            createTemplatizedType(
-                iteratorIterableType,
-                generatorValueTemplate,
-                generatorReturnTemplate,
-                generatorNextTemplate)));
+        nativeConstructorBuilder("Generator")
+            .withParameters()
+            .withTemplateKeys(
+                generatorValueTemplate, generatorReturnTemplate, generatorNextTemplate)
+            .build();
+    ObjectType iteratorOfGenerator =
+        createTemplatizedType(
+            iteratorType, generatorValueTemplate, generatorReturnTemplate, generatorNextTemplate);
+    ObjectType generatorPrototype =
+        PrototypeObjectType.builder(this)
+            .setName("Generator.prototype")
+            .setNative(true)
+            .setImplicitPrototype(iteratorOfGenerator)
+            .build();
+    generatorFunctionType.setPrototype(generatorPrototype, null);
+    generatorFunctionType.getInstanceType().mergeSupertypeTemplateTypes(iteratorOfGenerator);
     registerNativeType(JSTypeNative.GENERATOR_FUNCTION_TYPE, generatorFunctionType);
     registerNativeType(JSTypeNative.GENERATOR_TYPE, generatorFunctionType.getInstanceType());
 

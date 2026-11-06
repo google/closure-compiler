@@ -288,8 +288,8 @@ public final class PolyfillUsageFinderTest {
     PolyfillUsageFinder finder = createFinderWithRegistry(registry);
     Color generator = registry.get(StandardColors.GENERATOR_ID);
 
-    // Generator is a sibling of Iterator in externs, but inherits from %IteratorPrototype%
-    // at runtime in ES2025, so Generator and Iterator are known not to be disjoint.
+    // Generator extends Iterator in externs and native types, and inherits from
+    // %IteratorPrototype% at runtime in ES2025, so Generator and Iterator are not disjoint.
     assertThat(finder.isDisjointFromIterator(generator)).isFalse();
   }
 

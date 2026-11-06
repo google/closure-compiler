@@ -278,10 +278,12 @@ public class TestExternsBuilder {
        */
       Iterator.prototype.next;
       /**
+       * @override
        * @type {((function(T=): !IIterableResult<T>)|undefined)}
        */
       Iterator.prototype.return;
       /**
+       * @override
        * @type {((function(?=): !IIterableResult<T>)|undefined)}
        */
       Iterator.prototype.throw;
@@ -351,9 +353,12 @@ public class TestExternsBuilder {
       Iterator.prototype.find;
 
       /**
-       * @interface
-       * @extends {IteratorIterable<T, ?, *>}
+       * @constructor
+       * @abstract
+       * @extends {Iterator<T, ?, *>}
        * @template T, TReturn, TNext
+       * @return {?} Needed because parseTestCode treats synthetic externs as
+       *     non-extern code and infers void return for empty function bodies.
        */
       function Generator() {}
       /**
@@ -363,11 +368,13 @@ public class TestExternsBuilder {
        */
       Generator.prototype.next = function(opt_value) {};
       /**
+       * @override
        * @param {T=} value
        * @return {!IIterableResult<T>}
        */
       Generator.prototype.return = function(value) {};
       /**
+       * @override
        * @param {?=} exception
        * @return {!IIterableResult<T>}
        */
