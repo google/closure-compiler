@@ -928,6 +928,16 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean assumeStaticInheritanceIsNotUsed = true;
 
     @Option(
+        name = "--assume_for_of_iterator_close_is_not_needed",
+        handler = BooleanOptionHandler.class,
+        usage =
+            "Assume that code does not depend on an iterator's return() method being called when a"
+                + " for-of loop exits early (via break, return or throw). When transpiling for-of"
+                + " loops, this omits the try/finally that closes the iterator, reducing code"
+                + " size.")
+    private boolean assumeForOfIteratorCloseIsNotNeeded = false;
+
+    @Option(
         name = "--assume_no_prototype_method_enumeration",
         handler = BooleanOptionHandler.class,
         usage =
@@ -2008,6 +2018,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     options.setAllowDynamicImport(flags.allowDynamicImport);
     options.setDynamicImportAlias(flags.dynamicImportAlias);
     options.setAssumeStaticInheritanceIsNotUsed(flags.assumeStaticInheritanceIsNotUsed);
+    options.setAssumeForOfIteratorCloseIsNotNeeded(flags.assumeForOfIteratorCloseIsNotNeeded);
     options.setCrossChunkCodeMotionNoStubMethods(flags.assumeNoPrototypeMethodEnumeration);
 
     if (flags.chunkOutputType == ChunkOutputType.ES_MODULES) {
