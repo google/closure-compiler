@@ -615,14 +615,43 @@ function Transferable() {}
 
 /**
  * @param {number} length The length in bytes
+ * @param {{maxByteLength: (number|undefined)}=} options
  * @constructor
  * @throws {Error}
  * @implements {Transferable}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
  */
-function ArrayBuffer(length) {}
+function ArrayBuffer(length, options) {}
 
 /** @type {number} */
 ArrayBuffer.prototype.byteLength;
+
+/** @type {number} */
+ArrayBuffer.prototype.maxByteLength;
+
+/** @type {boolean} */
+ArrayBuffer.prototype.resizable;
+
+/**
+ * @param {number=} newByteLength
+ * @return {undefined}
+ */
+ArrayBuffer.prototype.resize = function(newByteLength) {};
+
+/** @type {boolean} */
+ArrayBuffer.prototype.detached;
+
+/**
+ * @param {number=} newByteLength
+ * @return {!ArrayBuffer}
+ */
+ArrayBuffer.prototype.transfer = function(newByteLength) {};
+
+/**
+ * @param {number=} newByteLength
+ * @return {!ArrayBuffer}
+ */
+ArrayBuffer.prototype.transferToFixedLength = function(newByteLength) {};
 
 /**
  * @param {number} begin
@@ -665,14 +694,27 @@ ArrayBufferView.prototype.byteLength;
 
 /**
  * @param {number} length The length in bytes
+ * @param {{maxByteLength: (number|undefined)}=} options
  * @constructor
  * @throws {Error}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
  */
-function SharedArrayBuffer(length) {}
+function SharedArrayBuffer(length, options) {}
 
 /** @type {number} */
 SharedArrayBuffer.prototype.byteLength;
+
+/** @type {boolean} */
+SharedArrayBuffer.prototype.growable;
+
+/** @type {number} */
+SharedArrayBuffer.prototype.maxByteLength;
+
+/**
+ * @param {number=} newByteLength
+ * @return {undefined}
+ */
+SharedArrayBuffer.prototype.grow = function(newByteLength) {};
 
 /**
  * @param {number=} begin
