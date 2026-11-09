@@ -748,6 +748,30 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testVariableRenamingReportWithCreateRenamingReports() {
+    args.add("--variable_renaming_report=vars_map.out");
+    args.add("--create_renaming_reports");
+    FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
+    assertThat(e)
+        .hasMessageThat()
+        .isEqualTo(
+            "The flags variable_renaming_report and "
+                + "create_renaming_reports cannot both be used simultaneously.");
+  }
+
+  @Test
+  public void testPropertyRenamingReportWithCreateRenamingReports() {
+    args.add("--property_renaming_report=props_map.out");
+    args.add("--create_renaming_reports");
+    FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
+    assertThat(e)
+        .hasMessageThat()
+        .isEqualTo(
+            "The flags property_renaming_report and "
+                + "create_renaming_reports cannot both be used simultaneously.");
+  }
+
+  @Test
   public void googFeatureSetYearIsNotDefinedWhenBrowserFeaturesetYearFlagIsNotSupplied() {
     testSame("var x = 3"); // input does not matter
     assertThat(lastCompiler.getOptions().getDefineReplacements())
