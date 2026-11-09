@@ -9,7 +9,7 @@ git_override(
     commit = "2cab52929507935aa43d460a3976d3bedc814d3a",
     remote = "https://github.com/google/bazel-common",
 )
-bazel_dep(name = "rules_jvm_external", version = "6.6")
+bazel_dep(name = "rules_jvm_external", version = "6.8")
 
 ## START_MAVEN_ARTIFACTS_LIST
 # List of external dependencies from Maven. Also update corresponding POM file below.
