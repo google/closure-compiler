@@ -2441,6 +2441,37 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "class A {} class B extends (0, A) {}", "class A {\n}\nclass B extends(0, A) {\n}\n");
   }
 
+  @Test
+  public void testClassExtendsNew() {
+    // Both `new Foo()` (MemberExpression) and `new Foo` (NewExpression) are
+    // LeftHandSideExpressions, so neither needs parentheses.
+    assertPrintSame("class C extends new Foo{}");
+    assertPrint("class C extends new Foo() {}", "class C extends new Foo{}");
+    assertPrintSame("class C extends new Foo(1){}");
+  }
+
+  @Test
+  public void testClassExtendsNonLeftHandSideExpression() {
+    assertPrintSame("class C extends(a=b){}");
+    assertPrintSame("class C extends(a?b:c){}");
+    assertPrintSame("class C extends(a||b){}");
+    assertPrintSame("class C extends(a??b){}");
+    assertPrintSame("class C extends(!a){}");
+    assertPrintSame("async function f(){class C extends(await a){}}");
+    assertPrintSame("function*f(){class C extends(yield a){}}");
+    assertPrintSame("class C extends(()=>{}){}");
+    assertPrintSame("class C extends(async()=>{}){}");
+  }
+
+  @Test
+  public void testClassExtendsLeftHandSideExpressionNoParens() {
+    assertPrintSame("class C extends a.b{}");
+    assertPrintSame("class C extends a[b]{}");
+    assertPrintSame("class C extends a(){}");
+    assertPrintSame("class C extends a?.b{}");
+    assertPrintSame("class C extends class{}{}");
+  }
+
   // Same as above, but tests argList instead of Param list
   @Test
   public void testNonJSDocCommentsPrinted_trailing_inlineComments_callArgList() {
@@ -4696,16 +4727,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testNullishCoalesceExtends() {
-    // TODO(b/571641705): CodeGenerator omits required parentheses around ?? in class extends clauses
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
-    assertThat(printNode(parse("class C extends (a ?? b) {}"))).isEqualTo("class C extends a??b{}");
+    assertThat(printNode(parse("class C extends (a ?? b) {}")))
+        .isEqualTo("class C extends(a??b){}");
   }
 
   @Test
   public void testNullishCoalesceAssignExtends() {
-    // TODO(b/571641705): CodeGenerator omits required parentheses around ??= in class extends clauses
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertThat(printNode(parse("class C extends (a ??= b) {}")))
-        .isEqualTo("class C extends a??=b{}");
+        .isEqualTo("class C extends(a??=b){}");
   }
 }

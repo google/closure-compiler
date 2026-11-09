@@ -551,8 +551,19 @@ public class CodeGenerator {
           if (!superClass.isEmpty()) {
             add("extends");
 
-            // Parentheses are required for a comma expression or an assignment expression.
-            addExpr(superClass, 1, Context.OTHER);
+            // ClassHeritage is `extends LeftHandSideExpression`, so parenthesize anything that
+            // binds more loosely, e.g. comma, assignment, `??`, `?:`, `await`. CALL's precedence
+            // is the lowest level at which every expression is a LeftHandSideExpression, except
+            // for arrow functions, which arrowFunctionNeedsParens handles.
+            // NEW is special-cased. NodeUtil gives it unary precedence because `new Foo` can't be
+            // followed by `()` or `.x` without changing its meaning. But in the grammar, both
+            // `new Foo()` (MemberExpression) and `new Foo` (NewExpression) are
+            // LeftHandSideExpressions, so a NEW superclass never needs parentheses.
+            int superClassPrecedence =
+                superClass.isNew()
+                    ? NodeUtil.precedence(Token.NEW)
+                    : NodeUtil.precedence(Token.CALL);
+            addExpr(superClass, superClassPrecedence, Context.OTHER);
           }
 
           Node interfaces = node.getImplements();
@@ -1476,6 +1487,9 @@ public class CodeGenerator {
       // MemberFunction '(' AssignmentExpressionList ')'
       // LeftHandSideExpression ? AssignmentExpression : AssignmentExpression
       return expressionOrEnclosingCast.isFirstChildOf(parent);
+    } else if (parent.isClass()) {
+      // ClassHeritage : 'extends' LeftHandSideExpression
+      return expressionOrEnclosingCast.isSecondChildOf(parent);
     } else {
       // All other cases are either illegal (e.g. because you cannot assign a value to an
       // ArrowFunction) or do not require parens.
@@ -1744,9 +1758,6 @@ public class CodeGenerator {
         || isNullishCoalesceChildOfLogicalAndOrLogicalOr(n)) {
       // precedence is not enough here since using && or || with ?? without parentheses
       // is a syntax error as ?? expands directly to |
-      return true;
-    } else if (n.isAssign() && n.getParent().isClass()) {
-      // Class declarations with assignments should be wrapped in parentheses.
       return true;
     } else {
       return precedence(n) < minPrecedence;
