@@ -3743,8 +3743,16 @@ Window.prototype.pageYOffset;
 
 /**
  * @typedef {{
- *   left: (number|undefined),
+ *   behavior: (string|undefined)
+ * }}
+ * @see https://www.w3.org/TR/cssom-view/#dictdef-scrolloptions
+ */
+var ScrollOptions;
+
+/**
+ * @typedef {{
  *   top: (number|undefined),
+ *   left: (number|undefined),
  *   behavior: (string|undefined)
  * }}
  * @see https://www.w3.org/TR/cssom-view/#dictdef-scrolltooptions
@@ -3767,28 +3775,28 @@ ScrollIntoViewOptions.prototype.block;
 ScrollIntoViewOptions.prototype.inline;
 
 /**
- * @param {number|!ScrollToOptions} scrollToOptionsOrX
+ * @param {(number|!ScrollToOptions)=} opt_xOrOptions
  * @param {number=} opt_y
  * @see http://www.w3.org/TR/cssom-view/#dom-window-scroll
  * @return {undefined}
  */
-Window.prototype.scroll = function(scrollToOptionsOrX, opt_y) {};
+Window.prototype.scroll = function(opt_xOrOptions, opt_y) {};
 
 /**
- * @param {number|!ScrollToOptions} scrollToOptionsOrX
+ * @param {(number|!ScrollToOptions)=} opt_xOrOptions
  * @param {number=} opt_y
  * @see http://www.w3.org/TR/cssom-view/#dom-window-scrollto
  * @return {undefined}
  */
-Window.prototype.scrollTo = function(scrollToOptionsOrX, opt_y) {};
+Window.prototype.scrollTo = function(opt_xOrOptions, opt_y) {};
 
 /**
- * @param {number|!ScrollToOptions} scrollToOptionsOrX
+ * @param {(number|!ScrollToOptions)=} opt_xOrOptions
  * @param {number=} opt_y
  * @see http://www.w3.org/TR/cssom-view/#dom-window-scrollby
  * @return {undefined}
  */
-Window.prototype.scrollBy = function(scrollToOptionsOrX, opt_y) {};
+Window.prototype.scrollBy = function(opt_xOrOptions, opt_y) {};
 
 /**
  * @type {number}
@@ -4047,12 +4055,28 @@ Element.prototype.getBoundingClientRect = function() {};
 Element.prototype.scrollIntoView = function(top) {};
 
 /**
- * @param {number|!ScrollToOptions} scrollToOptionsOrX
+ * @param {(number|!ScrollToOptions)=} opt_xOrOptions
  * @param {number=} opt_y
  * @see https://www.w3.org/TR/cssom-view/#extension-to-the-element-interface
  * @return {undefined}
  */
-Element.prototype.scrollTo = function(scrollToOptionsOrX, opt_y) {};
+Element.prototype.scroll = function(opt_xOrOptions, opt_y) {};
+
+/**
+ * @param {(number|!ScrollToOptions)=} opt_xOrOptions
+ * @param {number=} opt_y
+ * @see https://www.w3.org/TR/cssom-view/#extension-to-the-element-interface
+ * @return {undefined}
+ */
+Element.prototype.scrollTo = function(opt_xOrOptions, opt_y) {};
+
+/**
+ * @param {(number|!ScrollToOptions)=} opt_xOrOptions
+ * @param {number=} opt_y
+ * @see https://www.w3.org/TR/cssom-view/#extension-to-the-element-interface
+ * @return {undefined}
+ */
+Element.prototype.scrollBy = function(opt_xOrOptions, opt_y) {};
 
 /**
  * @type {number}
