@@ -165,7 +165,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       return; // Don't even brother. All global variables are likely escaped.
     }
 
-    if (!t.getScope().isFunctionBlockScope()) {
+    if (!t.inFunctionBlockScope()) {
       return; // Only want to do the following if its a function block scope.
     }
 
@@ -204,6 +204,9 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     // Using the forward reaching definition search to find all the inline
     // candidates
     NodeTraversal.traverse(compiler, t.getScopeRoot(), new GatherCandidates());
+    if (candidates.isEmpty()) {
+      return;
+    }
 
     // Compute the backward reaching use. The CFG and per-function variable info can be reused.
     reachingUses = new MaybeReachingVariableUse(cfg, escaped, allVarsInFn);

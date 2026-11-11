@@ -3719,10 +3719,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return checkNotModule(firstInput.getAstRoot(this), "Cannot insert code into a module");
     }
 
-    ImmutableList<CompilerInput> chunkInputs = chunk.getInputs();
-    if (!chunkInputs.isEmpty()) {
-      return checkNotModule(
-          chunkInputs.get(0).getAstRoot(this), "Cannot insert code into a module");
+    if (chunk.getInputCount() > 0) {
+      return checkNotModule(chunk.getFirst().getAstRoot(this), "Cannot insert code into a module");
     }
     throw new IllegalStateException("Root chunk has no inputs");
   }
@@ -4716,6 +4714,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private static final class NonClosingOutputStream extends java.io.FilterOutputStream {
     NonClosingOutputStream(OutputStream out) {
       super(out);
+    }
+
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+      out.write(b, off, len);
     }
 
     @Override

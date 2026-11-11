@@ -160,7 +160,7 @@ public class AmbiguateProperties implements CompilerPass {
     graphBuilder.addAll(graphNodeFactory.getAllKnownTypes());
     LinkedDirectedGraph<ColorGraphNode, Object> colorGraph = graphBuilder.build();
     try (LogFile chunkGraphLog = compiler.createOrReopenLog(this.getClass(), "color_graph.dot")) {
-      chunkGraphLog.log(DotFormatter.toDot(colorGraph));
+      chunkGraphLog.log(() -> DotFormatter.toDot(colorGraph));
     }
     for (ColorGraphNode node : graphNodeFactory.getAllKnownTypes()) {
       node.getSubtypeIndices().set(node.getIndex()); // Init subtyping as reflexive.

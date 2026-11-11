@@ -206,6 +206,20 @@ public final class PhaseOptimizerTest {
     assertThat(ex).hasMessageThat().isEqualTo("Precondition for pass myPass failed: message");
   }
 
+  @Test
+  public void sizeHeuristicDisabled_runsCodeRemovalLoopToFixpoint() {
+    compiler.getOptions().setUseSizeHeuristicToStopOptimizationLoop(false);
+    optimizer = new PhaseOptimizer(compiler, tracker);
+    Loop loop = optimizer.addFixedPointLoop();
+    addLoopedPass(loop, PassNames.PEEPHOLE_OPTIMIZATIONS, 3);
+
+    assertPasses(
+        PassNames.PEEPHOLE_OPTIMIZATIONS,
+        PassNames.PEEPHOLE_OPTIMIZATIONS,
+        PassNames.PEEPHOLE_OPTIMIZATIONS,
+        PassNames.PEEPHOLE_OPTIMIZATIONS);
+  }
+
   public void assertPasses(String... names) {
     optimizer.process(null, dummyRoot);
     assertThat(passesRun).isEqualTo(ImmutableList.copyOf(names));

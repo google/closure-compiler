@@ -73,6 +73,7 @@ class PhaseOptimizer implements CompilerPass {
       ImmutableList.of(PassNames.PEEPHOLE_OPTIMIZATIONS);
 
   static final int MAX_LOOPS = 100;
+  private static final int UNTRACKED_AST_SIZE = -1;
   static final String OPTIMIZE_LOOP_ERROR =
       "Fixed point loop exceeded the maximum number of iterations.";
 
@@ -347,7 +348,8 @@ class PhaseOptimizer implements CompilerPass {
       State state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
       boolean lastIterMadeChanges;
       int count = 1;
-      int astSize = NodeUtil.countAstSize(root);
+      boolean trackAstSize = shouldTrackAstSize();
+      int astSize = trackAstSize ? NodeUtil.countAstSize(root) : UNTRACKED_AST_SIZE;
       int previousAstSize = astSize;
 
       // The loop starts at state RUN_PASSES_NOT_RUN_IN_PREV_ITER and runs all passes.
@@ -397,7 +399,7 @@ class PhaseOptimizer implements CompilerPass {
           }
 
           previousAstSize = astSize;
-          astSize = NodeUtil.countAstSize(root);
+          astSize = trackAstSize ? NodeUtil.countAstSize(root) : UNTRACKED_AST_SIZE;
           if (state == State.RUN_PASSES_NOT_RUN_IN_PREV_ITER) {
             if (lastIterMadeChanges && isAstSufficientlyChanging(previousAstSize, astSize)) {
               state = State.RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER;
@@ -434,7 +436,12 @@ class PhaseOptimizer implements CompilerPass {
      * the loop, we should be OK.
      */
     private boolean isAstSufficientlyChanging(int oldAstSize, int newAstSize) {
-      if (useSizeHeuristicToStopOptimizationLoop && this.isCodeRemovalLoop) {
+      if (shouldTrackAstSize()) {
+        checkState(
+            oldAstSize > 0 && newAstSize > 0,
+            "Expected positive AST sizes when size heuristic is active, got old=%s, new=%s",
+            oldAstSize,
+            newAstSize);
         float percentChange = 100 * (Math.abs(newAstSize - oldAstSize) / (float) oldAstSize);
         if (percentChange < 0.05) {
           this.howmanyIterationsUnderThreshold++;
@@ -448,6 +455,10 @@ class PhaseOptimizer implements CompilerPass {
 
     boolean isPopulated() {
       return !myPasses.isEmpty();
+    }
+
+    private boolean shouldTrackAstSize() {
+      return useSizeHeuristicToStopOptimizationLoop && this.isCodeRemovalLoop;
     }
 
     private boolean isCodeRemovalLoop() {
