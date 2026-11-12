@@ -3241,6 +3241,11 @@ class IRFactory {
             "Private property '%s' has an unsupported token type: %s",
             propName,
             curNode.getToken());
+        // ES2022 § 15.7.1: It is a Syntax Error if PrivateBoundIdentifiers of ClassElementList
+        // contains "#constructor".
+        if (propName.equals("#constructor")) {
+          error(curNode, "Classes may not have a private element named '#constructor'");
+        }
 
         boolean isStatic = curNode.isStaticMember();
         boolean alreadyDeclared = privatePropNames.contains(propName);
