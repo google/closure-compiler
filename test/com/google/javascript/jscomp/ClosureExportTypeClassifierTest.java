@@ -22,10 +22,10 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.ClosureExportTypeClassifier.TsExportType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.TsExportType;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +39,7 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * Tests for {@link ClosureExportTypeClassifier}.
+ * Tests for {@link ClosureExportTypeClassifier}, via {@link GatherModuleMetadata}.
  *
  * <p>Each case in {@link ClassifyTest} classifies one goog.provide or goog.module namespace (the
  * goog.module 'm' for cases built with {@link #module}). The expected values match what Clutz's
@@ -1699,6 +1699,13 @@ public final class ClosureExportTypeClassifierTest {
     }
 
     @Override
+    protected CompilerOptions getOptions() {
+      CompilerOptions options = super.getOptions();
+      options.setClassifyTsExportTypes(true);
+      return options;
+    }
+
+    @Override
     protected CompilerPass getProcessor(Compiler compiler) {
       return (externs, root) ->
           new GatherModuleMetadata(
@@ -1736,10 +1743,8 @@ public final class ClosureExportTypeClassifierTest {
       testSame(srcs(source.files().toArray(new String[0])));
       String namespace = source.namespace();
       ModuleMetadata m = getMetadata(namespace);
-      ImmutableMap<String, TsExportType> exportTypes =
-          ClosureExportTypeClassifier.classify(m.rootNode(), m.googNamespaces().elementSet());
       assertWithMessage("export type of %s in:\n%s", namespace, String.join("\n", source.files()))
-          .that(exportTypes.get(namespace))
+          .that(m.tsExportTypes().get(namespace))
           .isEqualTo(expected);
     }
   }
@@ -1762,13 +1767,13 @@ public final class ClosureExportTypeClassifierTest {
           GatherModuleMetadata.MIXED_MODULE_TYPE);
       ModuleMetadata m = getMetadata("a.b");
       assertThat(m.isEs6Module()).isTrue();
+      var root = m.rootNode();
+      var namespaces = m.googNamespaces().elementSet();
 
       var thrown =
           assertThrows(
               IllegalArgumentException.class,
-              () ->
-                  ClosureExportTypeClassifier.classify(
-                      m.rootNode(), m.googNamespaces().elementSet()));
+              () -> ClosureExportTypeClassifier.classify(root, namespaces));
 
       assertThat(thrown).hasMessageThat().contains("SCRIPT");
     }
@@ -1782,13 +1787,13 @@ public final class ClosureExportTypeClassifierTest {
           srcs("goog.provide('a.b'); export const x = 1;"), GatherModuleMetadata.MIXED_MODULE_TYPE);
       ModuleMetadata m = getMetadata("a.b");
       assertThat(m.isEs6Module()).isTrue();
+      var root = m.rootNode();
+      var namespaces = m.googNamespaces().elementSet();
 
       var thrown =
           assertThrows(
               IllegalArgumentException.class,
-              () ->
-                  ClosureExportTypeClassifier.classify(
-                      m.rootNode(), m.googNamespaces().elementSet()));
+              () -> ClosureExportTypeClassifier.classify(root, namespaces));
 
       assertThat(thrown).hasMessageThat().contains("SCRIPT");
     }

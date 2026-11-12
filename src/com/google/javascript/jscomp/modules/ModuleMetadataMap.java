@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.modules;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -58,6 +60,20 @@ public final class ModuleMetadataMap {
   }
 
   /**
+   * Whether a goog.provide or goog.module namespace is seen from TypeScript (via Clutz) as a set of
+   * named exports or as a single default export.
+   *
+   * <p>For example, {@code exports = {A, B};} is NAMED and {@code exports = class Foo {};} is
+   * DEFAULT.
+   */
+  public enum TsExportType {
+    /** The module exports a single default value. */
+    DEFAULT,
+    /** The module exports multiple named values. */
+    NAMED
+  }
+
+  /**
    * Map from module path to module. These modules represent files and thus will contain all goog
    * namespaces that are in the file. These are not the same modules in modulesByGoogNamespace.
    */
@@ -72,9 +88,22 @@ public final class ModuleMetadataMap {
 
   private final ImmutableSet<ModuleMetadata> moduleMetadata;
 
+  /**
+   * Whether the modules' TypeScript export type facts were computed (see {@link
+   * com.google.javascript.jscomp.CompilerOptions#setClassifyTsExportTypes}).
+   */
+  private final boolean tsExportTypesClassified;
+
   public ModuleMetadataMap(
       Map<String, ModuleMetadata> modulesByPath,
       Map<String, ModuleMetadata> modulesByGoogNamespace) {
+    this(modulesByPath, modulesByGoogNamespace, /* tsExportTypesClassified= */ false);
+  }
+
+  public ModuleMetadataMap(
+      Map<String, ModuleMetadata> modulesByPath,
+      Map<String, ModuleMetadata> modulesByGoogNamespace,
+      boolean tsExportTypesClassified) {
     this.modulesByPath = ImmutableMap.copyOf(modulesByPath);
     this.modulesByGoogNamespace = ImmutableMap.copyOf(modulesByGoogNamespace);
     this.moduleMetadata =
@@ -82,6 +111,7 @@ public final class ModuleMetadataMap {
             .addAll(modulesByPath.values())
             .addAll(modulesByGoogNamespace.values())
             .build();
+    this.tsExportTypesClassified = tsExportTypesClassified;
   }
 
   /**
@@ -211,10 +241,20 @@ public final class ModuleMetadataMap {
      */
     public abstract ImmutableMultiset<String> readToggles();
 
+    /**
+     * How TypeScript (via Clutz) sees each namespace in {@link #googNamespaces()}.
+     *
+     * <p>Only populated for goog.provide and goog.module files when {@link
+     * com.google.javascript.jscomp.CompilerOptions#setClassifyTsExportTypes} is enabled; see {@link
+     * ModuleMetadataMap#getTsExportType}.
+     */
+    public abstract ImmutableMap<String, TsExportType> tsExportTypes();
+
     public abstract @Nullable ModulePath path();
 
     public static Builder builder() {
-      return new AutoValue_ModuleMetadataMap_ModuleMetadata.Builder();
+      return new AutoValue_ModuleMetadataMap_ModuleMetadata.Builder()
+          .tsExportTypes(ImmutableMap.of());
     }
 
     // Use reference equality to prevent bad HashSet<ModuleMetadata> performance on GWT.
@@ -257,6 +297,8 @@ public final class ModuleMetadataMap {
       public abstract ImmutableList.Builder<ModuleMetadata> nestedModulesBuilder();
 
       public abstract ImmutableMultiset.Builder<String> readTogglesBuilder();
+
+      public abstract Builder tsExportTypes(Map<String, TsExportType> value);
 
       public abstract Builder path(@Nullable ModulePath value);
 
@@ -302,6 +344,29 @@ public final class ModuleMetadataMap {
    */
   public ImmutableSet<ModuleMetadata> getAllModuleMetadata() {
     return moduleMetadata;
+  }
+
+  /**
+   * Returns whether TypeScript sees the given goog namespace as a set of named exports or as a
+   * single default export.
+   *
+   * <p>This is a purely syntactic approximation of Clutz's type-based classification, so that it
+   * can be computed without typechecking (e.g. when extracting JsTrimmer summaries).
+   *
+   * <p>Returns DEFAULT for namespaces not in this map, and for namespaces that aren't from a
+   * goog.provide or goog.module, e.g. from goog.declareModuleId, which aren't classified.
+   *
+   * @throws IllegalStateException unless this map was built with {@link
+   *     com.google.javascript.jscomp.CompilerOptions#setClassifyTsExportTypes} enabled
+   */
+  public TsExportType getTsExportType(String googNamespace) {
+    checkState(
+        this.tsExportTypesClassified,
+        "TypeScript export types require CompilerOptions#setClassifyTsExportTypes");
+    ModuleMetadata module = modulesByGoogNamespace.get(googNamespace);
+    return module != null
+        ? module.tsExportTypes().getOrDefault(googNamespace, TsExportType.DEFAULT)
+        : TsExportType.DEFAULT;
   }
 
   public static ModuleMetadataMap emptyForTesting() {

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.TsExportType;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -59,6 +60,8 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Users can make a namespace `named` with {@code @legacyNamedTsExport} on its {@code
  * goog.provide}/{@code goog.module} call. The annotation has no effect elsewhere.
+ *
+ * <p>This only runs when {@link CompilerOptions#setClassifyTsExportTypes} is enabled.
  */
 final class ClosureExportTypeClassifier {
 
@@ -177,13 +180,6 @@ final class ClosureExportTypeClassifier {
    * Namespaces whose goog.provide or goog.module call is annotated {@code @legacyNamedTsExport}.
    */
   private final Set<String> forcedNamedExport = new LinkedHashSet<>();
-
-  enum TsExportType {
-    /** The module exports a single default value. */
-    DEFAULT,
-    /** The module exports multiple named values. */
-    NAMED
-  }
 
   /**
    * Classifies each of {@code googNamespaces} as named or default.

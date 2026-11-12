@@ -220,6 +220,17 @@ public final class GatherModuleMetadata implements CompilerPass {
         }
       }
 
+      ModuleType moduleType = metadataBuilder.moduleType();
+      if (compiler.getOptions().getClassifyTsExportTypes()
+          && rootNode.isScript()
+          && !googNamespaces.isEmpty()
+          && (moduleType == ModuleType.GOOG_PROVIDE
+              || moduleType == ModuleType.GOOG_MODULE
+              || moduleType == ModuleType.LEGACY_GOOG_MODULE)) {
+        metadataBuilder.tsExportTypes(
+            ClosureExportTypeClassifier.classify(rootNode, googNamespaces.elementSet()));
+      }
+
       return metadataBuilder.build();
     }
   }
@@ -601,7 +612,11 @@ public final class GatherModuleMetadata implements CompilerPass {
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, externs, new Finder());
     NodeTraversal.traverse(compiler, root, new Finder());
-    compiler.setModuleMetadataMap(new ModuleMetadataMap(modulesByPath, modulesByGoogNamespace));
+    compiler.setModuleMetadataMap(
+        new ModuleMetadataMap(
+            modulesByPath,
+            modulesByGoogNamespace,
+            /* tsExportTypesClassified= */ compiler.getOptions().getClassifyTsExportTypes()));
   }
 
   // Must match closure/base.js's goog.VALID_MODULE_RE_ & also validates that dotted segments are

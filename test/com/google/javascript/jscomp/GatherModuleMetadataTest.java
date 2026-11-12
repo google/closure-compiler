@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.GatherModuleMetadata.INVALID_NAMESPACE_OR_MODULE_ID;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -26,6 +27,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.TsExportType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -35,6 +37,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
   private boolean rewriteScriptsToModules;
   private boolean sortOnly;
+  private boolean classifyTsExportTypes;
   private ImmutableList<ModuleIdentifier> entryPoints;
 
   @Override
@@ -43,6 +46,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     entryPoints = ImmutableList.of();
     rewriteScriptsToModules = false;
     sortOnly = false;
+    classifyTsExportTypes = false;
     setLanguageOut(LanguageMode.ECMASCRIPT5);
   }
 
@@ -55,6 +59,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     } else if (sortOnly) {
       options.setDependencyOptions(DependencyOptions.sortOnly());
     }
+    options.setClassifyTsExportTypes(classifyTsExportTypes);
     return options;
   }
 
@@ -900,5 +905,122 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
         """);
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.readToggles()).isEmpty();
+  }
+
+  @Test
+  public void testClassifyTsExportTypes_disabledByDefault() {
+    testSame(
+        srcs(
+            "goog.module('named.module'); exports = {a: 1};",
+            "goog.provide('named.provide'); named.provide.a = 1;"));
+
+    ModuleMetadataMap map = metadataMap();
+    assertThat(map.getModulesByGoogNamespace().get("named.module").tsExportTypes()).isEmpty();
+    assertThat(map.getModulesByGoogNamespace().get("named.provide").tsExportTypes()).isEmpty();
+    assertThrows(IllegalStateException.class, () -> map.getTsExportType("named.module"));
+  }
+
+  @Test
+  public void testClassifyTsExportTypes_enabled() {
+    classifyTsExportTypes = true;
+    testSame(
+        srcs(
+            "goog.module('named.module'); exports = {a: 1};",
+            "goog.module('def.module'); exports = class {};",
+            "goog.provide('named.provide'); named.provide.a = 1;",
+            "goog.provide('def.provide'); def.provide = class {};",
+            """
+            goog.loadModule(function(exports) {
+              goog.module('loaded.module');
+              exports = {a: 1};
+              return exports;
+            });
+            """));
+
+    assertThat(metadataMap().getModulesByGoogNamespace().get("named.module").tsExportTypes())
+        .containsExactly("named.module", TsExportType.NAMED);
+    assertThat(metadataMap().getModulesByGoogNamespace().get("def.module").tsExportTypes())
+        .containsExactly("def.module", TsExportType.DEFAULT);
+    assertThat(metadataMap().getModulesByGoogNamespace().get("named.provide").tsExportTypes())
+        .containsExactly("named.provide", TsExportType.NAMED);
+    assertThat(metadataMap().getModulesByGoogNamespace().get("def.provide").tsExportTypes())
+        .containsExactly("def.provide", TsExportType.DEFAULT);
+    assertThat(metadataMap().getModulesByGoogNamespace().get("loaded.module").tsExportTypes())
+        .isEmpty();
+
+    assertThat(metadataMap().getTsExportType("named.module")).isEqualTo(TsExportType.NAMED);
+    assertThat(metadataMap().getTsExportType("def.module")).isEqualTo(TsExportType.DEFAULT);
+    assertThat(metadataMap().getTsExportType("named.provide")).isEqualTo(TsExportType.NAMED);
+    assertThat(metadataMap().getTsExportType("def.provide")).isEqualTo(TsExportType.DEFAULT);
+    assertThat(metadataMap().getTsExportType("loaded.module")).isEqualTo(TsExportType.DEFAULT);
+  }
+
+  @Test
+  public void testClassifyTsExportTypes_esModuleDoesNotCrashAndReturnsNothing() {
+    classifyTsExportTypes = true;
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "with_id.js", "goog.declareModuleId('my.es6'); export const a = 1;"),
+            SourceFile.fromCode("without_id.js", "export const b = 2;")));
+
+    assertThat(metadataMap().getModulesByGoogNamespace().get("my.es6").tsExportTypes()).isEmpty();
+    assertThat(metadataMap().getModulesByPath().get("without_id.js").tsExportTypes()).isEmpty();
+    assertThat(metadataMap().getTsExportType("my.es6")).isEqualTo(TsExportType.DEFAULT);
+  }
+
+  @Test
+  public void testClassifyTsExportTypes_mixedProvideAndEsModuleReportsErrorWithoutCrash() {
+    classifyTsExportTypes = true;
+    testError(
+        srcs("goog.provide('a.b'); export const x = 1;"), GatherModuleMetadata.MIXED_MODULE_TYPE);
+    assertThat(metadataMap().getModulesByGoogNamespace().get("a.b").isEs6Module()).isTrue();
+    assertThat(metadataMap().getModulesByGoogNamespace().get("a.b").tsExportTypes()).isEmpty();
+
+    testError(
+        srcs("goog.provide('c.d'); import './other.js';"), GatherModuleMetadata.MIXED_MODULE_TYPE);
+    assertThat(metadataMap().getModulesByGoogNamespace().get("c.d").isEs6Module()).isTrue();
+    assertThat(metadataMap().getModulesByGoogNamespace().get("c.d").tsExportTypes()).isEmpty();
+  }
+
+  @Test
+  public void testClassifyTsExportTypes_esModuleImportingProvideScriptPreservesProvide() {
+    rewriteScriptsToModules = true;
+    classifyTsExportTypes = true;
+
+    testSame(
+        srcs(
+            SourceFile.fromCode("p.js", "goog.provide('a.b'); a.b.x = 1;"),
+            SourceFile.fromCode("m.js", "import './p.js';")));
+
+    ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("a.b");
+    assertThat(m.isGoogProvide()).isTrue();
+    assertThat(m.tsExportTypes()).containsExactly("a.b", TsExportType.NAMED);
+  }
+
+  @Test
+  public void
+      testClassifyTsExportTypes_malformedProvideOrModuleWithLegacyNamedTsExportReportsErrorWithoutCrash() {
+    classifyTsExportTypes = true;
+
+    testError(
+        srcs("goog.provide('a.b'); /** @legacyNamedTsExport */ goog.provide();"),
+        ClosureRewriteModule.INVALID_PROVIDE_NAMESPACE);
+    assertThat(metadataMap().getTsExportType("a.b")).isEqualTo(TsExportType.DEFAULT);
+
+    testError(
+        srcs("goog.provide('a.b'); /** @legacyNamedTsExport */ goog.provide(123);"),
+        ClosureRewriteModule.INVALID_PROVIDE_NAMESPACE);
+    assertThat(metadataMap().getTsExportType("a.b")).isEqualTo(TsExportType.DEFAULT);
+
+    testError(
+        srcs("goog.provide('a.b'); /** @legacyNamedTsExport */ goog.provide(`c.d`);"),
+        ClosureRewriteModule.INVALID_PROVIDE_NAMESPACE);
+    assertThat(metadataMap().getTsExportType("a.b")).isEqualTo(TsExportType.DEFAULT);
+
+    testError(
+        srcs("goog.module('m'); /** @legacyNamedTsExport */ goog.module();"),
+        ClosureRewriteModule.INVALID_MODULE_ID_ARG);
+    assertThat(metadataMap().getTsExportType("m")).isEqualTo(TsExportType.DEFAULT);
   }
 }

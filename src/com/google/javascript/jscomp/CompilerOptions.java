@@ -828,6 +828,13 @@ public class CompilerOptions {
 
   private boolean checksOnly;
 
+  /**
+   * Whether GatherModuleMetadata classifies goog.provide/goog.module namespaces as named or default
+   * exports for TypeScript (see ModuleMetadataMap#getTsExportType). Only tools generating
+   * TypeScript interop (Clutz, the JsTrimmer summary extractor) need this.
+   */
+  private boolean classifyTsExportTypes;
+
   /** What type of JS file should be output by this compilation */
   public static enum OutputJs {
     // Don't output anything.
@@ -1869,6 +1876,18 @@ public class CompilerOptions {
 
   public void setChecksOnly(boolean checksOnly) {
     this.checksOnly = checksOnly;
+  }
+
+  /**
+   * Sets whether GatherModuleMetadata classifies goog.provide/goog.module namespaces as named or
+   * default exports for TypeScript. Required for ModuleMetadataMap#getTsExportType.
+   */
+  public void setClassifyTsExportTypes(boolean classifyTsExportTypes) {
+    this.classifyTsExportTypes = classifyTsExportTypes;
+  }
+
+  public boolean getClassifyTsExportTypes() {
+    return classifyTsExportTypes;
   }
 
   boolean isChecksOnly() {
