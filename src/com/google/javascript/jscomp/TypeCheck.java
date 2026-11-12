@@ -775,9 +775,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         left = n.getFirstChild();
         right = n.getLastChild();
         rightType = getJSType(right);
-        validator.expectStringOrSymbol(left, getJSType(left), "left side of 'in'");
+        // In a private brand check (`#x in obj`), the LHS is a private identifier rather than a
+        // string/symbol expression, and checking it on a `@struct` class is safe because
+        // `RenameProperties` renames `#x` together with the class's `#x` declaration.
+        boolean isPrivateBrandCheck = left.isPrivateIdentifier();
+        if (!isPrivateBrandCheck) {
+          validator.expectStringOrSymbol(left, getJSType(left), "left side of 'in'");
+        }
         validator.expectObject(n, rightType, "'in' requires an object");
-        if (rightType.isStruct()) {
+        if (!isPrivateBrandCheck && rightType.isStruct()) {
           report(right, IN_USED_WITH_STRUCT);
         }
         ensureTyped(n, BOOLEAN_TYPE);
