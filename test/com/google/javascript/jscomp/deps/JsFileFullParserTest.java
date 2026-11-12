@@ -58,6 +58,55 @@ public final class JsFileFullParserTest {
   }
 
   @Test
+  public void testTsExportTypes_googModule() {
+    assertThat(parse("goog.module('a'); exports = {x: 1};").namedExportNamespaces)
+        .containsExactly("a");
+    assertThat(parse("goog.module('a'); exports = class {};").namedExportNamespaces).isEmpty();
+    assertThat(parse("goog.module('a'); /** @nodts */ class C {} exports = C;").noDtsNamespaces)
+        .containsExactly("a");
+  }
+
+  @Test
+  public void testTsExportTypes_googProvide() {
+    FileInfo info =
+        parse(
+            """
+            goog.provide('a');
+            goog.provide('b');
+            goog.provide('c');
+            b.x = 1;
+            /** @nodts */ c = class {};
+            """);
+    assertThat(info.namedExportNamespaces).containsExactly("b");
+    assertThat(info.noDtsNamespaces).containsExactly("c");
+  }
+
+  @Test
+  public void testTsExportTypes_loadModuleNotClassified() {
+    FileInfo info =
+        parse(
+            "goog.loadModule(function(exports) { goog.module('a'); exports = {x: 1}; return"
+                + " exports; });");
+    assertThat(info.namedExportNamespaces).isEmpty();
+    assertThat(info.noDtsNamespaces).isEmpty();
+  }
+
+  @Test
+  public void testTsExportTypes_bundleWithoutExternalClosure() {
+    FileInfo info =
+        parse(
+            """
+            var goog = {};
+            goog.provide('a');
+            goog.provide('b');
+            a.x = 1;
+            /** @nodts */ b = class {};
+            """);
+    assertThat(info.namedExportNamespaces).isEmpty();
+    assertThat(info.noDtsNamespaces).isEmpty();
+  }
+
+  @Test
   public void testModuleType_legacyGoogModule() {
     FileInfo info =
         parse(

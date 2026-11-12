@@ -42,6 +42,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * A parser that extracts dependency information from a .js file, including goog.require,
@@ -77,6 +78,18 @@ public class JsFileFullParser {
 
     public final Multimap<String, String> loadFlags = TreeMultimap.create();
     public ParserRunner.ParseResult parsed = null;
+
+    /**
+     * The subset of {@link #provides} that TypeScript sees as named exports (as opposed to a single
+     * default export). See {@link ModuleMetadata#tsExportTypes()}.
+     */
+    public final Set<String> namedExportNamespaces = new TreeSet<>();
+
+    /**
+     * The subset of {@link #provides} that Clutz omits from the .d.ts because of {@code @nodts}.
+     * See {@link ModuleMetadata#tsExportTypes()}.
+     */
+    public final Set<String> noDtsNamespaces = new TreeSet<>();
   }
 
   private JsFileFullParser() {
@@ -117,6 +130,7 @@ public class JsFileFullParser {
 
     CompilerOptions options = new CompilerOptions();
     options.setChecksOnly(true);
+    options.setClassifyTsExportTypes(true);
 
     compiler.init(ImmutableList.of(), ImmutableList.of(source), options);
 
@@ -189,6 +203,15 @@ public class JsFileFullParser {
       info.readToggles.addAll(module.readToggles().elementSet());
       info.typeRequires.addAll(module.weaklyRequiredGoogNamespaces());
       info.testonly = module.isTestOnly();
+      module
+          .tsExportTypes()
+          .forEach((namespace, exportType) -> {
+            switch (exportType) {
+              case NAMED -> info.namedExportNamespaces.add(namespace);
+              case NO_DTS -> info.noDtsNamespaces.add(namespace);
+              case DEFAULT -> {}
+            }
+          });
     }
     // Traverse any nested modules (goog.loadModule calls).
     for (ModuleMetadata nested : module.nestedModules()) {
