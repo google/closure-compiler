@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -54,11 +55,14 @@ import org.jspecify.annotations.Nullable;
  *   <li>A goog.provide namespace with a nested provide in this file has a property for it.
  * </ul>
  *
+ * <p>Besides top-level statements, it only scans the bodies of top-level goog.scope callbacks.
+ *
  * <p>Users can make a namespace `named` with {@code @legacyNamedTsExport} on its {@code
  * goog.provide}/{@code goog.module} call. The annotation has no effect elsewhere.
  */
 final class ClosureExportTypeClassifier {
 
+  private static final QualifiedName GOOG_SCOPE = QualifiedName.of("goog.scope");
   private static final String EXPORTS = "exports";
 
   /**
@@ -120,6 +124,11 @@ final class ClosureExportTypeClassifier {
 
     final NameRole role;
 
+    /** Whether this is a namespace provided by this goog.provide file. */
+    boolean isProvide() {
+      return role == NameRole.DOTTED_PROVIDE || role == NameRole.UNDOTTED_PROVIDE;
+    }
+
     /**
      * Whether {@link #value} is assigned as {@code exports = {a, b};} in a goog.module.
      * JSCompiler's module rewriting turns that into {@code exports.a = a; exports.b = b;} (see
@@ -147,6 +156,22 @@ final class ClosureExportTypeClassifier {
    * generated i18n data).
    */
   private final Map<String, List<String>> dottedProvidesByLastSegment = new LinkedHashMap<>();
+
+  /**
+   * Local names aliasing a provided namespace or a strict prefix of a dotted provide, mapped to the
+   * aliased qualified name, e.g. {@code const xhr = goog.labs.net.xhr;}, {@code const ns =
+   * confusion;}, or {@code const alignment = aplos.data.alignment;} for a provide
+   * 'aplos.data.alignment.Aligner', usually inside goog.scope. Qualified names rooted at an alias
+   * resolve to the aliased name, so properties assigned via an alias count as properties of the
+   * provide.
+   */
+  private final Map<String, String> aliases = new LinkedHashMap<>();
+
+  /**
+   * All strict prefixes of the dotted provides, e.g. 'a' and 'a.b' for 'a.b.c', to find {@link
+   * #aliases} with a single lookup.
+   */
+  private final Set<String> dottedProvidePrefixes = new LinkedHashSet<>();
 
   /**
    * Namespaces whose goog.provide or goog.module call is annotated {@code @legacyNamedTsExport}.
@@ -180,7 +205,7 @@ final class ClosureExportTypeClassifier {
         classifier.addProvide(namespace);
       }
     }
-    forEachTopLevelStatement(moduleRoot, isGoogModule, classifier::visitStatement);
+    classifier.forEachTopLevelStatement(moduleRoot, isGoogModule, classifier::visitStatement);
     if (!isGoogModule && googNamespaces.size() > 1) {
       classifier.addImplicitPropertiesFromNestedProvides(googNamespaces);
     }
@@ -212,6 +237,9 @@ final class ClosureExportTypeClassifier {
       dottedProvidesByLastSegment
           .computeIfAbsent(namespace.substring(lastDot + 1), unused -> new ArrayList<>(1))
           .add(namespace);
+      for (int dot = lastDot; dot != -1; dot = namespace.lastIndexOf('.', dot - 1)) {
+        dottedProvidePrefixes.add(namespace.substring(0, dot));
+      }
     }
   }
 
@@ -235,8 +263,11 @@ final class ClosureExportTypeClassifier {
   // Gathering facts from top-level statements.
   // ---------------------------------------------------------------------------------------------
 
-  /** Calls {@code callback} on each top-level statement of the file. */
-  private static void forEachTopLevelStatement(
+  /**
+   * Calls {@code callback} on each top-level statement of the file, including statements directly
+   * inside a top-level goog.scope callback.
+   */
+  private void forEachTopLevelStatement(
       Node moduleRoot, boolean isGoogModule, Consumer<Node> callback) {
     checkArgument(moduleRoot.isScript(), moduleRoot);
     // A goog.provide file is a script, so its statements are directly under the SCRIPT.
@@ -247,8 +278,39 @@ final class ClosureExportTypeClassifier {
     for (Node statement = body.getFirstChild();
         statement != null;
         statement = statement.getNext()) {
-      callback.accept(statement);
+      Node scopeBody = getGoogScopeBody(statement);
+      if (scopeBody != null) {
+        Map<String, String> savedAliases = aliases.isEmpty() ? null : new LinkedHashMap<>(aliases);
+        for (Node inner = scopeBody.getFirstChild(); inner != null; inner = inner.getNext()) {
+          callback.accept(inner);
+        }
+        aliases.clear();
+        if (savedAliases != null) {
+          aliases.putAll(savedAliases);
+        }
+      } else {
+        callback.accept(statement);
+      }
     }
+  }
+
+  /** Returns the body of the callback of a {@code goog.scope(function() { ... });} statement. */
+  private @Nullable Node getGoogScopeBody(Node statement) {
+    if (!NodeUtil.isExprCall(statement)) {
+      return null;
+    }
+    Node call = statement.getFirstChild();
+    if (!GOOG_SCOPE.matches(call.getFirstChild())) {
+      return null;
+    }
+    Node fn = call.getSecondChild();
+    if (fn != null && fn.isFunction() && !fn.isGeneratorFunction() && !fn.isAsyncFunction()) {
+      Node body = NodeUtil.getFunctionBody(fn);
+      if (body.isBlock()) { // ignore invalid code passing an arrow function
+        return body;
+      }
+    }
+    return null;
   }
 
   private void visitStatement(Node statement) {
@@ -297,6 +359,9 @@ final class ClosureExportTypeClassifier {
 
   private void visitDeclaredName(Node lhs) {
     Node initializer = lhs.getFirstChild();
+    if (initializer != null) {
+      maybeRecordAlias(lhs.getString(), initializer);
+    }
     NameInfo info = getOrCreate(lhs.getString());
     if (initializer != null && initializer.isAssign()) {
       // e.g. `const fromJson = a.b.fromJson = function() {};`
@@ -310,6 +375,33 @@ final class ClosureExportTypeClassifier {
       // A stub like `/** @type {T} */ let x;`. A bare redeclaration like `var x;` keeps any
       // earlier value.
       info.jsdoc = jsdoc;
+    }
+  }
+
+  /**
+   * Records {@code name} in {@link #aliases} if {@code initializer} is a qualified name that is a
+   * provided namespace or a strict prefix of a dotted provide; or an alias thereof.
+   *
+   * <p>For example, these are all treated as aliases: {@code const ns = confusion;}, {@code const a
+   * = aplos;}, or {@code const alignment = aplos.data.alignment;}.
+   */
+  private void maybeRecordAlias(String name, Node initializer) {
+    String target = null;
+    if (initializer.isName()) {
+      target = aliases.getOrDefault(initializer.getString(), initializer.getString());
+    } else if (!dottedProvidePrefixes.isEmpty()) {
+      // Only dotted provides and their prefixes can match, so skip files without any like
+      // `goog.module` files.
+      target = resolveAliasedQualifiedName(initializer);
+      if (target == null) {
+        target = initializer.getQualifiedName();
+      }
+    }
+    if (target != null
+        && (dottedProvidePrefixes.contains(target) || getProvideInfo(target) != null)) {
+      aliases.put(name, target);
+    } else {
+      aliases.remove(name);
     }
   }
 
@@ -342,6 +434,9 @@ final class ClosureExportTypeClassifier {
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getSecondChild();
     JSDocInfo jsdoc = expr.getJSDocInfo();
+    if (lhs.isName()) {
+      aliases.remove(lhs.getString());
+    }
     NameInfo assigned = getInfoForQualifiedName(lhs);
     if (assigned != null) {
       // `exports = ...;`, `a.b.Provide = ...;`, or `localName = ...;`
@@ -359,14 +454,22 @@ final class ClosureExportTypeClassifier {
   }
 
   private void recordProperty(Node owner) {
-    NameInfo ownerInfo = getInfoForQualifiedName(owner);
+    NameInfo ownerInfo = null;
+    if (owner.isName() && aliases.containsKey(owner.getString())) {
+      // `alias.x = ...;` where the alias is of a provide.
+      ownerInfo = getProvideInfo(aliases.get(owner.getString()));
+    }
+    if (ownerInfo == null) {
+      ownerInfo = getInfoForQualifiedName(owner);
+    }
     if (ownerInfo != null) {
       ownerInfo.propertyCount++;
     }
   }
 
   /**
-   * Returns the info for the given node if it is a simple name or a provided namespace, or null.
+   * Returns the info for the given node if it is a simple name or a provided namespace (possibly
+   * via an alias, e.g. {@code alignment.Aligner}), or null.
    *
    * <p>Avoids allocating qualified name strings (via {@code n.getQualifiedName()}) by first
    * checking the unallocated last-segment string ({@code n.getString()}) against {@link
@@ -384,12 +487,40 @@ final class ClosureExportTypeClassifier {
     if (candidates == null) {
       return null;
     }
+    String resolved = resolveAliasedQualifiedName(n);
+    if (resolved != null) {
+      return getProvideInfo(resolved);
+    }
     for (String provide : candidates) {
       if (n.matchesQualifiedName(provide)) {
         return topLevelNames.get(provide);
       }
     }
     return null;
+  }
+
+  /**
+   * Returns the qualified name of {@code n} with its root replaced by the aliased name, e.g.
+   * 'aplos.data.Aligner' for {@code a.data.Aligner} after {@code const a = aplos;}, or null if
+   * {@code n} isn't a qualified name rooted at an alias.
+   */
+  @SuppressWarnings("ReferenceEquality") // Rhino AST is designed to use reference equality.
+  private @Nullable String resolveAliasedQualifiedName(Node n) {
+    if (aliases.isEmpty() || !n.isQualifiedName()) {
+      return null;
+    }
+    Node root = NodeUtil.getRootOfQualifiedName(n);
+    String target = root.isName() ? aliases.get(root.getString()) : null;
+    if (target == null || n == root) {
+      return target;
+    }
+    return target + n.getQualifiedName().substring(root.getString().length());
+  }
+
+  /** Returns the info for {@code qname} if it is provided in this file, or null. */
+  private @Nullable NameInfo getProvideInfo(String qname) {
+    NameInfo info = topLevelNames.get(qname);
+    return info != null && info.isProvide() ? info : null;
   }
 
   private NameInfo getOrCreate(String name) {

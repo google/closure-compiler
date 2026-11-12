@@ -214,6 +214,20 @@ public final class ClosureExportTypeClassifierTest {
           },
           {"provide_undottedObjectLiteral", NAMED, file("a", "goog.provide('a'); a = {x: 1};")},
           {
+            "provide_googScopeAlias",
+            NAMED,
+            file(
+                "a.b",
+                """
+                goog.provide('a.b');
+                goog.scope(function() {
+                  const b = a.b;
+                  b.x = 1;
+                  b.f = function() {};
+                });
+                """)
+          },
+          {
             "provide_nestedProvide_parent",
             NAMED,
             file("a.b", "goog.provide('a.b'); goog.provide('a.b.Sub'); a.b.Sub = class {};")
@@ -265,6 +279,20 @@ public final class ClosureExportTypeClassifierTest {
                 """)
           },
           {
+            "propertyAssignmentOnNonQualifiedName_provide",
+            DEFAULT,
+            file(
+                "a.b.c",
+                """
+                goog.provide('a.b.c');
+                const b = a.b;
+                ((/** @type {?} */ (window))).c = 1;
+                if (goog.DEBUG) {
+                  ((/** @type {?} */ (window))).c = 2;
+                }
+                """)
+          },
+          {
             "provide_chainedPropertyAssignmentInConst",
             NAMED,
             file("a.b", "goog.provide('a.b'); const f = a.b.f = function() {};")
@@ -295,6 +323,11 @@ public final class ClosureExportTypeClassifierTest {
             "provide_selfDefaultWithoutPreviousValue",
             DEFAULT,
             file("a.b", "goog.provide('a.b'); /** @const */ a.b = a.b || {x: 1};")
+          },
+          {
+            "provide_inGoogScope",
+            NAMED,
+            file("a.b", "goog.provide('a.b'); goog.scope(function() { a.b.x = 1; });")
           },
 
           // @legacyNamedTsExport
@@ -470,6 +503,40 @@ public final class ClosureExportTypeClassifierTest {
             file("a.b", "goog.provide('a.b'); a.b = /** @type {!Foo} */ ({x: 1});")
           },
           {
+            "provide_googScopeAliasOfProvideThatIsAlsoAPrefix",
+            NAMED,
+            file(
+                "a.d.interpolators",
+                """
+                goog.provide('a.d');
+                goog.provide('a.d.interpolators');
+                goog.scope(function() {
+                  const d = a.d;
+                  d.interpolators.zero = function() {};
+                });
+                """)
+          },
+          {
+            "provide_googScopeAliasOfUndottedProvide",
+            NAMED,
+            file(
+                "confusion",
+                """
+                goog.provide('confusion');
+                goog.scope(function() {
+                  const ns = confusion;
+                  /** @typedef {{a: number}} */
+                  ns.Prediction;
+                });
+                """)
+          },
+          {
+            // Only provided namespaces are aliased.
+            "provide_aliasOfNonProvide",
+            DEFAULT,
+            file("a", "goog.provide('a'); a = class {}; var b = {}; const c = b; c.x = 1;")
+          },
+          {
             // Module rewriting turns this into `exports.X = X;`, dropping the @type.
             "namedExportsLiteralIgnoresDeclaredType",
             NAMED,
@@ -487,7 +554,123 @@ public final class ClosureExportTypeClassifierTest {
             module("/** @type {!Object<string, number>} */ exports = {X: 1};")
           },
           {
-            // Only top-level statements are scanned.
+            "provide_googScopePrefixAlias",
+            NAMED,
+            file(
+                "aplos.data.alignment.Aligner",
+                """
+                goog.provide('aplos.data.alignment.Aligner');
+                goog.scope(function() {
+                  const alignment = aplos.data.alignment;
+                  alignment.Aligner.align = function() {};
+                });
+                """)
+          },
+          {
+            "provide_googScopeRootPrefixAlias",
+            NAMED,
+            file(
+                "aplos.data.Aligner",
+                """
+                goog.provide('aplos.data.Aligner');
+                goog.scope(function() {
+                  const a = aplos;
+                  a.data.Aligner.align = function() {};
+                });
+                """)
+          },
+          {
+            "provide_googScopeAliasOfAlias",
+            NAMED,
+            file(
+                "aplos.data.Aligner",
+                """
+                goog.provide('aplos.data.Aligner');
+                goog.scope(function() {
+                  const a = aplos;
+                  const data = a.data;
+                  data.Aligner.align = function() {};
+                });
+                """)
+          },
+          {
+            // `other` isn't a provide or a prefix of one, so it isn't an alias.
+            "provide_googScopeNonProvideAlias",
+            DEFAULT,
+            file(
+                "aplos.data.Aligner",
+                """
+                goog.provide('aplos.data.Aligner');
+                goog.scope(function() {
+                  const a = other;
+                  a.data.Aligner.align = function() {};
+                });
+                """)
+          },
+          {
+            "provide_googScopeAliasDoesNotLeakAfterExit_propertyWrite",
+            DEFAULT,
+            file(
+                "a.b",
+                """
+                goog.provide('a.b');
+                goog.scope(function() {
+                  const b = a.b;
+                });
+                b.x = 1;
+                """)
+          },
+          {
+            "provide_googScopeAliasDoesNotLeakAfterExit_transitiveAlias",
+            DEFAULT,
+            file(
+                "a.b",
+                """
+                goog.provide('a.b');
+                goog.scope(function() {
+                  const b = a.b;
+                });
+                const b2 = b;
+                b2.x = 1;
+                """)
+          },
+          {
+            "provide_googScopeAliasDoesNotLeakIntoSecondGoogScope",
+            DEFAULT,
+            file(
+                "a.b",
+                """
+                goog.provide('a.b');
+                goog.scope(function() {
+                  const b = a.b;
+                });
+                goog.scope(function() {
+                  const b = other;
+                  b.x = 1;
+                });
+                """)
+          },
+          {
+            "provide_topLevelAliasRestoredAfterGoogScopeShadowing",
+            NAMED,
+            file(
+                "a.b",
+                """
+                goog.provide('a.b');
+                const b = a.b;
+                goog.scope(function() {
+                  const b = other;
+                });
+                b.x = 1;
+                """)
+          },
+          {
+            "provide_aliasClearedOnReassignment",
+            DEFAULT,
+            file("a.b", "goog.provide('a.b'); let b = a.b; b = {}; b.x = 1;")
+          },
+          {
+            // Only top-level statements and goog.scope callbacks are scanned.
             // Clutz: NAMED (TypeInference unions `{}` and `{a: number}` to `({}|{a: number})`,
             // where UnionType.toMaybeObjectType() is null and UnionType.isObject() is true).
             "controlFlowNotScanned_object",
@@ -593,6 +776,19 @@ public final class ClosureExportTypeClassifierTest {
                 try {} catch ({message}) {
                   g.h.x = 1;
                 }
+                """)
+          },
+          {
+            "unusualAst_googScopeWithoutFunction",
+            DEFAULT,
+            file(
+                "i.j",
+                """
+                goog.provide('i.j');
+                goog.scope();
+                goog.scope(function*() {
+                  i.j.x = 1;
+                });
                 """)
           },
           {
@@ -994,7 +1190,129 @@ public final class ClosureExportTypeClassifierTest {
                 """)
           },
 
-          // Reassignments and chained assignments:
+          // Aliases, goog.scope scoping, reassignments, and chained assignments:
+          {
+            "knownDivergence_provide_googScopeShadowedRootPrefixWithGlobal",
+            NAMED,
+            file(
+                "aplos.data.Aligner",
+                """
+                goog.provide('aplos.data.Aligner');
+                goog.scope(function() {
+                  const aplos = other;
+                  aplos.data.Aligner.align = function() {};
+                });
+                """)
+          },
+          {
+            "knownDivergence_provide_googScopeShadowedRootPrefixWithObject",
+            NAMED,
+            file(
+                "aplos.data.Aligner",
+                """
+                goog.provide('aplos.data.Aligner');
+                goog.scope(function() {
+                  const aplos = {data: {Aligner: {}}};
+                  aplos.data.Aligner.align = function() {};
+                });
+                """)
+          },
+          {
+            "knownDivergence_provide_googScopeShadowedRootPrefixDirectAssign",
+            NAMED,
+            file(
+                "aplos.data.Aligner",
+                """
+                goog.provide('aplos.data.Aligner');
+                goog.scope(function() {
+                  const aplos = other;
+                  /** @const */ aplos.data.Aligner = {x: 1};
+                });
+                """)
+          },
+          {
+            "knownDivergence_provide_googScopeLocalCollidesWithUndottedProvide",
+            DEFAULT,
+            file(
+                "b",
+                """
+                goog.provide('b');
+                goog.provide('a.b');
+                b.y = 1;
+                goog.scope(function() {
+                  const b = a.b;
+                  b.x = 1;
+                });
+                """)
+          },
+          {
+            "knownDivergence_provide_googScopeLocalCollidesWithOuterLocal_aliasOfProvide",
+            NAMED,
+            file(
+                "a.b",
+                """
+                goog.provide('a');
+                goog.provide('a.b');
+                const x = {};
+                goog.scope(function() {
+                  const x = a;
+                  x.foo = 1;
+                });
+                /** @const */ a.b = x;
+                """)
+          },
+          {
+            "knownDivergence_provide_googScopeLocalCollidesWithOuterLocal_objectLiteral",
+            NAMED,
+            file(
+                "a.b",
+                """
+                goog.provide('a.b');
+                const x = {};
+                goog.scope(function() {
+                  const x = {foo: 1};
+                });
+                /** @const */ a.b = x;
+                """)
+          },
+          {
+            "knownDivergence_provide_googScopeLocalCollidesWithOuterLocal_primitiveClobbersObject",
+            DEFAULT,
+            file(
+                "a.b",
+                """
+                goog.provide('a.b');
+                const x = {foo: 1};
+                goog.scope(function() {
+                  const x = 5;
+                });
+                /** @const */ a.b = x;
+                """)
+          },
+          {
+            "knownDivergence_provide_googScopeFunctionCollidesWithOuterLocal_isNeverNamespaceNotReset",
+            DEFAULT,
+            file(
+                "a.b",
+                """
+                goog.provide('a.b');
+                goog.scope(function() {
+                  function x() {}
+                });
+                const x = {foo: 1};
+                /** @const */ a.b = x;
+                """)
+          },
+          {
+            "knownDivergence_provide_staleAliasAfterDestructuringReassignment",
+            NAMED,
+            file("a.b", "goog.provide('a.b'); let b = a.b; ({b} = {b: {}}); b.x = 1;")
+          },
+          {
+            "knownDivergence_provide_topLevelPrefixAliasOutsideGoogScope",
+            NAMED,
+            file("a.b.c", "goog.provide('a.b.c'); const b = a.b; /** @const */ b.c = {x: 1};")
+          },
           {
             "knownDivergence_provide_rhsIsDottedProvide",
             DEFAULT,
@@ -1005,6 +1323,19 @@ public final class ClosureExportTypeClassifierTest {
                 goog.provide('a.c');
                 a.b.x = 1;
                 /** @const */ a.c = a.b;
+                """)
+          },
+          {
+            "knownDivergence_provide_rhsIsAliasOfDottedProvide",
+            DEFAULT,
+            file(
+                "a.c",
+                """
+                goog.provide('a.b');
+                goog.provide('a.c');
+                a.b.x = 1;
+                const b = a.b;
+                /** @const */ a.c = b;
                 """)
           },
           {
@@ -1072,6 +1403,29 @@ public final class ClosureExportTypeClassifierTest {
             "knownDivergence_module_chainedExportsAndLocalAssignment",
             DEFAULT,
             module("let local; exports = local = {a: 1};")
+          },
+
+          // Concise-arrow goog.scope (GatherModuleMetadata runs before ScopedAliases, which itself
+          // rejects concise-arrow goog.scope; getGoogScopeBody skips non-block callback bodies):
+          {
+            "knownDivergence_provide_googScopeConciseArrow_assignBody",
+            DEFAULT,
+            file("a.b", "goog.provide('a.b'); goog.scope(() => a.b.x = 1);")
+          },
+          {
+            "knownDivergence_provide_googScopeConciseArrow_anonymousClassAssignBody",
+            DEFAULT,
+            file("a.b", "goog.provide('a.b'); goog.scope(() => a.b = class {});")
+          },
+          {
+            "knownDivergence_provide_googScopeConciseArrow_classArgIgnored",
+            NAMED,
+            file("C", "goog.provide('C'); C.x = 1; goog.scope(() => foo(class C {}));")
+          },
+          {
+            "knownDivergence_provide_googScopeConciseArrow_functionArgIgnored",
+            NAMED,
+            file("C", "goog.provide('C'); C.x = 1; goog.scope(() => foo(function() {}));")
           },
 
           // Non-nullable record types and inline @enum JSDoc:
@@ -1151,6 +1505,63 @@ public final class ClosureExportTypeClassifierTest {
                 m = {x: 1};
                 /** @const */ a.b = m;
                 """)
+          },
+
+          // Unhandled alias patterns (exports aliases, `=`-assigned aliases, secondary local
+          // object aliases, cross-provide aliases, and chained empty-object assignments):
+          {
+            "knownDivergence_module_localAliasOfExports_propertyWrite",
+            DEFAULT,
+            module("const e = exports; e.x = 1;")
+          },
+          {
+            "knownDivergence_module_localAliasOfExportsViaAssignment_propertyWrite",
+            DEFAULT,
+            module("let e; e = exports; e.x = 1;")
+          },
+          {
+            "knownDivergence_provide_aliasAssignedViaEquals_propertyWrite",
+            DEFAULT,
+            file("a.b", "goog.provide('a.b'); let b; b = a.b; b.x = 1;")
+          },
+          {
+            "knownDivergence_provide_undottedAliasAssignedViaEquals_propertyWrite",
+            DEFAULT,
+            file("a", "goog.provide('a'); let b; b = a; b.x = 1;")
+          },
+          {
+            "knownDivergence_module_secondaryAliasOfLocalEmptyObject_propertyWrite",
+            DEFAULT,
+            module("const ns = {}; const alias = ns; alias.x = 1; exports = ns;")
+          },
+          {
+            "knownDivergence_provide_secondaryAliasOfLocalEmptyObject_propertyWrite",
+            DEFAULT,
+            file(
+                "a.b",
+                """
+                goog.provide('a.b');
+                const ns = {};
+                const alias = ns;
+                alias.x = 1;
+                /** @const */ a.b = ns;
+                """)
+          },
+          {
+            "knownDivergence_provide_anotherProvideAliasesUndottedProvideAndAddsProperty",
+            DEFAULT,
+            file("a", "goog.provide('a'); goog.provide('c'); /** @const */ c = a; c.x = 1;")
+          },
+          {
+            "knownDivergence_module_chainedExportsAndLocalEmptyObject_propertyWriteOnLocal",
+            DEFAULT,
+            module("let e; exports = e = {}; e.x = 1;")
+          },
+          {
+            // Clutz: NAMED. Same chained empty-object behavior on `/** @const */ a.b = b = {}`.
+            "knownDivergence_provide_chainedConstProvideAndLocalEmptyObject_propertyWriteOnLocal",
+            DEFAULT,
+            file("a.b", "goog.provide('a.b'); let b; /** @const */ a.b = b = {}; b.x = 1;")
           },
 
           // Stale propertyCount or hoisted `var` candidateDefinition overwriting provides:
