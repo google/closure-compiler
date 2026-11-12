@@ -195,6 +195,14 @@ class VarCheck implements ScopedCallback, CompilerPass {
       return;
     }
 
+    // In `#x in obj`, IRFactory represents `#x` as a NAME node and validates at parse time that it
+    // is inside a class and declared by an enclosing class. SyntacticScopeCreator only tracks
+    // variables, not class members, so skip `Scope` lookup and extern synthesis here.
+    if (n.isPrivateIdentifier()) {
+      checkState(parent.isIn() && n.isFirstChildOf(parent), n);
+      return;
+    }
+
     Scope scope = t.getScope();
     Var var = scope.getVar(varName);
 

@@ -1257,6 +1257,23 @@ public final class VarCheckTest extends CompilerTestCase {
             }));
   }
 
+  @Test
+  public void testPrivateBrandCheck() {
+    String js =
+        """
+        class C {
+          #x;
+          #m() {}
+          get #g() { return 1; }
+          has(o) {
+            return #x in o && #m in o && #g in o;
+          }
+        }
+        """;
+    testSame(js);
+    checkSynthesizedExtern(srcs(js), VAR_CHECK_EXTERNS);
+  }
+
   private static final class VariableTestCheck implements CompilerPass {
 
     final AbstractCompiler compiler;
@@ -1272,7 +1289,10 @@ public final class VarCheckTest extends CompilerTestCase {
           new AbstractPostOrderCallback() {
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
-              if (n.isName() && !parent.isFunction() && !parent.isLabel()) {
+              if (n.isName()
+                  && !parent.isFunction()
+                  && !parent.isLabel()
+                  && !n.isPrivateIdentifier()) {
                 assertScope(t.getScope()).declares(n.getString());
               }
             }
