@@ -654,6 +654,37 @@ public class AstFactoryTest {
     assertNode(getProp).hasFirstChildThat().isEqualTo(receiver);
     assertNode(getProp).hasColorThat().isEqualTo(StandardColors.NUMBER);
     assertNode(getProp).isNotOptionalChainStart();
+    assertThat(getProp.isPrivateIdentifier()).isFalse();
+  }
+
+  @Test
+  public void testCreateGetPropSetsPrivateIdentifier() {
+    AstFactory astFactory = createTestAstFactoryWithColors();
+    Node typeTemplate = astFactory.createNumber(0);
+
+    Node getProp =
+        astFactory.createGetProp(
+            astFactory.createNameWithUnknownType("x"), "#y", type(typeTemplate));
+    assertThat(getProp.isPrivateIdentifier()).isTrue();
+
+    Node getPropUnknown =
+        astFactory.createGetPropWithUnknownType(astFactory.createNameWithUnknownType("x"), "#y");
+    assertThat(getPropUnknown.isPrivateIdentifier()).isTrue();
+
+    Node startOptChain =
+        astFactory.createStartOptChainGetprop(
+            astFactory.createNameWithUnknownType("x"), "#y", type(typeTemplate));
+    assertThat(startOptChain.isPrivateIdentifier()).isTrue();
+
+    Node continueOptChain =
+        astFactory.createContinueOptChainGetprop(
+            astFactory.createNameWithUnknownType("x"), "#y", type(typeTemplate));
+    assertThat(continueOptChain.isPrivateIdentifier()).isTrue();
+
+    AstFactory jstypeFactory = createTestAstFactory();
+    Node getPropWithoutColor =
+        jstypeFactory.createGetPropWithoutColor(jstypeFactory.createNameWithUnknownType("x"), "#y");
+    assertThat(getPropWithoutColor.isPrivateIdentifier()).isTrue();
   }
 
   @Test

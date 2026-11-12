@@ -2066,7 +2066,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       }
 
       String propertyName() {
-        return name.startsWith("#") ? name.substring(1) : name;
+        return Node.isPrivateName(name) ? name.substring(1) : name;
       }
 
       /**
@@ -2114,7 +2114,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     void recordPrivateMember(Node n) {
       checkArgument(n.isPrivateIdentifier());
       String name = n.getString();
-      checkArgument(name.startsWith("#"), name);
+      checkArgument(Node.isPrivateName(name), name);
       boolean isStatic = n.isStaticMember();
 
       PrivateMemberKind kind;

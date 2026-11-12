@@ -3515,13 +3515,31 @@ public class Node {
     this.putBooleanProp(Prop.QUOTED, true);
   }
 
+  /**
+   * Returns true if {@code name}, the name of a property or class member, is a private name, like
+   * {@code #x}.
+   */
+  public static boolean isPrivateName(String name) {
+    return name.startsWith("#");
+  }
+
   public final boolean isPrivateIdentifier() {
     return (this instanceof StringNode) && this.getBooleanProp(Prop.PRIVATE_IDENTIFIER);
   }
 
+  /**
+   * Marks this node as a private identifier (for example, {@code #x}).
+   *
+   * <p>Note: {@link IR#getprop}, {@link IR#startOptChainGetprop}, and {@link
+   * IR#continueOptChainGetprop} call this automatically when {@link #isPrivateName(String)} holds.
+   * This method remains {@code public} for {@code IRFactory}, which constructs non-{@code GETPROP}
+   * private AST nodes (such as {@code MEMBER_FIELD_DEF}, {@code MEMBER_FUNCTION_DEF}, {@code
+   * GETTER_DEF}, {@code SETTER_DEF}, and {@code NAME} in {@code IN}) and must distinguish them from
+   * quoted public keys like {@code '#x'}.
+   */
   public final void setPrivateIdentifier() {
     checkState(this instanceof StringNode, this);
-    checkState(this.getString().startsWith("#"));
+    checkState(isPrivateName(this.getString()), this);
     this.putBooleanProp(Prop.PRIVATE_IDENTIFIER, true);
   }
 

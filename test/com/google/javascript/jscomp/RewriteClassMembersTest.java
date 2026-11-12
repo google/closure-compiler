@@ -7364,52 +7364,52 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLogicalAssignmentToPrivateField_knownBug() {
-    // Expected behavior: both the read and the write of `#n` that `Normalize` creates for
-    // `this.#n ??= 1` are lowered, like any other use of `#n`, so both go through `C`'s private
-    // map. Once `#n` is lowered, `C` no longer declares a native `#n`, so a native `#n` access
-    // left in `C` is a SyntaxError.
-    String js =
+  public void testLogicalAssignmentToPrivateField() {
+    test(
         """
         class C {
           #n;
           m() {
             this.#n ??= 1;
+            this.#n ||= 2;
+            this.#n &&= 3;
           }
         }
-        """;
-    String expected =
+        """,
         """
-        const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
+        const PRIVATE_MAP$3 = new $jscomp.PrivateMap();
         class C {
           constructor() {
-            const PRIVATE$2 = Object.create(null);
-            PRIVATE_MAP$1.set(this, PRIVATE$2);
-            PRIVATE$2.n = void 0;
+            const PRIVATE$4 = Object.create(null);
+            PRIVATE_MAP$3.set(this, PRIVATE$4);
+            PRIVATE$4.n = void 0;
           }
           m() {
             let $jscomp$logical$assign$tmpm1146332801$0;
-            PRIVATE_MAP$1.get($jscomp$logical$assign$tmpm1146332801$0 = this).n ??
-                (PRIVATE_MAP$1.get($jscomp$logical$assign$tmpm1146332801$0).n = 1);
+            PRIVATE_MAP$3.get($jscomp$logical$assign$tmpm1146332801$0 = this).n ??
+                (PRIVATE_MAP$3.get($jscomp$logical$assign$tmpm1146332801$0).n = 1);
+            let $jscomp$logical$assign$tmpm1146332801$1;
+            PRIVATE_MAP$3.get($jscomp$logical$assign$tmpm1146332801$1 = this).n ||
+                (PRIVATE_MAP$3.get($jscomp$logical$assign$tmpm1146332801$1).n = 2);
+            let $jscomp$logical$assign$tmpm1146332801$2;
+            PRIVATE_MAP$3.get($jscomp$logical$assign$tmpm1146332801$2 = this).n &&
+                (PRIVATE_MAP$3.get($jscomp$logical$assign$tmpm1146332801$2).n = 3);
           }
         }
-        """;
-    // TODO(b/236744850): The accesses to `#n` that `Normalize` creates for `??=` are not lowered.
-    // Current behavior: `Normalize` rewrites `this.#n ??= 1` to `(tmp = this).#n ?? (tmp.#n = 1)`
-    //   with a temporary `tmp`, without the private name flag on the two new `#n` accesses. So
-    //   neither is lowered, the output keeps both as `#n`, and `test(js, expected)` fails.
-    // Why it's a bug: `#n` was lowered, so `C` no longer declares `#n`, and `tmp.#n` is a
-    //   SyntaxError. The whole script fails to load.
-    var ex = assertThrows(AssertionError.class, () -> test(js, expected));
-    assertThat(ex).hasMessageThat().contains(".#n");
+        """);
   }
 
   @Test
-  public void testLogicalAssignmentToPrivateMethod_knownBug() {
-    // Expected behavior: `this.#m ??= () => {}` compiles, and both accesses to `#m` that
-    // `Normalize` creates for it go through `C`'s private map. Natively `init()` only reads `#m`:
-    // a method is never nullish, so the assignment never runs.
-    String js =
+  public void testLogicalAssignmentToPrivateMethod_wontFix() {
+    // Intentional ES2022 spec deviation (b/236744850): `this.#m ??= v` is rejected at compile time
+    // with `JSC_ILLEGAL_PRIVATE_MEMBER_ASSIGNMENT` rather than compiling as a read-only no-op.
+    // Difference from ES2022: natively `init()` never evaluates the assignment branch because a
+    // private method is always non-nullish (and truthy for `||=`), so `init()` succeeds at runtime.
+    // Why: `Normalize` desugars `this.#m ??= v` into `(tmp = this).#m ?? (tmp.#m = v)` before class
+    // lowering, exposing a dead write to an unwritable private method. Such code is pointless in
+    // practice, and accepting it would require special-casing logical assignments in `Normalize` or
+    // `Es6NormalizeClasses`.
+    testError(
         """
         class C {
           #m() {}
@@ -7417,36 +7417,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
             this.#m ??= () => {};
           }
         }
-        """;
-    String expected =
-        """
-        const PRIVATE_MAP$1 = new $jscomp.PrivateMap();
-        const PRIVATE_PROTO$2 = Object.create(null, {
-          m: {
-            value: function() {}
-          }
-        });
-        class C {
-          constructor() {
-            const PRIVATE$3 = Object.create(PRIVATE_PROTO$2);
-            PRIVATE_MAP$1.set(this, PRIVATE$3);
-          }
-          init() {
-            let $jscomp$logical$assign$tmpm1146332801$0;
-            PRIVATE_MAP$1.get($jscomp$logical$assign$tmpm1146332801$0 = this).m ??
-                (PRIVATE_MAP$1.get($jscomp$logical$assign$tmpm1146332801$0).m = () => {});
-          }
-        }
-        """;
-    // TODO(b/236744850): The accesses to `#m` that `Normalize` creates for `??=` are not lowered.
-    // Current behavior: `Normalize` rewrites `this.#m ??= () => {}` to
-    //   `(tmp = this).#m ?? (tmp.#m = () => {})` with a temporary `tmp`, without the private name
-    //   flag on the two new `#m` accesses. So neither is lowered, the output keeps both as `#m`,
-    //   and `test(js, expected)` fails.
-    // Why it's a bug: `#m` was lowered, so `C` no longer declares `#m`, and `tmp.#m` is a
-    //   SyntaxError. The whole script fails to load.
-    var ex = assertThrows(AssertionError.class, () -> test(js, expected));
-    assertThat(ex).hasMessageThat().contains(".#m");
+        """,
+        Es6NormalizeClasses.ILLEGAL_PRIVATE_MEMBER_ASSIGNMENT);
   }
 
   @Test

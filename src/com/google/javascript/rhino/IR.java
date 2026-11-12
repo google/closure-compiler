@@ -409,6 +409,9 @@ public class IR {
   public static Node startOptChainGetprop(Node target, String prop) {
     checkState(mayBeExpression(target), target);
     Node optChainGetProp = Node.newString(Token.OPTCHAIN_GETPROP, prop);
+    if (Node.isPrivateName(prop)) {
+      optChainGetProp.setPrivateIdentifier();
+    }
     optChainGetProp.addChildToBack(target);
     optChainGetProp.setIsOptionalChainStart(true);
     return optChainGetProp;
@@ -417,6 +420,9 @@ public class IR {
   public static Node continueOptChainGetprop(Node target, String prop) {
     checkState(mayBeExpression(target), target);
     Node optChainGetProp = Node.newString(Token.OPTCHAIN_GETPROP, prop);
+    if (Node.isPrivateName(prop)) {
+      optChainGetProp.setPrivateIdentifier();
+    }
     optChainGetProp.addChildToBack(target);
     optChainGetProp.setIsOptionalChainStart(false);
     return optChainGetProp;
@@ -425,6 +431,9 @@ public class IR {
   public static Node getprop(Node target, String prop) {
     checkState(mayBeExpression(target));
     Node getprop = Node.newString(Token.GETPROP, prop);
+    if (Node.isPrivateName(prop)) {
+      getprop.setPrivateIdentifier();
+    }
     getprop.addChildToBack(target);
     return getprop;
   }

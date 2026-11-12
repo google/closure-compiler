@@ -301,6 +301,28 @@ public class IRTest {
             ""));
   }
 
+  @Test
+  public void testGetpropSetsPrivateIdentifier() {
+    assertThat(IR.getprop(IR.name("x"), "y").isPrivateIdentifier()).isFalse();
+    assertThat(IR.getprop(IR.name("x"), "#y").isPrivateIdentifier()).isTrue();
+
+    Node chained = IR.getprop(IR.name("x"), "a", "#b");
+    assertThat(chained.isPrivateIdentifier()).isTrue();
+    assertThat(chained.getFirstChild().isPrivateIdentifier()).isFalse();
+
+    Node startOptChain = IR.startOptChainGetprop(IR.name("x"), "#y");
+    assertThat(startOptChain.isPrivateIdentifier()).isTrue();
+    assertThat(IR.startOptChainGetprop(IR.name("x"), "y").isPrivateIdentifier()).isFalse();
+
+    Node continueOptChain =
+        IR.continueOptChainGetprop(IR.startOptChainGetprop(IR.name("x"), "a"), "#y");
+    assertThat(continueOptChain.isPrivateIdentifier()).isTrue();
+    assertThat(
+            IR.continueOptChainGetprop(IR.startOptChainGetprop(IR.name("x"), "a"), "y")
+                .isPrivateIdentifier())
+        .isFalse();
+  }
+
   private void testIR(Node node, String expectedStructure) {
     assertThat(node.toStringTree()).isEqualTo(expectedStructure);
   }

@@ -1064,6 +1064,13 @@ public class NodeTest {
   }
 
   @Test
+  public void testIsPrivateName() {
+    assertThat(Node.isPrivateName("#x")).isTrue();
+    assertThat(Node.isPrivateName("x")).isFalse();
+    assertThat(Node.isPrivateName("")).isFalse();
+  }
+
+  @Test
   public void testIsPos() {
     assertThat(new Node(Token.POS).isPos()).isTrue();
     assertThat(new Node(Token.NEG).isPos()).isFalse();
