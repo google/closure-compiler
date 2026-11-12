@@ -1150,16 +1150,6 @@ final class FunctionTypeBuilder {
     compiler.report(JSError.make(errorRoot, error, args));
   }
 
-  /** Determines whether the given JsDoc info declares a function type. */
-  static boolean isFunctionTypeDeclaration(JSDocInfo info) {
-    return info.getParameterCount() > 0
-        || info.hasReturnType()
-        || info.hasThisType()
-        || info.isConstructor()
-        || info.isInterface()
-        || info.isAbstract();
-  }
-
   /**
    * Check whether a type is resolvable in the future If this has a supertype that hasn't been
    * resolved yet, then we can assume this type will be OK once the super type resolves.

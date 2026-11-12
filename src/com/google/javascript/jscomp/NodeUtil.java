@@ -5523,6 +5523,16 @@ public final class NodeUtil {
         || isEs6Constructor(fnNode);
   }
 
+  /** Determines whether the given JsDoc info declares a function type. */
+  static boolean isFunctionTypeDeclaration(JSDocInfo info) {
+    return info.getParameterCount() > 0
+        || info.hasReturnType()
+        || info.hasThisType()
+        || info.isConstructor()
+        || info.isInterface()
+        || info.isAbstract();
+  }
+
   public static boolean isEs6ConstructorMemberFunctionDef(Node memberFunctionDef) {
     if (!memberFunctionDef.isMemberFunctionDef()) {
       return false; // not a member function at all

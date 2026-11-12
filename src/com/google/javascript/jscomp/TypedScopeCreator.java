@@ -2442,7 +2442,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return getDeclaredType(info, lValue, rValue.getSecondChild(), null);
       }
 
-      if (info != null && FunctionTypeBuilder.isFunctionTypeDeclaration(info)) {
+      if (info != null && NodeUtil.isFunctionTypeDeclaration(info)) {
         String fnName = lValue.getQualifiedName();
         return createFunctionTypeFromNodes(null, fnName, info, lValue);
       }
@@ -2908,7 +2908,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
               && (info.hasType()
                   || info.hasEnumParameterType()
                   || isValidTypedefDeclaration(n, info)
-                  || FunctionTypeBuilder.isFunctionTypeDeclaration(info)
+                  || NodeUtil.isFunctionTypeDeclaration(info)
                   || (rhsValue != null && rhsValue.isFunction())))
           || isTypedConstantDeclaration(info, n, valueType)) {
         return false;

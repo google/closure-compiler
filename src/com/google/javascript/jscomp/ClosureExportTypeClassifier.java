@@ -18,20 +18,24 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Syntactically classifies whether each goog.module namespace in a file is seen from TypeScript as
- * a set of "named" exports or as a single "default" export.
+ * Syntactically classifies whether each goog.provide or goog.module namespace in a file is seen
+ * from TypeScript as a set of "named" exports or as a single "default" export.
  *
  * <p>This approximates the type-based logic originally implemented in Clutz. So most of the
  * (potentially surprising) logic is in place to mirror Clutz & allow migration to this syntactic
@@ -41,14 +45,17 @@ import org.jspecify.annotations.Nullable;
  *
  * <ul>
  *   <li>Object literals with at least one non-computed, non-spread key are NAMED.
- *   <li>Properties assigned or declared ({@code /** @type {T} *\/ exports.x;}) on {@code exports},
- *       or on a local alias of it, make an empty object NAMED.
+ *   <li>Properties assigned or declared ({@code /** @type {T} *\/ ns.x;}) on the namespace, or on a
+ *       local alias of it, make an empty object NAMED.
  *   <li>{@code exports = {a, b};} in a goog.module is NAMED even with a declared type, since module
  *       rewriting turns it into {@code exports.a = a; exports.b = b;} and drops the JSDoc.
+ *   <li>A dotted goog.provide namespace assigned without {@code @const} or a type isn't declared by
+ *       the typechecker, so it's DEFAULT.
+ *   <li>A goog.provide namespace with a nested provide in this file has a property for it.
  * </ul>
  *
  * <p>Users can make a namespace `named` with {@code @legacyNamedTsExport} on its {@code
- * goog.module} call. The annotation has no effect elsewhere.
+ * goog.provide}/{@code goog.module} call. The annotation has no effect elsewhere.
  */
 final class ClosureExportTypeClassifier {
 
@@ -75,7 +82,26 @@ final class ClosureExportTypeClassifier {
     NAMESPACE
   }
 
-  /** Facts gathered about a top-level name: {@code exports} or a local variable. */
+  /** Which kind of top-level name a {@link NameInfo} is about. */
+  private enum NameRole {
+    /** A goog.module's {@code exports}. */
+    GOOG_MODULE_EXPORTS,
+    /**
+     * A dotted namespace provided by this goog.provide file, e.g. 'a.b' but not 'a'. goog.provide
+     * implicitly initializes it to {}. An explicit assignment to one only counts with declaring
+     * JSDoc: JSCompiler doesn't declare {@code a.b = {x: 1};} (no {@code @const} or type).
+     */
+    DOTTED_PROVIDE,
+    /**
+     * An undotted namespace provided by this goog.provide file, e.g. 'a'. goog.provide implicitly
+     * initializes it to {}.
+     */
+    UNDOTTED_PROVIDE,
+    /** A local variable. */
+    LOCAL
+  }
+
+  /** Facts gathered about a top-level name: {@code exports}, a provide, or a local variable. */
   private static final class NameInfo {
     /** The last value assigned to this name, if any. */
     @Nullable Node value;
@@ -92,8 +118,7 @@ final class ClosureExportTypeClassifier {
     /** Number of properties assigned or declared on this name ({@code name.x = ...;}). */
     int propertyCount;
 
-    /** Whether this is a goog.module's {@code exports}. */
-    boolean isGoogModuleExports;
+    final NameRole role;
 
     /**
      * Whether {@link #value} is assigned as {@code exports = {a, b};} in a goog.module.
@@ -102,11 +127,30 @@ final class ClosureExportTypeClassifier {
      * NAMED.
      */
     boolean isNamedExportsLiteral;
+
+    private NameInfo(NameRole role) {
+      this.role = role;
+    }
   }
 
   private final Map<String, NameInfo> topLevelNames = new LinkedHashMap<>();
 
-  /** Namespaces whose goog.module call is annotated {@code @legacyNamedTsExport}. */
+  /**
+   * Provided namespaces that are not simple names, e.g. 'a.b.c' but not 'a', keyed by their last
+   * segment ('c').
+   *
+   * <p>This index is just for performance: on any GETPROP node, {@code n.getString()} gives the
+   * last property name without allocating a new String. If that name isn't in this map, we
+   * immediately know the node is not one of our provided namespaces, avoiding both heap allocations
+   * from {@code n.getQualifiedName()} and O(N_provides) scans via {@code
+   * n.matchesQualifiedName(...)} on every property assignment in files with many provides (e.g.
+   * generated i18n data).
+   */
+  private final Map<String, List<String>> dottedProvidesByLastSegment = new LinkedHashMap<>();
+
+  /**
+   * Namespaces whose goog.provide or goog.module call is annotated {@code @legacyNamedTsExport}.
+   */
   private final Set<String> forcedNamedExport = new LinkedHashSet<>();
 
   enum TsExportType {
@@ -117,38 +161,89 @@ final class ClosureExportTypeClassifier {
   }
 
   /**
-   * Classifies a single {@code goog.module} namespace as named or default.
+   * Classifies each of {@code googNamespaces} as named or default.
    *
-   * @param moduleRoot the SCRIPT node for this module
-   * @param googNamespace the namespace of this module
+   * @param moduleRoot the SCRIPT node for this goog.provide or goog.module file
+   * @param googNamespaces the namespaces provided by this file
+   * @return the export type of each of {@code googNamespaces}, in the same order
    */
-  static TsExportType classify(Node moduleRoot, String googNamespace) {
-    ClosureExportTypeClassifier classifier = new ClosureExportTypeClassifier();
-    classifier.addGoogModuleExports();
-    forEachTopLevelStatement(moduleRoot, classifier::visitStatement);
-
-    NameInfo info = classifier.topLevelNames.get(EXPORTS);
-    if (classifier.forcedNamedExport.contains(googNamespace)
-        || classifier.kindOfName(info, 0) == Kind.NAMESPACE) {
-      return TsExportType.NAMED;
+  static ImmutableMap<String, TsExportType> classify(Node moduleRoot, Set<String> googNamespaces) {
+    if (googNamespaces.isEmpty()) {
+      return ImmutableMap.of();
     }
-    return TsExportType.DEFAULT;
+    boolean isGoogModule = NodeUtil.isGoogModuleFile(moduleRoot);
+    ClosureExportTypeClassifier classifier = new ClosureExportTypeClassifier();
+    if (isGoogModule) {
+      classifier.addGoogModuleExports();
+    } else {
+      for (String namespace : googNamespaces) {
+        classifier.addProvide(namespace);
+      }
+    }
+    forEachTopLevelStatement(moduleRoot, isGoogModule, classifier::visitStatement);
+    if (!isGoogModule && googNamespaces.size() > 1) {
+      classifier.addImplicitPropertiesFromNestedProvides(googNamespaces);
+    }
+
+    ImmutableMap.Builder<String, TsExportType> exportTypes = ImmutableMap.builder();
+    for (String namespace : googNamespaces) {
+      NameInfo info = classifier.topLevelNames.get(isGoogModule ? EXPORTS : namespace);
+      boolean isNamed =
+          classifier.forcedNamedExport.contains(namespace)
+              || classifier.kindOfName(info, 0) == Kind.NAMESPACE;
+      exportTypes.put(namespace, isNamed ? TsExportType.NAMED : TsExportType.DEFAULT);
+    }
+    return exportTypes.buildOrThrow();
   }
 
   private void addGoogModuleExports() {
-    NameInfo info = new NameInfo();
-    info.isGoogModuleExports = true;
+    NameInfo info = new NameInfo(NameRole.GOOG_MODULE_EXPORTS);
     topLevelNames.put(EXPORTS, info);
+  }
+
+  private void addProvide(String namespace) {
+    int lastDot = namespace.lastIndexOf('.');
+    var role = lastDot != -1 ? NameRole.DOTTED_PROVIDE : NameRole.UNDOTTED_PROVIDE;
+    NameInfo info = new NameInfo(role);
+    topLevelNames.put(namespace, info);
+    if (lastDot != -1) {
+      // Index by last segment (e.g. 'c' for 'a.b.c') so getInfoForQualifiedName can quickly
+      // filter GETPROP nodes via n.getString() without allocating strings.
+      dottedProvidesByLastSegment
+          .computeIfAbsent(namespace.substring(lastDot + 1), unused -> new ArrayList<>(1))
+          .add(namespace);
+    }
+  }
+
+  /**
+   * goog.provide('a.b'); goog.provide('a.b.c'); implicitly creates a property 'c' on 'a.b'. This
+   * cannot see nested provides in other files.
+   */
+  private void addImplicitPropertiesFromNestedProvides(Set<String> provides) {
+    // In sorted order, any namespace nested under 'a.b' sorts in ['a.b.', 'a.b/'), since '/' is
+    // the character after '.'.
+    TreeSet<String> sorted = new TreeSet<>(provides);
+    for (String namespace : provides) {
+      int nestedCount = sorted.subSet(namespace + ".", namespace + "/").size();
+      if (nestedCount > 0) {
+        topLevelNames.get(namespace).propertyCount += nestedCount;
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------------------------
   // Gathering facts from top-level statements.
   // ---------------------------------------------------------------------------------------------
 
-  /** Calls {@code callback} on each top-level statement of the module. */
-  private static void forEachTopLevelStatement(Node moduleRoot, Consumer<Node> callback) {
-    checkArgument(moduleRoot.isScript() && moduleRoot.getFirstChild().isModuleBody(), moduleRoot);
-    Node body = moduleRoot.getFirstChild();
+  /** Calls {@code callback} on each top-level statement of the file. */
+  private static void forEachTopLevelStatement(
+      Node moduleRoot, boolean isGoogModule, Consumer<Node> callback) {
+    checkArgument(moduleRoot.isScript(), moduleRoot);
+    // A goog.provide file is a script, so its statements are directly under the SCRIPT.
+    checkArgument(
+        isGoogModule || !moduleRoot.hasChildren() || !moduleRoot.getFirstChild().isModuleBody(),
+        moduleRoot);
+    Node body = isGoogModule ? moduleRoot.getFirstChild() : moduleRoot;
     for (Node statement = body.getFirstChild();
         statement != null;
         statement = statement.getNext()) {
@@ -172,9 +267,12 @@ final class ClosureExportTypeClassifier {
     }
   }
 
-  /** Records an explicit @legacyNamedTsExport annotation on a goog.module call statement. */
+  /**
+   * Records an explicit @legacyNamedTsExport annotation on a goog.provide or goog.module call
+   * statement.
+   */
   private void maybeRecordLegacyNamedTsExport(Node statement) {
-    if (!NodeUtil.isGoogModuleCall(statement)) {
+    if (!NodeUtil.isGoogModuleCall(statement) && !NodeUtil.isGoogProvideCall(statement)) {
       return;
     }
     Node call = statement.getFirstChild();
@@ -182,7 +280,11 @@ final class ClosureExportTypeClassifier {
     if (jsdoc == null || !jsdoc.isLegacyNamedTsExport()) {
       return;
     }
-    forcedNamedExport.add(call.getSecondChild().getString());
+    Node arg = call.getSecondChild();
+    if (arg == null || !arg.isStringLit()) {
+      return;
+    }
+    forcedNamedExport.add(arg.getString());
   }
 
   private void visitNameDeclaration(Node declaration) {
@@ -197,6 +299,7 @@ final class ClosureExportTypeClassifier {
     Node initializer = lhs.getFirstChild();
     NameInfo info = getOrCreate(lhs.getString());
     if (initializer != null && initializer.isAssign()) {
+      // e.g. `const fromJson = a.b.fromJson = function() {};`
       visitExpression(initializer);
     }
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(lhs);
@@ -215,9 +318,20 @@ final class ClosureExportTypeClassifier {
       case ASSIGN -> visitAssign(expr);
       case GETPROP -> {
         // Stub declarations like `/** @typedef {number} */ exports.T;`
-        if (expr.getJSDocInfo() != null && expr.getFirstChild().isName()) {
-          String variableName = expr.getFirstChild().getString();
-          getOrCreate(variableName).propertyCount++;
+        NameInfo declared = getInfoForQualifiedName(expr);
+        JSDocInfo jsdoc = expr.getJSDocInfo();
+        if (declared != null) {
+          // Only a @typedef stub (before any assignment) suppresses goog.provide's implicit `{}`.
+          if (declared.value == null && jsdoc != null && jsdoc.hasTypedefType()) {
+            declared.isNeverNamespace = true;
+          }
+          return;
+        }
+        if (jsdoc != null
+            && (jsdoc.hasType()
+                || isDefiningType(jsdoc)
+                || NodeUtil.isFunctionTypeDeclaration(jsdoc))) {
+          recordProperty(expr.getFirstChild());
         }
       }
       default -> {}
@@ -228,24 +342,58 @@ final class ClosureExportTypeClassifier {
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getSecondChild();
     JSDocInfo jsdoc = expr.getJSDocInfo();
-    if (lhs.isName()) {
-      // `exports = ...;` or `localName = ...;`
-      NameInfo assigned = getOrCreate(lhs.getString());
+    NameInfo assigned = getInfoForQualifiedName(lhs);
+    if (assigned != null) {
+      // `exports = ...;`, `a.b.Provide = ...;`, or `localName = ...;`
       assigned.value = rhs;
       assigned.jsdoc = jsdoc;
       assigned.isNeverNamespace = false;
       assigned.isNamedExportsLiteral =
-          assigned.isGoogModuleExports && NodeUtil.isNamedExportsLiteral(rhs);
+          assigned.role == NameRole.GOOG_MODULE_EXPORTS && NodeUtil.isNamedExportsLiteral(rhs);
       return;
     }
-    if (lhs.isGetProp() && lhs.getFirstChild().isName()) {
-      // `exports.x = ...;` or `localName.x = ...;`
-      getOrCreate(lhs.getFirstChild().getString()).propertyCount++;
+    if (lhs.isGetProp()) {
+      // `exports.x = ...;`, `a.b.Provide.x = ...;`, or `localName.x = ...;`
+      recordProperty(lhs.getFirstChild());
     }
   }
 
+  private void recordProperty(Node owner) {
+    NameInfo ownerInfo = getInfoForQualifiedName(owner);
+    if (ownerInfo != null) {
+      ownerInfo.propertyCount++;
+    }
+  }
+
+  /**
+   * Returns the info for the given node if it is a simple name or a provided namespace, or null.
+   *
+   * <p>Avoids allocating qualified name strings (via {@code n.getQualifiedName()}) by first
+   * checking the unallocated last-segment string ({@code n.getString()}) against {@link
+   * #dottedProvidesByLastSegment}, and only then testing candidates with zero-allocation {@code
+   * n.matchesQualifiedName(provide)}.
+   */
+  private @Nullable NameInfo getInfoForQualifiedName(Node n) {
+    if (n.isName()) {
+      return getOrCreate(n.getString());
+    }
+    if (!n.isGetProp() || dottedProvidesByLastSegment.isEmpty()) {
+      return null;
+    }
+    List<String> candidates = dottedProvidesByLastSegment.get(n.getString());
+    if (candidates == null) {
+      return null;
+    }
+    for (String provide : candidates) {
+      if (n.matchesQualifiedName(provide)) {
+        return topLevelNames.get(provide);
+      }
+    }
+    return null;
+  }
+
   private NameInfo getOrCreate(String name) {
-    return topLevelNames.computeIfAbsent(name, (unused) -> new NameInfo());
+    return topLevelNames.computeIfAbsent(name, unused -> new NameInfo(NameRole.LOCAL));
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -259,11 +407,17 @@ final class ClosureExportTypeClassifier {
     if (info.isNamedExportsLiteral) {
       return Kind.NAMESPACE;
     }
+    if (info.role == NameRole.DOTTED_PROVIDE
+        && info.value != null
+        && !isDeclaringJsDoc(info.jsdoc)) {
+      return Kind.NOT_NAMESPACE;
+    }
     Kind kind;
     if (info.value != null || info.jsdoc != null) {
       kind = kindOfValue(info.value, info.jsdoc, depth);
     } else {
-      kind = info.isGoogModuleExports ? Kind.EMPTY_OBJECT : Kind.NOT_NAMESPACE;
+      // goog.module and goog.provide implicitly initialize exports and provides to {}.
+      kind = info.role != NameRole.LOCAL ? Kind.EMPTY_OBJECT : Kind.NOT_NAMESPACE;
     }
     if (kind == Kind.EMPTY_OBJECT && info.propertyCount > 0) {
       return Kind.NAMESPACE;
@@ -271,11 +425,22 @@ final class ClosureExportTypeClassifier {
     return kind;
   }
 
+  private static boolean isDeclaringJsDoc(@Nullable JSDocInfo jsdoc) {
+    return isDefiningType(jsdoc) || (jsdoc != null && (jsdoc.isConstant() || jsdoc.hasType()));
+  }
+
+  private static boolean isDefiningType(@Nullable JSDocInfo jsdoc) {
+    // Anything defining a new type (i.e. some name that can be referred to in a type annotation)
+    // is never a namespace.
+    return jsdoc != null
+        && (jsdoc.hasEnumParameterType()
+            || jsdoc.hasTypedefType()
+            || jsdoc.isConstructorOrInterface());
+  }
+
   private Kind kindOfValue(@Nullable Node value, @Nullable JSDocInfo jsdoc, int depth) {
     if (jsdoc != null) {
-      if (jsdoc.hasEnumParameterType()
-          || jsdoc.hasTypedefType()
-          || jsdoc.isConstructorOrInterface()) {
+      if (isDefiningType(jsdoc)) {
         return Kind.NOT_NAMESPACE;
       }
       if (jsdoc.hasType()) {
