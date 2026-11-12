@@ -60,17 +60,19 @@ public final class ModuleMetadataMap {
   }
 
   /**
-   * Whether a goog.provide or goog.module namespace is seen from TypeScript (via Clutz) as a set of
-   * named exports or as a single default export.
+   * How a goog.provide or goog.module namespace is seen from TypeScript (via Clutz): as a set of
+   * named exports, as a single default export, or omitted because of {@code @nodts}.
    *
-   * <p>For example, {@code exports = {A, B};} is NAMED and {@code exports = class Foo {};} is
-   * DEFAULT.
+   * <p>For example, {@code exports = {A, B};} is NAMED, {@code exports = class Foo {};} is DEFAULT,
+   * and {@code /** @nodts *}{@code / exports = class Foo {};} is NO_DTS.
    */
   public enum TsExportType {
     /** The module exports a single default value. */
     DEFAULT,
     /** The module exports multiple named values. */
-    NAMED
+    NAMED,
+    /** Clutz omits the namespace from the .d.ts (and import mappings) because of {@code @nodts}. */
+    NO_DTS
   }
 
   /**
@@ -347,8 +349,8 @@ public final class ModuleMetadataMap {
   }
 
   /**
-   * Returns whether TypeScript sees the given goog namespace as a set of named exports or as a
-   * single default export.
+   * Returns whether TypeScript sees the given goog namespace as a set of named exports, as a single
+   * default export, or as omitted because of {@code @nodts}.
    *
    * <p>This is a purely syntactic approximation of Clutz's type-based classification, so that it
    * can be computed without typechecking (e.g. when extracting JsTrimmer summaries).

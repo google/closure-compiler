@@ -122,6 +122,9 @@ final class ClosureExportTypeClassifier {
      */
     boolean isNeverNamespace;
 
+    /** Whether this name is a class or function declaration annotated {@code @nodts}. */
+    boolean isNoDtsDeclaration;
+
     /** Number of properties assigned or declared on this name ({@code name.x = ...;}). */
     int propertyCount;
 
@@ -182,7 +185,7 @@ final class ClosureExportTypeClassifier {
   private final Set<String> forcedNamedExport = new LinkedHashSet<>();
 
   /**
-   * Classifies each of {@code googNamespaces} as named or default.
+   * Classifies each of {@code googNamespaces} as named, default, or {@code @nodts}.
    *
    * @param moduleRoot the SCRIPT node for this goog.provide or goog.module file
    * @param googNamespaces the namespaces provided by this file
@@ -209,6 +212,11 @@ final class ClosureExportTypeClassifier {
     ImmutableMap.Builder<String, TsExportType> exportTypes = ImmutableMap.builder();
     for (String namespace : googNamespaces) {
       NameInfo info = classifier.topLevelNames.get(isGoogModule ? EXPORTS : namespace);
+      if ((info.jsdoc != null && info.jsdoc.isNoDts()) || classifier.hasNoDtsType(info, 0)) {
+        exportTypes.put(namespace, TsExportType.NO_DTS);
+        continue;
+      }
+
       boolean isNamed =
           classifier.forcedNamedExport.contains(namespace)
               || classifier.kindOfName(info, 0) == Kind.NAMESPACE;
@@ -253,6 +261,34 @@ final class ClosureExportTypeClassifier {
         topLevelNames.get(namespace).propertyCount += nestedCount;
       }
     }
+  }
+
+  /**
+   * Whether the value held by {@code info} has a type annotated {@code @nodts}: Clutz's {@code
+   * ClosureTypes.isNoDts} checks the JSDoc of the exported symbol's type, which is the JSDoc of the
+   * class, function, or object literal declaration that created it.
+   */
+  private boolean hasNoDtsType(NameInfo info, int depth) {
+    if (info.isNoDtsDeclaration) {
+      return true; // `/** @nodts */ class C {}`
+    }
+    if (info.isNeverNamespace) {
+      return false;
+    }
+    Node value = info.value;
+    if (value == null) {
+      return false;
+    }
+    if (info.jsdoc != null
+        && info.jsdoc.isNoDts()
+        && (value.isObjectLit() || value.isClass() || value.isFunction())) {
+      return true; // `/** @nodts */ const C = class {};` or `/** @nodts */ const x = {...};`
+    }
+    if (value.isName() && depth < MAX_ALIAS_DEPTH) {
+      NameInfo aliased = topLevelNames.get(value.getString());
+      return aliased != null && hasNoDtsType(aliased, depth + 1);
+    }
+    return false;
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -316,6 +352,8 @@ final class ClosureExportTypeClassifier {
         Node name = statement.getFirstChild();
         NameInfo info = getOrCreate(name.getString());
         info.isNeverNamespace = true;
+        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(statement);
+        info.isNoDtsDeclaration = jsdoc != null && jsdoc.isNoDts();
       }
       case EXPR_RESULT -> {
         maybeRecordLegacyNamedTsExport(statement);
@@ -439,6 +477,7 @@ final class ClosureExportTypeClassifier {
       assigned.value = rhs;
       assigned.jsdoc = jsdoc;
       assigned.isNeverNamespace = false;
+      assigned.isNoDtsDeclaration = false;
       assigned.isNamedExportsLiteral =
           assigned.role == NameRole.GOOG_MODULE_EXPORTS && NodeUtil.isNamedExportsLiteral(rhs);
       return;

@@ -927,8 +927,10 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
         srcs(
             "goog.module('named.module'); exports = {a: 1};",
             "goog.module('def.module'); exports = class {};",
+            "goog.module('nodts.module'); /** @nodts */ class C {} exports = C;",
             "goog.provide('named.provide'); named.provide.a = 1;",
             "goog.provide('def.provide'); def.provide = class {};",
+            "goog.provide('nodts.provide'); /** @nodts */ nodts.provide = class {};",
             """
             goog.loadModule(function(exports) {
               goog.module('loaded.module');
@@ -941,18 +943,25 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
         .containsExactly("named.module", TsExportType.NAMED);
     assertThat(metadataMap().getModulesByGoogNamespace().get("def.module").tsExportTypes())
         .containsExactly("def.module", TsExportType.DEFAULT);
+    assertThat(metadataMap().getModulesByGoogNamespace().get("nodts.module").tsExportTypes())
+        .containsExactly("nodts.module", TsExportType.NO_DTS);
     assertThat(metadataMap().getModulesByGoogNamespace().get("named.provide").tsExportTypes())
         .containsExactly("named.provide", TsExportType.NAMED);
     assertThat(metadataMap().getModulesByGoogNamespace().get("def.provide").tsExportTypes())
         .containsExactly("def.provide", TsExportType.DEFAULT);
+    assertThat(metadataMap().getModulesByGoogNamespace().get("nodts.provide").tsExportTypes())
+        .containsExactly("nodts.provide", TsExportType.NO_DTS);
     assertThat(metadataMap().getModulesByGoogNamespace().get("loaded.module").tsExportTypes())
         .isEmpty();
 
     assertThat(metadataMap().getTsExportType("named.module")).isEqualTo(TsExportType.NAMED);
     assertThat(metadataMap().getTsExportType("def.module")).isEqualTo(TsExportType.DEFAULT);
+    assertThat(metadataMap().getTsExportType("nodts.module")).isEqualTo(TsExportType.NO_DTS);
     assertThat(metadataMap().getTsExportType("named.provide")).isEqualTo(TsExportType.NAMED);
     assertThat(metadataMap().getTsExportType("def.provide")).isEqualTo(TsExportType.DEFAULT);
+    assertThat(metadataMap().getTsExportType("nodts.provide")).isEqualTo(TsExportType.NO_DTS);
     assertThat(metadataMap().getTsExportType("loaded.module")).isEqualTo(TsExportType.DEFAULT);
+    assertThat(metadataMap().getTsExportType("unknown")).isEqualTo(TsExportType.DEFAULT);
   }
 
   @Test

@@ -56,6 +56,7 @@ public final class ClosureExportTypeClassifierTest {
 
   private static final TsExportType DEFAULT = TsExportType.DEFAULT;
   private static final TsExportType NAMED = TsExportType.NAMED;
+  private static final TsExportType NO_DTS = TsExportType.NO_DTS;
 
   /** The goog namespace to classify, and the source files to compile. */
   private record Source(String namespace, List<String> files) {}
@@ -65,10 +66,15 @@ public final class ClosureExportTypeClassifierTest {
     return file("m", "goog.module('m');\n" + body);
   }
 
-  /** Returns the file with the given code, which provides the namespace to classify. */
-  private static Source file(String namespace, String code) {
-    return new Source(namespace, Arrays.asList(code));
+  /** Returns the files with the given code, one of which provides the namespace to classify. */
+  private static Source file(String namespace, String... files) {
+    return new Source(namespace, Arrays.asList(files));
   }
+
+  private static final String J2CL_OVERLAY_IMPL =
+      "goog.module('o$impl'); /** @nodts */ class O {} exports = O;";
+  private static final String J2CL_OVERLAY_HEADER =
+      "goog.module('o'); const O = goog.require('o$impl'); /** @nodts */ exports = O;";
 
   private static List<Object[]> classifyCases() {
     return Arrays.asList(
@@ -733,6 +739,87 @@ public final class ClosureExportTypeClassifierTest {
             file("a.b", "goog.provide('a.b'); if (c) { a.b.x; foo(); }")
           },
 
+          // @nodts
+          {"noDts_notAnnotated", DEFAULT, module("class C {} exports = C;")},
+          {
+            // J2CL overlay header files.
+            "noDts_onExportsAssignment",
+            NO_DTS,
+            module("const C = goog.require('m$impl'); /** @nodts */ exports = C;")
+          },
+          {
+            // J2CL overlay impl files.
+            "noDts_onExportedClassDeclaration",
+            NO_DTS,
+            module("/** @nodts */ class C {} exports = C;")
+          },
+          {
+            "noDts_onExportedFunctionDeclaration",
+            NO_DTS,
+            module("/** @nodts */ function f() {} exports = f;")
+          },
+          {
+            "noDts_onExportedObjectLiteralDeclaration",
+            NO_DTS,
+            module("/** @nodts */ const ns = {a: 1}; exports = ns;")
+          },
+          {
+            "noDts_onClassExpressionAssignment", NO_DTS, module("/** @nodts */ exports = class {};")
+          },
+          {
+            "noDts_onMemberOnly",
+            DEFAULT,
+            module("class C { /** @nodts */ static f() {} } exports = C;")
+          },
+          {"noDts_onExportsProperty", NAMED, module("/** @nodts */ exports.x = 1;")},
+          {
+            "noDts_provideAssignment",
+            NO_DTS,
+            file("a.b", "goog.provide('a.b'); /** @nodts */ a.b = class {};")
+          },
+          {
+            "noDts_provideProperty",
+            NAMED,
+            file("a.b", "goog.provide('a.b'); /** @nodts */ a.b.x = 1;")
+          },
+          {
+            // Only a's exports assignment is annotated, not the type of its value.
+            "noDts_reexportOfNoDtsAssignment",
+            DEFAULT,
+            file(
+                "b",
+                "goog.module('a'); const C = goog.require('a$impl'); /** @nodts */ exports = C;",
+                "goog.module('b'); const a = goog.require('a'); exports = a;")
+          },
+          {"noDts_j2clOverlayImpl", NO_DTS, file("o$impl", J2CL_OVERLAY_IMPL, J2CL_OVERLAY_HEADER)},
+          {"noDts_j2clOverlayHeader", NO_DTS, file("o", J2CL_OVERLAY_IMPL, J2CL_OVERLAY_HEADER)},
+          {
+            "noDts_onExportedClassExpressionDeclaration",
+            NO_DTS,
+            module("/** @nodts */ const C = class {}; exports = C;")
+          },
+          {
+            "noDts_onExportedFunctionExpressionDeclaration",
+            NO_DTS,
+            module("/** @nodts */ const f = function() {}; exports = f;")
+          },
+          {
+            "noDts_onExportedPrimitiveDeclaration",
+            DEFAULT,
+            module("/** @nodts */ const x = 1; exports = x;")
+          },
+          {
+            "noDts_overwrittenClassDeclaration",
+            DEFAULT,
+            module(
+                """
+                /** @nodts */ class C {}
+                class Public {}
+                C = Public;
+                exports = C;
+                """)
+          },
+
           // Inputs that once crashed, or might crash, the classifier.
           {
             // Intentional divergence from Clutz.
@@ -1087,6 +1174,23 @@ public final class ClosureExportTypeClassifierTest {
             "knownDivergence_unionOfRecordTypes",
             DEFAULT,
             module("/** @const {{a: number}|{b: number}} */ exports = {a: 1};")
+          },
+          {
+            // Clutz omits 'b': the re-exported type is annotated, so its type-based check sees
+            // @nodts. Re-exports aren't resolved syntactically.
+            "knownDivergence_reexportOfNoDtsType",
+            DEFAULT,
+            file(
+                "b",
+                "goog.module('a'); /** @nodts */ class C {} exports = C;",
+                "goog.module('b'); const a = goog.require('a'); exports = a;")
+          },
+          {
+            // Clutz: DEFAULT. ClosureRewriteModule inlines `exports = C` into `class C {}` and
+            // drops the `@nodts` JSDoc on the `exports` assignment.
+            "knownDivergence_noDtsOnExportsAssignmentOfInlinedLocal",
+            NO_DTS,
+            module("class C {} /** @nodts */ exports = C;")
           },
 
           // ---------------------------------------------------------------------------------------
