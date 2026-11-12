@@ -151,13 +151,14 @@ public final class GatherModuleMetadata implements CompilerPass {
 
   private class ModuleMetadataBuilder {
     private boolean ambiguous;
-    private boolean hasModuleBody;
     private Node declaredModuleId;
     private Node declaresLegacyNamespace;
+    private final Node rootNode;
     final ModuleMetadata.Builder metadataBuilder;
     final LinkedHashMultiset<String> googNamespaces = LinkedHashMultiset.create();
 
     ModuleMetadataBuilder(Node rootNode, @Nullable ModulePath path) {
+      this.rootNode = rootNode;
       this.metadataBuilder =
           ModuleMetadata.builder()
               .path(path)
@@ -197,12 +198,14 @@ public final class GatherModuleMetadata implements CompilerPass {
 
     ModuleMetadata build() {
       metadataBuilder.googNamespacesBuilder().addAll(googNamespaces);
+      if (rootNode.isScript() && Es6RewriteModules.isEs6ModuleRoot(rootNode)) {
+        // A script with a non-goog.module MODULE_BODY was either wrapped by
+        // Es6RewriteScriptsToModules (which only wraps scripts with no goog.provide) or parsed by
+        // IRFactory with import/export syntax (setting Node.ES6_MODULE, even if it ambiguously
+        // also contains goog.provide). Treat it as an ES6_MODULE to match Es6RewriteModules.
+        metadataBuilder.moduleType(ModuleType.ES6_MODULE);
+      }
       if (!ambiguous) {
-        if (hasModuleBody && metadataBuilder.moduleType() == ModuleType.SCRIPT) {
-          // A script with no imports or exports, but has a module body, must be an ES module.
-          metadataBuilder.moduleType(ModuleType.ES6_MODULE);
-        }
-
         if (declaredModuleId != null && metadataBuilder.moduleType() != ModuleType.ES6_MODULE) {
           compiler.report(JSError.make(declaredModuleId, DECLARE_MODULE_ID_OUTSIDE_ES6_MODULE));
         }
@@ -244,7 +247,6 @@ public final class GatherModuleMetadata implements CompilerPass {
             enterModule(t, n, null);
           }
         }
-        case MODULE_BODY -> currentModule.hasModuleBody = true;
         case DYNAMIC_IMPORT -> visitDynamicImport(n);
         default -> {}
       }

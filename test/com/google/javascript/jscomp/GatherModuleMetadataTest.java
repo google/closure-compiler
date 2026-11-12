@@ -485,6 +485,27 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMixedProvideAndEs6Module_isEs6Module() {
+    testError("goog.provide('a.b'); export const x = 1;", GatherModuleMetadata.MIXED_MODULE_TYPE);
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.isEs6Module()).isTrue();
+    assertThat(m.googNamespaces()).containsExactly("a.b");
+
+    testError("goog.provide('a.b'); import './dep.js';", GatherModuleMetadata.MIXED_MODULE_TYPE);
+    m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.isEs6Module()).isTrue();
+    assertThat(m.googNamespaces()).containsExactly("a.b");
+  }
+
+  @Test
+  public void testMixedGoogModuleAndEs6Module_isGoogModule() {
+    testError("goog.module('m'); export const x = 1;", GatherModuleMetadata.MIXED_MODULE_TYPE);
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
+    assertThat(m.isGoogModule()).isTrue();
+    assertThat(m.googNamespaces()).containsExactly("m");
+  }
+
+  @Test
   public void testDuplicateGoogModules() {
     testError(
         srcs("goog.module('duplciated');", "goog.module('duplciated');"),
