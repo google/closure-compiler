@@ -1531,6 +1531,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ensureTyped(key);
     }
 
+    if (key.isPrivateIdentifier()) {
+      // Each class has its own private names, so a private member never overrides another member.
+      return;
+    }
+
     // Validate inheritance for classes and object literals used as prototypes
     Property.Key propertyKey = new StringKey(propertyName);
     if (owner.isClass()) {

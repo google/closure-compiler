@@ -4732,7 +4732,7 @@ override: string
   }
 
   @Test
-  public void testPrivateClassMembersWithSameNameInSubclass_knownBug() {
+  public void testPrivateClassMembersWithSameNameInSubclass() {
     // Expected behavior: no diagnostics. Each class has its own private names, so the private
     // members of `Sub` don't override those of `Base`, and their types can differ.
     newTest()
@@ -4751,28 +4751,6 @@ override: string
               #m() { return this.#x; }
             }
             """)
-        // TODO(b/236744850): Private members of a subclass are checked as overrides.
-        // Current behavior: `TypeCheck` reports the 4 diagnostics below: a type mismatch with
-        //   `Base` and a missing `@override` for each of `#x` and `#m`.
-        // Why it's a bug: `Sub`'s `#x` and `#m` are new members that `Base` can't see, so all 4
-        //   diagnostics are false. The type mismatches are `checkTypes` warnings, so with
-        //   `--jscomp_error=checkTypes`, valid code fails to compile.
-        .addDiagnostic(
-"""
-mismatch of the #x property type and the type of the property it overrides from superclass Base
-original: string
-override: number
-""")
-        .addDiagnostic(
-            "property #x already defined on superclass Base; use @override to override it")
-        .addDiagnostic(
-"""
-mismatch of the #m property type and the type of the property it overrides from superclass Base
-original: function(this:Base): string
-override: function(this:Sub): number
-""")
-        .addDiagnostic(
-            "property #m already defined on superclass Base; use @override to override it")
         .run();
   }
 

@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.rhino.Node;
 import org.jspecify.annotations.Nullable;
@@ -496,7 +495,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCannotExportPrivateClassMembers_knownBug() {
+  public void testCannotExportPrivateClassMembers() {
     // Expected behavior: `@export` on a private member reports the error
     // `JSC_EXPORT_ANNOTATION_NOT_ALLOWED`. A private name is valid only inside the body of its
     // class, so an export call after the class can't refer to it.
@@ -506,16 +505,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
           /** @export */ #m() {}
         }
         """;
-    // TODO(b/236744850): `@export` on a private method exports it instead of reporting an error.
-    // Current behavior: no error, and `goog.exportProperty(G.prototype, "#m", G.prototype.#m);`
-    //   is added after `G`. So `testError` fails.
-    // Why it's a bug: `G.prototype.#m` outside the body of `G` is a SyntaxError, so the whole
-    //   script fails to load.
-    var methodEx =
-        assertThrows(
-            AssertionError.class,
-            () -> testError(method, FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED));
-    assertThat(methodEx).hasMessageThat().contains("but was        : []");
+    testError(method, FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
 
     String staticField =
         """
@@ -523,16 +513,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
           /** @export */ static #x = 3;
         }
         """;
-    // TODO(b/236744850): `@export` on a private field exports it instead of reporting an error.
-    // Current behavior: no error, and `goog.exportSymbol("G.#x", G.#x);` is added after `G`. So
-    //   `testError` fails.
-    // Why it's a bug: `G.#x` outside the body of `G` is a SyntaxError, so the whole script fails
-    //   to load.
-    var staticFieldEx =
-        assertThrows(
-            AssertionError.class,
-            () -> testError(staticField, FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED));
-    assertThat(staticFieldEx).hasMessageThat().contains("but was        : []");
+    testError(staticField, FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
   }
 
   @Test

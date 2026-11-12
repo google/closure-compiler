@@ -78,6 +78,12 @@ class FindExportableNodes extends AbstractPostOrderCallback {
       return;
     }
 
+    if (n.isPrivateIdentifier()) {
+      // A private member can't be exported, because its name is valid only inside the class body.
+      t.report(n, EXPORT_ANNOTATION_NOT_ALLOWED);
+      return;
+    }
+
     if (parent.isAssign() && (n.isFunction() || n.isClass())) {
       JSDocInfo parentInfo = parent.getJSDocInfo();
       if (parentInfo != null && parentInfo.isExport()) {
