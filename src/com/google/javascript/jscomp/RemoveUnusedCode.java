@@ -489,6 +489,13 @@ class RemoveUnusedCode implements CompilerPass {
           // class name() {}
           // handled at a higher level
           checkState(!((parent.isFunction() || parent.isClass()) && parent.getFirstChild() == n));
+          if (n.isPrivateIdentifier()) {
+            // In `#x in o`, `#x` is a NAME node representing a private property (not a variable in
+            // `scope`); pin the property name so the declaration of `#x` is kept, and skip variable
+            // lookup.
+            markPropertyNameAsPinned(n.getString());
+            return;
+          }
           traverseNameNode(n, scope)
               .setIsExplicitlyNotRemovable(
                   () -> String.format("reference found: %s", n.getLocation()));
