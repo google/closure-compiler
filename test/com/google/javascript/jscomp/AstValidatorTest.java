@@ -1877,6 +1877,32 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testArrayLit_invalidLaterElement() {
+    typeInfoValidationMode = TypeInfoValidation.NONE;
+
+    Node arrayWithBlock = new Node(Token.ARRAYLIT, IR.number(1), IR.block());
+    setTestSourceLocationForTree(arrayWithBlock);
+    // TODO(lharker): Wrong; should be invalid. Fixed in the next CL.
+    expectValid(arrayWithBlock, Check.EXPRESSION);
+
+    Node arrayWithInvalidSpread =
+        new Node(Token.ARRAYLIT, IR.number(1), new Node(Token.ITER_SPREAD, IR.block()));
+    setTestSourceLocationForTree(arrayWithInvalidSpread);
+    // TODO(lharker): Wrong; should be invalid. Fixed in the next CL.
+    expectValid(arrayWithInvalidSpread, Check.EXPRESSION);
+  }
+
+  @Test
+  public void testArrayLit_validLaterEmptyAndSpread() {
+    valid("var x = []; [1, , ...x];");
+
+    typeInfoValidationMode = TypeInfoValidation.NONE;
+    Node handBuilt = IR.arraylit(IR.number(1), IR.empty(), IR.iterSpread(IR.name("x")));
+    setTestSourceLocationForTree(handBuilt);
+    expectValid(handBuilt, Check.EXPRESSION);
+  }
+
+  @Test
   public void checkRequiredInlinings_failsWithRemainingRequiredInlinings() {
     // Write a reference to a function that required inlining. We need an enclosing statement
     // because the expression checker will look for a parent.
