@@ -6215,5 +6215,86 @@ async function abc() {
     }
     return count;
   }
+
+  // https://github.com/google/closure-compiler/issues/4390
+  @Test
+  public void testDestructuredCatchDoesNotCoalesceWithSubsequentVariables_simpleOptimizations() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+
+    test(
+        options,
+        """
+        function load(items) {
+          try {
+            init();
+          } catch ({ message }) {
+            console.error(message);
+          }
+          const out = [];
+          for (const x of items) {
+            out.push(x);
+          }
+          return out;
+        }
+        """,
+        """
+        function load(c) {
+          try {
+            init();
+          } catch ({message: a}) {
+            console.error(a);
+          }
+          var b = [];
+          for (let a of c) {
+            b.push(a);
+          }
+          return b;
+        }
+        """);
+  }
+
+  // https://github.com/google/closure-compiler/issues/4390
+  @Test
+  public void testDestructuredCatchDoesNotCoalesceWithSubsequentVariables_advancedOptimizations() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
+
+    test(
+        options,
+        """
+        window['load'] = function(items) {
+          try {
+            init();
+          } catch ([message]) {
+            console.error(message);
+          }
+          const out = [];
+          for (const x of items) {
+            out.push(x);
+          }
+          return out;
+        };
+        """,
+        """
+        window.load = function(c) {
+          try {
+            init();
+          } catch ([a]) {
+            console.a(a);
+          }
+          var b = [];
+          for (let a of c) {
+            b.push(a);
+          }
+          return b;
+        };
+        """);
+  }
 }
 

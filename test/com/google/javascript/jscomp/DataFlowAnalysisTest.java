@@ -656,6 +656,10 @@ public final class DataFlowAnalysisTest {
         .hasSize(1);
     assertThat(computeEscapedLocals("function f() {var _x}")).hasSize(1);
     assertThat(computeEscapedLocals("function f() {try{} catch(e){}}")).hasSize(1);
+    assertThat(computeEscapedLocals("function f() {try{} catch({e}){}}")).hasSize(1);
+    assertThat(computeEscapedLocals("function f() {try{} catch({e}){ let x = 1; }}")).hasSize(1);
+    assertThat(computeEscapedLocals("function f() {try{} catch([a, b = 1, ...rest]){}}"))
+        .hasSize(3);
   }
 
   @Test

@@ -297,6 +297,10 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void testTryCatch() {
     inFunction("try {} catch (e) { } var x = 4; x;");
     inFunction("var x = 4; x; try {} catch (e) { }");
+    inFunction("try {} catch ({e}) { } var x = 4; x;");
+    inFunction("var x = 4; x; try {} catch ({e}) { }");
+    inFunction("try {} catch ([e]) { } const x = 4; x;");
+    inFunction("const x = 4; x; try {} catch ([e]) { }");
   }
 
   @Test

@@ -464,8 +464,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     // TODO (simranarora) catch variables should not be considered escaped in ES6. Getting rid of
     // the catch check is causing breakages however
     for (Var var : allVarsInFn.values()) {
-      if (var.getParentNode().isCatch()
-          || compiler.getCodingConvention().isExported(var.getName())) {
+      if (var.isCatch() || compiler.getCodingConvention().isExported(var.getName())) {
         escaped.add(var);
       }
     }
