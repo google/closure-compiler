@@ -571,6 +571,13 @@ String.prototype.includes = function(searchString, opt_position) {};
 String.prototype.isWellFormed = function() {};
 
 /**
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toWellFormed
+ */
+String.prototype.toWellFormed = function() {};
+
+/**
  * @this {String|string}
  * @return {string}
  * @nosideeffects

@@ -31,5 +31,6 @@
 'require es6/string/repeat';
 'require es6/string/replaceall';
 'require es6/string/startswith';
+'require es6/string/towellformed';
 'require es6/string/trimend';
 'require es6/string/trimstart';
