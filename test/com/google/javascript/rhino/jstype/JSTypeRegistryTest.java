@@ -66,6 +66,7 @@ import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.MapBasedScope;
+import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -431,5 +432,334 @@ public class JSTypeRegistryTest {
     Node n = new Node(Token.ADD);
     n.setJSType(type);
     return registry.getReadableJSTypeName(n, deref);
+  }
+
+  @Test
+  public void testCreateTypeFromCommentNode_internedBuiltinTypesAndTemplates_closedResolver() {
+    TestErrorReporter reporter = new TestErrorReporter();
+    JSTypeRegistry closedRegistry = new JSTypeRegistry(reporter);
+    StaticTypedScope globalScope =
+        createStaticTypedScope(IR.root(), null, ImmutableMap.of(), ImmutableSet.of());
+
+    // Builtin generic specializations (non-null via BANG, nullable via bare STRINGLIT/QMARK,
+    // optional).
+    JSType nonNullArrayStr =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("Array", IR.string("string"))), "a.js", globalScope);
+    JSType nullableArrayStr =
+        closedRegistry.createTypeFromCommentNode(
+            templatizedCommentNode("Array", IR.string("string")), "b.js", globalScope);
+    JSType qmarkArrayStr =
+        closedRegistry.createTypeFromCommentNode(
+            new Node(Token.QMARK, templatizedCommentNode("Array", IR.string("string"))),
+            "b.js",
+            globalScope);
+    JSType optArrayStr =
+        closedRegistry.createTypeFromCommentNode(
+            new Node(Token.EQUALS, nullableArrayStrNode()), "b.js", globalScope);
+    JSType nonNullArrayUnknown =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("Array", new Node(Token.QMARK))), "c.js", globalScope);
+    JSType arrayUnknown =
+        closedRegistry.createTypeFromCommentNode(
+            templatizedCommentNode("Array", new Node(Token.QMARK)), "c.js", globalScope);
+
+    assertType(nonNullArrayStr)
+        .isEqualTo(
+            closedRegistry.createTemplatizedType(
+                closedRegistry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
+                closedRegistry.getNativeType(STRING_TYPE)));
+    assertThat(nonNullArrayStr.toString()).isEqualTo("Array<string>");
+    assertThat(nonNullArrayStr.toAnnotationString(JSType.Nullability.EXPLICIT))
+        .isEqualTo("!Array<string>");
+    assertType(nullableArrayStr).isEqualTo(closedRegistry.createNullableType(nonNullArrayStr));
+    assertType(qmarkArrayStr).isEqualTo(nullableArrayStr);
+    assertType(optArrayStr).isEqualTo(closedRegistry.createOptionalType(nullableArrayStr));
+    assertType(nonNullArrayUnknown)
+        .isEqualTo(
+            closedRegistry.createTemplatizedType(
+                closedRegistry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
+                closedRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE)));
+    assertType(nonNullArrayUnknown).isNotEqualTo(nonNullArrayStr);
+    assertThat(nonNullArrayUnknown.toString()).isEqualTo("Array<?>");
+    assertThat(arrayUnknown.toString()).isEqualTo("(Array<?>|null)");
+
+    // Repeated evaluation yields structurally equal types with identical template arguments.
+    JSType nonNullArrayStr2 =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("Array", IR.string("string"))), "d.js", null);
+    assertType(nonNullArrayStr2).isEqualTo(nonNullArrayStr);
+    assertThat(nonNullArrayStr2.isResolved()).isTrue();
+    assertThat(nonNullArrayStr2.getTemplateTypeMap().getTemplateValues())
+        .containsExactlyElementsIn(nonNullArrayStr.getTemplateTypeMap().getTemplateValues())
+        .inOrder();
+
+    // ReadonlyArray, Promise, IThenable, IIterableResult, ReadonlyMap, Map, and unions.
+    JSType readonlyArrNum =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("ReadonlyArray", IR.string("number"))),
+            "a.js",
+            globalScope);
+    assertThat(readonlyArrNum.toString()).isEqualTo("ReadonlyArray<number>");
+
+    JSType promiseStr =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("Promise", IR.string("string"))), "a.js", globalScope);
+    assertThat(promiseStr.toString()).isEqualTo("Promise<string>");
+
+    JSType ithenableBool =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("IThenable", IR.string("boolean"))),
+            "a.js",
+            globalScope);
+    assertThat(ithenableBool.toString()).isEqualTo("IThenable<boolean>");
+
+    JSType iterResultNum =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("IIterableResult", IR.string("number"))),
+            "a.js",
+            globalScope);
+    assertThat(iterResultNum.toString()).isEqualTo("IIterableResult<number>");
+
+    JSType readonlyMapStrNum =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(
+                templatizedCommentNode("ReadonlyMap", IR.string("string"), IR.string("number"))),
+            "a.js",
+            globalScope);
+    assertThat(readonlyMapStrNum.toString()).isEqualTo("ReadonlyMap<string,number>");
+
+    JSType nestedMap =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(
+                templatizedCommentNode(
+                    "Map",
+                    IR.string("string"),
+                    bangNode(templatizedCommentNode("Array", IR.string("string"))))),
+            "a.js",
+            globalScope);
+    assertThat(nestedMap.toString()).isEqualTo("Map<string,Array<string>>");
+
+    Node unionNode = new Node(Token.PIPE);
+    unionNode.addChildToBack(IR.string("string"));
+    unionNode.addChildToBack(IR.string("number"));
+    unionNode.addChildToBack(IR.string("boolean"));
+    unionNode.addChildToBack(IR.string("bigint"));
+    unionNode.addChildToBack(IR.string("null"));
+    unionNode.addChildToBack(IR.string("undefined"));
+    unionNode.addChildToBack(IR.string("symbol"));
+    JSType bigUnion = closedRegistry.createTypeFromCommentNode(unionNode, "a.js", globalScope);
+    assertThat(bigUnion.toString())
+        .isEqualTo("(bigint|boolean|null|number|string|symbol|undefined)");
+
+    assertType(closedRegistry.createTypeFromCommentNode(new Node(Token.STAR), "a.js", globalScope))
+        .isEqualTo(closedRegistry.getNativeType(ALL_TYPE));
+    assertType(closedRegistry.createTypeFromCommentNode(new Node(Token.QMARK), "a.js", globalScope))
+        .isEqualTo(closedRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+    assertType(closedRegistry.createTypeFromCommentNode(new Node(Token.EMPTY), "a.js", globalScope))
+        .isEqualTo(closedRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+    assertType(closedRegistry.createTypeFromCommentNode(IR.string("null"), "a.js", globalScope))
+        .isEqualTo(closedRegistry.getNativeType(NULL_TYPE));
+    // !null removes null from the type, yielding bottom (None).
+    assertType(
+            closedRegistry.createTypeFromCommentNode(
+                bangNode(IR.string("null")), "a.js", globalScope))
+        .isEqualTo(closedRegistry.getNativeType(JSTypeNative.NO_TYPE));
+    assertType(
+            closedRegistry.createTypeFromCommentNode(
+                new Node(Token.QMARK, bangNode(IR.string("string"))), "a.js", globalScope))
+        .isEqualTo(closedRegistry.createNullableType(closedRegistry.getNativeType(STRING_TYPE)));
+    assertType(
+            closedRegistry.createTypeFromCommentNode(
+                bangNode(new Node(Token.QMARK, IR.string("string"))), "a.js", globalScope))
+        .isEqualTo(closedRegistry.getNativeType(STRING_TYPE));
+
+    reporter.verifyHasEncounteredAllWarningsAndErrors();
+  }
+
+  @Test
+  public void testCreateTypeFromCommentNode_templateScopeShadowing_doesNotLeakCachedBuiltins() {
+    TestErrorReporter reporter = new TestErrorReporter();
+    JSTypeRegistry closedRegistry = new JSTypeRegistry(reporter);
+    StaticTypedScope globalScope =
+        createStaticTypedScope(IR.root(), null, ImmutableMap.of(), ImmutableSet.of());
+
+    // Warm builtin Array evaluation first.
+    JSType builtinArrayStr =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("Array", IR.string("string"))), "a.js", globalScope);
+    assertThat(builtinArrayStr.isTemplatizedType()).isTrue();
+
+    // Shadow "Array" via @template in SyntheticTemplateScope.
+    TemplateType templateArray = new TemplateType(closedRegistry, "Array");
+    StaticTypedScope templateScope =
+        closedRegistry.createScopeWithTemplates(globalScope, ImmutableList.of(templateArray));
+
+    JSType shadowedBare =
+        closedRegistry.createTypeFromCommentNode(IR.string("Array"), "a.js", templateScope);
+    JSType shadowedWithArgs =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("Array", IR.string("string"))), "a.js", templateScope);
+    assertType(shadowedBare).isEqualTo(templateArray);
+    assertType(shadowedWithArgs).isEqualTo(templateArray);
+
+    // Shadow "Promise" via typeOfThis template key map.
+    TemplateType templatePromise = new TemplateType(closedRegistry, "Promise");
+    ObjectType ownerThis;
+    try (JSTypeResolver.Closer closer = closedRegistry.getResolver().openForDefinition()) {
+      ownerThis =
+          FunctionType.builder(closedRegistry)
+              .forConstructor()
+              .withName("PromiseOwner")
+              .withTemplateKeys(templatePromise)
+              .build()
+              .getInstanceType();
+    }
+    StaticTypedScope thisScope =
+        new AbstractStaticScope() {
+          @Override
+          public Node getRootNode() {
+            return IR.block();
+          }
+
+          @Override
+          public StaticTypedScope getParentScope() {
+            return globalScope;
+          }
+
+          @Override
+          public StaticTypedSlot getSlot(String name) {
+            return null;
+          }
+
+          @Override
+          public JSType getTypeOfThis() {
+            return ownerThis;
+          }
+        };
+    JSType shadowedThisPromise =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("Promise", IR.string("string"))), "a.js", thisScope);
+    assertType(shadowedThisPromise).isEqualTo(templatePromise);
+
+    // Shadowing must not leak back to clean global scope.
+    JSType cleanAgain =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("Array", IR.string("string"))), "a.js", globalScope);
+    assertType(cleanAgain).isEqualTo(builtinArrayStr);
+
+    reporter.verifyHasEncounteredAllWarningsAndErrors();
+  }
+
+  @Test
+  public void testCreateTypeFromCommentNode_localScopeAndNonNullableShadowing() {
+    TestErrorReporter reporter = new TestErrorReporter();
+    JSTypeRegistry closedRegistry = new JSTypeRegistry(reporter);
+    StaticTypedScope globalScope =
+        createStaticTypedScope(IR.root(), null, ImmutableMap.of(), ImmutableSet.of());
+
+    JSType globalPromise =
+        closedRegistry.createTypeFromCommentNode(
+            templatizedCommentNode("Promise", IR.string("string")), "a.js", globalScope);
+    assertThat(globalPromise.toString()).isEqualTo("(Promise<string>|null)");
+
+    // Local slot shadowing built-in Array must produce NamedType, not builtin Array.
+    Map<String, StaticTypedSlot> slots = new HashMap<>();
+    StaticTypedScope localScope =
+        createStaticTypedScope(IR.block(), globalScope, slots, ImmutableSet.of());
+    slots.put(
+        "Array",
+        new SimpleSlot("Array", closedRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE), true) {
+          @Override
+          public StaticTypedScope getScope() {
+            return localScope;
+          }
+        });
+    reporter.expectAllWarnings(
+        "Bad type annotation. Unknown type Array\n"
+            + "It's possible that 'Array' refers to a value, not a type.");
+    JSType shadowedLocal =
+        closedRegistry.createTypeFromCommentNode(
+            bangNode(templatizedCommentNode("Array", IR.string("string"))), "local.js", localScope);
+    assertThat(shadowedLocal).isInstanceOf(NamedType.class);
+
+    // Registering a non-nullable name must change subsequent un-banged evaluations.
+    closedRegistry.identifyNonNullableName(null, "Promise");
+    JSType nonNullablePromise =
+        closedRegistry.createTypeFromCommentNode(
+            templatizedCommentNode("Promise", IR.string("string")), "b.js", globalScope);
+    assertThat(nonNullablePromise.toString()).isEqualTo("Promise<string>");
+
+    reporter.verifyHasEncounteredAllWarningsAndErrors();
+  }
+
+  @Test
+  public void testCreateTypeFromCommentNode_repeatedTooManyTemplateParametersEmitsAllWarnings() {
+    TestErrorReporter warningReporter = new TestErrorReporter();
+    String expected = "Too many template parameters\nFound 2, required at most 1";
+    warningReporter.expectAllWarnings(expected, expected);
+    JSTypeRegistry warnRegistry = new JSTypeRegistry(warningReporter);
+
+    Node firstExtra = IR.string("number");
+    firstExtra.setLinenoCharno(10, 20);
+    Node firstArray = IR.string("Array");
+    firstArray.addChildToFront(new Node(Token.BLOCK, IR.string("string"), firstExtra));
+
+    Node secondExtra = IR.string("number");
+    secondExtra.setLinenoCharno(25, 4);
+    Node secondArray = IR.string("Array");
+    secondArray.addChildToFront(new Node(Token.BLOCK, IR.string("string"), secondExtra));
+
+    JSType t1 = warnRegistry.createTypeFromCommentNode(bangNode(firstArray), "warn.js", null);
+    JSType t2 = warnRegistry.createTypeFromCommentNode(bangNode(secondArray), "warn.js", null);
+
+    assertType(t1).isEqualTo(t2);
+    assertThat(t1.toString()).isEqualTo("Array<string>");
+    warningReporter.verifyHasEncounteredAllWarningsAndErrors();
+  }
+
+  @Test
+  public void testCreateTypeFromCommentNode_recordTypePreservesDistinctPropertyNodes() {
+    TestErrorReporter reporter = new TestErrorReporter();
+    JSTypeRegistry closedRegistry = new JSTypeRegistry(reporter);
+
+    Node propNode1 = IR.string("a");
+    propNode1.setLinenoCharno(10, 3);
+    Node recNode1 =
+        new Node(
+            Token.LC, new Node(Token.LB, new Node(Token.COLON, propNode1, IR.string("string"))));
+
+    Node propNode2 = IR.string("a");
+    propNode2.setLinenoCharno(20, 3);
+    Node recNode2 =
+        new Node(
+            Token.LC, new Node(Token.LB, new Node(Token.COLON, propNode2, IR.string("string"))));
+
+    JSType r1 = closedRegistry.createTypeFromCommentNode(recNode1, "rec.js", null);
+    JSType r2 = closedRegistry.createTypeFromCommentNode(recNode2, "rec.js", null);
+
+    assertType(r1).isEqualTo(r2);
+    assertThat(r1.toMaybeRecordType().getPropertyNode("a")).isSameInstanceAs(propNode1);
+    assertThat(r2.toMaybeRecordType().getPropertyNode("a")).isSameInstanceAs(propNode2);
+    assertThat(r2.toMaybeRecordType().getPropertyNode("a")).isNotSameInstanceAs(propNode1);
+    reporter.verifyHasEncounteredAllWarningsAndErrors();
+  }
+
+  private static Node nullableArrayStrNode() {
+    return templatizedCommentNode("Array", IR.string("string"));
+  }
+
+  private static Node bangNode(Node child) {
+    return new Node(Token.BANG, child);
+  }
+
+  private static Node templatizedCommentNode(String name, Node... templateArgs) {
+    Node node = IR.string(name);
+    Node block = new Node(Token.BLOCK);
+    for (Node arg : templateArgs) {
+      block.addChildToBack(arg);
+    }
+    node.addChildToFront(block);
+    return node;
   }
 }

@@ -455,6 +455,48 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAst_repeatedNestedBuiltinTypes_deterministicAndPreserved() {
+    String externs =
+        new TestExternsBuilder().addObject().addArray().addMap().addPromise().addIterable().build();
+    String source =
+        """
+        /**
+         * @param {!Array<!Promise<(string|number|null)>>} items
+         * @param {!ReadonlyMap<string, !ReadonlyArray<(boolean|{count: number})>>} lookup
+         * @return {!IThenable<!IIterableResult<string>>}
+         */
+        function first(items, lookup) {
+          throw 'stub';
+        }
+
+        /**
+         * @param {!Array<!Promise<(string|number|null)>>} items
+         * @param {!ReadonlyMap<string, !ReadonlyArray<(boolean|{count: number})>>} lookup
+         * @param {function(!Array<string>): !Map<string, !Array<string>>} mapper
+         * @return {!IThenable<!IIterableResult<string>>}
+         */
+        function second(items, lookup, mapper) {
+          return first(items, lookup);
+        }
+
+        /**
+         * @param {!Array<T>} xs
+         * @return {!Array<T>}
+         * @template T
+         */
+        function identity(xs) {
+          return xs;
+        }
+        """;
+
+    SerializationResult result1 = compileWithExterns(externs, source);
+    SerializationResult result2 = compileWithExterns(externs, source);
+
+    assertThat(result1.ast).isEqualTo(result2.ast);
+    assertThat(result1.ast.getTypePool().getTypeList()).isNotEmpty();
+  }
+
+  @Test
   public void doesNotSerializeInputSourceMappingURL() throws InvalidProtocolBufferException {
     // We do not want TypedAST to support input source maps (source maps in separate files).
     String sourceMapTestCode =
