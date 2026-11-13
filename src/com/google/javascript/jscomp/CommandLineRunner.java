@@ -299,8 +299,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         handler = BooleanOptionHandler.class,
         usage =
             "If true, variable renaming and property renaming report "
-                + "files will be produced as {binary name}_vars_renaming_report.out "
-                + "and {binary name}_props_renaming_report.out. Note that this flag "
+                + "files will be produced as {binary name}_vars_map.out "
+                + "and {binary name}_props_map.out. Note that this flag "
                 + "cannot be used in conjunction with either variable_renaming_report "
                 + "or property_renaming_report")
     private boolean createNameMapFiles = false;
