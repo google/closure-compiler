@@ -690,7 +690,7 @@ public final class CompilerTest {
   public void testImportantCommentOutput() {
     test(
         "/*! Your favorite license goes here */ console.log(0);",
-        "/*\n Your favorite license goes here */\nconsole.log(0);",
+        "/* Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -720,7 +720,7 @@ public final class CompilerTest {
         /*! Your favorite license goes here */
         console.log(0);
         """,
-        "/*\n Your favorite license goes here */\nconsole.log(0);",
+        "/* Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -735,7 +735,14 @@ public final class CompilerTest {
         /*! Your favorite license goes here */
         console.log(0);
         """,
-        "/*\n Another license  Your favorite license goes here */\nconsole.log(0);",
+        """
+        /*
+         Another license
+
+         Your favorite license goes here
+        */
+        console.log(0);
+        """,
         null);
   }
 
@@ -752,7 +759,8 @@ public final class CompilerTest {
         """
         /*
          Your favorite license goes here
-         @fileoverview This is my favorite file! */
+         @fileoverview This is my favorite file!
+        */
         console.log(0);
         """,
         null);
@@ -767,7 +775,13 @@ public final class CompilerTest {
          * @author Robert */
         console.log(0);
         """,
-        "/*\n Your favorite license goes here\n @author Robert */\nconsole.log(0);",
+        """
+        /*
+         Your favorite license goes here
+         @author Robert
+        */
+        console.log(0);
+        """,
         null);
   }
 
@@ -780,7 +794,14 @@ public final class CompilerTest {
         /*! Another license */
         console.log(0);
         """,
-        "/*\n Your favorite license goes here  Another license */\nconsole.log(0);",
+        """
+        /*
+         Your favorite license goes here
+
+         Another license
+        */
+        console.log(0);
+        """,
         null);
   }
 
@@ -792,7 +813,14 @@ public final class CompilerTest {
         /** @license Another license */
         console.log(0);
         """,
-        "/*\n Another license  Your favorite license goes here */\nconsole.log(0);",
+        """
+        /*
+         Another license
+
+         Your favorite license goes here
+        */
+        console.log(0);
+        """,
         null);
   }
 
@@ -804,7 +832,14 @@ public final class CompilerTest {
         /*! Another license */
         console.log(0);
         """,
-        "/*\n Your favorite license goes here  Another license */\nconsole.log(0);",
+        """
+        /*
+         Your favorite license goes here
+
+         Another license
+        */
+        console.log(0);
+        """,
         null);
   }
 
@@ -820,7 +855,7 @@ public final class CompilerTest {
          1;};
         console.log(0);
         """,
-        "/*\n Your favorite license goes here */\nconsole.log(0);",
+        "/* Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -838,11 +873,9 @@ public final class CompilerTest {
         """;
     String expected =
         """
-        /*
-         One license here */
+        /* One license here */
         console.log(0);\
-        /*
-         Another license here */
+        /* Another license here */
         console.log(1);\
         """;
 
@@ -874,7 +907,7 @@ public final class CompilerTest {
         /*! Identical license here */
         console.log(1);
         """;
-    String expected = "/*\n Identical license here */\nconsole.log(0);console.log(1);";
+    String expected = "/* Identical license here */\nconsole.log(0);console.log(1);";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
@@ -897,7 +930,7 @@ public final class CompilerTest {
   public void testLicenseDirectiveOutput() {
     test(
         "/** @license Your favorite license goes here */ console.log(0);",
-        "/*\n Your favorite license goes here */\nconsole.log(0);",
+        "/* Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -935,7 +968,7 @@ public final class CompilerTest {
         /** @license Your favorite license goes here */
         console.log(0);
         """,
-        "/*\n Your favorite license goes here */\nconsole.log(0);",
+        "/* Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -950,7 +983,14 @@ public final class CompilerTest {
         /** @license Your favorite license goes here */
         console.log(0);
         """,
-        "/*\n Your favorite license goes here  Another license */\nconsole.log(0);",
+        """
+        /*
+         Your favorite license goes here
+
+         Another license
+        */
+        console.log(0);
+        """,
         null);
   }
 
@@ -967,7 +1007,8 @@ public final class CompilerTest {
         """
         /*
          Your favorite license goes here
-         @fileoverview This is my favorite file! */
+         @fileoverview This is my favorite file!
+        */
         console.log(0);
         """,
         null);
@@ -982,7 +1023,13 @@ public final class CompilerTest {
          * @author Robert */
         console.log(0);
         """,
-        "/*\n Your favorite license goes here\n @author Robert */\nconsole.log(0);",
+        """
+        /*
+         Your favorite license goes here
+         @author Robert
+        */
+        console.log(0);
+        """,
         null);
   }
 
@@ -995,7 +1042,14 @@ public final class CompilerTest {
         /** @license Another license */
         console.log(0);
         """,
-        "/*\n Another license  Your favorite license goes here */\nconsole.log(0);",
+        """
+        /*
+         Another license
+
+         Your favorite license goes here
+        */
+        console.log(0);
+        """,
         null);
   }
 
@@ -1011,7 +1065,8 @@ public final class CompilerTest {
         """
         /*
          Your favorite license goes here
-         @license Another license */
+         @license Another license
+        */
         console.log(0);
         """,
         null);
@@ -1027,7 +1082,7 @@ public final class CompilerTest {
         /** @license Your favorite license goes here */
          console.log(0);};a();
         """,
-        "/*\n Your favorite license goes here */\nconsole.log(0);",
+        "/* Your favorite license goes here */\nconsole.log(0);",
         null);
   }
 
@@ -1045,10 +1100,8 @@ public final class CompilerTest {
         """;
     String expected =
         """
-        /*
-         One license here */
-        console.log(0);/*
-         Another license here */
+        /* One license here */
+        console.log(0);/* Another license here */
         console.log(1);\
         """;
 
@@ -1086,8 +1139,7 @@ public final class CompilerTest {
         console.log(2);
         /** @license Identical license here */
         """;
-    String expected =
-        "/*\n Identical license here */\nconsole.log(0);console.log(1);console.log(2);";
+    String expected = "/* Identical license here */\nconsole.log(0);console.log(1);console.log(2);";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
@@ -1119,7 +1171,7 @@ public final class CompilerTest {
         /*! Identical license here */
         console.log(1);
         """;
-    String expected = "/*\n Identical license here */\nconsole.log(0);console.log(1);";
+    String expected = "/* Identical license here */\nconsole.log(0);console.log(1);";
 
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
@@ -1135,6 +1187,33 @@ public final class CompilerTest {
 
     assertWithMessage(Joiner.on(",").join(result.errors)).that(result.success).isTrue();
     assertThat(compiler.toSource()).isEqualTo(expected);
+  }
+
+  @Test
+  public void testMultilineLicenseLeadingAndTrailingBlankLinesTrimmed() {
+    test(
+        """
+        /**
+         * @license
+         * First multiline license
+         */
+        /**
+         * @license
+         *
+         * Second multiline license
+         *
+         */
+        console.log(0);
+        """,
+        """
+        /*
+         Second multiline license
+
+         First multiline license
+        */
+        console.log(0);
+        """,
+        null);
   }
 
   @Test

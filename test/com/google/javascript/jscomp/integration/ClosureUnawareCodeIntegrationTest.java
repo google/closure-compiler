@@ -968,7 +968,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     Node script = lastCompiler.getRoot().getSecondChild().getFirstChild();
     assertNode(script).isScript();
     assertThat(script.getJSDocInfo()).isNotNull();
-    assertThat(script.getJSDocInfo().getLicense()).isEqualTo(" FOO BAR BAZ!\n");
+    assertThat(script.getJSDocInfo().getLicense()).isEqualTo(" FOO BAR BAZ!");
 
     Node fn = script.getFirstChild().getFirstFirstChild().getFirstChild();
     assertNode(fn).isFunction();
@@ -1039,7 +1039,7 @@ public final class ClosureUnawareCodeIntegrationTest extends IntegrationTestCase
     Node script = lastCompiler.getRoot().getSecondChild().getFirstChild();
     assertNode(script).isScript();
     assertThat(script.getJSDocInfo()).isNotNull();
-    assertThat(script.getJSDocInfo().getLicense()).isEqualTo(" FOO BAR BAZ!\n");
+    assertThat(script.getJSDocInfo().getLicense()).isEqualTo(" FOO BAR BAZ!");
 
     Node fn = script.getFirstChild().getFirstFirstChild().getFirstChild();
     assertNode(fn).isFunction();

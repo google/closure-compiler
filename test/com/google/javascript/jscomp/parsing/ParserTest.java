@@ -4024,7 +4024,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(n.getFirstChild()).hasType(Token.FUNCTION);
     assertThat(n.getJSDocInfo()).isNotNull();
     assertThat(n.getFirstChild().getJSDocInfo()).isNull();
-    assertThat(n.getJSDocInfo().getLicense()).isEqualTo(" Hi mom! ");
+    assertThat(n.getJSDocInfo().getLicense()).isEqualTo(" Hi mom!");
   }
 
   @Test

@@ -2735,77 +2735,77 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       final LicenseTracker licenseTracker,
       final int inputSeqNum,
       final Node root) {
-    runInCompilerThread(
-        () -> {
-          if (options.shouldPrintInputDelimiter()) {
-            if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
-              cb.append("\n"); // Make sure that the label starts on a new line
-            }
-            checkState(root.isScript());
+    runInCompilerThread(() -> {
+      if (options.shouldPrintInputDelimiter()) {
+        if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
+          cb.append("\n"); // Make sure that the label starts on a new line
+        }
+        checkState(root.isScript());
 
-            String delimiter = options.getInputDelimiter();
+        String delimiter = options.getInputDelimiter();
 
-            String inputName = root.getInputId().getIdName();
-            String sourceName = root.getSourceFileName();
-            checkState(sourceName != null);
-            checkState(!sourceName.isEmpty());
+        String inputName = root.getInputId().getIdName();
+        String sourceName = root.getSourceFileName();
+        checkState(sourceName != null);
+        checkState(!sourceName.isEmpty());
 
-            delimiter =
-                delimiter
-                    .replace("%name%", inputName)
-                    .replace("%num%", String.valueOf(inputSeqNum))
-                    .replace("%n%", "\n");
+        delimiter =
+            delimiter
+                .replace("%name%", inputName)
+                .replace("%num%", String.valueOf(inputSeqNum))
+                .replace("%n%", "\n");
 
-            cb.append(delimiter).append("\n");
-          }
+        cb.append(delimiter).append("\n");
+      }
 
-          CodePrinter.SourceAndMappings sourceAndMappings =
-              toSourceAndMappings(root, inputSeqNum == 0, licenseTracker);
-          String code = sourceAndMappings.source;
+      CodePrinter.SourceAndMappings sourceAndMappings =
+          toSourceAndMappings(root, inputSeqNum == 0, licenseTracker);
+      String code = sourceAndMappings.source;
 
-          // Check whether there is any license information that should be emitted.
-          for (String license : licenseTracker.emitLicenses()) {
-            cb.append("/*\n").append(license).append("*/\n");
-          }
+      // Check whether there is any license information that should be emitted.
+      ImmutableSet<String> licenses = licenseTracker.emitLicenses();
+      if (!licenses.isEmpty()) {
+        cb.append(formatLicenseComment(String.join("\n\n", licenses)));
+      }
 
-          // Check whether there's any actual code to emit.
-          // This is deliberately done after the license tracker is given an opportunity to emit
-          // licenses, as some trackers might want to emit license info from this Node's tree
-          // regardless of whether it emits visible code. One example of this would be the case
-          // where inlining has moved the contents from this file to another file, but the license
-          // tracker can't be sure if the license for this code will ever be emitted.
-          if (code.isEmpty()) {
-            // Nothing to do.
-            return null;
-          }
+      // Check whether there's any actual code to emit.
+      // This is deliberately done after the license tracker is given an opportunity to emit
+      // licenses, as some trackers might want to emit license info from this Node's tree
+      // regardless of whether it emits visible code. One example of this would be the case
+      // where inlining has moved the contents from this file to another file, but the license
+      // tracker can't be sure if the license for this code will ever be emitted.
+      if (code.isEmpty()) {
+        // Nothing to do.
+        return null;
+      }
 
-          // If there is a valid source map, then indicate to it that the current
-          // root node's mappings are offset by the given string builder buffer.
-          // This offset is a result of licenses being added to the output buffer.
-          if (options.shouldGatherSourceMapInfo()) {
-            sourceMap.setStartingPosition(cb.getLineIndex(), cb.getColumnIndex());
-          }
+      // If there is a valid source map, then indicate to it that the current
+      // root node's mappings are offset by the given string builder buffer.
+      // This offset is a result of licenses being added to the output buffer.
+      if (options.shouldGatherSourceMapInfo()) {
+        sourceMap.setStartingPosition(cb.getLineIndex(), cb.getColumnIndex());
+      }
 
-          cb.append(code);
+      cb.append(code);
 
-          // In order to avoid parse ambiguity when files are concatenated
-          // together, all files should end in a semi-colon. Do a quick
-          // heuristic check if there's an obvious semi-colon already there.
-          int length = code.length();
-          char lastChar = code.charAt(length - 1);
-          char secondLastChar = length >= 2 ? code.charAt(length - 2) : '\0';
-          boolean hasSemiColon = lastChar == ';' || (lastChar == '\n' && secondLastChar == ';');
-          if (!hasSemiColon) {
-            cb.append(";");
-          }
+      // In order to avoid parse ambiguity when files are concatenated
+      // together, all files should end in a semi-colon. Do a quick
+      // heuristic check if there's an obvious semi-colon already there.
+      int length = code.length();
+      char lastChar = code.charAt(length - 1);
+      char secondLastChar = length >= 2 ? code.charAt(length - 2) : '\0';
+      boolean hasSemiColon = lastChar == ';' || (lastChar == '\n' && secondLastChar == ';');
+      if (!hasSemiColon) {
+        cb.append(";");
+      }
 
-          if (options.shouldGatherSourceMapInfo()) {
-            for (SourceMap.Mapping mapping : sourceAndMappings.mappings) {
-              sourceMap.addMapping(mapping);
-            }
-          }
-          return null;
-        });
+      if (options.shouldGatherSourceMapInfo()) {
+        for (SourceMap.Mapping mapping : sourceAndMappings.mappings) {
+          sourceMap.addMapping(mapping);
+        }
+      }
+      return null;
+    });
   }
 
   /** Generates JavaScript source code for an AST, doesn't generate source map info. */
@@ -2818,11 +2818,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // about what licenses are included in the resulting JS.
     ScriptNodeLicensesOnlyTracker lt = new ScriptNodeLicensesOnlyTracker(this);
     String code = toSourceAndMappings(n, false, lt).source;
-    for (String license : lt.emitLicenses()) {
-      sb.append("/*\n").append(license).append("*/\n");
+    ImmutableSet<String> licenses = lt.emitLicenses();
+    if (!licenses.isEmpty()) {
+      sb.append(formatLicenseComment(String.join("\n\n", licenses)));
     }
     sb.append(code);
     return sb.toString();
+  }
+
+  private static String formatLicenseComment(String license) {
+    if (license.contains("\n")) {
+      return "/*\n" + license + "\n*/\n";
+    }
+    String prefix = license.startsWith(" ") ? "/*" : "/* ";
+    String suffix = license.endsWith(" ") ? "*/\n" : " */\n";
+    return prefix + license + suffix;
   }
 
   /**

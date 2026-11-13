@@ -3642,7 +3642,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     String result =
         """
         /*
-
            This
              is
                ASCII    ART

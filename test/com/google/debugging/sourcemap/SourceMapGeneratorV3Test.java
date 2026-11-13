@@ -333,9 +333,9 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
         TestJsonBuilder.create()
             .setVersion(3)
             .setFile("testcode")
-            .setLineCount(6)
+            .setLineCount(3)
             .setMappings(
-                "A;;;;aAGAA,OAAQC,CAAAA,GAAR,CAAYC,CAAZ,CAAgB,mxCAAhB;AAAsyCC,CAAtyC,CAA0yCC,CAA1yC,CAA8yCC,CAA9yC;")
+                "A;aAGAA,OAAQC,CAAAA,GAAR,CAAYC,CAAZ,CAAgB,mxCAAhB;AAAsyCC,CAAtyC,CAA0yCC,CAA1yC,CAA8yCC,CAA9yC;")
             .setSources(getEncodedFileName())
             .setNames("console", "log", "a", "c", "d", "e")
             .build());
@@ -379,9 +379,9 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
         TestJsonBuilder.create()
             .setVersion(3)
             .setFile("testcode")
-            .setLineCount(6)
+            .setLineCount(3)
             .setMappings(
-                "A;;;;aAGAA,OAAQC,CAAAA,GAAR,CAAYC,CAAZ;AAAsyCC,CAAtyC,CAA0yCC,CAA1yC,CAA8yCC,CAA9yC;")
+                "A;aAGAA,OAAQC,CAAAA,GAAR,CAAYC,CAAZ;AAAsyCC,CAAtyC,CAA0yCC,CAA1yC,CAA8yCC,CAA9yC;")
             .setSources(getEncodedFileName())
             .setNames("console", "log", "a", "c", "d", "e")
             .build());

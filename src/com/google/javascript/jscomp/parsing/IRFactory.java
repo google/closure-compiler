@@ -146,10 +146,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
 /** IRFactory transforms the external AST to the internal AST. */
 class IRFactory {
+
+  private static final Pattern LEADING_BLANK_LINES = Pattern.compile("^(?:[ \\t]*\\n)+");
 
   static final String GETTER_ERROR_MESSAGE =
       "getters are not supported in older versions of JavaScript. "
@@ -721,7 +724,7 @@ class IRFactory {
         (this.firstFileoverview == null) ? JSDocInfo.builder() : this.firstFileoverview.toBuilder();
 
     if (!this.licenseBuilder.isEmpty()) {
-      fileoverview.recordLicense(String.join("", this.licenseBuilder));
+      fileoverview.recordLicense(String.join("\n\n", this.licenseBuilder));
     }
 
     irNode.setJSDocInfo(fileoverview.build(false));
@@ -745,7 +748,10 @@ class IRFactory {
    */
   private boolean handlePossibleFileOverviewJsDoc(JsDocInfoParser jsDocParser) {
     if (jsDocParser.getLicenseText() != null) {
-      this.licenseBuilder.add(jsDocParser.getLicenseText());
+      String license = trimLicenseText(jsDocParser.getLicenseText());
+      if (!license.isEmpty()) {
+        this.licenseBuilder.add(license);
+      }
     }
 
     JSDocInfo newFileoverview = jsDocParser.getFileOverviewJSDocInfo();
@@ -781,6 +787,14 @@ class IRFactory {
     JsDocInfoParser jsDocParser = createJsDocInfoParser(comment, useLicensesOnlyConfig);
     parsedComments.add(comment);
     handlePossibleFileOverviewJsDoc(jsDocParser);
+  }
+
+  /**
+   * Removes leading blank lines and trailing whitespace from license text while preserving leading
+   * horizontal indentation on content lines.
+   */
+  private static String trimLicenseText(String license) {
+    return LEADING_BLANK_LINES.matcher(license.stripTrailing()).replaceFirst("");
   }
 
   private Comment getJSDocCommentAt(SourcePosition pos) {
