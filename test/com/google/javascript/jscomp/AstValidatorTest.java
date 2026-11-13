@@ -1882,14 +1882,12 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     Node arrayWithBlock = new Node(Token.ARRAYLIT, IR.number(1), IR.block());
     setTestSourceLocationForTree(arrayWithBlock);
-    // TODO(lharker): Wrong; should be invalid. Fixed in the next CL.
-    expectValid(arrayWithBlock, Check.EXPRESSION);
+    expectInvalid(arrayWithBlock, Check.EXPRESSION);
 
     Node arrayWithInvalidSpread =
         new Node(Token.ARRAYLIT, IR.number(1), new Node(Token.ITER_SPREAD, IR.block()));
     setTestSourceLocationForTree(arrayWithInvalidSpread);
-    // TODO(lharker): Wrong; should be invalid. Fixed in the next CL.
-    expectValid(arrayWithInvalidSpread, Check.EXPRESSION);
+    expectInvalid(arrayWithInvalidSpread, Check.EXPRESSION);
   }
 
   @Test

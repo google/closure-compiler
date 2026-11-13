@@ -1785,7 +1785,6 @@ public final class AstValidator implements CompilerPass {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       // Array-literals may have empty slots.
       validatePseudoExpression(c, Token.EMPTY, Token.ITER_SPREAD);
-      break;
     }
   }
 
