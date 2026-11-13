@@ -510,6 +510,8 @@ class InlineFunctions implements CompilerPass {
 
   /** Find references to functions that are inlinable. */
   private class FindCandidatesReferences extends CallVisitor implements CallVisitorCallback {
+    private final Set<Node> functionsWithTaggedTemplateLit = new LinkedHashSet<>();
+
     FindCandidatesReferences(Map<String, FunctionState> fns, Map<Node, String> anonFns) {
       super(fns, anonFns, null);
       this.callback = this;
@@ -520,7 +522,46 @@ class InlineFunctions implements CompilerPass {
       super.visit(t, n, parent);
       if (n.isName()) {
         checkNameUsage(n, parent);
+      } else if (n.isTaggedTemplateLit()) {
+        Node enclosingFn = t.getEnclosingFunction();
+        if (enclosingFn != null) {
+          functionsWithTaggedTemplateLit.add(enclosingFn);
+        }
+      } else if (n.isFunction()
+          && !functionsWithTaggedTemplateLit.isEmpty()
+          && functionsWithTaggedTemplateLit.remove(n)) {
+        FunctionState functionState = getFunctionStateForFunctionNode(n);
+        if (functionState != null) {
+          functionState.setHasTaggedTemplateLit(true);
+        }
+        Node enclosingFn = t.getEnclosingFunction();
+        if (enclosingFn != null) {
+          functionsWithTaggedTemplateLit.add(enclosingFn);
+        }
       }
+    }
+
+    private @Nullable FunctionState getFunctionStateForFunctionNode(Node fnNode) {
+      String name = anonFns.get(fnNode);
+      if (name == null) {
+        if (NodeUtil.isFunctionDeclaration(fnNode)) {
+          name = fnNode.getFirstChild().getString();
+        } else if (fnNode.getParent().isName()
+            && fnNode.getGrandparent() != null
+            && NodeUtil.isNameDeclaration(fnNode.getGrandparent())) {
+          name = fnNode.getParent().getString();
+        }
+      }
+      if (name == null) {
+        return null;
+      }
+      FunctionState functionState = fns.get(name);
+      if (functionState != null
+          && functionState.hasExistingFunctionDefinition()
+          && functionState.getFn().getFunctionNode() == fnNode) {
+        return functionState;
+      }
+      return null;
     }
 
     @Override
@@ -698,6 +739,11 @@ class InlineFunctions implements CompilerPass {
     for (i = fns.entrySet().iterator(); i.hasNext(); ) {
       FunctionState functionState = i.next().getValue();
       if (functionState.hasReferences()) {
+        if (wouldDuplicateTaggedTemplateLit(functionState)) {
+          functionState.disallowInlining(compiler, DisallowInliningReason.TAGGED_TEMPLATE_LITERAL);
+          i.remove();
+          continue;
+        }
         // Only inline function if it decreases the code size.
         boolean lowersCost = minimizeCost(functionState);
         if (!lowersCost) {
@@ -710,6 +756,16 @@ class InlineFunctions implements CompilerPass {
         i.remove();
       }
     }
+  }
+
+  /**
+   * Returns whether inlining {@code functionState} would leave more than one copy of a tagged
+   * template literal in the AST, breaking ECMA-262 {@code GetTemplateObject} call-site identity.
+   */
+  private static boolean wouldDuplicateTaggedTemplateLit(FunctionState functionState) {
+    int refCount = functionState.getReferences().size();
+    return (refCount > 1 || (refCount == 1 && !functionState.canRemove()))
+        && functionState.hasTaggedTemplateLit();
   }
 
   /**
@@ -807,7 +863,12 @@ class InlineFunctions implements CompilerPass {
               ShouldWarnWhenRequireInliningCannotInline.NO);
           // For functions that can no longer be removed, check if they should
           // still be inlined.
-          if (!minimizeCost(fsCalled)
+          if (wouldDuplicateTaggedTemplateLit(fsCalled)) {
+            fsCalled.disallowInlining(
+                compiler,
+                DisallowInliningReason.TAGGED_TEMPLATE_LITERAL,
+                ShouldWarnWhenRequireInliningCannotInline.NO);
+          } else if (!minimizeCost(fsCalled)
               && !fsCalled.requireInlining()
               && !fsCalled.encourageInlining()) {
             // It can't be inlined remove it from the list.
@@ -900,6 +961,7 @@ class InlineFunctions implements CompilerPass {
     private boolean inlineDirectly = false;
     private boolean referencesThis = false;
     private boolean hasInnerClosures = false;
+    private boolean hasTaggedTemplateLit = false;
     private @Nullable Map<Node, Reference> references = null;
     private @Nullable JSChunk chunk = null;
     private @Nullable Set<String> namesToAlias = null;
@@ -929,6 +991,14 @@ class InlineFunctions implements CompilerPass {
 
     boolean hasInnerClosures() {
       return hasInnerClosures;
+    }
+
+    void setHasTaggedTemplateLit(boolean hasTaggedTemplateLit) {
+      this.hasTaggedTemplateLit = hasTaggedTemplateLit;
+    }
+
+    boolean hasTaggedTemplateLit() {
+      return hasTaggedTemplateLit;
     }
 
     void removeBlockInliningReferences() {
@@ -1267,6 +1337,7 @@ class InlineFunctions implements CompilerPass {
     NOT_CANDIDATE_FUNCTION,
     NO_INLINE_ANNOTATION,
     REASSIGNED,
+    TAGGED_TEMPLATE_LITERAL,
     TARGET_SIZE_EXCEEDS_LIMIT;
   }
 

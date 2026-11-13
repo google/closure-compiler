@@ -5436,5 +5436,172 @@ JSCompiler_temp_const$jscomp$v0.bug = JSCompiler_inline_result$jscomp$v1;
         .hasMessageThat()
         .contains("Start of optional chain node OPTCHAIN_GETPROP is not marked as the start");
   }
+
+  @Test
+  public void testNoInlineTaggedTemplateLitMultipleCalls() {
+    // Duplicating a tagged template literal creates a separate template array per inlined site,
+    // breaking GetTemplateObject call-site identity
+    // (https://github.com/google/closure-compiler/issues/4393).
+    testSame(
+        """
+        function row(x) { return html`<li>${x}</li>`; }
+        use(row('a'), row('b'));
+        """);
+
+    testSame(
+        """
+        const row = (x) => html`<li>${x}</li>`;
+        use(row('a'), row('b'));
+        """);
+
+    testSame(
+        """
+        const row = function namedRow(x) { return html`<li>${x}</li>`; };
+        use(row('a'), row('b'));
+        """);
+
+    testSame(
+        """
+        function row(x) { return html`<li>${x}</li>`; }
+        use(row.call(null, 'a'), row.call(null, 'b'));
+        """);
+
+    // Block inlining into multiple call sites must also be prevented.
+    testSame(
+        """
+        function row(x) {
+          chg();
+          return html`<li>${x}</li>`;
+        }
+        row('a');
+        row('b');
+        """);
+
+    // Nested closures containing a tagged template literal share a single TemplateLiteral parse
+    // node across invocations of makeRow(), so duplicating makeRow() would also duplicate the site.
+    testSame(
+        """
+        function makeRow() {
+          return () => html`<li>hi</li>`;
+        }
+        var a = makeRow();
+        var b = makeRow();
+        """);
+  }
+
+  @Test
+  public void testNoInlineTaggedTemplateLitSingleCallWhenNotRemovable() {
+    // Keeping the function while also inlining its sole call site would leave two copies of the
+    // tagged template literal in the AST, even when inlining lowers code size.
+    testSame(
+        """
+        function veryLongFunctionNameExceedingTemplateCost() { return f``; }
+        window.keep = veryLongFunctionNameExceedingTemplateCost;
+        use(veryLongFunctionNameExceedingTemplateCost());
+        """);
+
+    // Second call site uses spread and cannot be inlined, making the function non-removable.
+    testSame(
+        """
+        function veryLongFunctionNameExceedingTemplateCost(x) { return f`${x}`; }
+        use(
+            veryLongFunctionNameExceedingTemplateCost('a'),
+            veryLongFunctionNameExceedingTemplateCost(...args));
+        """);
+
+    // `wrapper` is inlined into two call sites, so `resolveInlineConflicts` marks `row`
+    // non-removable; `row` must not be inlined into `wrapper` or into the expanded calls.
+    test(
+        """
+        function row(x) { return html`<li>${x}</li>`; }
+        function wrapper(x) { return row(x); }
+        use(wrapper('a'), wrapper('b'));
+        """,
+        """
+        function row(x) { return html`<li>${x}</li>`; }
+        use(row('a'), row('b'));
+        """);
+
+    test(
+        """
+        /** @encourageInlining */
+        function row(x) { return html`<li>${x}</li>`; }
+        function veryLongWrapperFunctionName(x) { return row(x); }
+        window.keep = veryLongWrapperFunctionName;
+        use(veryLongWrapperFunctionName('a'));
+        """,
+        """
+        /** @encourageInlining */
+        function row(x) { return html`<li>${x}</li>`; }
+        function veryLongWrapperFunctionName(x) { return row(x); }
+        window.keep = veryLongWrapperFunctionName;
+        use(row('a'));
+        """);
+  }
+
+  @Test
+  public void testNoInlineTaggedTemplateLitEncourageAndRequireInlining() {
+    testSame(
+        """
+        /** @encourageInlining */
+        function row(x) { return html`<li>${x}</li>`; }
+        use(row('a'), row('b'));
+        """);
+
+    testSame(
+        srcs(
+            """
+            /** @requireInlining */
+            function row(x) { return html`<li>${x}</li>`; }
+            use(row('a'), row('b'));
+            """),
+        warning(InlineFunctions.MISSED_REQUIRED_INLINING));
+
+    // When an outer single-call wrapper is inlined first, @requireInlining on the inner function
+    // succeeds on the next pass without a false-positive warning on the first pass.
+    test(
+        """
+        /** @requireInlining */
+        function row(x) { return html`<li>${x}</li>`; }
+        function wrapper(x) { return row(x); }
+        use(wrapper('a'));
+        """,
+        "use(html`<li>${'a'}</li>`);");
+  }
+
+  @Test
+  public void testInlineTaggedTemplateLitSingleRemovableCall() {
+    // Moving a tagged template literal into its sole call site and removing the function leaves a
+    // single TemplateLiteral parse node in the AST (including inside a loop).
+    test(
+        """
+        function row(x) { return html`<li>${x}</li>`; }
+        use(row('a'));
+        """,
+        "use(html`<li>${'a'}</li>`);");
+
+    test(
+        """
+        function row(x) { return html`<li>${x}</li>`; }
+        for (const item of items) {
+          use(row(item));
+        }
+        """,
+        """
+        for (const item of items) {
+          use(html`<li>${item}</li>`);
+        }
+        """);
+
+    test("use((() => html`<li>hi</li>`)());", "use(html`<li>hi</li>`);");
+
+    // Plain (untagged) template literals evaluate to strings and can still be duplicated freely.
+    test(
+        """
+        function row(x) { return `<li>${x}</li>`; }
+        use(row('a'), row('b'));
+        """,
+        "use(`<li>${'a'}</li>`, `<li>${'b'}</li>`);");
+  }
 }
 

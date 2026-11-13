@@ -6071,5 +6071,150 @@ async function abc() {
         a("ext-b");
         """);
   }
+
+  @Test
+  public void
+      testTaggedTemplateInFunctionNotDuplicatedAcrossCallSites_simpleOptimizations_es2020() {
+    externs = createTaggedTemplateWeakMapExterns();
+    String input =
+        """
+        (function() {
+          const cache = new WeakMap();
+          let compiled = 0;
+          function html(strings, ...values) {
+            if (!cache.has(strings)) {
+              cache.set(strings, ++compiled);
+            }
+            return cache.get(strings) + ':' + values.join();
+          }
+          function row(x) {
+            return html`<li>${x}</li>`;
+          }
+          console.log(row('a'), row('b'), 'templates compiled:', compiled);
+        })();
+        """;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2020);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2020);
+    options.setRewritePolyfills(false);
+
+    Compiler compiler = compile(options, input);
+
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(countNodes(compiler.getRoot().getLastChild(), Token.TAGGED_TEMPLATELIT))
+        .isEqualTo(1);
+  }
+
+  @Test
+  public void
+      testTaggedTemplateInFunctionNotDuplicatedAcrossCallSites_advancedOptimizations_es2020() {
+    externs = createTaggedTemplateWeakMapExterns();
+    String input =
+        """
+        (function() {
+          const cache = new WeakMap();
+          let compiled = 0;
+          function html(strings, ...values) {
+            if (!cache.has(strings)) {
+              cache.set(strings, ++compiled);
+            }
+            return cache.get(strings) + ':' + values.join();
+          }
+          function row(x) {
+            return html`<li>${x}</li>`;
+          }
+          console.log(row('a'), row('b'), 'templates compiled:', compiled);
+        })();
+        """;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2020);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2020);
+    options.setRewritePolyfills(false);
+
+    Compiler compiler = compile(options, input);
+
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(countNodes(compiler.getRoot().getLastChild(), Token.TAGGED_TEMPLATELIT))
+        .isEqualTo(1);
+  }
+
+  @Test
+  public void testTaggedTemplateInFunctionInlinedAcrossCallSites_advancedOptimizations_es5() {
+    // When transpiling to ES5, LateEs6ToEs3Converter hoists a single template array to the top of
+    // the script before InlineFunctions runs, so inlining `row` into both call sites still shares
+    // one `$jscomp.createTemplateTagFirstArg` array.
+    externs = createTaggedTemplateWeakMapExterns();
+    String input =
+        """
+        (function() {
+          const cache = new WeakMap();
+          let compiled = 0;
+          function html(strings, ...values) {
+            if (!cache.has(strings)) {
+              cache.set(strings, ++compiled);
+            }
+            return cache.get(strings) + ':' + values.join();
+          }
+          function row(x) {
+            return html`<li>${x}</li>`;
+          }
+          console.log(row('a'), row('b'), 'templates compiled:', compiled);
+        })();
+        """;
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2020);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRewritePolyfills(false);
+
+    Compiler compiler = compile(options, input);
+    String compiledSource = compiler.toSource();
+
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(countNodes(compiler.getRoot().getLastChild(), Token.TAGGED_TEMPLATELIT))
+        .isEqualTo(0);
+    assertThat(compiledSource.split("\\\\x3cli\\\\x3e", -1)).hasLength(2);
+    assertThat(compiledSource)
+        .containsMatch(
+            "([a-zA-Z_$][\\w$]*)\\(([a-zA-Z_$][\\w$]*),\\s*\"a\"\\),\\s*\\1\\(\\2,\\s*\"b\"\\)");
+  }
+
+  private static ImmutableList<SourceFile> createTaggedTemplateWeakMapExterns() {
+    return ImmutableList.of(
+        SourceFile.fromCode(
+            "testExterns.js",
+            new TestExternsBuilder()
+                .addConsole()
+                .addITemplateArray()
+                .addArguments()
+                .addObject()
+                .addExtra(
+                    """
+                    /** @constructor */
+                    function WeakMap() {}
+                    /** @param {?} k @return {boolean} */
+                    WeakMap.prototype.has = function(k) {};
+                    /** @param {?} k @return {?} */
+                    WeakMap.prototype.get = function(k) {};
+                    /** @param {?} k @param {?} v */
+                    WeakMap.prototype.set = function(k, v) {};
+                    /** @param {string=} sep @return {string} */
+                    Array.prototype.join = function(sep) {};
+                    """)
+                .build()));
+  }
+
+  private static int countNodes(Node root, Token token) {
+    int count = root.getToken() == token ? 1 : 0;
+    for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {
+      count += countNodes(child, token);
+    }
+    return count;
+  }
 }
 
