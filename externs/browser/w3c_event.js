@@ -155,6 +155,13 @@ Event.prototype.path;
  */
 Event.prototype.deepPath;
 
+
+/**
+ * @type {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/isTrusted
+ */
+Event.prototype.isTrusted;
+
 /**
  * @return {undefined}
  */
