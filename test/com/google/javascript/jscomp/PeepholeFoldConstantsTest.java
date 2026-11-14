@@ -412,6 +412,25 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testArrayAndObjectLiteralStringComparison() {
+    // Array and object literals become strings in ToPrimitive, so these compare as strings.
+    test("[10] < '9'", "true");
+    test("'9' > [10]", "true");
+    test("[10] >= '9'", "false");
+    test("'9' <= [10]", "false");
+    test("[2] < [10]", "false");
+    test("['a'] < 'b'", "true");
+    test("[] < 'a'", "true");
+    test("'-1' < []", "false");
+    test("({}) < 'x'", "true");
+    test("'x' > {}", "true");
+    // A number on either side still makes it a numeric comparison.
+    test("[10] < 9", "false");
+    test("9 < [10]", "true");
+    testSame("[x] < 'a'");
+  }
+
+  @Test
   public void testNumberStringComparison() {
     test("1 < '2'", "true");
     test("2 > '1'", "true");

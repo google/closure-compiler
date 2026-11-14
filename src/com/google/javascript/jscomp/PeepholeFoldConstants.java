@@ -1306,7 +1306,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
     ValueType rightValueType = NodeUtil.getKnownValueType(right);
     // First, check for a string comparison.
-    if (leftValueType == ValueType.STRING && rightValueType == ValueType.STRING) {
+    if (isStringPrimitive(left, leftValueType) && isStringPrimitive(right, rightValueType)) {
       String lvStr = peepholeOptimization.getSideEffectFreeStringValue(left);
       String rvStr = peepholeOptimization.getSideEffectFreeStringValue(right);
       if (lvStr != null && rvStr != null) {
@@ -1395,6 +1395,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     return Tri.UNKNOWN;
+  }
+
+  /**
+   * Whether ToPrimitive(n) is a string. valueOf on an array or object literal returns the object
+   * itself, so ToPrimitive falls back to toString and {@code [10] < '9'} compares "10" with "9".
+   */
+  private static boolean isStringPrimitive(Node n, ValueType valueType) {
+    return valueType == ValueType.STRING || n.isArrayLit() || n.isObjectLit();
   }
 
   private static Tri bigintLessThanDouble(
