@@ -32,12 +32,14 @@ public class InjectTranspilationRuntimeLibrariesTest {
   private Compiler compiler;
   private LanguageMode languageOut;
   private boolean instrumentAsyncContext;
+  private boolean assumeForOfIteratorCloseIsNotNeeded;
 
   @Before
   public void setup() {
     compiler = new Compiler();
     languageOut = LanguageMode.ECMASCRIPT5;
     instrumentAsyncContext = false;
+    assumeForOfIteratorCloseIsNotNeeded = false;
   }
 
   /**
@@ -50,6 +52,7 @@ public class InjectTranspilationRuntimeLibrariesTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(this.languageOut);
     options.setInstrumentAsyncContext(instrumentAsyncContext);
+    options.setAssumeForOfIteratorCloseIsNotNeeded(assumeForOfIteratorCloseIsNotNeeded);
     options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
 
     compiler.init(
@@ -101,6 +104,14 @@ public class InjectTranspilationRuntimeLibrariesTest {
     ImmutableSet<String> injected = parseAndRunInjectionPass("for (x of []) {}");
 
     assertThat(injected).containsExactly("es6/util/makeiterator", "es6/util/iteratorclose");
+  }
+
+  @Test
+  public void testForOf_assumeIteratorCloseIsNotNeeded_doesNotInjectIteratorClose() {
+    assumeForOfIteratorCloseIsNotNeeded = true;
+    ImmutableSet<String> injected = parseAndRunInjectionPass("for (x of []) {}");
+
+    assertThat(injected).containsExactly("es6/util/makeiterator");
   }
 
   @Test

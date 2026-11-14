@@ -37,6 +37,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
   private final DefaultNameGenerator namer;
   private final AstFactory astFactory;
   private final StaticScope namespace;
+  private final boolean emitIteratorClose;
 
   private static final String ITER_BASE = "$jscomp$iter$";
 
@@ -47,6 +48,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     this.namer = new DefaultNameGenerator();
     this.astFactory = compiler.createAstFactory();
     this.namespace = compiler.getTranspilationNamespace();
+    this.emitIteratorClose = !compiler.getOptions().getAssumeForOfIteratorCloseIsNotNeeded();
   }
 
   @Override
@@ -146,6 +148,19 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     Node newBody = IR.block(declarationOrAssign, body).srcref(body);
     Node empty = astFactory.createEmpty();
     Node newFor = IR.forNode(empty, cond, incr, newBody).srcrefTreeIfMissing(node);
+
+    if (!emitIteratorClose) {
+      node.replaceWith(newFor);
+      // Check if the for loop has a parent that is a label i.e. `loop1: for(...of ...)`
+      Node insertionPoint = newFor;
+      while (insertionPoint.getParent().isLabel()) {
+        insertionPoint = insertionPoint.getParent();
+      }
+      initIter.insertBefore(insertionPoint);
+      initIterResult.insertAfter(initIter);
+      compiler.reportChangeToEnclosingScope(newFor);
+      return;
+    }
 
     // Build finally block:
     // (0, $jscomp.iteratorClose)($jscomp$iter$0, $jscomp$key$extraName);
