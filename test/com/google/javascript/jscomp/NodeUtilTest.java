@@ -2268,6 +2268,101 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testMayBeNegativeZero() {
+      // Guaranteed not -0:
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("1"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("-1"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("0"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("+0"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("NaN"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("Infinity"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("-Infinity"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a | 0"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a & b"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a ^ b"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("~a"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a << 1"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a >> 1"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a >>> 1"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a + 0"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("0 + a"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("0 - a"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("+(a | 0)"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("Math.abs(a)"), /* isNormalized= */ true))
+          .isFalse();
+      assertThat(
+              NodeUtil.mayBeNegativeZero(
+                  parseExpr("c ? Math.abs(a) : (b & 1)"), /* isNormalized= */ true))
+          .isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("c ? (a | 0) : (b & 1)"))).isFalse();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("(foo(), a | 0)"))).isFalse();
+
+      // May be -0:
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("-0"))).isTrue();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("-0.0"))).isTrue();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a"))).isTrue();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a * b"))).isTrue();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a / b"))).isTrue();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("a - b"))).isTrue();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("-a"))).isTrue();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("+(x + 0)"))).isTrue();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("+(x + '')"))).isTrue();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("c ? a : (b | 0)"))).isTrue();
+      // Math.abs(a) may be -0 if AST is not normalized (Math could be shadowed/overridden):
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("Math.abs(a)"))).isTrue();
+      assertThat(NodeUtil.mayBeNegativeZero(parseExpr("Math.abs(a)"), /* isNormalized= */ false))
+          .isTrue();
+      assertThat(
+              NodeUtil.mayBeNegativeZero(
+                  parseExpr("c ? Math.abs(a) : (b & 1)"), /* isNormalized= */ false))
+          .isTrue();
+    }
+
+    @Test
+    public void testMayBePositiveZero() {
+      // Guaranteed not +0:
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("1"))).isFalse();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("-1"))).isFalse();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("-0.0"))).isFalse();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("NaN"))).isFalse();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("Infinity"))).isFalse();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("-Infinity"))).isFalse();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("void 0"))).isFalse();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("void foo()"))).isFalse();
+
+      // May be +0:
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("0"))).isTrue();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("+0"))).isTrue();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("0.0"))).isTrue();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("'0'"))).isTrue();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("null"))).isTrue();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("false"))).isTrue();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("a"))).isTrue();
+      assertThat(NodeUtil.mayBePositiveZero(parseExpr("a + b"))).isTrue();
+    }
+
+    @Test
+    public void testIsPositiveZero() {
+      assertThat(NodeUtil.isPositiveZero(parseExpr("0"))).isTrue();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("+0"))).isTrue();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("0.0"))).isTrue();
+
+      assertThat(NodeUtil.isPositiveZero(parseExpr("'0'"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("''"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("null"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("false"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("-0"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("-0.0"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("1"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("-1"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("NaN"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("Infinity"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("void 0"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("void foo()"))).isFalse();
+      assertThat(NodeUtil.isPositiveZero(parseExpr("a"))).isFalse();
+    }
+
+    @Test
     public void testGetBigIntValue() {
       // Strings
       // NOTE: Strings with the 'n' literal syntax can't be converted to BigInt

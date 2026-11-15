@@ -1604,6 +1604,100 @@ public final class NodeUtil {
     return getKnownValueType(n) == ValueType.NUMBER;
   }
 
+  /**
+   * Returns false only if the node is guaranteed to never evaluate to negative zero (-0.0). Returns
+   * true if it may evaluate to -0.0 or if it's unknown.
+   */
+  public static boolean mayBeNegativeZero(Node n) {
+    return mayBeNegativeZero(n, false);
+  }
+
+  /**
+   * Returns false only if the node is guaranteed to never evaluate to negative zero (-0.0). Returns
+   * true if it may evaluate to -0.0 or if it's unknown.
+   *
+   * @param isNormalized whether the AST is normalized. When true, known global methods like
+   *     Math.abs can be assumed not to be shadowed.
+   */
+  public static boolean mayBeNegativeZero(Node n, boolean isNormalized) {
+    Double val = getNumberValueNoConversions(n);
+    if (val != null) {
+      return val == 0.0 && isNegative(val);
+    }
+    switch (n.getToken()) {
+      case BITOR, BITAND, BITXOR, BITNOT, LSH, RSH, URSH -> {
+        // Bitwise operations return 32-bit integers, which in JavaScript always convert to +0.0,
+        // never -0.0.
+        return false;
+      }
+      case ADD -> {
+        // x + 0 and 0 + x (with +0.0) never result in -0.0 under IEEE 754:
+        // -0.0 + 0.0 is +0.0.
+        Node left = n.getFirstChild();
+        Node right = n.getLastChild();
+        if (isPositiveZero(left) || isPositiveZero(right)) {
+          return false;
+        }
+        return true;
+      }
+      case SUB -> {
+        // 0 - x (with +0.0) never results in -0.0 under IEEE 754:
+        // 0.0 - 0.0 is +0.0, and 0.0 - (-0.0) is +0.0.
+        Node left = n.getFirstChild();
+        if (isPositiveZero(left)) {
+          return false;
+        }
+        return true;
+      }
+      case CALL -> {
+        if (isNormalized) {
+          // Math.abs() never returns -0.0: Math.abs(-0.0) is +0.0.
+          Node target = n.getFirstChild();
+          if (target.isGetProp()
+              && target.getString().equals("abs")
+              && target.getFirstChild().isName()
+              && target.getFirstChild().getString().equals("Math")) {
+            return false;
+          }
+        }
+        return true;
+      }
+      case HOOK -> {
+        return mayBeNegativeZero(n.getSecondChild(), isNormalized)
+            || mayBeNegativeZero(n.getLastChild(), isNormalized);
+      }
+      case COMMA -> {
+        return mayBeNegativeZero(n.getLastChild(), isNormalized);
+      }
+      case POS -> {
+        if (isNumericResult(n.getFirstChild())) {
+          return mayBeNegativeZero(n.getFirstChild(), isNormalized);
+        }
+        return true;
+      }
+      case CAST -> {
+        return mayBeNegativeZero(n.getFirstChild(), isNormalized);
+      }
+      default -> {
+        return true;
+      }
+    }
+  }
+
+  /**
+   * Returns false only if the node is guaranteed to never evaluate to positive zero (+0.0). Returns
+   * true if it may evaluate to +0.0 or if it's unknown.
+   */
+  public static boolean mayBePositiveZero(Node n) {
+    Double val = getNumberValue(n);
+    return val == null || (val == 0.0 && !isNegative(val));
+  }
+
+  public static boolean isPositiveZero(Node n) {
+    Double val = getNumberValueNoConversions(n);
+    return val != null && val == 0.0 && !isNegative(val);
+  }
+
   /** Returns true if the result of node evaluation is always a bigint */
   public static boolean isBigIntResult(Node n) {
     return getKnownValueType(n) == ValueType.BIGINT;

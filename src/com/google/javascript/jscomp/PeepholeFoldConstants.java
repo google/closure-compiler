@@ -719,9 +719,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         if (lValObj != null && rValObj != null) {
           return maybeReplaceBinaryOpWithNumericResult(lValObj + rValObj, lValObj, rValObj);
         }
-        if (lValObj != null && lValObj == 0) {
+        // NOTE: `x + 0` and `0 + x` can only be folded to `x` when `x` cannot evaluate to `-0`,
+        // because `-0 + 0` and `0 + (-0)` is `+0` (not `-0`).
+        if (isPositiveZero(lValObj) && !NodeUtil.mayBeNegativeZero(right, isASTNormalized())) {
           return right.cloneTree(true);
-        } else if (rValObj != null && rValObj == 0) {
+        } else if (isPositiveZero(rValObj)
+            && !NodeUtil.mayBeNegativeZero(left, isASTNormalized())) {
           return left.cloneTree(true);
         }
         return null;
@@ -730,13 +733,15 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         if (lValObj != null && rValObj != null) {
           return maybeReplaceBinaryOpWithNumericResult(lValObj - rValObj, lValObj, rValObj);
         }
-        if (lValObj != null && lValObj == 0) {
+        if (isPositiveZero(lValObj) && !NodeUtil.mayBePositiveZero(right)) {
           // 0 - x -> -x
-          // NOTE: this optimization has the subtle side effect of changing `0` to `-0` because
-          // `0-0 -> 0` but `-0 -> -0`.
+          // NOTE: 0 - x is only safe to fold to -x when x cannot be +0.0, because
+          // 0 - (+0.0) is +0.0, but -(+0.0) is -0.0.
           return IR.neg(right.cloneTree(true));
-        } else if (rValObj != null && rValObj == 0) {
+        } else if (isPositiveZero(rValObj)) {
           // x - 0 -> x
+          // NOTE: x - 0 is safe for all numbers under IEEE 754 when 0 is +0.0:
+          // +0.0 - 0.0 = +0.0, -0.0 - 0.0 = -0.0.
           return left.cloneTree(true);
         }
         return null;
@@ -892,6 +897,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
       default -> null;
     };
+  }
+
+  private static boolean isPositiveZero(@Nullable Double val) {
+    return val != null && val == 0.0 && isPositive(val);
   }
 
   private boolean isNumeric(Node n) {

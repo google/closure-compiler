@@ -2608,16 +2608,18 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     replaceTypesWithColors();
     disableCompareJsDoc();
 
-    foldNumericTypes("x+0", "x");
-    foldNumericTypes("0+x", "x");
-    foldNumericTypes("x+0+0+x+x+0", "x+x+x");
+    // can't optimize these without keeping the sign of zero: -0 + 0 is +0, and 0 - 0 is +0 (not -0)
+    foldNumericTypes("x+0", "x+0");
+    foldNumericTypes("0+x", "0+x");
+    // (x+0) cannot be -0, so (x+0)+0 folds to x+0:
+    foldNumericTypes("x+0+0+x+x+0", "x+0+x+x+0");
 
     foldNumericTypes("x-0", "x");
     foldNumericTypes("x-0-0-0", "x");
     // 'x-0' is numeric even if x isn't
     test("var x='a'; x-0-0", "var x='a';x-0");
-    foldNumericTypes("0-x", "-x");
-    test("for (var i = 0; i < 5; i++) var x = 0 + i * 1", "var i = 0; for(; i < 5; i++) var x=i");
+    foldNumericTypes("0-x", "0-x");
+    test("for (var i = 0; i < 5; i++) var x = 0 + i * 1", "var i = 0; for(; i < 5; i++) var x=0+i");
 
     foldNumericTypes("x*1", "x");
     foldNumericTypes("1*x", "x");
@@ -2627,6 +2629,38 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("0/x");
 
     foldNumericTypes("x/1", "x");
+  }
+
+  @Test
+  public void testIssue4387() {
+    enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
+
+    // Preserve the sign of zero:
+    // -0 + 0 is +0, so x + 0 and 0 + x cannot be folded to x when x may be -0.
+    // 0 - 0 is +0, but -(+0) is -0, so 0 - x cannot be folded to -x when x may be +0.
+    foldNumericTypes("x + 0", "x + 0");
+    foldNumericTypes("0 + x", "0 + x");
+    foldNumericTypes("0 - x", "0 - x");
+    foldNumericTypes("x - 0", "x");
+    foldNumericTypes("x - -0", "x - -0");
+    testSame("function f(x) { return [0 - x * 1, x * 1 + 0, 0 + x * 1]; }");
+
+    // Operations that can never evaluate to -0 can safely fold with 0:
+    test("var x = (y | 0) + 0", "var x = y | 0");
+    test("var x = 0 + (y | 0)", "var x = y | 0");
+    test("var x = (y >>> 0) + 0", "var x = y >>> 0");
+    test("var x = (c ? -1 : 1) + 0", "var x = c ? -1 : 1");
+    foldNumericTypes("(x + 0) + 0", "x + 0");
+    foldNumericTypes("(0 - x) + 0", "0 - x");
+
+    // Expressions that could evaluate to string "-0" cannot fold when coerced with unary +:
+    testSame("var x = +(y + 0) + 0");
+    testSame("var x = +(y + '') + 0");
+
+    // 0 - x folds to -x when x cannot be +0 (e.g., void expressions with side effects):
+    test("var x = 0 - +void foo()", "var x = -(+void foo())");
   }
 
   @Test
