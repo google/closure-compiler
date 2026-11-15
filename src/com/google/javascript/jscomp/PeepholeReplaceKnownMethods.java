@@ -1121,7 +1121,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     // specify the behavior in some of these cases, but we haven't
     // done a thorough investigation that it is correctly implemented
     // in all browsers.
-    if ((start + length) > stringAsString.length() || (length < 0) || (start < 0)) {
+    // Compare against the remaining length instead of computing start + length, which can
+    // overflow when the length argument is large (e.g. Infinity saturates to Integer.MAX_VALUE).
+    if ((start < 0) || (length < 0) || length > stringAsString.length() - start) {
       return n;
     }
 

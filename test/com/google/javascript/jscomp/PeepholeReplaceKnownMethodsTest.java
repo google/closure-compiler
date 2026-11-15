@@ -567,6 +567,12 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'abcde'.substr(1, 2, 3)");
     foldSame("x = 'a'.substr(0, 2)");
 
+    // start + length must not overflow int
+    foldSame("x = 'abcde'.substr(1, Infinity)");
+    foldSame("x = 'abcde'.substr(1, 2147483647)");
+    foldSame("x = 'abcde'.substr(2, 4294967296)");
+    foldSame("x = 'abcde'.substr(Infinity, Infinity)");
+
     // Template strings
     foldSame("x = `abcdef`.substr(0,2)");
     foldSame("x = `abc ${xyz} def`.substr(0,2)");
