@@ -264,6 +264,18 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     name.putBooleanProp(Node.IS_CONSTANT_NAME, lhs.getBooleanProp(Node.IS_CONSTANT_NAME));
     name.getFirstChild().setOriginalName(className + ".prototype");
 
+    name.copyTypeFrom(lhs);
+    if (name.getColor() != null && lhs.isColorFromTypeCast()) {
+      name.setColorFromTypeCast();
+    }
+
+    Node receiver = lhs.getFirstChild();
+    Node aliasNode = name.getFirstChild();
+    aliasNode.copyTypeFrom(receiver);
+    if (aliasNode.getColor() != null && receiver.isColorFromTypeCast()) {
+      aliasNode.setColorFromTypeCast();
+    }
+
     lhs.replaceWith(name);
     compiler.reportChangeToEnclosingScope(name);
   }

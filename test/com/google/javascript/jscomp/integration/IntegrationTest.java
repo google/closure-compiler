@@ -2827,17 +2827,17 @@ public final class IntegrationTest extends IntegrationTestCase {
       code.append("Bar.prototype.barM").append(i).append(" = function() {};\n");
     }
 
-    // TODO(b/575626948): AmbiguateProperties should ambiguate Foo and Bar prototype methods to the
-    // same property names (a..g) instead of distinct names (a..g and h..n).
+    // When AmbiguateProperties works, disjoint classes share ambiguated property names.
+    // Both Foo and Bar prototype methods should be assigned the same 7 property names.
     StringBuilder expected = new StringBuilder();
     expected.append("var a; function b() {} a = b.prototype;");
-    expected.append("a.h=function(){};");
-    expected.append("a.i=function(){};");
-    expected.append("a.j=function(){};");
-    expected.append("a.k=function(){};");
-    expected.append("a.l=function(){};");
-    expected.append("a.m=function(){};");
-    expected.append("a.n=function(){};");
+    expected.append("a.a=function(){};");
+    expected.append("a.b=function(){};");
+    expected.append("a.c=function(){};");
+    expected.append("a.d=function(){};");
+    expected.append("a.e=function(){};");
+    expected.append("a.f=function(){};");
+    expected.append("a.g=function(){};");
     expected.append("function c() {} a = c.prototype;");
     expected.append("a.a=function(){};");
     expected.append("a.b=function(){};");
