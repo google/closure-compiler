@@ -36,11 +36,20 @@ import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 /** Unit tests for {@link RewriteDynamicImports} */
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class RewriteDynamicImportsTest extends CompilerTestCase {
+  @Parameter public boolean enableTypeCheck;
+
+  @Parameters(name = "enableTypeCheck={0}")
+  public static ImmutableList<Boolean> cases() {
+    return ImmutableList.of(true, false);
+  }
+
   private @Nullable String dynamicImportAlias = "imprt_";
   private @Nullable LanguageMode language = null;
   private @Nullable LanguageMode languageIn = null;
@@ -55,7 +64,9 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableCreateModuleMap();
-    enableTypeInfoValidation();
+    if (enableTypeCheck) {
+      enableTypeInfoValidation();
+    }
   }
 
   @Override
@@ -74,15 +85,18 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return (externs, root) -> {
-      // NOTE: we cannot just use enableTypeCheck(), because we need to be able
-      // to retrieve globalTypedScope for use by Es6RewriteModules.
-      ReverseAbstractInterpreter rai =
-          new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
-      TypedScope globalTypedScope =
-          checkNotNull(
-              new TypeCheck(compiler, rai, compiler.getTypeRegistry())
-                  .processForTesting(externs, root));
-      compiler.setTypeCheckingHasRun(true);
+      TypedScope globalTypedScope = null;
+      if (enableTypeCheck) {
+        // NOTE: we cannot just use enableTypeCheck(), because we need to be able
+        // to retrieve globalTypedScope for use by Es6RewriteModules.
+        ReverseAbstractInterpreter rai =
+            new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
+        globalTypedScope =
+            checkNotNull(
+                new TypeCheck(compiler, rai, compiler.getTypeRegistry())
+                    .processForTesting(externs, root));
+        compiler.setTypeCheckingHasRun(true);
+      }
       // We need to make sure modules are rewritten, because RewriteDynamicImports
       // expects to be able to see the module variables.
       new Es6RewriteModules(
@@ -523,6 +537,7 @@ public class RewriteDynamicImportsTest extends CompilerTestCase {
     assertThat(injectedAlias.isFunction()).isTrue();
     assertThat(injectedAlias.getFirstChild().isName()).isTrue();
     assertThat(injectedAlias.getFirstChild().getString()).isEqualTo("import");
+    assertThat(injectedAlias.getJSType() != null).isEqualTo(enableTypeCheck);
   }
 
   @Test

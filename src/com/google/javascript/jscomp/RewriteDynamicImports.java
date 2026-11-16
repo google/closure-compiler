@@ -97,6 +97,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
+  private final @Nullable JSTypeRegistry registry;
   private final String alias;
   private final boolean requiresAliasing;
   private final boolean shouldWrapDynamicImportCallbacks;
@@ -108,6 +109,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
       AbstractCompiler compiler, @Nullable String alias, ChunkOutputType chunkOutputType) {
     this.compiler = compiler;
     this.astFactory = compiler.createAstFactory();
+    this.registry = this.astFactory.isAddingTypes() ? compiler.getTypeRegistry() : null;
     this.alias = alias;
     this.requiresAliasing =
         !compiler.getOptions().getOutputFeatureSet().contains(Feature.DYNAMIC_IMPORT);
@@ -217,38 +219,15 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
    */
   private void replaceDynamicImportWithPromise(
       NodeTraversal t, Node dynamicImport, Var targetModuleNS) {
-    final JSTypeRegistry registry = compiler.getTypeRegistry();
     final Node promiseDotResolve =
-        astFactory.createQName(compiler.getTranspilationNamespace(), "Promise.resolve");
-    final Node promiseResolveCall = astFactory.createCall(promiseDotResolve, type(dynamicImport));
+        astFactory.createGetPropWithUnknownType(
+            astFactory.createName(compiler.getTranspilationNamespace(), "Promise"), "resolve");
     final boolean isExpressionUsed = NodeUtil.isExpressionResultUsed(dynamicImport);
-    if (isExpressionUsed) {
-      JSType moduleNamespaceType;
-      if (dynamicImport.getJSType() != null && dynamicImport.getJSType().isTemplatizedType()) {
-        TemplatizedType templatizedType = (TemplatizedType) dynamicImport.getJSType();
-        moduleNamespaceType = templatizedType.getTemplateTypes().get(0);
-      } else {
-        moduleNamespaceType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-      }
-      promiseDotResolve.setJSType(
-          registry.createFunctionType(
-              registry.createTemplatizedType(
-                  registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE), moduleNamespaceType),
-              registry.getNativeType(JSTypeNative.ALL_TYPE)));
-      promiseResolveCall.addChildToBack(createModuleNamespaceNode(targetModuleNS));
-      promiseResolveCall.copyTypeFrom(dynamicImport);
-    } else {
-      promiseDotResolve.setJSType(
-          registry.createFunctionType(
-              registry.createTemplatizedType(
-                  registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
-                  registry.getNativeType(JSTypeNative.VOID_TYPE)),
-              registry.getNativeType(JSTypeNative.ALL_TYPE)));
-      promiseResolveCall.setJSType(
-          registry.createTemplatizedType(
-              registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
-              registry.getNativeType(JSTypeNative.VOID_TYPE)));
-    }
+    final Node promiseResolveCall =
+        isExpressionUsed
+            ? astFactory.createCall(
+                promiseDotResolve, type(dynamicImport), createModuleNamespaceNode(targetModuleNS))
+            : astFactory.createCallWithUnknownType(promiseDotResolve);
     promiseResolveCall.srcrefTree(dynamicImport);
     Node parent = dynamicImport.getParent();
     dynamicImport.replaceWith(promiseResolveCall);
@@ -314,24 +293,18 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
    * </pre>
    */
   private void addChainedThen(NodeTraversal t, Node dynamicImport, Var targetModuleNs) {
-    JSTypeRegistry registry = compiler.getTypeRegistry();
     final Node importParent = dynamicImport.getParent();
     final Node placeholder = IR.empty();
     dynamicImport.replaceWith(placeholder);
     final Node moduleNamespaceNode = createModuleNamespaceNode(targetModuleNs);
     final Node callbackFn = astFactory.createZeroArgArrowFunctionForExpression(moduleNamespaceNode);
-    callbackFn.setJSType(
-        registry.createFunctionType(
-            registry.createTemplatizedType(
-                registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
-                registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)),
-            registry.createFunctionType(registry.getNativeType(JSTypeNative.ALL_TYPE))));
     Node thenArgument = callbackFn;
     if (shouldWrapDynamicImportCallbacks) {
-      Node wrappingFunction =
-          astFactory.createName(
-              DYNAMIC_IMPORT_CALLBACK_FN,
-              type(registry.createFunctionType(callbackFn.getJSType(), callbackFn.getJSType())));
+      AstFactory.Type wrappingFnType =
+          registry != null
+              ? type(registry.createFunctionType(callbackFn.getJSType(), callbackFn.getJSType()))
+              : type(JSTypeNative.UNKNOWN_TYPE);
+      Node wrappingFunction = astFactory.createName(DYNAMIC_IMPORT_CALLBACK_FN, wrappingFnType);
       thenArgument = astFactory.createCall(wrappingFunction, type(callbackFn), callbackFn);
       wrappedDynamicImportCallback = true;
     }
@@ -341,9 +314,6 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
             type(dynamicImport),
             thenArgument);
     importThenCall.srcrefTreeIfMissing(dynamicImport);
-    if (dynamicImport.getJSType() != null) {
-      importThenCall.copyTypeFrom(dynamicImport);
-    }
     placeholder.replaceWith(importThenCall);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.ARROW_FUNCTIONS, compiler);
     compiler.reportChangeToChangeScope(callbackFn);
@@ -374,9 +344,6 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
         astFactory
             .createCall(aliasNode, type(dynamicImport), moduleSpecifier)
             .srcrefTreeIfMissing(dynamicImport);
-    if (dynamicImport.getJSType() != null) {
-      importAliasCall.copyTypeFrom(dynamicImport);
-    }
     dynamicImport.replaceWith(importAliasCall);
     t.reportCodeChange(importAliasCall);
     dynamicImportsRemoved = true;
@@ -392,14 +359,17 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
 
   /** For a given module, return a reference to the module namespace export */
   private void injectWrappingFunctionExtern() {
-    JSTypeRegistry registry = compiler.getTypeRegistry();
-    TemplateType templateT = registry.createTemplateType("T");
+    AstFactory.Type wrappingFnType = type(JSTypeNative.UNKNOWN_TYPE);
+    if (registry != null) {
+      TemplateType templateT = registry.createTemplateType("T");
+      wrappingFnType = type(registry.createFunctionType(templateT, templateT));
+    }
     final Node wrappingFunctionDefinition =
         astFactory.createFunction(
             DYNAMIC_IMPORT_CALLBACK_FN,
             astFactory.createParamList("importCallback"),
             astFactory.createBlock(),
-            type(registry.createFunctionType(templateT, templateT)));
+            wrappingFnType);
 
     Node externsRoot = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
     wrappingFunctionDefinition.srcrefTree(externsRoot);
@@ -424,13 +394,17 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
         return false;
       }
 
-      // Create the type of the import function
-      JSTypeRegistry registry = compiler.getTypeRegistry();
-      JSType unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-      JSType promiseType = registry.getNativeType(JSTypeNative.PROMISE_TYPE);
-      TemplatizedType promiseTemplatizedType =
-          registry.createTemplatizedType(promiseType.toObjectType(), ImmutableList.of(unknownType));
-      JSType stringType = registry.getNativeType(JSTypeNative.STRING_TYPE);
+      // Create the type of the import function if adding types
+      AstFactory.Type importFnType = type(JSTypeNative.UNKNOWN_TYPE);
+      if (registry != null) {
+        JSType unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+        JSType promiseType = registry.getNativeType(JSTypeNative.PROMISE_TYPE);
+        TemplatizedType promiseTemplatizedType =
+            registry.createTemplatizedType(
+                promiseType.toObjectType(), ImmutableList.of(unknownType));
+        JSType stringType = registry.getNativeType(JSTypeNative.STRING_TYPE);
+        importFnType = type(registry.createFunctionType(promiseTemplatizedType, stringType));
+      }
 
       Node externsRoot = compiler.getSynthesizedExternsInput().getAstRoot(compiler);
       // "import" is not a valid JS name and will not parse. However we can manually create it
@@ -441,7 +415,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
                 alias,
                 astFactory.createParamList("specifier"),
                 astFactory.createBlock(),
-                type(registry.createFunctionType(promiseTemplatizedType, stringType)));
+                importFnType);
         aliasNode.srcrefTree(externsRoot);
         externsRoot.addChildToBack(aliasNode);
       } else {
@@ -472,7 +446,7 @@ public class RewriteDynamicImports extends NodeTraversal.AbstractPostOrderCallba
                     "",
                     astFactory.createParamList("specifier"),
                     astFactory.createBlock(),
-                    type(registry.createFunctionType(promiseTemplatizedType, stringType)));
+                    importFnType);
           } else {
             assignedValue = astFactory.createObjectLit();
           }
