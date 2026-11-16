@@ -158,8 +158,8 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         alert(foo.x ||= (foo.y &&= (bar.z ??= 'something')));
         """,
         """
-        const a = {}, b = {};
-        alert(a.a || (a.a = a.b && (a.b = b.c ?? (b.c = 'something'))));
+        var a, b, c;
+        alert(a ||= b &&= c ??= 'something');
         """);
   }
 
@@ -236,8 +236,8 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         alert(foo.x ||= (foo.y &&= (bar.z ??= 'something')));
         """,
         """
-        const a = {}, b = {};
-        alert(a.a || (a.a = a.b && (a.b = b.c ?? (b.c = 'something'))));
+        var a, b, c;
+        alert(a || (a = b && (b = c ?? (c = 'something'))));
         """);
   }
 
@@ -442,11 +442,9 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void logicalAssignmentStaticClassPropertyGlobalConditionalOutput_knownBug() {
+  public void logicalAssignmentStaticClassPropertyGlobalConditionalOutput() {
     CompilerOptions options = fullyOptimizedCompilerOptions();
 
-    // TODO: b/476221453 - `(c = a).a ?? (c.a = 3)` should be collapsed, preventing `MyClass.b`
-    // from being constant-inlined as `2` in `alert(2)`.
     test(
         options,
         """
@@ -457,11 +455,9 @@ public final class ES2021IntegrationTest extends IntegrationTestCase {
         alert(MyClass.b);
         """,
         """
-        class a {}
-        var b = 1;
-        let c;
-        alert(b || (b = (c = a).a ?? (c.a = 3)));
-        alert(2);
+        var a = 1, b = 2;
+        alert(a || (a = b ?? (b = 3)));
+        alert(b);
         """);
   }
 

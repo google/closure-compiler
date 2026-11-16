@@ -20,9 +20,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
@@ -176,6 +179,122 @@ public final class EvaluationOrderTest {
         IllegalArgumentException.class, () -> EvaluationOrder.isEvaluatedBeforeSibling(call, a));
   }
 
+  @Test
+  public void isExecutedAfterInit_sameNodeReturnsFalse() {
+    Node script = parse("if (c) { init; }");
+    ScopedNode init = checkNotNull(getScopedNameNodes(script).get("init"));
+
+    assertThat(
+            EvaluationOrder.checkExecutionAfter(init.node(), init.scope())
+                .isExecutedAfterInit(init.node(), init.scope()))
+        .isFalse();
+  }
+
+  @Test
+  public void isExecutedAfterInit_sequentialStatements() {
+    assertThat(executesAfterInitTestCase("init; ref;")).isTrue();
+    assertThat(executesAfterInitTestCase("ref; init;")).isFalse();
+    assertThat(executesAfterInitTestCase("if (c) { init; alert(1); use(ref); }")).isTrue();
+    assertThat(executesAfterInitTestCase("if (c) { use(ref); alert(1); init; }")).isFalse();
+    assertThat(executesAfterInitTestCase("if (c) { init; if (inner) { use(ref); } }")).isTrue();
+    assertThat(executesAfterInitTestCase("if (c) { inner && init; alert(1); use(ref); }"))
+        .isFalse();
+    assertThat(executesAfterInitTestCase("if (c) { if (inner) { init; } use(ref); }")).isFalse();
+  }
+
+  @Test
+  public void isExecutedAfterInit_shortCircuitAndTernaryExpressions() {
+    assertThat(executesAfterInitTestCase("init && ref;")).isTrue();
+    assertThat(executesAfterInitTestCase("init || ref;")).isTrue();
+    assertThat(executesAfterInitTestCase("init ?? ref;")).isTrue();
+    assertThat(executesAfterInitTestCase("c && (init.prop ?? (ref.prop = 1));")).isTrue();
+    assertThat(executesAfterInitTestCase("(c && init) || ref;")).isFalse();
+
+    assertThat(executesAfterInitTestCase("init ? ref : 1;")).isTrue();
+    assertThat(executesAfterInitTestCase("init ? 1 : ref;")).isTrue();
+    assertThat(executesAfterInitTestCase("c ? init : ref;")).isFalse();
+    assertThat(executesAfterInitTestCase("c ? ref : init;")).isFalse();
+
+    assertThat(executesAfterInitTestCase("init.x ||= ref.y;")).isTrue();
+    assertThat(executesAfterInitTestCase("init.x &&= ref.y;")).isTrue();
+    assertThat(executesAfterInitTestCase("init.x ??= ref.y;")).isTrue();
+    assertThat(executesAfterInitTestCase("if (c) { a ||= init; use(ref); }")).isFalse();
+    assertThat(executesAfterInitTestCase("if (c) { a &&= init; use(ref); }")).isFalse();
+    assertThat(executesAfterInitTestCase("if (c) { a ??= init; use(ref); }")).isFalse();
+
+    assertThat(executesAfterInitTestCase("init?.(ref);")).isTrue();
+    assertThat(executesAfterInitTestCase("init?.[ref];")).isTrue();
+    assertThat(executesAfterInitTestCase("if (c) { a?.(init); use(ref); }")).isFalse();
+  }
+
+  @Test
+  public void isExecutedAfterInit_controlStructures() {
+    assertThat(executesAfterInitTestCase("if (init) { use(ref); }")).isTrue();
+    assertThat(executesAfterInitTestCase("if (init) {} else { use(ref); }")).isTrue();
+    assertThat(executesAfterInitTestCase("if (c) { init; } else { use(ref); }")).isFalse();
+
+    assertThat(executesAfterInitTestCase("switch (init) { case 1: use(ref); }")).isTrue();
+    assertThat(executesAfterInitTestCase("switch (init) { case ref: break; }")).isTrue();
+    assertThat(executesAfterInitTestCase("switch (x) { case 1: init; use(ref); }")).isTrue();
+    assertThat(executesAfterInitTestCase("switch (x) { case init: use(ref); }")).isFalse();
+    assertThat(executesAfterInitTestCase("switch (x) { case 1: case init: use(ref); }")).isFalse();
+    assertThat(executesAfterInitTestCase("switch (x) { case init: case 2: use(ref); }")).isFalse();
+    assertThat(executesAfterInitTestCase("switch (x) { case 1: init; case 2: use(ref); }"))
+        .isFalse();
+
+    assertThat(executesAfterInitTestCase("if (c) { init; label: { use(ref); } }")).isTrue();
+    assertThat(executesAfterInitTestCase("if (c) { label: { init; use(ref); } }")).isTrue();
+    assertThat(
+            executesAfterInitTestCase(
+                "if (c) { label: { if (skip) break label; init; } use(ref); }"))
+        .isFalse();
+
+    assertThat(executesAfterInitTestCase("try { init; use(ref); } catch (e) {}")).isTrue();
+    assertThat(executesAfterInitTestCase("try { init; } catch (e) { use(ref); }")).isFalse();
+    assertThat(executesAfterInitTestCase("try { init; } finally { use(ref); }")).isFalse();
+  }
+
+  @Test
+  public void isExecutedAfterInit_destructuringAndDefaultValues() {
+    assertThat(executesAfterInitTestCase("let {a: x = ref} = init;")).isTrue();
+    assertThat(executesAfterInitTestCase("({a: x = ref} = init);")).isTrue();
+
+    assertThat(executesAfterInitTestCase("let {[init]: x} = {a: ref};")).isFalse();
+    assertThat(executesAfterInitTestCase("({[init]: x} = {a: ref});")).isFalse();
+    assertThat(executesAfterInitTestCase("let [{[init]: x} = {a: ref}] = arr;")).isFalse();
+
+    // A property target is evaluated before its (conditional) default value.
+    assertThat(executesAfterInitTestCase("[o[init] = ref] = arr;")).isTrue();
+    assertThat(executesAfterInitTestCase("[o[ref] = init] = arr;")).isFalse();
+    // A name target is written after its default value is evaluated.
+    assertThat(executesAfterInitTestCase("[init = ref] = arr;")).isFalse();
+  }
+
+  @Test
+  public void isExecutedAfterInit_hoistScopesAndClasses() {
+    assertThat(executesAfterInitTestCase("if (c) { init; function f() { return ref; } }"))
+        .isFalse();
+    assertThat(executesAfterInitTestCase("if (c) { init; const f = () => ref; }")).isFalse();
+    assertThat(executesAfterInitTestCase("if (c) { init; class C { static { use(ref); } } }"))
+        .isFalse();
+    assertThat(executesAfterInitTestCase("if (c) { init; class C { x = ref; } }")).isFalse();
+    assertThat(executesAfterInitTestCase("if (c) { class C { static x = init; [ref]() {} } }"))
+        .isFalse();
+    assertThat(executesAfterInitTestCase("if (c) { class C { x = init; static y = ref; } }"))
+        .isFalse();
+  }
+
+  private record ScopedNode(Node node, Scope scope) {}
+
+  private boolean executesAfterInitTestCase(String js) {
+    Node script = parse(js);
+    ImmutableMap<String, ScopedNode> nodes = getScopedNameNodes(script);
+    ScopedNode init = checkNotNull(nodes.get("init"), "No 'init' node in: %s", js);
+    ScopedNode ref = checkNotNull(nodes.get("ref"), "No 'ref' node in: %s", js);
+    return EvaluationOrder.checkExecutionAfter(init.node(), init.scope())
+        .isExecutedAfterInit(ref.node(), ref.scope());
+  }
+
   private Node parse(String js) {
     Node script = compiler.parseTestCode(js);
     assertThat(compiler.getErrors()).isEmpty();
@@ -206,5 +325,18 @@ public final class EvaluationOrderTest {
       }
     }
     return null;
+  }
+
+  private ImmutableMap<String, ScopedNode> getScopedNameNodes(Node script) {
+    Map<String, ScopedNode> found = new LinkedHashMap<>();
+    NodeTraversal.builder()
+        .setCompiler(compiler)
+        .setCallback((NodeTraversal t, Node n, Node parent) -> {
+          if (n.isName()) {
+            found.putIfAbsent(n.getString(), new ScopedNode(n, t.getScope()));
+          }
+        })
+        .traverse(script);
+    return ImmutableMap.copyOf(found);
   }
 }

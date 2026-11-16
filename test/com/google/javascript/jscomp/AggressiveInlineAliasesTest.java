@@ -981,10 +981,9 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGlobalAliasInConditionalGetPropReceiver_knownBug() {
+  public void testGlobalAliasInConditionalGetPropReceiver() {
     // Regression test for b/476221453: in global scope, `window.cond && (Main.prop ??= {})`
     // normalizes to `let tmp; window.cond && ((tmp = Main).prop ?? (tmp.prop = {}));`.
-    // TODO: b/476221453 - `tmp` should be inlined to `Main`.
     test(
         """
         class Main {}
@@ -996,7 +995,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         class Main {}
         Main.prop = 1;
         let tmp;
-        window.cond && ((tmp = Main).prop ?? (tmp.prop = {}));
+        window.cond && (Main.prop ?? (Main.prop = {}));
         """);
   }
 
@@ -1154,15 +1153,19 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGlobalConditionalConstNamespaceAlias_knownBug() {
+  public void testGlobalConditionalConstNamespaceAlias() {
     // Regression test for b/476221453: Global conditional logical assignment on a `@const`
     // namespace.
-    // TODO: b/476221453 - `tmp` should be inlined to `ns`.
-    testSame(
+    test(
         """
         /** @const */ const ns = {prop: 1};
         let tmp;
         window.cond && ((tmp = ns).prop ?? (tmp.prop = 2));
+        """,
+        """
+        /** @const */ const ns = {prop: 1};
+        let tmp;
+        window.cond && (ns.prop ?? (ns.prop = 2));
         """);
   }
 
@@ -1229,10 +1232,11 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalConditionalAliasReadInSubsequentStatementNotInlined() {
-    // Covers `ReferenceCollector.isBlockBoundary` being true on the first hop
-    // (`window.inner && (tmp = Main)`) and `isExecutedAfterInitInBlock` scanning past an
-    // intermediate statement (`alert(1)`) before encountering `use(tmp.prop)` outside the
-    // conditional.
+    // Covers `BasicBlock.isBlockBoundary` being true on the first hop
+    // (`window.inner && (tmp = Main)`) and
+    // `EvaluationOrder.ExecutionOrderCheck.isExecutedAfterInit`
+    // scanning past an intermediate statement (`alert(1)`) before encountering `use(tmp.prop)`
+    // outside the conditional.
     testSame(
         """
         class Main {}
@@ -1248,10 +1252,10 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalConditionalAliasAcrossBasicBlockBoundariesNotInlined() {
-    // Covers destructuring RHS-before-LHS evaluation order in `isExecutedAfterInitInBlock` and
-    // `SWITCH_BODY` in `ReferenceCollector.isBlockBoundary`: an alias assigned inside a computed
-    // destructuring key or switch `case` expression does not dominate sibling evaluations in the
-    // outer block.
+    // Covers destructuring RHS-before-LHS evaluation order in
+    // `EvaluationOrder.ExecutionOrderCheck.isExecutedAfterInit` and `SWITCH_BODY` in
+    // `BasicBlock.isBlockBoundary`: an alias assigned inside a computed destructuring key or switch
+    // `case` expression does not dominate sibling evaluations in the outer block.
     testSame(
         """
         class Main {}
@@ -1290,11 +1294,10 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGlobalConditionalAliasWithIntermediateStatementInBlock_knownBug() {
+  public void testGlobalConditionalAliasWithIntermediateStatementInBlock() {
     // Covers `for (Node sibling = initChild.getNext(); ...)` advancing past an intermediate
     // sibling statement when `initChild` is an unconditional statement in a conditional block.
-    // TODO: b/476221453 - `(tmp = Main)` and `tmp.prop` should be inlined to `Main.prop`.
-    testSame(
+    test(
         """
         class Main {}
         Main.prop = 1;
@@ -1303,6 +1306,16 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
           (tmp = Main).prop = 2;
           alert(1);
           use(tmp.prop);
+        }
+        """,
+        """
+        class Main {}
+        Main.prop = 1;
+        let tmp;
+        if (window.cond) {
+          Main.prop = 2;
+          alert(1);
+          use(Main.prop);
         }
         """);
   }
@@ -2562,9 +2575,9 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         use(ns2.foo);
         """);
 
-    // In this case, it would be safe to inline ns, as long as all subsequent references
-    // to ns2 are inside the if block, but the algorithm is not complex enough to know that.
-    testSame(
+    // All subsequent references to ns2 are inside the if block and ns2 is unescaped, so ns can be
+    // safely inlined.
+    test(
         """
         let ns = {};
         ns.foo = 'bar';
@@ -2572,6 +2585,15 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         if (true) {
           ns2 = ns;
           use(ns2.foo);
+        }
+        """,
+        """
+        let ns = {};
+        ns.foo = 'bar';
+        let ns2;
+        if (true) {
+          ns2 = null;
+          use(ns.foo);
         }
         """);
   }

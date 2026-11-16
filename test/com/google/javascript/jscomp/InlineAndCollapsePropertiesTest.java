@@ -1367,9 +1367,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGlobalAliasInConditionalGetPropReceiver_knownBug() {
+  public void testGlobalAliasInConditionalGetPropReceiver() {
     // Regression test for b/476221453
-    // TODO: b/476221453 - `(tmp = Main).prop` and `tmp.prop` should be collapsed to `Main$prop`.
     test(
         """
         class Main {}
@@ -1381,7 +1380,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         class Main {}
         var Main$prop = 1;
         let tmp;
-        window.cond && ((tmp = Main).prop ?? (tmp.prop = {}));
+        window.cond && (Main$prop ?? (Main$prop = {}));
         """);
   }
 
@@ -2709,8 +2708,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalAliasWithLet3() {
-    // We don't do any sort of branch prediction, so can't collapse here.
-    testSame(
+    test(
         """
         let ns = {};
         ns.foo = 'bar';
@@ -2718,6 +2716,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         if (true) {
           ns2 = ns;
           use(ns2.foo);
+        }
+        """,
+        """
+        var ns$foo = 'bar';
+        let ns2;
+        if (true) {
+          ns2 = null;
+          use(ns$foo);
         }
         """);
   }

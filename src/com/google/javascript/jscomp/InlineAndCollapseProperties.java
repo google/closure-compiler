@@ -770,13 +770,7 @@ class InlineAndCollapseProperties implements CompilerPass {
       // Ensure that the alias is assigned to global name at that the
       // declaration.
       Node aliasParent = alias.getNode().getParent();
-      if (((aliasParent.isAssign() || aliasParent.isName())
-              && NodeUtil.isExecutedExactlyOnce(aliasParent))
-          // We special-case for constructors here, to inline constructor aliases
-          // more aggressively in global scope.
-          // We do this because constructor properties are always collapsed,
-          // so we want to inline the aliases also to avoid breakages.
-          || (aliasParent.isName() && name.isConstructor())) {
+      if (aliasParent.isAssign() || aliasParent.isName()) {
         Node lvalue = aliasParent.isName() ? aliasParent : aliasParent.getFirstChild();
         if (!lvalue.isQualifiedName()) {
           return;
@@ -800,6 +794,15 @@ class InlineAndCollapseProperties implements CompilerPass {
         Inlinability aliasInlinability = aliasingName.calculateInlinability();
         if (!aliasInlinability.shouldInlineUsages()) {
           // nothing to do here
+          return;
+        }
+
+        // Ensure that the alias is either executed unconditionally once, a declaration-site
+        // constructor alias, or dominates all of its reads within the same basic block.
+        if (!NodeUtil.isExecutedExactlyOnce(aliasParent)
+            && !(aliasParent.isName() && name.isConstructor())
+            && !isConditionallyInlineableGlobalAlias(
+                aliasingName, alias, aliasParent, lvalue, name.isConstructor())) {
           return;
         }
 
@@ -845,6 +848,56 @@ class InlineAndCollapseProperties implements CompilerPass {
         // to descendants of {@code name}. So those need to be collected now.
         namespace.scanNewNodes(newNodes);
       }
+    }
+
+    /**
+     * Checks whether a conditionally executed global alias (such as `var $tmp; cond && (($tmp =
+     * C).p ?? ($tmp.p = x))`) is unescaped, assigned once, and dominates all of its reads within
+     * the same basic block.
+     *
+     * <p>Runs in O(refs * depth) time.
+     */
+    private boolean isConditionallyInlineableGlobalAlias(
+        Name aliasingName, Ref alias, Node aliasParent, Node lvalue, boolean allowLoop) {
+      if (!lvalue.isName()) {
+        // Tracking property control flow is a lot harder, even within a basic block; and we are
+        // also primarily motivated by the simple variable aliases that Normalize generates.
+        return false;
+      }
+      if (!allowLoop && NodeUtil.isWithinLoop(aliasParent)) {
+        return false;
+      }
+      EvaluationOrder.ExecutionOrderCheck initOrderCheck =
+          EvaluationOrder.checkExecutionAfter(aliasParent, alias.scope);
+
+      return areAllRefsExecutedAfterInitInBlock(
+          aliasingName,
+          aliasingName.getInitialization(),
+          aliasingName.getDeclaration(),
+          initOrderCheck);
+    }
+
+    private boolean areAllRefsExecutedAfterInitInBlock(
+        Name currentName,
+        Ref initRef,
+        @Nullable Ref declRef,
+        EvaluationOrder.ExecutionOrderCheck initOrderCheck) {
+      for (Ref ref : currentName.getRefs()) {
+        if (ref == initRef || ref == declRef) {
+          continue;
+        }
+        if (!initOrderCheck.isExecutedAfterInit(ref.getNode(), ref.scope)) {
+          return false;
+        }
+      }
+      if (currentName.props != null) {
+        for (Name prop : currentName.props) {
+          if (!areAllRefsExecutedAfterInitInBlock(prop, initRef, declRef, initOrderCheck)) {
+            return false;
+          }
+        }
+      }
+      return true;
     }
 
     /**

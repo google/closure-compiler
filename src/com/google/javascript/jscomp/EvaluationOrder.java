@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -136,5 +137,66 @@ final class EvaluationOrder {
       }
     }
     return false;
+  }
+
+  /**
+   * Precomputed basic-block ancestor state for an initialization node, used to check whether
+   * subsequent reference nodes in the same hoist scope are guaranteed to execute after it.
+   */
+  record ExecutionOrderCheck(Node scopeRoot, ImmutableMap<Node, Node> initAncestorToChild) {
+    /**
+     * Returns whether every execution of {@code refNode} is preceded by an execution of the
+     * initialization node, within the same hoist scope and basic block.
+     *
+     * <p>This does not require {@code refNode} to be executed at all, e.g. it returns true for
+     * {@code ref} in {@code init ? ref : 0}.
+     */
+    @SuppressWarnings("ReferenceEquality")
+    boolean isExecutedAfterInit(Node refNode, AbstractScope<?, ?> refScope) {
+      if (refScope.getClosestHoistScope().getRootNode() != scopeRoot) {
+        return false;
+      }
+      Node prev = refNode;
+      for (Node curr = refNode.getParent();
+          curr != null && prev != scopeRoot;
+          prev = curr, curr = curr.getParent()) {
+        if (curr.isClassMembers()) {
+          // Computed keys in a class body execute before static initializers regardless of
+          // source order, and non-static field initializers only execute upon instantiation.
+          return false;
+        }
+        Node initChild = initAncestorToChild.get(curr);
+        if (initChild != null) {
+          if (curr.isCase()) {
+            // In `case init: use(ref);`, an earlier case can fall through into the case body
+            // without evaluating the `case` test expression.
+            return false;
+          }
+          // initChild is not a conditional child of curr, because checkExecutionAfter stops at
+          // block boundaries. So evaluation order is sufficient.
+          return isEvaluatedBeforeSibling(initChild, prev);
+        }
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Returns an {@link ExecutionOrderCheck} that tests whether nodes execute after {@code initNode}
+   * within its basic block (bounded by the closest hoist scope of {@code initScope}).
+   */
+  @SuppressWarnings("ReferenceEquality")
+  static ExecutionOrderCheck checkExecutionAfter(Node initNode, AbstractScope<?, ?> initScope) {
+    Node scopeRoot = initScope.getClosestHoistScope().getRootNode();
+    ImmutableMap.Builder<Node, Node> ancestorToChild = ImmutableMap.builder();
+    for (Node prev = initNode, curr = initNode.getParent();
+        curr != null
+            && !curr.isRoot()
+            && prev != scopeRoot
+            && !BasicBlock.isBlockBoundary(prev, curr);
+        prev = curr, curr = curr.getParent()) {
+      ancestorToChild.put(curr, prev);
+    }
+    return new ExecutionOrderCheck(scopeRoot, ancestorToChild.buildOrThrow());
   }
 }
