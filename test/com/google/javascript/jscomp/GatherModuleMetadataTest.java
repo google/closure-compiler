@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.GatherModuleMetadata.INVALID_NAMESPACE_OR_MODULE_ID;
-import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -37,7 +36,6 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
   private boolean rewriteScriptsToModules;
   private boolean sortOnly;
-  private boolean classifyTsExportTypes;
   private ImmutableList<ModuleIdentifier> entryPoints;
 
   @Override
@@ -46,7 +44,6 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     entryPoints = ImmutableList.of();
     rewriteScriptsToModules = false;
     sortOnly = false;
-    classifyTsExportTypes = false;
     setLanguageOut(LanguageMode.ECMASCRIPT5);
   }
 
@@ -59,7 +56,6 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     } else if (sortOnly) {
       options.setDependencyOptions(DependencyOptions.sortOnly());
     }
-    options.setClassifyTsExportTypes(classifyTsExportTypes);
     return options;
   }
 
@@ -908,21 +904,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Test
-  public void testClassifyTsExportTypes_disabledByDefault() {
-    testSame(
-        srcs(
-            "goog.module('named.module'); exports = {a: 1};",
-            "goog.provide('named.provide'); named.provide.a = 1;"));
-
-    ModuleMetadataMap map = metadataMap();
-    assertThat(map.getModulesByGoogNamespace().get("named.module").tsExportTypes()).isEmpty();
-    assertThat(map.getModulesByGoogNamespace().get("named.provide").tsExportTypes()).isEmpty();
-    assertThrows(IllegalStateException.class, () -> map.getTsExportType("named.module"));
-  }
-
-  @Test
   public void testClassifyTsExportTypes_enabled() {
-    classifyTsExportTypes = true;
     testSame(
         srcs(
             "goog.module('named.module'); exports = {a: 1};",
@@ -966,7 +948,6 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
   @Test
   public void testClassifyTsExportTypes_esModuleDoesNotCrashAndReturnsNothing() {
-    classifyTsExportTypes = true;
     testSame(
         srcs(
             SourceFile.fromCode(
@@ -980,7 +961,6 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
   @Test
   public void testClassifyTsExportTypes_mixedProvideAndEsModuleReportsErrorWithoutCrash() {
-    classifyTsExportTypes = true;
     testError(
         srcs("goog.provide('a.b'); export const x = 1;"), GatherModuleMetadata.MIXED_MODULE_TYPE);
     assertThat(metadataMap().getModulesByGoogNamespace().get("a.b").isEs6Module()).isTrue();
@@ -995,7 +975,6 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   @Test
   public void testClassifyTsExportTypes_esModuleImportingProvideScriptPreservesProvide() {
     rewriteScriptsToModules = true;
-    classifyTsExportTypes = true;
 
     testSame(
         srcs(
@@ -1010,8 +989,6 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   @Test
   public void
       testClassifyTsExportTypes_malformedProvideOrModuleWithLegacyNamedTsExportReportsErrorWithoutCrash() {
-    classifyTsExportTypes = true;
-
     testError(
         srcs("goog.provide('a.b'); /** @legacyNamedTsExport */ goog.provide();"),
         ClosureRewriteModule.INVALID_PROVIDE_NAMESPACE);

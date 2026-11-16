@@ -130,7 +130,6 @@ public class JsFileFullParser {
 
     CompilerOptions options = new CompilerOptions();
     options.setChecksOnly(true);
-    options.setClassifyTsExportTypes(true);
 
     compiler.init(ImmutableList.of(), ImmutableList.of(source), options);
 

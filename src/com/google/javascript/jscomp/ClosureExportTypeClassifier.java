@@ -60,8 +60,6 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Users can make a namespace `named` with {@code @legacyNamedTsExport} on its {@code
  * goog.provide}/{@code goog.module} call. The annotation has no effect elsewhere.
- *
- * <p>This only runs when {@link CompilerOptions#setClassifyTsExportTypes} is enabled.
  */
 final class ClosureExportTypeClassifier {
 

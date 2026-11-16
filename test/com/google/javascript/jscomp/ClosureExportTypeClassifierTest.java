@@ -1803,13 +1803,6 @@ public final class ClosureExportTypeClassifierTest {
     }
 
     @Override
-    protected CompilerOptions getOptions() {
-      CompilerOptions options = super.getOptions();
-      options.setClassifyTsExportTypes(true);
-      return options;
-    }
-
-    @Override
     protected CompilerPass getProcessor(Compiler compiler) {
       return (externs, root) ->
           new GatherModuleMetadata(

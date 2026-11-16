@@ -221,8 +221,7 @@ public final class GatherModuleMetadata implements CompilerPass {
       }
 
       ModuleType moduleType = metadataBuilder.moduleType();
-      if (compiler.getOptions().getClassifyTsExportTypes()
-          && rootNode.isScript()
+      if (rootNode.isScript()
           && !googNamespaces.isEmpty()
           && (moduleType == ModuleType.GOOG_PROVIDE
               || moduleType == ModuleType.GOOG_MODULE
@@ -612,11 +611,7 @@ public final class GatherModuleMetadata implements CompilerPass {
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, externs, new Finder());
     NodeTraversal.traverse(compiler, root, new Finder());
-    compiler.setModuleMetadataMap(
-        new ModuleMetadataMap(
-            modulesByPath,
-            modulesByGoogNamespace,
-            /* tsExportTypesClassified= */ compiler.getOptions().getClassifyTsExportTypes()));
+    compiler.setModuleMetadataMap(new ModuleMetadataMap(modulesByPath, modulesByGoogNamespace));
   }
 
   // Must match closure/base.js's goog.VALID_MODULE_RE_ & also validates that dotted segments are
