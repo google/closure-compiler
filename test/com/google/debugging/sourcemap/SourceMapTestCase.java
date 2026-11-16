@@ -62,6 +62,7 @@ public abstract class SourceMapTestCase {
 
   protected DetailLevel detailLevel = DetailLevel.ALL;
   protected boolean sourceMapIncludeSourcesContent = false;
+  protected boolean sourceMapMergeIdenticalSegments = false;
 
   protected static class RunResult {
     public String generatedSource;
@@ -324,6 +325,7 @@ public abstract class SourceMapTestCase {
     options.setSourceMapFormat(getSourceMapFormat());
     options.setSourceMapDetailLevel(detailLevel);
     options.setSourceMapIncludeSourcesContent(sourceMapIncludeSourcesContent);
+    options.setSourceMapMergeIdenticalSegments(sourceMapMergeIdenticalSegments);
     options.addWarningsGuard(
         new WarningsGuard() {
 

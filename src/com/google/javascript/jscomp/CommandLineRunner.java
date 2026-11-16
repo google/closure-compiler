@@ -314,6 +314,15 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean sourceMapIncludeSourcesContent = false;
 
     @Option(
+        name = "--source_map_merge_identical_segments",
+        handler = BooleanOptionHandler.class,
+        usage =
+            "Omits source map segments that map to the same original position and name as the"
+                + " previous segment on the same generated line. Reduces the size of source maps"
+                + " without changing the original position of any generated position.")
+    private boolean sourceMapMergeIdenticalSegments = false;
+
+    @Option(
         name = "--property_renaming_report",
         usage =
             "File where the serialized version of the property "
@@ -1058,6 +1067,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                     "source_map_input",
                     "source_map_include_content",
                     "source_map_location_mapping",
+                    "source_map_merge_identical_segments",
                     "variable_renaming_report"))
             .putAll(
                 "Miscellaneous",
@@ -1965,6 +1975,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     options.setStrictModeInput(flags.strictModeInput);
     options.setEmitUseStrict(flags.emitUseStrict);
     options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeSourcesContent);
+    options.setSourceMapMergeIdenticalSegments(flags.sourceMapMergeIdenticalSegments);
     options.setModuleResolutionMode(flags.moduleResolutionMode);
     options.setBrowserResolverPrefixReplacements(
         ImmutableMap.copyOf(flags.browserResolverPrefixReplacements));

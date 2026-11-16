@@ -17,7 +17,9 @@
 package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3.ExtensionMergeAction;
 import com.google.gson.Gson;
@@ -32,6 +34,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -747,6 +750,124 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     mapping = parseJsonObject(out.toString());
 
     assertThat(mapping.get("sourceRoot").getAsString()).isEqualTo("http://url/path");
+  }
+
+  private static String buildMergeSampleMappings(boolean mergeIdenticalSegments)
+      throws IOException {
+    SourceMapGeneratorV3 g = new SourceMapGeneratorV3();
+    g.setMergeIdenticalSegments(mergeIdenticalSegments);
+    addMapping(g, "a.js", "x", 1, 1, 0, 0, 0, 20);
+    addMapping(g, "a.js", "x", 1, 1, 0, 2, 0, 5);
+    addMapping(g, "a.js", "x", 1, 1, 0, 5, 0, 8);
+    addMapping(g, "a.js", null, 2, 3, 0, 10, 0, 12);
+    addMapping(g, "a.js", "y", 1, 1, 0, 14, 0, 16);
+    addMapping(g, "b.js", "z", 5, 0, 0, 22, 1, 3);
+    addMapping(g, "b.js", "z", 5, 0, 1, 3, 1, 6);
+    addMapping(g, "b.js", "z", 5, 0, 1, 6, 1, 9);
+    addMapping(g, "b.js", "z", 5, 0, 1, 11, 1, 13);
+    addMapping(g, "c.js", "z", 5, 0, 1, 13, 1, 15);
+    StringBuilder out = new StringBuilder();
+    g.appendTo(out, "out.js");
+    return out.toString();
+  }
+
+  private static void addMapping(
+      SourceMapGeneratorV3 generator,
+      String source,
+      @Nullable String name,
+      int srcLine,
+      int srcCol,
+      int startLine,
+      int startCol,
+      int endLine,
+      int endCol) {
+    generator.addMapping(
+        source,
+        name,
+        new FilePosition(srcLine, srcCol),
+        new FilePosition(startLine, startCol),
+        new FilePosition(endLine, endCol));
+  }
+
+  private static String getMappings(String sourceMap) {
+    return parseJsonObject(sourceMap).get("mappings").getAsString();
+  }
+
+  private static int countSegments(String sourceMap) {
+    int count = 0;
+    for (String line : Splitter.on(';').split(getMappings(sourceMap))) {
+      if (!line.isEmpty()) {
+        count += Splitter.on(',').splitToList(line).size();
+      }
+    }
+    return count;
+  }
+
+  private static void assertSameLookups(String expectedMap, String actualMap, int maxColumn)
+      throws SourceMapParseException {
+    SourceMapConsumerV3 expected = new SourceMapConsumerV3();
+    expected.parse(expectedMap);
+    SourceMapConsumerV3 actual = new SourceMapConsumerV3();
+    actual.parse(actualMap);
+    assertThat(actual.getLineCount()).isEqualTo(expected.getLineCount());
+    for (int line = 1; line <= expected.getLineCount() + 1; line++) {
+      for (int column = 1; column <= maxColumn; column++) {
+        assertWithMessage("line %s, column %s", line, column)
+            .that(actual.getMappingForLine(line, column))
+            .isEqualTo(expected.getMappingForLine(line, column));
+      }
+    }
+  }
+
+  @Test
+  public void testMergeIdenticalSegments_disabledByDefaultKeepsEverySegment() throws Exception {
+    String expectedMappings =
+        "AACCA,EAAAA,GAAAA,GAAAA,EACE,EADFA,EAAAC,EAAAD,I,ECIDE;GAAAA,GAAAA,G,EAAAA,ECAAA;";
+    assertThat(getMappings(buildMergeSampleMappings(false))).isEqualTo(expectedMappings);
+
+    SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
+    addMapping(generator, "a.js", "x", 1, 1, 0, 0, 0, 20);
+    addMapping(generator, "a.js", "x", 1, 1, 0, 2, 0, 5);
+    StringBuilder out = new StringBuilder();
+    generator.appendTo(out, "out.js");
+    assertThat(countSegments(out.toString())).isEqualTo(3);
+  }
+
+  @Test
+  public void testMergeIdenticalSegments() throws Exception {
+    String unmerged = buildMergeSampleMappings(false);
+    String merged = buildMergeSampleMappings(true);
+    assertThat(getMappings(merged))
+        .isEqualTo("AACCA,UACE,EADFA,EAAAC,EAAAD,I,ECIDE;GAAAA,M,EAAAA,ECAAA;");
+    assertSameLookups(unmerged, merged, 30);
+
+    // Distinct original line/col and line starts are never merged.
+    SourceMapGeneratorV3 g = new SourceMapGeneratorV3();
+    g.setMergeIdenticalSegments(true);
+    addMapping(g, "a.js", "x", 1, 1, 0, 0, 0, 2);
+    addMapping(g, "a.js", "x", 2, 1, 0, 2, 0, 4);
+    addMapping(g, "a.js", "x", 2, 2, 0, 4, 0, 6);
+    addMapping(g, "a.js", "x", 2, 2, 1, 0, 1, 4);
+    StringBuilder out = new StringBuilder();
+    g.appendTo(out, "out.js");
+    // 3 distinct segments on line 0 + 1 unmapped segment from col 6 to line end + 1 on line 1.
+    assertThat(countSegments(out.toString())).isEqualTo(5);
+
+    String js =
+        """
+        goog.asserts.assert(__A__.__B__.__C__);
+        var __X__ = `line ${__D__.__E__}
+        line ${__F__.__G__.__H__}`;
+        __I__.__J__.__K__(1, __L__.__M__);
+        """;
+    sourceMapMergeIdenticalSegments = false;
+    RunResult unmergedRun = compile(js, "testcode");
+    sourceMapMergeIdenticalSegments = true;
+    RunResult mergedRun = compile(js, "testcode");
+    assertThat(countSegments(mergedRun.sourceMapFileContent))
+        .isLessThan(countSegments(unmergedRun.sourceMapFileContent));
+    assertSameLookups(unmergedRun.sourceMapFileContent, mergedRun.sourceMapFileContent, 80);
+    check("testcode", js, mergedRun.generatedSource, mergedRun.sourceMapFileContent);
   }
 
   FilePosition count(String js) {

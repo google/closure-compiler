@@ -34,100 +34,85 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Collects information mapping the generated (compiled) source back to
- * its original source for debugging purposes.
+ * Collects information mapping the generated (compiled) source back to its original source for
+ * debugging purposes.
  *
- * Source Map Revision 3 Proposal:
+ * <p>Source Map Revision 3 Proposal:
  * https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit?usp=sharing
  */
 public final class SourceMapGeneratorV3 implements SourceMapGenerator {
 
   /**
-   * This interface provides the merging strategy when an extension conflict
-   * appears because of merging two source maps on method
-   * {@link #mergeMapSection}.
+   * This interface provides the merging strategy when an extension conflict appears because of
+   * merging two source maps on method {@link #mergeMapSection}.
    */
   public interface ExtensionMergeAction {
 
     /**
-     * Returns the merged value between two extensions with the same name when
-     * merging two source maps
+     * Returns the merged value between two extensions with the same name when merging two source
+     * maps
      *
      * @param extensionKey The extension name in conflict
      * @param currentValue The extension value in the current source map
      * @param newValue The extension value in the input source map
      * @return The merged value
      */
-    Object merge(String extensionKey, Object currentValue,
-        Object newValue);
+    Object merge(String extensionKey, Object currentValue, Object newValue);
   }
 
   private static final int UNMAPPED = -1;
 
-
-  /**
-   * A pre-order traversal ordered list of mappings stored in this map.
-   */
+  /** A pre-order traversal ordered list of mappings stored in this map. */
   private final List<Mapping> mappings = new ArrayList<>();
 
-  /**
-   * A map of source names to source name index
-   */
-  private final LinkedHashMap<String, Integer> sourceFileMap =
-       new LinkedHashMap<>();
+  /** A map of source names to source name index */
+  private final LinkedHashMap<String, Integer> sourceFileMap = new LinkedHashMap<>();
 
-  /**
-   * A map of source names to source file contents
-   */
-  private final LinkedHashMap<String, String> sourceFileContentMap =
-       new LinkedHashMap<>();
+  /** A map of source names to source file contents */
+  private final LinkedHashMap<String, String> sourceFileContentMap = new LinkedHashMap<>();
 
-  /**
-   * A map of source names to source name index
-   */
-  private final LinkedHashMap<String, Integer> originalNameMap =
-       new LinkedHashMap<>();
+  /** A map of source names to source name index */
+  private final LinkedHashMap<String, Integer> originalNameMap = new LinkedHashMap<>();
 
   /** Cache of the last mappings source name. */
   private @Nullable String lastSourceFile = null;
 
-  /**
-   * Cache of the last mappings source name index.
-   */
+  /** Cache of the last mappings source name index. */
   private int lastSourceFileIndex = -1;
 
   /** For validation store the last mapping added. */
   private @Nullable Mapping lastMapping;
 
   /**
-   * The position that the current source map is offset in the
-   * buffer being used to generated the compiled source file.
+   * The position that the current source map is offset in the buffer being used to generated the
+   * compiled source file.
    */
   private FilePosition offsetPosition = new FilePosition(0, 0);
 
   /**
-   * The position that the current source map is offset in the
-   * generated the compiled source file by the addition of a
-   * an output wrapper prefix.
+   * The position that the current source map is offset in the generated the compiled source file by
+   * the addition of a an output wrapper prefix.
    */
   private FilePosition prefixPosition = new FilePosition(0, 0);
 
   /**
-   * A list of extensions to be added to sourcemap. The value is a object
-   * to permit single values, like strings or numbers, and JsonObject or
-   * JsonArray objects.
+   * A list of extensions to be added to sourcemap. The value is a object to permit single values,
+   * like strings or numbers, and JsonObject or JsonArray objects.
    */
   private final LinkedHashMap<String, Object> extensions = new LinkedHashMap<>();
 
   /**
-   * The source root path for relocating source fails or avoid duplicate values
-   * on the source entry.
+   * The source root path for relocating source fails or avoid duplicate values on the source entry.
    */
   private String sourceRootPath;
 
   /**
-   * {@inheritDoc}
+   * Whether to omit a mapped segment whose original position and name are identical to those of the
+   * previous segment written on the same generated line.
    */
+  private boolean mergeIdenticalSegments = false;
+
+  /** {@inheritDoc} */
   @Override
   public void reset() {
     // Do not reset sourceFileContentMap
@@ -142,8 +127,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   /**
-   * @param validate Whether to perform (potentially costly) validation on the
-   * generated source map.
+   * @param validate Whether to perform (potentially costly) validation on the generated source map.
    */
   @Override
   public void validate(boolean validate) {
@@ -151,9 +135,22 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   /**
-   * Sets the prefix used for wrapping the generated source file before
-   * it is written. This ensures that the source map is adjusted for the
-   * change in character offsets.
+   * Sets whether to omit a mapped segment whose source, original line, original column, and name
+   * are identical to those of the previous segment written on the same generated line.
+   *
+   * <p>Lookups from a generated position to an original position are unchanged: a lookup resolves
+   * to the closest preceding segment on the line, which carries the same original position and
+   * name. The first segment of each generated line is always written, and unmapped segments are
+   * never merged. Reverse lookups may report fewer generated columns for an original position.
+   */
+  @Override
+  public void setMergeIdenticalSegments(boolean mergeIdenticalSegments) {
+    this.mergeIdenticalSegments = mergeIdenticalSegments;
+  }
+
+  /**
+   * Sets the prefix used for wrapping the generated source file before it is written. This ensures
+   * that the source map is adjusted for the change in character offsets.
    *
    * @param prefix The prefix that is added before the generated source code.
    */
@@ -176,11 +173,10 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   /**
-   * Sets the source code that exists in the buffer for which the
-   * generated code is being generated. This ensures that the source map
-   * accurately reflects the fact that the source is being appended to
-   * an existing buffer and as such, does not start at line 0, position 0
-   * but rather some other line and position.
+   * Sets the source code that exists in the buffer for which the generated code is being generated.
+   * This ensures that the source map accurately reflects the fact that the source is being appended
+   * to an existing buffer and as such, does not start at line 0, position 0 but rather some other
+   * line and position.
    *
    * @param offsetLine The index of the current line being printed.
    * @param offsetIndex The column index of the current character being printed.
@@ -193,15 +189,18 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   /**
-   * Adds a mapping for the given node.  Mappings must be added in order.
+   * Adds a mapping for the given node. Mappings must be added in order.
+   *
    * @param startPosition The position on the starting line
    * @param endPosition The position on the ending line.
    */
   @Override
   public void addMapping(
-      String sourceName, @Nullable String symbolName,
+      String sourceName,
+      @Nullable String symbolName,
       FilePosition sourceStartPosition,
-      FilePosition startPosition, FilePosition endPosition) {
+      FilePosition startPosition,
+      FilePosition endPosition) {
 
     // Don't bother if there is not sufficient information to be useful.
     if (sourceName == null || sourceStartPosition.getLine() < 0) {
@@ -211,8 +210,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     FilePosition adjustedStart = startPosition;
     FilePosition adjustedEnd = endPosition;
 
-    if (offsetPosition.getLine() != 0
-        || offsetPosition.getColumn() != 0) {
+    if (offsetPosition.getLine() != 0 || offsetPosition.getColumn() != 0) {
       // If the mapping is found on the first line, we need to offset
       // its character position by the number of characters found on
       // the *last* line of the source file to which the code is
@@ -229,13 +227,14 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
         endOffsetPosition = 0;
       }
 
-      adjustedStart = new FilePosition(
-          startPosition.getLine() + offsetLine,
-          startPosition.getColumn() + startOffsetPosition);
+      adjustedStart =
+          new FilePosition(
+              startPosition.getLine() + offsetLine,
+              startPosition.getColumn() + startOffsetPosition);
 
-      adjustedEnd = new FilePosition(
-          endPosition.getLine() + offsetLine,
-          endPosition.getColumn() + endOffsetPosition);
+      adjustedEnd =
+          new FilePosition(
+              endPosition.getLine() + offsetLine, endPosition.getColumn() + endOffsetPosition);
     }
 
     // Create the new mapping.
@@ -252,18 +251,21 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
       int lastColumn = lastMapping.startPosition.getColumn();
       int nextLine = mapping.startPosition.getLine();
       int nextColumn = mapping.startPosition.getColumn();
-      Preconditions.checkState(nextLine > lastLine
-          || (nextLine == lastLine && nextColumn >= lastColumn),
-          "Incorrect source mappings order, previous : (%s,%s)\n"
-          + "new : (%s,%s)",
-          lastLine, lastColumn, nextLine, nextColumn);
+      Preconditions.checkState(
+          nextLine > lastLine || (nextLine == lastLine && nextColumn >= lastColumn),
+          "Incorrect source mappings order, previous : (%s,%s)\n" + "new : (%s,%s)",
+          lastLine,
+          lastColumn,
+          nextLine,
+          nextColumn);
     }
 
     lastMapping = mapping;
     mappings.add(mapping);
   }
 
-  @Override public void addSourcesContent(String source, String content) {
+  @Override
+  public void addSourcesContent(String source, String content) {
     sourceFileContentMap.put(source, content);
   }
 
@@ -271,11 +273,12 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
 
     @Override
     public void visit(
-        String sourceName, String symbolName,
+        String sourceName,
+        String symbolName,
         FilePosition sourceStartPosition,
-        FilePosition startPosition, FilePosition endPosition) {
-      addMapping(sourceName, symbolName,
-          sourceStartPosition, startPosition, endPosition);
+        FilePosition startPosition,
+        FilePosition endPosition) {
+      addMapping(sourceName, symbolName, sourceStartPosition, startPosition, endPosition);
     }
   }
 
@@ -313,16 +316,15 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     section.parse(mapSectionContents);
     section.visitMappings(new ConsumerEntryVisitor());
     for (Entry<String, Object> entry : section.getExtensions().entrySet()) {
-       String extensionKey = entry.getKey();
-       if (extensions.containsKey(extensionKey)) {
-         extensions.put(extensionKey,
-             mergeAction.merge(extensionKey,
-                               extensions.get(extensionKey),
-                               entry.getValue()));
-       } else {
-         extensions.put(extensionKey, entry.getValue());
-       }
-     }
+      String extensionKey = entry.getKey();
+      if (extensions.containsKey(extensionKey)) {
+        extensions.put(
+            extensionKey,
+            mergeAction.merge(extensionKey, extensions.get(extensionKey), entry.getValue()));
+      } else {
+        extensions.put(extensionKey, entry.getValue());
+      }
+    }
   }
 
   /**
@@ -369,7 +371,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     }
     appendField(out, "lineCount", String.valueOf(maxLine));
 
-    //optional source root
+    // optional source root
     if (this.sourceRootPath != null && !this.sourceRootPath.isEmpty()) {
       appendField(out, "sourceRoot", escapeString(this.sourceRootPath));
     }
@@ -415,32 +417,29 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   /**
-   * A prefix to be added to the beginning of each sourceName passed to
-   * {@link #addMapping}. Debuggers expect (prefix + sourceName) to be a URL
-   * for loading the source code.
+   * A prefix to be added to the beginning of each sourceName passed to {@link #addMapping}.
+   * Debuggers expect (prefix + sourceName) to be a URL for loading the source code.
    *
    * @param path The URL prefix to save in the sourcemap file. (Not validated.)
    */
-  public void setSourceRoot(String path){
+  public void setSourceRoot(String path) {
     this.sourceRootPath = path;
   }
 
   /**
-   * Adds field extensions to the json source map. The value is allowed to be
-   * any value accepted by json, eg. string, JsonObject, JsonArray, etc.
+   * Adds field extensions to the json source map. The value is allowed to be any value accepted by
+   * json, eg. string, JsonObject, JsonArray, etc.
    *
-   * Extensions must follow the format x_orgranization_field (based on V3
-   * proposal), otherwise a {@code SourceMapParseExtension} will be thrown.
+   * <p>Extensions must follow the format x_orgranization_field (based on V3 proposal), otherwise a
+   * {@code SourceMapParseExtension} will be thrown.
    *
    * @param name The name of the extension with format organization_field
    * @param object The value of the extension as a valid json value
-   * @throws SourceMapParseException  if extension name is malformed
+   * @throws SourceMapParseException if extension name is malformed
    */
-  public void addExtension(String name, Object object)
-      throws SourceMapParseException{
-    if (!name.startsWith("x_")){
-      throw new SourceMapParseException("Extension '" + name +
-                                        "' must start with 'x_'");
+  public void addExtension(String name, Object object) throws SourceMapParseException {
+    if (!name.startsWith("x_")) {
+      throw new SourceMapParseException("Extension '" + name + "' must start with 'x_'");
     }
     this.extensions.put(name, object);
   }
@@ -476,9 +475,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     return this.extensions.get(name);
   }
 
-  /**
-   * Writes the source name map to 'out'.
-   */
+  /** Writes the source name map to 'out'. */
   private void addSourceNameMap(Appendable out) throws IOException {
     addNameMap(out, sourceFileMap);
   }
@@ -515,15 +512,12 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     appendFieldEnd(out);
   }
 
-  /**
-   * Writes the source name map to 'out'.
-   */
+  /** Writes the source name map to 'out'. */
   private void addSymbolNameMap(Appendable out) throws IOException {
     addNameMap(out, originalNameMap);
   }
 
-  private static void addNameMap(Appendable out, Map<String, Integer> map)
-      throws IOException {
+  private static void addNameMap(Appendable out, Map<String, Integer> map) throws IOException {
     int i = 0;
     for (Entry<String, Integer> entry : map.entrySet()) {
       String key = entry.getKey();
@@ -535,31 +529,26 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     }
   }
 
-  /**
-   * Escapes the given string for JSON.
-   */
+  /** Escapes the given string for JSON. */
   private static String escapeString(String value) {
     return Util.escapeString(value);
   }
 
   // Source map field helpers.
 
-  private static void appendFirstField(
-      Appendable out, String name, CharSequence value)
+  private static void appendFirstField(Appendable out, String name, CharSequence value)
       throws IOException {
     appendFieldStart(out, name, true);
     out.append(value);
   }
 
-  private static void appendField(
-      Appendable out, String name, CharSequence value)
+  private static void appendField(Appendable out, String name, CharSequence value)
       throws IOException {
     appendFieldStart(out, name, false);
     out.append(value);
   }
 
-  private static void appendFieldStart(Appendable out, String name)
-      throws IOException {
+  private static void appendFieldStart(Appendable out, String name) throws IOException {
     appendFieldStart(out, name, false);
   }
 
@@ -577,9 +566,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   @SuppressWarnings("unused")
   private static void appendFieldEnd(Appendable out) {}
 
-  /**
-   * Assigns sequential ids to used mappings, and returns the last line mapped.
-   */
+  /** Assigns sequential ids to used mappings, and returns the last line mapped. */
   private int prepMappings() throws IOException {
     // Mark any unused mappings.
     (new MappingTraversal()).traverse(new UsedMappingCheck());
@@ -600,54 +587,44 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   /**
-   * A mapping from a given position in an input source file to a given position
-   * in the generated code.
+   * A mapping from a given position in an input source file to a given position in the generated
+   * code.
    */
   static class Mapping {
-    /**
-     * A unique ID for this mapping for record keeping purposes.
-     */
+    /** A unique ID for this mapping for record keeping purposes. */
     int id = UNMAPPED;
 
-    /**
-     * The source file index.
-     */
+    /** The source file index. */
     String sourceFile;
 
     /**
-     * The position of the code in the input source file. Both
-     * the line number and the character index are indexed by
-     * 1 for legacy reasons via the Rhino Node class.
+     * The position of the code in the input source file. Both the line number and the character
+     * index are indexed by 1 for legacy reasons via the Rhino Node class.
      */
     FilePosition originalPosition;
 
     /**
-     * The starting position of the code in the generated source
-     * file which this mapping represents. Indexed by 0.
+     * The starting position of the code in the generated source file which this mapping represents.
+     * Indexed by 0.
      */
     FilePosition startPosition;
 
     /**
-     * The ending position of the code in the generated source
-     * file which this mapping represents. Indexed by 0.
+     * The ending position of the code in the generated source file which this mapping represents.
+     * Indexed by 0.
      */
     FilePosition endPosition;
 
     /**
-     * The original name of the token found at the position
-     * represented by this mapping (if any).
+     * The original name of the token found at the position represented by this mapping (if any).
      */
     String originalName;
 
-    /**
-     * Whether the mapping is actually used by the source map.
-     */
+    /** Whether the mapping is actually used by the source map. */
     boolean used = false;
   }
 
-  /**
-   * Mark any visited mapping as "used".
-   */
+  /** Mark any visited mapping as "used". */
   private static class UsedMappingCheck implements MappingVisitor {
     /** */
     @Override
@@ -670,16 +647,15 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   }
 
   /**
-   * Walk the mappings and visit each segment of the mappings, unmapped
-   * segments are visited with a null mapping, unused mapping are not visited.
+   * Walk the mappings and visit each segment of the mappings, unmapped segments are visited with a
+   * null mapping, unused mapping are not visited.
    */
   private class MappingTraversal {
     // The last line and column written
     private int line;
     private int col;
 
-    MappingTraversal() {
-    }
+    MappingTraversal() {}
 
     // Append the line mapping entries.
     void traverse(MappingVisitor v) throws IOException {
@@ -727,8 +703,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
       int rawLine = p.getLine();
       int rawCol = p.getColumn();
       // Only the first line needs the character position adjusted.
-      return (rawLine != 0)
-          ? rawCol : rawCol + prefixPosition.getColumn();
+      return (rawLine != 0) ? rawCol : rawCol + prefixPosition.getColumn();
     }
 
     /**
@@ -744,10 +719,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
       return (l1 == l2 && c1 >= c2) || l1 > l2;
     }
 
-    /**
-     * Write any needed entries from the current position to the end of the
-     * provided mapping.
-     */
+    /** Write any needed entries from the current position to the end of the provided mapping. */
     private void maybeVisit(MappingVisitor v, Mapping m) throws IOException {
       int nextLine = getAdjustedLine(m.endPosition);
       int nextCol = getAdjustedCol(m.endPosition);
@@ -758,11 +730,8 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
       }
     }
 
-    /**
-     * Write any needed entries to complete the provided mapping.
-     */
-    private void maybeVisitParent(MappingVisitor v, Mapping parent, Mapping m)
-        throws IOException {
+    /** Write any needed entries to complete the provided mapping. */
+    private void maybeVisitParent(MappingVisitor v, Mapping parent, Mapping m) throws IOException {
       int nextLine = getAdjustedLine(m.startPosition);
       int nextCol = getAdjustedCol(m.startPosition);
       // If the previous value is null, no mapping exists.
@@ -773,12 +742,10 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     }
 
     /**
-     * Write any entries needed between the current position the next position
-     * and update the current position.
+     * Write any entries needed between the current position the next position and update the
+     * current position.
      */
-    private void visit(MappingVisitor v, Mapping m,
-        int nextLine, int nextCol)
-        throws IOException {
+    private void visit(MappingVisitor v, Mapping m, int nextLine, int nextCol) throws IOException {
       checkState(line <= nextLine);
       checkState(line < nextLine || col < nextCol);
 
@@ -885,17 +852,18 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     private int previousSourceColumn;
     private int previousNameId;
 
+    // The mapping of the last entry written, or null if that entry was unmapped. Only meaningful
+    // when the entry being visited is on previousLine.
+    private @Nullable Mapping previousMapping;
+
     LineMapper(Appendable out, int maxLine) {
       this.out = out;
       this.maxLine = maxLine;
     }
 
-    /**
-     * As each segment is visited write out the appropriate line mapping.
-     */
+    /** As each segment is visited write out the appropriate line mapping. */
     @Override
-    public void visit(Mapping m, int line, int col, int nextLine, int nextCol)
-      throws IOException {
+    public void visit(Mapping m, int line, int col, int nextLine, int nextCol) throws IOException {
       if (previousLine != line) {
         previousColumn = 0;
       }
@@ -905,12 +873,20 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
         // So far they're just null mappings and we can ignore them.
         // (If they're non-null, we assert-fail.)
         if (line < maxLine) {
-          if (previousLine == line) { // not the first entry for the line
-            out.append(',');
+          // When merging, skip a segment that the previous entry on this line already covers with
+          // the same original position and name. VLQ deltas stay relative to the last written
+          // entry.
+          boolean merge =
+              mergeIdenticalSegments && previousLine == line && hasSameOrigin(m, previousMapping);
+          if (!merge) {
+            if (previousLine == line) { // not the first entry for the line
+              out.append(',');
+            }
+            writeEntry(m, col);
+            previousLine = line;
+            previousColumn = col;
+            previousMapping = m;
           }
-          writeEntry(m, col);
-          previousLine = line;
-          previousColumn = col;
         } else {
           checkState(m == null);
         }
@@ -927,10 +903,23 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     }
 
     /**
-     * Writes an entry for the given column (of the generated text) and
-     * associated mapping.
-     * The values are stored as relative to the last seen values for each
-     * field and encoded as Base64VLQs.
+     * Returns whether both mappings are non-null and have the same source file, original position,
+     * and original name, i.e. would be written as the same source map segment apart from the
+     * generated column.
+     */
+    private boolean hasSameOrigin(@Nullable Mapping m, @Nullable Mapping previous) {
+      return m != null
+          && previous != null
+          && Objects.equals(m.sourceFile, previous.sourceFile)
+          && m.originalPosition.getLine() == previous.originalPosition.getLine()
+          && m.originalPosition.getColumn() == previous.originalPosition.getColumn()
+          && Objects.equals(m.originalName, previous.originalName);
+    }
+
+    /**
+     * Writes an entry for the given column (of the generated text) and associated mapping. The
+     * values are stored as relative to the last seen values for each field and encoded as
+     * Base64VLQs.
      */
     void writeEntry(Mapping m, int column) throws IOException {
       // The relative generated column number
@@ -971,18 +960,14 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
       closeLine(true);
     }
 
-    /**
-     * Begin the entry for a new line.
-     */
+    /** Begin the entry for a new line. */
     private void openLine(boolean firstEntry) throws IOException {
       if (firstEntry) {
         out.append('\"');
       }
     }
 
-    /**
-     * End the entry for a line.
-     */
+    /** End the entry for a line. */
     private void closeLine(boolean finalEntry) throws IOException {
       out.append(';');
       if (finalEntry) {
@@ -990,5 +975,4 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
       }
     }
   }
-
 }

@@ -1530,6 +1530,19 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testSourceMapMergeIdenticalSegments_default() {
+    testSame("var x = 3;");
+    assertThat(lastCompiler.getOptions().getSourceMapMergeIdenticalSegments()).isFalse();
+  }
+
+  @Test
+  public void testSourceMapMergeIdenticalSegments_flag() {
+    args.add("--source_map_merge_identical_segments");
+    testSame("var x = 3;");
+    assertThat(lastCompiler.getOptions().getSourceMapMergeIdenticalSegments()).isTrue();
+  }
+
+  @Test
   public void testSourceMapLocationsTranslations1() {
     args.add("--js_output_file");
     args.add("/path/to/out.js");

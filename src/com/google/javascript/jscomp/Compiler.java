@@ -848,6 +848,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (options.shouldGatherSourceMapInfo()) {
       sourceMap = options.getSourceMapFormat().getInstance();
       sourceMap.setPrefixMappings(options.getSourceMapLocationMappings());
+      sourceMap.setMergeIdenticalSegments(options.getSourceMapMergeIdenticalSegments());
       if (options.getApplyInputSourceMaps()) {
         sourceMap.setSourceFileMapping(this);
         if (options.getSourceMapIncludeSourcesContent()) {

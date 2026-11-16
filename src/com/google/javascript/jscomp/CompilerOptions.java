@@ -1170,6 +1170,12 @@ public class CompilerOptions {
   /** Whether to include full file contents in the source map. */
   private boolean sourceMapIncludeSourcesContent = false;
 
+  /**
+   * Whether to omit source map segments that are identical to the previous segment on the same
+   * generated line. Lookups from a generated position still return the same original position.
+   */
+  private boolean sourceMapMergeIdenticalSegments = false;
+
   /** Charset to use when generating code. If null, then output ASCII. */
   private transient Charset outputCharset;
 
@@ -3095,6 +3101,19 @@ public class CompilerOptions {
     return this.sourceMapIncludeSourcesContent;
   }
 
+  /**
+   * Sets whether to omit a source map segment whose source, original position, and name are
+   * identical to those of the previous segment on the same generated line. Every generated position
+   * still resolves to the same original mapping, so this only reduces the source map size.
+   */
+  public void setSourceMapMergeIdenticalSegments(boolean sourceMapMergeIdenticalSegments) {
+    this.sourceMapMergeIdenticalSegments = sourceMapMergeIdenticalSegments;
+  }
+
+  boolean getSourceMapMergeIdenticalSegments() {
+    return this.sourceMapMergeIdenticalSegments;
+  }
+
   public void setParseInlineSourceMaps(boolean parseInlineSourceMaps) {
     this.parseInlineSourceMaps = parseInlineSourceMaps;
   }
@@ -3563,6 +3582,7 @@ public class CompilerOptions {
         .add("sourceMapDetailLevel", sourceMapDetailLevel)
         .add("sourceMapFormat", sourceMapFormat)
         .add("sourceMapLocationMappings", sourceMapLocationMappings)
+        .add("sourceMapMergeIdenticalSegments", sourceMapMergeIdenticalSegments)
         .add("sourceMapOutputPath", sourceMapOutputPath)
         .add("strictMessageReplacement", strictMessageReplacement)
         .add("stripNamePrefixes", stripNamePrefixes)

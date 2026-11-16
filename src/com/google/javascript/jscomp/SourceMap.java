@@ -303,6 +303,14 @@ public final class SourceMap {
     generator.validate(validate);
   }
 
+  /**
+   * Sets whether to omit a mapped segment whose original position and name are identical to those
+   * of the previous segment on the same generated line.
+   */
+  public void setMergeIdenticalSegments(boolean mergeIdenticalSegments) {
+    generator.setMergeIdenticalSegments(mergeIdenticalSegments);
+  }
+
   /** */
   public void setPrefixMappings(List<? extends LocationMapping> sourceMapLocationMappings) {
     this.prefixMappings = sourceMapLocationMappings;

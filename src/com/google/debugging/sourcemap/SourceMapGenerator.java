@@ -98,4 +98,11 @@ public interface SourceMapGenerator {
 
   /** Whether to perform additional validation on the source map. */
   void validate(boolean validate);
+
+  /**
+   * Sets whether to omit a mapped segment whose original position and name are identical to those
+   * of the previous segment on the same generated line. Generators that do not support this ignore
+   * it.
+   */
+  default void setMergeIdenticalSegments(boolean mergeIdenticalSegments) {}
 }
