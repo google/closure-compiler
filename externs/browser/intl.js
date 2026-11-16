@@ -699,3 +699,387 @@ Intl.Locale.prototype.toString = function() {};
  * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/getCanonicalLocales
  */
 Intl.getCanonicalLocales = function(locale) {};
+
+/**
+ * @record
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/DurationFormat#parameters
+ */
+Intl.DurationFormatOptions = function() {};
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'lookup', 'best fit'.
+ */
+Intl.DurationFormatOptions.prototype.localeMatcher;
+
+/** @type {string|undefined} */
+Intl.DurationFormatOptions.prototype.numberingSystem;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow', 'digital'.
+ */
+Intl.DurationFormatOptions.prototype.style;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow'.
+ */
+Intl.DurationFormatOptions.prototype.years;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.DurationFormatOptions.prototype.yearsDisplay;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow'.
+ */
+Intl.DurationFormatOptions.prototype.months;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.DurationFormatOptions.prototype.monthsDisplay;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow'.
+ */
+Intl.DurationFormatOptions.prototype.weeks;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.DurationFormatOptions.prototype.weeksDisplay;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow'.
+ */
+Intl.DurationFormatOptions.prototype.days;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.DurationFormatOptions.prototype.daysDisplay;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow', 'numeric', '2-digit'.
+ */
+Intl.DurationFormatOptions.prototype.hours;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.DurationFormatOptions.prototype.hoursDisplay;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow', 'numeric', '2-digit'.
+ */
+Intl.DurationFormatOptions.prototype.minutes;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.DurationFormatOptions.prototype.minutesDisplay;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow', 'numeric', '2-digit'.
+ */
+Intl.DurationFormatOptions.prototype.seconds;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.DurationFormatOptions.prototype.secondsDisplay;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow', 'numeric'.
+ */
+Intl.DurationFormatOptions.prototype.milliseconds;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.DurationFormatOptions.prototype.millisecondsDisplay;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow', 'numeric'.
+ */
+Intl.DurationFormatOptions.prototype.microseconds;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.DurationFormatOptions.prototype.microsecondsDisplay;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'long', 'short', 'narrow', 'numeric'.
+ */
+Intl.DurationFormatOptions.prototype.nanoseconds;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.DurationFormatOptions.prototype.nanosecondsDisplay;
+
+/**
+ * @type {number|undefined}
+ * Valid values: integers from 0 to 9.
+ */
+Intl.DurationFormatOptions.prototype.fractionalDigits;
+
+/**
+ * @record
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/resolvedOptions#return_value
+ */
+Intl.ResolvedDurationFormatOptions = function() {};
+
+/** @type {!Intl.UnicodeBCP47LocaleIdentifier} */
+Intl.ResolvedDurationFormatOptions.prototype.locale;
+
+/** @type {string} */
+Intl.ResolvedDurationFormatOptions.prototype.numberingSystem;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow', 'digital'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.style;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.years;
+
+/**
+ * @type {string}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.yearsDisplay;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.months;
+
+/**
+ * @type {string}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.monthsDisplay;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.weeks;
+
+/**
+ * @type {string}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.weeksDisplay;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.days;
+
+/**
+ * @type {string}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.daysDisplay;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow', 'numeric', '2-digit'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.hours;
+
+/**
+ * @type {string}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.hoursDisplay;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow', 'numeric', '2-digit'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.minutes;
+
+/**
+ * @type {string}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.minutesDisplay;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow', 'numeric', '2-digit'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.seconds;
+
+/**
+ * @type {string}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.secondsDisplay;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow', 'numeric'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.milliseconds;
+
+/**
+ * @type {string}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.millisecondsDisplay;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow', 'numeric'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.microseconds;
+
+/**
+ * @type {string}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.microsecondsDisplay;
+
+/**
+ * @type {string}
+ * Valid values: 'long', 'short', 'narrow', 'numeric'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.nanoseconds;
+
+/**
+ * @type {string}
+ * Valid values: 'always', 'auto'.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.nanosecondsDisplay;
+
+/**
+ * @type {number|undefined}
+ * Valid values: integers from 0 to 9.
+ */
+Intl.ResolvedDurationFormatOptions.prototype.fractionalDigits;
+
+/**
+ * The duration object accepted by `Intl.DurationFormat.prototype.format` and
+ * `Intl.DurationFormat.prototype.formatToParts`.
+ * @record
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/format#duration
+ */
+Intl.DurationFormatDurationLike = function() {};
+
+/** @type {number|undefined} */
+Intl.DurationFormatDurationLike.prototype.years;
+
+/** @type {number|undefined} */
+Intl.DurationFormatDurationLike.prototype.months;
+
+/** @type {number|undefined} */
+Intl.DurationFormatDurationLike.prototype.weeks;
+
+/** @type {number|undefined} */
+Intl.DurationFormatDurationLike.prototype.days;
+
+/** @type {number|undefined} */
+Intl.DurationFormatDurationLike.prototype.hours;
+
+/** @type {number|undefined} */
+Intl.DurationFormatDurationLike.prototype.minutes;
+
+/** @type {number|undefined} */
+Intl.DurationFormatDurationLike.prototype.seconds;
+
+/** @type {number|undefined} */
+Intl.DurationFormatDurationLike.prototype.milliseconds;
+
+/** @type {number|undefined} */
+Intl.DurationFormatDurationLike.prototype.microseconds;
+
+/** @type {number|undefined} */
+Intl.DurationFormatDurationLike.prototype.nanoseconds;
+
+/**
+ * @record
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/formatToParts#return_value
+ */
+Intl.DurationFormatPart = function() {};
+
+/** @type {string} */
+Intl.DurationFormatPart.prototype.type;
+
+/** @type {string} */
+Intl.DurationFormatPart.prototype.value;
+
+/**
+ * @type {string|undefined}
+ * Valid values: 'year', 'month', 'week', 'day', 'hour', 'minute', 'second',
+ * 'millisecond', 'microsecond', 'nanosecond'. Absent on some 'literal' parts.
+ */
+Intl.DurationFormatPart.prototype.unit;
+
+/**
+ * @constructor
+ * @param {(string|!Array<string>)=} locales
+ * @param {!Intl.DurationFormatOptions=} options
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/DurationFormat
+ */
+Intl.DurationFormat = function(locales, options) {};
+
+/**
+ * @param {(string|!Array<string>)=} locales
+ * @param {{localeMatcher: (string|undefined)}=} options
+ * @return {!Array<!Intl.UnicodeBCP47LocaleIdentifier>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/supportedLocalesOf
+ */
+Intl.DurationFormat.supportedLocalesOf = function(locales, options) {};
+
+/**
+ * @param {!Intl.DurationFormatDurationLike} duration
+ * @return {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/format
+ */
+Intl.DurationFormat.prototype.format = function(duration) {};
+
+/**
+ * @param {!Intl.DurationFormatDurationLike} duration
+ * @return {!Array<!Intl.DurationFormatPart>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/formatToParts
+ */
+Intl.DurationFormat.prototype.formatToParts = function(duration) {};
+
+/**
+ * @return {!Intl.ResolvedDurationFormatOptions}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DurationFormat/resolvedOptions
+ */
+Intl.DurationFormat.prototype.resolvedOptions = function() {};
