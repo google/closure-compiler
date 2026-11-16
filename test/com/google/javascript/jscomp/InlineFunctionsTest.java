@@ -23,17 +23,25 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
+import java.io.IOException;
+import java.nio.file.Path;
+import org.jspecify.annotations.Nullable;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Inline function tests. */
 @RunWith(JUnit4.class)
 public class InlineFunctionsTest extends CompilerTestCase {
+  @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
+
   private Reach inliningReach;
   private boolean assumeStrictThis;
   private int maxSizeAfterInlining;
+  private @Nullable Path debugLogDirectoryOverride;
 
   static final String EXTERNS = "/** @nosideeffects */ function nochg(){}\nfunction chg(){}\n";
 
@@ -61,7 +69,17 @@ public class InlineFunctionsTest extends CompilerTestCase {
     inliningReach = Reach.ALL;
     assumeStrictThis = false;
     maxSizeAfterInlining = CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;
+    debugLogDirectoryOverride = null;
     uniqueIdSupplier = new UniqueIdSupplier();
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    if (debugLogDirectoryOverride != null) {
+      options.setDebugLogDirectory(debugLogDirectoryOverride);
+    }
+    return options;
   }
 
   @Override
@@ -5540,7 +5558,12 @@ JSCompiler_temp_const$jscomp$v0.bug = JSCompiler_inline_result$jscomp$v1;
   }
 
   @Test
-  public void testNoInlineTaggedTemplateLitEncourageAndRequireInlining() {
+  public void testNoInlineTaggedTemplateLitEncourageAndRequireInlining() throws IOException {
+    // InlineFunctions reports MISSED_REQUIRED_INLINING only when a debug log directory is set.
+    // Supply a temporary directory explicitly because CompilerTestCaseUtils.setDebugLogDirectoryOn
+    // is a no-op in open-source builds.
+    debugLogDirectoryOverride = tempFolder.newFolder().toPath();
+
     testSame(
         """
         /** @encourageInlining */
