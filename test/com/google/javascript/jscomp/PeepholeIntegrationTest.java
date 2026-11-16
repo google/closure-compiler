@@ -1658,5 +1658,23 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
         "function f(a, x) { if (a) { return eval(x); } else { return (0, eval)(x); } }",
         "function f(a, x) { return a ? eval(x) : (0, eval)(x); }");
   }
+
+  // See https://github.com/google/closure-compiler/issues/4388
+  @Test
+  public void testFinallyBareReturnPreserved() {
+    testSame("function f() { try { return 1; } finally { return; } }");
+    testSame("function h(fn) { try { fn(); } finally { return; } }");
+    test(
+        "function f() { try { return 1; } finally { return undefined; } }",
+        "function f() { try { return 1; } finally { return; } }");
+    test(
+        "function f() { try { return 1; } finally { return void 0; } }",
+        "function f() { try { return 1; } finally { return; } }");
+    test(
+        "function f(x) { try { return 1; } finally { if (x) { return; } else { return; } } }",
+        "function f(x) { try { return 1; } finally { return; } }");
+    // When try is empty, PeepholeRemoveDeadCode unwraps finally first, after which return; is dead.
+    test("function f() { try {} finally { return; } }", "function f() {}");
+  }
 }
 

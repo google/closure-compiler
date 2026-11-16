@@ -1149,4 +1149,157 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     testSame("x = foo() || (foo() && b);");
     testSame("function f(Boolean) { Boolean(x) ? a : b; }");
   }
+
+  // See https://github.com/google/closure-compiler/issues/4388
+  @Test
+  public void testDontRemoveExitLeavingFinally() {
+    late = false;
+    enableNormalize();
+    enableNormalizeExpectedOutput();
+
+    // Bare return at the end of finally overrides a pending return or thrown exception from try.
+    foldSame("function f() { try { return 1; } finally { return; } }");
+    foldSame("function f() { try { a(); } finally { return; } }");
+    foldSame("function f() { try { a(); } catch (e) { throw e; } finally { return; } }");
+    foldSame("function f() { try { a(); } finally { if (x) { return; } } }");
+    foldSame("function f() { try { a(); } finally { switch (x) { case 1: return; } } }");
+
+    // Matching return/throw after try-finally still cannot allow removing an exit that leaves
+    // finally, because normal completion of finally resumes the pending completion from try/catch.
+    foldSame("function f() { try { a(); } finally { if (x) { return 1; } } return 1; }");
+    foldSame("function f() { try { return 1; } finally { if (x) { throw a; } } throw a; }");
+    foldSame(
+        "class C { static { a: { try { break a; } finally { if (x) { throw e; } } throw e; } } }");
+
+    // Nested try-finally inside an outer finally: exiting the inner try-finally still exits the
+    // outer finally.
+    foldSame("function f() { try { a(); } finally { try { return; } finally { b(); } } }");
+    foldSame(
+        """
+        function f() {
+          try {
+            a();
+          } finally {
+            try {
+              if (x) {
+                return 1;
+              }
+            } finally {
+              b();
+            }
+          }
+          return 1;
+        }
+        """);
+
+    // Loops/switches inside finally cannot replace return/throw with break if breaking exits
+    // finally normally.
+    foldSame("function f() { try { a(); } finally { while (x) { return; } } }");
+    foldSame("function f() { try { a(); } finally { while (x) { return 5; } } return 5; }");
+    foldSame(
+        "function f() { try { a(); } finally { switch (x) { case 1: return; default: b(); } } }");
+    foldSame(
+        "function f() { try { return 1; } finally { while (x) { throw Error; } } throw Error; }");
+    foldSame(
+        """
+        function f() {
+          try {
+            a();
+          } finally {
+            while (x) {
+              try {
+                b();
+              } finally {
+                if (y) {
+                  return;
+                }
+              }
+            }
+          }
+        }
+        """);
+
+    // Exits whose follow node remains inside the same finally block can still be minimized.
+    fold(
+        "function f() { try { a(); } finally { if (x) { return; } return; } }",
+        "function f() { try { a(); } finally { if (x) {} return; } }");
+    fold(
+        "function f() { try { a(); } finally { if (x) { return 1; } return 1; } }",
+        "function f() { try { a(); } finally { if (x) {} return 1; } }");
+    fold(
+        "function f() { try { return 1; } finally { if (x) { throw a; } throw a; } }",
+        "function f() { try { return 1; } finally { if (x) {} throw a; } }");
+    fold(
+        """
+        function f() {
+          try {
+            a();
+          } finally {
+            try {
+              if (x) {
+                return 1;
+              }
+            } finally {}
+            return 1;
+          }
+        }
+        """,
+        """
+        function f() {
+          try {
+            a();
+          } finally {
+            try {
+              if (x) {}
+            } finally {}
+            return 1;
+          }
+        }
+        """);
+    fold(
+        """
+        function f() {
+          try {
+            a();
+          } finally {
+            while (x) {
+              if (y) {
+                return 5;
+              }
+              b();
+            }
+            return 5;
+          }
+        }
+        """,
+        """
+        function f() {
+          try {
+            a();
+          } finally {
+            while (x) {
+              if (y) {
+                break;
+              }
+              b();
+            }
+            return 5;
+          }
+        }
+        """);
+
+    // Inner functions inside finally have their own return boundary, and loops outside try-finally
+    // exit finally abruptly via break.
+    fold(
+        "function f() { try { a(); } finally { const g = function() { return; }; g(); } }",
+        "function f() { try { a(); } finally { const g = function() {}; g(); } }");
+    fold(
+        "function f() { while (x) { try { a(); } finally { if (y) { return; } b(); } } }",
+        "function f() { while (x) { try { a(); } finally { if (y) { break; } b(); } } }");
+
+    // Also verify late = true mode (where tryJoinForCondition is active).
+    late = true;
+    foldSame("function f() { try { return 1; } finally { return; } }");
+    foldSame("function f() { try { a(); } finally { for (; x;) { if (y) { return; } } } }");
+  }
 }

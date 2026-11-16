@@ -6297,5 +6297,151 @@ async function abc() {
         };
         """);
   }
+
+  // See https://github.com/google/closure-compiler/issues/4388
+  @Test
+  public void testFinallyBareReturnPreservedSimpleAndAdvanced() {
+    String source =
+        """
+        function f() {
+          try {
+            return 1;
+          } finally {
+            return;
+          }
+        }
+        function g(fn) {
+          try {
+            fn();
+          } finally {
+            return 'swallowed';
+          }
+        }
+        function h(fn) {
+          try {
+            fn();
+          } finally {
+            return;
+          }
+        }
+        window['keep'] = [f, g, h];
+        """;
+
+    CompilerOptions simpleOptions = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(simpleOptions);
+    test(
+        simpleOptions,
+        source,
+        """
+        function f() {
+          try {
+            return 1;
+          } finally {
+            return;
+          }
+        }
+        function g(a) {
+          try {
+            a();
+          } finally {
+            return 'swallowed';
+          }
+        }
+        function h(a) {
+          try {
+            a();
+          } finally {
+            return;
+          }
+        }
+        window.keep = [f, g, h];
+        """);
+
+    CompilerOptions advancedOptions = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(advancedOptions);
+    // Also exercise OptimizeReturns rewriting `return 'swallowed'` to `return;` when unused.
+    test(
+        advancedOptions,
+        """
+        /** @noinline */
+        function swallowUnused(fn) {
+          try {
+            fn();
+          } finally {
+            return 'swallowed';
+          }
+        }
+        /** @noinline */
+        function bareFinallyReturn(fn) {
+          try {
+            fn();
+          } finally {
+            return;
+          }
+        }
+        swallowUnused(window['fn']);
+        window['res'] = bareFinallyReturn(window['fn']);
+        """,
+        """
+        function b(a) {
+          try {
+            a();
+          } finally {
+            return;
+          }
+        }
+        function c(a) {
+          try {
+            a();
+          } finally {
+            return;
+          }
+        }
+        b(window.fn);
+        window.res = c(window.fn);
+        """);
+
+    // Verify inlined functions with bare `return;` in `finally` keep their labeled break.
+    test(
+        advancedOptions,
+        """
+        function f() {
+          try {
+            return 1;
+          } finally {
+            return;
+          }
+        }
+        function h(fn) {
+          try {
+            fn();
+          } finally {
+            return;
+          }
+        }
+        window['out'] = [f(), h(window['fn'])];
+        """,
+        """
+        var a;
+        a: {
+          try {
+            a = 1;
+          } finally {
+            a = void 0;
+            break a;
+          }
+        }
+        var b = window, c = a, d;
+        a: {
+          try {
+            (0, window.fn)();
+          } finally {
+            d = void 0;
+            break a;
+          }
+        }
+        b.out = [c, d];
+        """);
+  }
 }
 

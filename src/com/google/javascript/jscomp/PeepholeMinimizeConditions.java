@@ -290,6 +290,12 @@ class PeepholeMinimizeConditions
       return n;
     }
 
+    if (exitsFinallyBlock(breakTarget, follow)) {
+      // Breaking to breakTarget and falling through to follow would exit an enclosing finally
+      // block normally instead of overriding any pending completion from try or catch.
+      return n;
+    }
+
     // When follow is null, this mean the follow of a break target is the
     // end of a function. This means a break is same as return.
     if (follow == null || areMatchingExits(n, follow)) {
@@ -332,6 +338,12 @@ class PeepholeMinimizeConditions
       return n;
     }
 
+    if (exitsFinallyBlock(n, follow)) {
+      // Falling through to follow would exit an enclosing finally block normally instead of
+      // overriding any pending completion from try or catch.
+      return n;
+    }
+
     // When follow is null, this mean the follow of a break target is the
     // end of a function. This means a break is same as return.
     if (follow == null || areMatchingExits(n, follow)) {
@@ -341,6 +353,26 @@ class PeepholeMinimizeConditions
     }
 
     return n;
+  }
+
+  /**
+   * Returns whether normal control-flow transfer from {@code startNode} to {@code follow} exits an
+   * enclosing {@code finally} block.
+   *
+   * <p>In ECMA-262 {@code TryStatement} evaluation, normal completion of a {@code finally} block
+   * resumes any pending abrupt completion ({@code return}, {@code throw}, {@code break}, or {@code
+   * continue}) from the {@code try} or {@code catch} block, whereas an abrupt exit from {@code
+   * finally} overrides that pending completion.
+   */
+  private static boolean exitsFinallyBlock(Node startNode, @Nullable Node follow) {
+    for (Node cur = startNode; !cur.isFunction() && !cur.isScript(); cur = cur.getParent()) {
+      if (NodeUtil.isTryFinallyNode(cur.getParent(), cur)) {
+        if (follow == null || follow == cur || !follow.isDescendantOf(cur)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
