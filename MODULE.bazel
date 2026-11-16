@@ -1,6 +1,6 @@
-bazel_dep(name = "rules_java", version = "8.6.1")
+bazel_dep(name = "rules_java", version = "9.3.0")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
-bazel_dep(name = "protobuf", version = "30.2")
+bazel_dep(name = "protobuf", version = "36.2")
 bazel_dep(name = "bazel_jar_jar", version = "0.1.5")
 bazel_dep(name = "google_bazel_common", version = "0.0.1")
 git_override(
@@ -9,23 +9,23 @@ git_override(
     commit = "2cab52929507935aa43d460a3976d3bedc814d3a",
     remote = "https://github.com/google/bazel-common",
 )
-bazel_dep(name = "rules_jvm_external", version = "6.8")
+bazel_dep(name = "rules_jvm_external", version = "6.9")
 
 ## START_MAVEN_ARTIFACTS_LIST
 # List of external dependencies from Maven. Also update corresponding POM file below.
 MAVEN_ARTIFACTS = [
     "args4j:args4j:2.33",
     "com.google.code.gson:gson:2.9.1",
-    "com.google.errorprone:error_prone_annotations:2.5.1",
-    "com.google.guava:failureaccess:1.0.1",
-    "com.google.guava:guava:33.4.6-jre",
-    "com.google.guava:guava-testlib:33.4.6-jre",
+    "com.google.errorprone:error_prone_annotations:2.52.0",
+    "com.google.guava:failureaccess:1.0.3",
+    "com.google.guava:guava:33.8.0-jre",
+    "com.google.guava:guava-testlib:33.8.0-jre",
     "com.google.jimfs:jimfs:1.2",
-    "com.google.protobuf:protobuf-java:4.30.2",
+    "com.google.protobuf:protobuf-java:4.36.2",
     "com.google.re2j:re2j:1.8",
     "io.github.java-diff-utils:java-diff-utils:4.12",
     "org.apache.ant:ant:1.10.11",
-    "org.jspecify:jspecify:0.3.0",
+    "org.jspecify:jspecify:1.0.1",
 ]
 
 # Pom and gradle files for Maven dependencies. Only used to automatically extract license
@@ -41,15 +41,14 @@ MAVEN_ARTIFACTS = [
 ORDERED_POM_OR_GRADLE_FILE_LIST_FOR_LICENSE_CHECK = [
     "https://github.com/kohsuke/args4j/blob/args4j-site-2.33@/args4j/pom.xml",
     "https://github.com/google/gson/blob/gson-parent-2.9.1@/gson/pom.xml",
-    "https://github.com/google/error-prone/blob/v2.5.1@/annotations/pom.xml",
-    "https://github.com/google/guava/blob/failureaccess-v1.0.1@/futures/failureaccess/pom.xml",
-    "https://github.com/google/guava/blob/v33.4.6@/guava/pom.xml",
-    "https://github.com/google/guava/blob/v33.4.6@/guava-testlib/pom.xml",
+    "https://github.com/google/error-prone/blob/v2.52.0@/annotations/pom.xml",
+    "https://github.com/google/guava/blob/failureaccess-v1.0.3@/futures/failureaccess/pom.xml",
+    "https://github.com/google/guava/blob/v33.8.0@/guava/pom.xml",
+    "https://github.com/google/guava/blob/v33.8.0@/guava-testlib/pom.xml",
     "https://github.com/google/jimfs/blob/v1.2@/jimfs/pom.xml",
     "https://github.com/google/re2j/blob/re2j-1.3@/build.gradle",
     "https://github.com/java-diff-utils/java-diff-utils/blob/java-diff-utils-parent-4.12@/java-diff-utils/pom.xml",
     "https://github.com/apache/ant/blob/rel/1.10.11@/src/etc/poms/ant/pom.xml",
-    "https://github.com/jspecify/jspecify/blob/v0.3.0@/gradle/publish.gradle",
 ]
 
 # Additional GitHub links to license files for maven artifacts. Add an entry here only if there is
@@ -57,7 +56,9 @@ ORDERED_POM_OR_GRADLE_FILE_LIST_FOR_LICENSE_CHECK = [
 # is that we don't have to hardcode the artifact id here and can just read it from the file).
 # TODO: lharker - could we instead grab license information from the maven repository?
 ADDITIONAL_LICENSES = {
-    "com.google.protobuf:protobuf-java": "https://github.com/protocolbuffers/protobuf/blob/v4.30.1/LICENSE",
+    "com.google.protobuf:protobuf-java": "https://github.com/protocolbuffers/protobuf/blob/v36.2/LICENSE",
+    # jspecify v1.0.1's gradle/publish.gradle no longer sets literal groupId/artifactId strings.
+    "org.jspecify:jspecify": "https://github.com/jspecify/jspecify/blob/v1.0.1/LICENSE",
 }
 
 ## END_MAVEN_ARTIFACTS_LIST
@@ -65,6 +66,10 @@ ADDITIONAL_LICENSES = {
 maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
 maven.install(
     artifacts = MAVEN_ARTIFACTS,
+    known_contributing_modules = [
+        "",
+        "protobuf",
+    ],
     repositories = [
         "https://maven.google.com",
         "https://repo1.maven.org/maven2",
@@ -73,7 +78,7 @@ maven.install(
 use_repo(maven, "maven")
 
 # Works around https://github.com/bazelbuild/rules_python/issues/1169
-bazel_dep(name = "rules_python", version = "0.28.0")
+bazel_dep(name = "rules_python", version = "1.6.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(

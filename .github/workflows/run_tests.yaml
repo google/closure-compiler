@@ -74,7 +74,7 @@ jobs:
           repository-cache: true
 
       - name: Build and Test
-        run: unset ANDROID_HOME && bazelisk test //:all
+        run: bazelisk test //:all
 
       - name: Unsymlink Bazel Artifacts
         # upload-artifact doesn't support paths with symlinks
