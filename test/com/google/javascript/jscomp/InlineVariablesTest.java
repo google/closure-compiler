@@ -1574,6 +1574,22 @@ public final class InlineVariablesTest extends CompilerTestCase {
         "           switch (y) {}");
   }
 
+  @Test
+  public void testNoInlineAssignmentSkippedByLabeledBreak() {
+    testSame(
+        """
+        function g() {
+          let t;
+          l: {
+            if (window.c) break l;
+            t = 2;
+          }
+          alert(t);
+          alert(t);
+        }
+        """);
+  }
+
   // Successfully inlines 'values' and 'e'
   @Test
   public void testInlineIntoForLoop1() {

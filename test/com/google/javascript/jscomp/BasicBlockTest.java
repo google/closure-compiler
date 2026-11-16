@@ -100,6 +100,10 @@ public final class BasicBlockTest {
     assertThat(BasicBlock.isBlockBoundary(caseNode, switchBody)).isTrue();
     assertThat(BasicBlock.isBlockBoundary(caseNode.getFirstChild(), caseNode)).isFalse();
 
+    Node labelNode = parse("label: { a(); }").getFirstChild();
+    assertThat(BasicBlock.isBlockBoundary(labelNode.getFirstChild(), labelNode)).isFalse();
+    assertThat(BasicBlock.isBlockBoundary(labelNode.getSecondChild(), labelNode)).isTrue();
+
     Node classNode = parse("class C extends Base {}").getFirstChild();
     // All children of a class are conservatively treated as separate blocks.
     for (Node child = classNode.getFirstChild(); child != null; child = child.getNext()) {

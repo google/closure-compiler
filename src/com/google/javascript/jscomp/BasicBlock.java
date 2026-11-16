@@ -51,8 +51,8 @@ final class BasicBlock implements Serializable {
           // `extends` clause (e.g. undoing Es6RewriteClassExtendsExpressions).
           return true;
         }
-        case IF -> {
-          // The condition is not a boundary, but the `then` and `else` branches are.
+        case IF, LABEL -> {
+          // The if condition or label name is not a boundary, but the corresponding block is.
           return n != parent.getFirstChild();
         }
         default -> {}
