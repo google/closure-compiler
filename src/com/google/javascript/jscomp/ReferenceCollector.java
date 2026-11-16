@@ -248,7 +248,7 @@ public final class ReferenceCollector
       behavior.beforeTraverseNode(nodeTraversal, n, parent);
 
       // If node is a new basic block, put on basic block stack
-      if (isBlockBoundary(n, parent)) {
+      if (BasicBlock.isBlockBoundary(n, parent)) {
         pushNewBlock(n);
       }
 
@@ -291,7 +291,7 @@ public final class ReferenceCollector
 
       behavior.afterVisitNode(t, n, parent, addedReference);
 
-      if (isBlockBoundary(n, parent)) {
+      if (BasicBlock.isBlockBoundary(n, parent)) {
         popLastBlock(n);
       }
     }
@@ -314,44 +314,6 @@ public final class ReferenceCollector
     BasicBlock last = this.blockStack.removeLast();
     // Verfiy that the stack is unwound correctly.
     checkState(identical(root, last.getRoot()), root);
-  }
-
-  /**
-   * @return true if this node marks the start of a new basic block
-   */
-  private static boolean isBlockBoundary(Node n, Node parent) {
-    if (parent != null) {
-      switch (parent.getToken()) {
-        case DO, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, TRY, WHILE, WITH, CLASS, SWITCH_BODY -> {
-          // NOTE: TRY has up to 3 child blocks:
-          // TRY
-          //   BLOCK
-          //   BLOCK
-          //     CATCH
-          //   BLOCK
-          // Note that there is an explicit CATCH token but no explicit
-          // FINALLY token. For simplicity, we consider each BLOCK
-          // a separate basic BLOCK.
-          return true;
-        }
-        case AND,
-            HOOK,
-            IF,
-            OR,
-            COALESCE,
-            OPTCHAIN_GETPROP,
-            OPTCHAIN_GETELEM,
-            OPTCHAIN_CALL,
-            DEFAULT_VALUE -> {
-          // The first child of a conditional is not a boundary,
-          // but all the rest of the children are.
-          return n != parent.getFirstChild();
-        }
-        default -> {}
-      }
-    }
-
-    return n.isCase();
   }
 
   @CanIgnoreReturnValue

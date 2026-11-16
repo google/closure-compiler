@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Node;
  *
  * <p>These predicates only describe expression-level evaluation within a single statement. They
  * deliberately know nothing about statement-level control flow (loops, {@code try}, {@code switch},
- * labels, etc.), which is handled by {@link BasicBlock} and the CFG.
+ * labels, etc.), which is handled by {@link BasicBlock#isBlockBoundary} and the CFG.
  */
 final class EvaluationOrder {
 

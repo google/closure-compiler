@@ -19,12 +19,52 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.io.Serializable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a section of code that is uninterrupted by control structures (conditional or
  * iterative logic).
  */
 final class BasicBlock implements Serializable {
+
+  /** Returns true if {@code n} marks the start of a new basic block under {@code parent}. */
+  @SuppressWarnings("ReferenceEquality")
+  static boolean isBlockBoundary(Node n, @Nullable Node parent) {
+    if (parent != null) {
+      switch (parent.getToken()) {
+        case DO, FOR, FOR_IN, FOR_OF, FOR_AWAIT_OF, TRY, WHILE, WITH, SWITCH_BODY -> {
+          // NOTE: TRY has up to 3 child blocks:
+          // TRY
+          //   BLOCK
+          //   BLOCK
+          //     CATCH
+          //   BLOCK
+          // Note that there is an explicit CATCH token but no explicit
+          // FINALLY token. For simplicity, we consider each BLOCK
+          // a separate basic BLOCK.
+          return true;
+        }
+        case CLASS -> {
+          // The name and `extends` clause are evaluated unconditionally, but every child of a
+          // class is still treated as a separate block. Passes like InlineVariables only inline
+          // within a single basic block, and rely on this to avoid inlining declarations into an
+          // `extends` clause (e.g. undoing Es6RewriteClassExtendsExpressions).
+          return true;
+        }
+        case IF -> {
+          // The condition is not a boundary, but the `then` and `else` branches are.
+          return n != parent.getFirstChild();
+        }
+        default -> {}
+      }
+      if (EvaluationOrder.isConditionalChild(n)) {
+        // e.g. the right-hand side of `&&`, either arm of `?:`, or a destructuring default value.
+        return true;
+      }
+    }
+
+    return n.isCase();
+  }
 
   private final BasicBlock parent;
 
