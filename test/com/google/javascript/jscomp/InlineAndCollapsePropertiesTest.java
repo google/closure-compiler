@@ -3700,6 +3700,177 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testToStringValueOfFunctionReferenceInObjectLiteral() {
+    testSame(
+        externs("function compute() {} function reject() {} function allow() {}"),
+        srcs(
+            """
+            function getScore() { return compute(); }
+            let z = {
+              valueOf: getScore,
+            };
+            if (z > 5) { reject(); } else { allow(); }
+            """));
+    testSame(
+        externs("function compute() {} function use(x) {}"),
+        srcs(
+            """
+            function tag() { return compute(); }
+            let z = {
+              toString: tag,
+            };
+            use('' + z);
+            """));
+  }
+
+  @Test
+  public void testToStringValueOfShorthandAndDynamicValueInObjectLiteral() {
+    testSame(
+        externs("function makeFn() {} function use(x) {}"),
+        srcs(
+            """
+            function valueOf() { return 3; }
+            let z = {
+              valueOf,
+              toString: makeFn(),
+            };
+            use(z + 1);
+            """));
+  }
+
+  @Test
+  public void testToStringValueOfAssignedToObjectLiteral() {
+    testSame(
+        externs("function compute() {} function use(x) {}"),
+        srcs(
+            """
+            function getScore() { return compute(); }
+            function tag() { return compute(); }
+            let z = {};
+            z.valueOf = getScore;
+            z.toString = tag;
+            use(z > 5);
+            """));
+  }
+
+  @Test
+  public void testToStringValueOfNonFunctionInObjectLiteral() {
+    // Non-function overrides still affect ToPrimitive (e.g. `{toString: null}` throws TypeError
+    // on string coercion instead of falling back to Object.prototype.toString).
+    testSame(
+        externs("function use(x) {}"),
+        srcs(
+            """
+            let z = {
+              toString: null,
+              valueOf: null,
+            };
+            use('' + z);
+            """));
+  }
+
+  @Test
+  public void testToStringValueOfObjectLiteralValueInObjectLiteral() {
+    testSame(
+        externs("function use(x) {}"),
+        srcs(
+            """
+            let z = {
+              valueOf: {a: 1},
+            };
+            use(z.valueOf.a);
+            """));
+    testSame(
+        externs("function use(x) {}"),
+        srcs(
+            """
+            let z = {
+              valueOf: {
+                /** @constructor */
+                C: function() {},
+              },
+            };
+            use(new z.valueOf.C());
+            """));
+    testSame(
+        externs("function use(x) {}"),
+        srcs(
+            """
+            let z = {};
+            z.valueOf = {};
+            /** @constructor */
+            z.valueOf.C = function() {};
+            use(new z.valueOf.C());
+            """));
+  }
+
+  @Test
+  public void testToStringValueOfLocallyAssignedToObjectLiteral() {
+    testSame(
+        externs("function compute() {} function use(x) {}"),
+        srcs(
+            """
+            function getScore() { return compute(); }
+            const z = {};
+            function init() {
+              z.valueOf = getScore;
+            }
+            init();
+            use(z > 5);
+            """));
+  }
+
+  @Test
+  public void testToStringValueOfStubDeclaration() {
+    testSame(
+        """
+        const z = {};
+        /** @type {function(): number} */
+        z.valueOf;
+        """);
+  }
+
+  @Test
+  public void testToStringValueOfQuotedKeyInObjectLiteral() {
+    testSame(
+        externs("function compute() {} function use(x) {}"),
+        srcs(
+            """
+            function getScore() { return compute(); }
+            let z = {
+              'valueOf': getScore,
+            };
+            use(z > 5);
+            """));
+  }
+
+  @Test
+  public void testToStringValueOfMixedWithCollapsiblePropertiesInObjectLiteral() {
+    test(
+        externs("function compute() {} function use(x) {}"),
+        srcs(
+            """
+            function getScore() { return compute(); }
+            let z = {
+              valueOf: getScore,
+              other: 42,
+            };
+            use(z > 5);
+            use(z.other);
+            """),
+        expected(
+            """
+            function getScore() { return compute(); }
+            var z$other = 42;
+            let z = {
+              valueOf: getScore,
+            };
+            use(z > 5);
+            use(z$other);
+            """));
+  }
+
+  @Test
   public void testLoopInAliasChainOfTypedefConstructorProperty() {
     test(
         """

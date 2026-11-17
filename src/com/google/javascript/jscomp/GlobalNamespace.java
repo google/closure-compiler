@@ -1867,8 +1867,8 @@ class GlobalNamespace
       if (isToStringValueOfInObjectLiteral()) {
         logDecision(
             Inlinability.DO_NOT_INLINE,
-            "references explicit definition of toString/valueOf functions used implicitly in the JS"
-                + " language");
+            "references explicit definition of toString/valueOf properties used implicitly in the"
+                + " JS language");
         return Inlinability.DO_NOT_INLINE;
       }
 
@@ -2037,12 +2037,11 @@ class GlobalNamespace
       return canCollapseOrInlineChildNames().canCollapse();
     }
 
-    // toString/valueOf are implicitly used as part of the JS language should not be collapsed.
+    // toString/valueOf are implicitly used as part of the JS language and should not be collapsed.
     boolean isToStringValueOfInObjectLiteral() {
       Name parent = this.getParent();
       String baseName = this.getBaseName();
-      return this.isFunction()
-          && parent != null
+      return parent != null
           && parent.isObjectLiteral()
           && (baseName.equals("toString") || baseName.equals("valueOf"));
     }
@@ -2104,6 +2103,14 @@ class GlobalNamespace
       if (isCollapsingExplicitlyDenied()) {
         // condition (d)
         logChildNamesDecision(Inlinability.DO_NOT_INLINE, "@nocollapse");
+        return Inlinability.DO_NOT_INLINE;
+      }
+
+      if (isToStringValueOfInObjectLiteral()) {
+        logChildNamesDecision(
+            Inlinability.DO_NOT_INLINE,
+            "references explicit definition of toString/valueOf properties used implicitly in the"
+                + " JS language");
         return Inlinability.DO_NOT_INLINE;
       }
 
@@ -2203,14 +2210,18 @@ class GlobalNamespace
 
     /** Whether this is an object literal that needs to keep its keys. */
     boolean shouldKeepKeys() {
-      return isObjectLiteral() && (aliasingGets > 0 || isCollapsingExplicitlyDenied());
+      return isObjectLiteral()
+          && (aliasingGets > 0
+              || isCollapsingExplicitlyDenied()
+              || isToStringValueOfInObjectLiteral());
     }
 
     boolean needsToBeStubbed() {
       return globalSets == 0
           && localSets > 0
           && localSetsWithNoCollapse == 0
-          && !isCollapsingExplicitlyDenied();
+          && !isCollapsingExplicitlyDenied()
+          && !isToStringValueOfInObjectLiteral();
     }
 
     private void setDeclaredTypeKind(NameProp declaredType) {

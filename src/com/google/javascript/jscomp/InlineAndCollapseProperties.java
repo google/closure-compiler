@@ -1575,6 +1575,11 @@ class InlineAndCollapseProperties implements CompilerPass {
         logDecisionForName(n, "@nocollapse: will not flatten descendant name references");
         return;
       }
+      if (n.isToStringValueOfInObjectLiteral()) {
+        logDecisionForName(
+            n, "toString/valueOf on object literal: will not flatten descendant name references");
+        return;
+      }
       if (escaped.contains(n)) {
         logDecisionForName(n, "escapes: will not flatten descendant name references");
         return;
@@ -1592,6 +1597,9 @@ class InlineAndCollapseProperties implements CompilerPass {
             flattenReferencesTo(p, propAlias);
           } else if (p.isCollapsingExplicitlyDenied()) {
             logDecisionForName(p, "@nocollapse: will not flatten references");
+          } else if (p.isToStringValueOfInObjectLiteral()) {
+            logDecisionForName(
+                p, "toString/valueOf on object literal: will not flatten references");
           } else if (p.isSimpleStubDeclaration()) {
             logDecisionForName(p, "simple stub declaration: will flatten references");
             flattenSimpleStubDeclaration(p, propAlias);
@@ -1814,7 +1822,7 @@ class InlineAndCollapseProperties implements CompilerPass {
         updateGlobalNameDeclaration(n, alias, canCollapseChildNames);
       }
 
-      if (n.props == null || escaped.contains(n)) {
+      if (n.props == null || escaped.contains(n) || n.isToStringValueOfInObjectLiteral()) {
         return;
       }
       logDecisionForName(n, "collapsing descendants");

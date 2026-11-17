@@ -1636,6 +1636,50 @@ public final class GlobalNamespaceTest {
     assertThat(crossChunkName.getDeclaration().getChunk()).isEqualTo(chunks[2]);
   }
 
+  @Test
+  public void testToStringValueOfInObjectLiteral_cannotCollapse() {
+    GlobalNamespace ns =
+        parse(
+            """
+            function getScore() { return 1; }
+            const a = {
+              valueOf: getScore,
+              toString: null,
+              other: 1,
+            };
+            const b = {
+              valueOf: {x: 1},
+            };
+            const c = {};
+            function init() {
+              c.valueOf = getScore;
+            }
+            class D {
+              static valueOf() { return 1; }
+            }
+            function fn() {}
+            fn.valueOf = getScore;
+            """);
+
+    assertThat(ns.getSlot("a.valueOf").canCollapse()).isFalse();
+    assertThat(ns.getSlot("a.toString").canCollapse()).isFalse();
+    assertThat(ns.getSlot("a.other").canCollapse()).isTrue();
+
+    Name bValueOf = ns.getSlot("b.valueOf");
+    assertThat(bValueOf.canCollapse()).isFalse();
+    assertThat(bValueOf.canCollapseOrInlineChildNames()).isEqualTo(Inlinability.DO_NOT_INLINE);
+    assertThat(bValueOf.shouldKeepKeys()).isTrue();
+    assertThat(ns.getSlot("b.valueOf.x").canCollapse()).isFalse();
+
+    Name cValueOf = ns.getSlot("c.valueOf");
+    assertThat(cValueOf.canCollapse()).isFalse();
+    assertThat(cValueOf.needsToBeStubbed()).isFalse();
+
+    // The guard stays scoped to object literals so static class/function helpers still collapse.
+    assertThat(ns.getSlot("D.valueOf").canCollapse()).isTrue();
+    assertThat(ns.getSlot("fn.valueOf").canCollapse()).isTrue();
+  }
+
   // This method exists for testing module metadata lookups.
   private GlobalNamespace parseAndGatherModuleData(String js) {
     CompilerOptions options = getDefaultOptions();

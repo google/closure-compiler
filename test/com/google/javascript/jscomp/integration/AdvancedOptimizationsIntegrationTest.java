@@ -3649,4 +3649,65 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
           """
         });
   }
+
+  @Test
+  public void testCollapsePropertiesPreservesReferenceValuedToStringAndValueOf() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addObject()
+                .addExtra(
+                    """
+                    function computeScore() {}
+                    function reject() {}
+                    function allow() {}
+                    function use(x) {}
+                    """)
+                .buildExternsFile("externs.js"));
+
+    test(
+        options,
+        """
+        function getRiskScore() {
+          return computeScore();
+        }
+        const ns = {
+          valueOf: getRiskScore,
+        };
+        if (ns > 5) {
+          reject();
+        } else {
+          allow();
+        }
+        """,
+        """
+        ({
+          valueOf: function() {
+            return computeScore();
+          }
+        }) > 5 ? reject() : allow();
+        """);
+
+    test(
+        options,
+        """
+        function tag() {
+          return computeScore();
+        }
+        const ns = {
+          toString: tag,
+        };
+        use('' + ns);
+        """,
+        """
+        use("" + {
+          toString: function() {
+            return computeScore();
+          }
+        });
+        """);
+  }
 }
