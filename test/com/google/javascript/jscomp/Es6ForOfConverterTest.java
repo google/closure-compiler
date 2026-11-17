@@ -33,12 +33,15 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
   private static final String EXTERNS_BASE =
       new TestExternsBuilder().addArguments().addConsole().addJSCompLibraries().build();
 
+  private boolean assumeForOfIteratorCloseIsNotNeeded;
+
   public Es6ForOfConverterTest() {
     super(EXTERNS_BASE);
   }
 
   @Before
   public void customSetUp() throws Exception {
+    assumeForOfIteratorCloseIsNotNeeded = false;
     enableNormalize();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
@@ -50,6 +53,13 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
         ImmutableMap.of(
             "KEY", "$jscomp$key$",
             "ITER", "$jscomp$iter$"));
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setAssumeForOfIteratorCloseIsNotNeeded(assumeForOfIteratorCloseIsNotNeeded);
+    return options;
   }
 
   @Override
@@ -381,6 +391,43 @@ try {
           }
         } finally {
           $jscomp.iteratorClose(ITER$0, KEY$1$x);
+        }
+        """);
+  }
+
+  @Test
+  public void testForOfLoop_assumeIteratorCloseIsNotNeeded() {
+    assumeForOfIteratorCloseIsNotNeeded = true;
+    test(
+        "for (var i of arr) { if (i) break; console.log(i); }",
+        """
+        var i;
+        var ITER$0 = (0, $jscomp.makeIterator)(arr);
+        var KEY$1$i = ITER$0.next();
+        for (; !KEY$1$i.done; KEY$1$i = ITER$0.next()) {
+          i = KEY$1$i.value;
+          {
+            if (i) break;
+            console.log(i);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testLabelForOf_assumeIteratorCloseIsNotNeeded() {
+    assumeForOfIteratorCloseIsNotNeeded = true;
+    test(
+        "a: b: for(var x of [1,2]){console.log(x)}",
+        """
+        var x;
+        var ITER$0 = (0, $jscomp.makeIterator)([1,2]);
+        var KEY$1$x = ITER$0.next();
+        a: b: for (; !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+          x = KEY$1$x.value;
+          {
+            console.log(x);
+          }
         }
         """);
   }

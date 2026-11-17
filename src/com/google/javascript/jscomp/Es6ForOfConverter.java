@@ -26,8 +26,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
-import java.util.ArrayList;
-import java.util.List;
 
 /** Converts ES6 "for of" loops to ES5. */
 public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCallback
@@ -37,6 +35,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
   private final DefaultNameGenerator namer;
   private final AstFactory astFactory;
   private final StaticScope namespace;
+  private final boolean emitIteratorClose;
 
   private static final String ITER_BASE = "$jscomp$iter$";
 
@@ -47,6 +46,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     this.namer = new DefaultNameGenerator();
     this.astFactory = compiler.createAstFactory();
     this.namespace = compiler.getTranspilationNamespace();
+    this.emitIteratorClose = !compiler.getOptions().getAssumeForOfIteratorCloseIsNotNeeded();
   }
 
   @Override
@@ -146,35 +146,34 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     Node newBody = IR.block(declarationOrAssign, body).srcref(body);
     Node empty = astFactory.createEmpty();
     Node newFor = IR.forNode(empty, cond, incr, newBody).srcrefTreeIfMissing(node);
-
-    // Build finally block:
-    // (0, $jscomp.iteratorClose)($jscomp$iter$0, $jscomp$key$extraName);
-    Node callIteratorClose =
-        astFactory
-            .createJscompIteratorCloseCall(
-                iterName.cloneTree(), iterResult.cloneTree(), this.namespace)
-            .srcrefTreeIfMissing(node);
-    Node finallyBlock = astFactory.createBlock(astFactory.exprResult(callIteratorClose));
+    node.replaceWith(newFor);
 
     // Check if the for loop has a parent that is a label i.e. `loop1: for(...of ...)`
-    List<Node> labelNames = new ArrayList<>();
-    Node insertionPoint = node;
+    Node insertionPoint = newFor;
     while (insertionPoint.getParent() != null && insertionPoint.getParent().isLabel()) {
       insertionPoint = insertionPoint.getParent();
-      labelNames.add(insertionPoint.getFirstChild().cloneNode());
     }
 
-    Node innerLoop = newFor;
-    for (Node labelName : labelNames) {
-      innerLoop = astFactory.createLabel(labelName, innerLoop);
+    if (emitIteratorClose) {
+      // Build finally block:
+      // (0, $jscomp.iteratorClose)($jscomp$iter$0, $jscomp$key$extraName);
+      Node callIteratorClose =
+          astFactory
+              .createJscompIteratorCloseCall(
+                  iterName.cloneTree(), iterResult.cloneTree(), this.namespace)
+              .srcrefTreeIfMissing(node);
+      Node finallyBlock = astFactory.createBlock(astFactory.exprResult(callIteratorClose));
+      Node tryBlock = astFactory.createBlock();
+      Node tryFinally =
+          astFactory.createTryFinally(tryBlock, finallyBlock).srcrefTreeIfMissing(node);
+
+      insertionPoint.replaceWith(tryFinally);
+      tryBlock.addChildToBack(insertionPoint);
+      insertionPoint = tryFinally;
     }
-    Node tryBlock = astFactory.createBlock(innerLoop);
-    Node tryFinally = astFactory.createTryFinally(tryBlock, finallyBlock).srcrefTreeIfMissing(node);
 
-    insertionPoint.replaceWith(tryFinally);
-
-    initIter.insertBefore(tryFinally);
+    initIter.insertBefore(insertionPoint);
     initIterResult.insertAfter(initIter);
-    compiler.reportChangeToEnclosingScope(tryFinally);
+    compiler.reportChangeToEnclosingScope(insertionPoint);
   }
 }

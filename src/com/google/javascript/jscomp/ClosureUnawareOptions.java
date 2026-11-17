@@ -97,6 +97,7 @@ class ClosureUnawareOptions {
     shadowOptions.setCodingConvention(CodingConventions.getDefault());
     shadowOptions.setRemoveClosureAsserts(false);
 
+    shadowOptions.setAssumeForOfIteratorCloseIsNotNeeded(false);
     shadowOptions.setAssumeGettersArePure(false);
     shadowOptions.setAssumePropertiesAreStaticallyAnalyzable(false);
     shadowOptions.setAssumeStaticInheritanceIsNotUsed(false);

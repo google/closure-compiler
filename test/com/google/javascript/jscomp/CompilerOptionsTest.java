@@ -322,7 +322,7 @@ public final class CompilerOptionsTest {
 
     String expected =
         "CompilerOptions{aliasStringsMode=NONE, ambiguateProperties=false, angularPass=false,"
-            + " assumeGettersArePure=true,"
+            + " assumeForOfIteratorCloseIsNotNeeded=false, assumeGettersArePure=true,"
             + " assumePropertiesAreStaticallyAnalyzable=true, assumeStrictThis=false,"
             + " browserResolverPrefixReplacements={}, checkDeterminism=false,"
             + " checkSuspiciousCode=false, checkSymbols=false, checkTypes=false, checksOnly=false,"
