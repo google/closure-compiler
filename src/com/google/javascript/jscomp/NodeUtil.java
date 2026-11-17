@@ -4327,30 +4327,61 @@ public final class NodeUtil {
     }
   }
 
-  /** Finds the number of times a type is referenced within the node tree. */
+  /**
+   * Finds the number of times a type is referenced within the node tree.
+   *
+   * @deprecated This performs a full traversal of the subtree on every call, which makes it easy to
+   *     accidentally write quadratic algorithms. See {@link #has} for details.
+   */
+  @Deprecated
   static int getNodeTypeReferenceCount(
       Node node, Token type, Predicate<Node> traverseChildrenPred) {
     return getCount(node, new MatchNodeType(type), traverseChildrenPred);
   }
 
-  /** Whether a simple name is referenced within the node tree. */
+  /**
+   * Whether a simple name is referenced within the node tree.
+   *
+   * @deprecated This performs a full traversal of the subtree on every call, which makes it easy to
+   *     accidentally write quadratic algorithms. See {@link #has} for details.
+   */
+  @Deprecated
   static boolean isNameReferenced(Node node, String name, Predicate<Node> traverseChildrenPred) {
     return has(node, new MatchNameNode(name), traverseChildrenPred);
   }
 
-  /** Whether a simple name is referenced within the node tree. */
+  /**
+   * Whether a simple name is referenced within the node tree.
+   *
+   * @deprecated This performs a full traversal of the subtree on every call, which makes it easy to
+   *     accidentally write quadratic algorithms. See {@link #has} for details.
+   */
+  @Deprecated
   static boolean isNameReferenced(Node node, String name) {
     return isNameReferenced(node, name, Predicates.alwaysTrue());
   }
 
-  /** Finds the number of times a simple name is referenced within the node tree. */
+  /**
+   * Finds the number of times a simple name is referenced within the node tree.
+   *
+   * @deprecated This performs a full traversal of the subtree on every call, which makes it easy to
+   *     accidentally write quadratic algorithms. See {@link #has} for details.
+   */
+  @Deprecated
   static int getNameReferenceCount(Node node, String name) {
     return getCount(node, new MatchNameNode(name), Predicates.alwaysTrue());
   }
 
   /**
-   * @return Whether the predicate is true for the node or any of its descendants.
+   * Returns whether the predicate is true for the node or any of its descendants.
+   *
+   * @deprecated This performs a full traversal of the subtree rooted at {@code node} on every call.
+   *     That makes it easy to accidentally traverse the AST more than necessary, e.g. calling it
+   *     from within a {@link NodeTraversal} callback or a loop turns an O(n) algorithm into an
+   *     O(n^2) one. Prefer computing the needed information for all nodes in a single traversal
+   *     (e.g. by recording facts in a {@link NodeTraversal.Callback} as you go).
    */
+  @Deprecated
   public static boolean has(Node node, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     if (pred.apply(node)) {
       return true;
@@ -4369,7 +4400,13 @@ public final class NodeUtil {
     return false;
   }
 
-  /** Returns the first Node matching the given pred via a pre-order traversal. */
+  /**
+   * Returns the first Node matching the given pred via a pre-order traversal.
+   *
+   * @deprecated This performs a full traversal of the subtree on every call, which makes it easy to
+   *     accidentally write quadratic algorithms. See {@link #has} for details.
+   */
+  @Deprecated
   public static @Nullable Node findPreorder(
       Node node, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     if (pred.apply(node)) {
@@ -4391,8 +4428,12 @@ public final class NodeUtil {
   }
 
   /**
-   * @return The number of times the predicate is true for the node or any of its descendants.
+   * Returns the number of times the predicate is true for the node or any of its descendants.
+   *
+   * @deprecated This performs a full traversal of the subtree on every call, which makes it easy to
+   *     accidentally write quadratic algorithms. See {@link #has} for details.
    */
+  @Deprecated
   public static int getCount(Node n, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     int total = 0;
 
