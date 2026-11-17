@@ -48,6 +48,15 @@ function Iterator() {}
 Iterator.from = function(iterable) {};
 
 /**
+ * @param {...!Iterable<T>} iterables
+ * @return {!Iterator<T>}
+ * @template T
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/concat
+ */
+Iterator.concat = function(iterables) {};
+
+/**
  * @override
  * @param {?=} opt_value
  * @return {!IIterableResult<T>}
