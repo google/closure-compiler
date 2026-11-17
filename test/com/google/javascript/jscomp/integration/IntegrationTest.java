@@ -3015,6 +3015,25 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void renameVars_skipsReservedVars() {
+    CompilerOptions options = createCompilerOptions();
+    options.setVariableRenaming(VariableRenamingPolicy.ALL);
+
+    options.setRenamePrefix("opr");
+    test(options, "var abc = 3;", "var opra = 3;");
+
+    options.setRenamePrefix("fbq");
+    test(options, "var abc = 3;", "var fbqa = 3;");
+
+    options.setRenamePrefix("");
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "testExterns.js", new TestExternsBuilder().addExtra("var opr; var fbq;").build()));
+    test(options, "var abc = opr || fbq;", "var a = opr || fbq;");
+  }
+
+  @Test
   public void testRenameLabels() {
     CompilerOptions options = createCompilerOptions();
     String code = "longLabel: for(;true;) { break longLabel; }";
