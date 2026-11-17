@@ -362,12 +362,6 @@ Document.prototype.getBoxObjectFor = function(element) {};
 Range.prototype.compareNode;
 
 /**
- * @type {!NodeList<!Element>}
- * @see https://developer.mozilla.org/en/DOM/element.children
- */
-Element.prototype.children;
-
-/**
  * Firebug sets this property on elements it is inserting into the DOM.
  * @type {boolean}
  */
