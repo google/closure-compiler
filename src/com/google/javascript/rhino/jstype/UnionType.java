@@ -58,6 +58,7 @@ import com.google.javascript.rhino.Outcome;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -669,10 +670,16 @@ public final class UnionType extends JSType {
    * <p>Most users of this class should prefer {@link JSTypeRegistry#createUnionType} instead.
    */
   public static final class Builder {
+    private static final int IDENTITY_SET_THRESHOLD = 8;
+
     private final @Nullable UnionType rebuildTarget;
     private final JSTypeRegistry registry;
 
     private final List<JSType> alternates = new ArrayList<>();
+
+    @SuppressWarnings("DeterministicDatastructure")
+    private @Nullable IdentityHashMap<JSType, Boolean> alternateIdentitySet = null;
+
     private @Nullable ImmutableList<JSType> finalAlternates = null;
 
     // If a union has ? or *, we do not care about any other types, except for undefined (for
@@ -757,13 +764,10 @@ public final class UnionType extends JSType {
       // JSType operations like equality and subtyping are not reliable pre-resolution.
       if (!alternate.isResolved()) {
         this.alternatesResolvedBeforeBuild = false;
-
-        for (JSType current : alternates) {
-          if (identical(current, alternate)) {
-            return this;
-          }
+        if (containsIdenticalAlternate(alternate)) {
+          return this;
         }
-        alternates.add(alternate);
+        appendAlternate(alternate);
         return this;
       }
 
@@ -785,6 +789,10 @@ public final class UnionType extends JSType {
         return this;
       }
 
+      if (containsIdenticalAlternate(alternate)) {
+        return this;
+      }
+
       // Function types are special, because they have their
       // own bizarre sub-lattice. See the comments on
       // FunctionType#supAndInf helper and above at functionTypePosition.
@@ -792,9 +800,15 @@ public final class UnionType extends JSType {
         // See the comments on functionTypePosition above.
         FunctionType other = alternates.get(functionTypePosition).toMaybeFunctionType();
         FunctionType supremum = alternate.toMaybeFunctionType().supAndInfHelper(other, true);
-        alternates.set(functionTypePosition, supremum);
+        replaceAlternate(functionTypePosition, other, supremum);
         return this;
       }
+
+      boolean altIsUnknown = alternate.isUnknownType();
+      boolean altHasTemplateTypesComputed = false;
+      boolean altHasTemplateTypes = false;
+      boolean altIsDisjointValue = isDisjointValueType(alternate);
+      boolean altIsCleanObject = isCleanConcreteObjectForDisjointCheck(alternate);
 
       // Look through the alternates we've got so far,
       // and check if any of them are duplicates of
@@ -805,14 +819,19 @@ public final class UnionType extends JSType {
         if (!current.isResolved()) { // Defer de-duplicating unresolved alternates.
           continue;
         }
+        if (areDisjointFast(altIsDisjointValue, altIsCleanObject, alternate, current)) {
+          continue;
+        }
 
         // Unknown types may just be names that haven't
         // been resolved yet. So keep these in the union, and just use
         // equality checking for simple de-duping.
-        if (alternate.isUnknownType()
-            || current.isUnknownType()
-            || alternate.hasAnyTemplateTypes()
-            || current.hasAnyTemplateTypes()) {
+        boolean curIsUnknown = current.isUnknownType();
+        if (!altIsUnknown && !curIsUnknown && !altHasTemplateTypesComputed) {
+          altHasTemplateTypes = alternate.hasAnyTemplateTypes();
+          altHasTemplateTypesComputed = true;
+        }
+        if (altIsUnknown || curIsUnknown || altHasTemplateTypes || current.hasAnyTemplateTypes()) {
           if (alternate.equals(current)) {
             // Alternate is unnecessary.
             return this;
@@ -871,6 +890,11 @@ public final class UnionType extends JSType {
                 ObjectType rawType = templatizedCurrent.getReferencedObjTypeInternal();
                 // Providing no type-parameter values specializes `rawType` on `?` by default.
                 alternate = registry.createTemplatizedType(rawType, ImmutableList.of());
+                altIsUnknown = alternate.isUnknownType();
+                altHasTemplateTypesComputed = false;
+                altHasTemplateTypes = false;
+                altIsDisjointValue = isDisjointValueType(alternate);
+                altIsCleanObject = isCleanConcreteObjectForDisjointCheck(alternate);
                 removeCurrent = true;
               }
             }
@@ -888,7 +912,7 @@ public final class UnionType extends JSType {
         }
 
         if (removeCurrent) {
-          alternates.remove(index);
+          removeAlternateAt(index);
 
           if (index == functionTypePosition) {
             functionTypePosition = -1;
@@ -906,8 +930,81 @@ public final class UnionType extends JSType {
         functionTypePosition = alternates.size();
       }
 
-      alternates.add(alternate);
+      appendAlternate(alternate);
       return this;
+    }
+
+    private boolean containsIdenticalAlternate(JSType candidate) {
+      if (alternateIdentitySet != null) {
+        return alternateIdentitySet.containsKey(candidate);
+      }
+      for (int i = 0; i < alternates.size(); i++) {
+        if (identical(alternates.get(i), candidate)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    @SuppressWarnings("DeterministicDatastructure")
+    private void appendAlternate(JSType alternate) {
+      if (alternateIdentitySet != null) {
+        alternateIdentitySet.put(alternate, Boolean.TRUE);
+      } else if (alternates.size() >= IDENTITY_SET_THRESHOLD) {
+        IdentityHashMap<JSType, Boolean> set = new IdentityHashMap<>((alternates.size() + 2) * 2);
+        for (int i = 0; i < alternates.size(); i++) {
+          set.put(alternates.get(i), Boolean.TRUE);
+        }
+        set.put(alternate, Boolean.TRUE);
+        alternateIdentitySet = set;
+      }
+      alternates.add(alternate);
+    }
+
+    private void replaceAlternate(int index, JSType previous, JSType replacement) {
+      alternates.set(index, replacement);
+      if (alternateIdentitySet != null && !identical(previous, replacement)) {
+        alternateIdentitySet.remove(previous);
+        alternateIdentitySet.put(replacement, Boolean.TRUE);
+      }
+    }
+
+    private void removeAlternateAt(int index) {
+      JSType removed = alternates.remove(index);
+      if (alternateIdentitySet != null) {
+        alternateIdentitySet.remove(removed);
+      }
+    }
+
+    private static boolean isDisjointValueType(JSType type) {
+      return type instanceof ValueType && !(type instanceof KnownSymbolType);
+    }
+
+    private static boolean isCleanConcreteObjectForDisjointCheck(JSType type) {
+      return type instanceof InstanceObjectType
+          && !type.isUnknownType()
+          && !type.isTemplatizedType()
+          && type.getTemplateTypeMap().isEmpty()
+          && !type.hasAnyTemplateTypes();
+    }
+
+    /**
+     * Fast disjointness check for common resolved alternates that cannot be subtypes of or equal to
+     * each other: two distinct pure {@link ValueType} singletons (excluding {@link
+     * KnownSymbolType}, which is a subtype of {@code symbol}), or a pure {@link ValueType} paired
+     * with a concrete, non-templatized, non-unknown {@link InstanceObjectType}.
+     */
+    private static boolean areDisjointFast(
+        boolean altIsDisjointValue, boolean altIsCleanObject, JSType alternate, JSType current) {
+      if (altIsDisjointValue && isDisjointValueType(current)) {
+        // Each pure ValueType is a distinct concrete subclass singleton in the registry, so
+        // different classes are disjoint and identical instances return false.
+        return alternate.getClass() != current.getClass();
+      }
+      if (altIsDisjointValue && isCleanConcreteObjectForDisjointCheck(current)) {
+        return true;
+      }
+      return altIsCleanObject && isDisjointValueType(current);
     }
 
     private void mayRegisterDroppedProperties(JSType subtype, JSType supertype) {

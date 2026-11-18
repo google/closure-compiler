@@ -42,6 +42,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
@@ -446,6 +447,203 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     assertThat(union.getAlternates()).containsAtLeastElementsIn(classes);
     assertThat(union.getAlternates()).contains(subRec);
     assertThat(union.getAlternates()).hasSize(12);
+  }
+
+  @Test
+  public void
+      testIdentitySetThreshold_growthReplacementsAndRemovalsMaintainIdentityDeduplication() {
+    List<ObjectType> classes = createDistinctInstanceTypes("ThreshCls", 9);
+    FunctionType fnString = createFunctionWithReturn(STRING_TYPE);
+    FunctionType fnNumber = createFunctionWithReturn(NUMBER_TYPE);
+    FunctionType fnSub = createFunctionWithReturn(sub);
+    FunctionType fnBase = createFunctionWithReturn(base);
+
+    UnionType.Builder builder = UnionType.builder(registry);
+    // Stay below IDENTITY_SET_THRESHOLD (7 alternates: sub, fnString, classes[0..4]).
+    builder.addAlternate(sub).addAlternate(fnString);
+    for (int i = 0; i < 5; i++) {
+      builder.addAlternate(classes.get(i));
+    }
+    // Linear identity scan before threshold must drop exact duplicates.
+    builder.addAlternate(sub).addAlternate(fnString).addAlternate(classes.get(0));
+
+    // Cross IDENTITY_SET_THRESHOLD = 8 (7 -> 8 -> 9 -> 10 -> 11 alternates).
+    for (int i = 5; i < classes.size(); i++) {
+      builder.addAlternate(classes.get(i));
+    }
+    // Lazy IdentityHashMap must contain alternates added both before and after crossing 8.
+    builder.addAlternate(classes.get(0)).addAlternate(classes.get(8)).addAlternate(fnString);
+
+    // Function supremum replacement (`replaceAlternate`) updates alternateIdentitySet to hold
+    // `function(): (number|string)` and evict `fnString`.
+    builder.addAlternate(fnNumber);
+    // Removing `sub` via `removeAlternateAt` shifts `functionTypePosition` down and evicts `sub`.
+    builder.addAlternate(base);
+    builder.addAlternate(base).addAlternate(fnString).addAlternate(fnNumber);
+
+    UnionType union = builder.build().toMaybeUnionType();
+    assertThat(union).isNotNull();
+    // 9 classes + base + 1 merged function = 11 alternates.
+    assertThat(union.getAlternates()).hasSize(11);
+    assertThat(union.getAlternates()).containsAtLeastElementsIn(classes);
+    assertThat(union.getAlternates()).contains(base);
+    assertThat(union.getAlternates()).doesNotContain(sub);
+    assertThat(union.getAlternates().stream().filter(JSType::isFunctionType).count()).isEqualTo(1);
+    assertType(
+            union.getAlternates().stream().filter(JSType::isFunctionType).findFirst().orElseThrow())
+        .isEqualTo(createFunctionWithReturn(registry.createUnionType(NUMBER_TYPE, STRING_TYPE)));
+
+    // Also verify `replaceAlternate` when supremum is reference-identical to the incoming function
+    // (`fnBase`), and `removeAlternateAt` when `OBJECT_TYPE` removes all classes and the function
+    // at `index == functionTypePosition`.
+    UnionType.Builder collapseBuilder = UnionType.builder(registry);
+    collapseBuilder.addAlternate(STRING_TYPE).addAlternate(fnSub);
+    for (ObjectType cls : classes) {
+      collapseBuilder.addAlternate(cls);
+    }
+    collapseBuilder.addAlternate(fnBase).addAlternate(fnBase);
+    collapseBuilder.addAlternate(OBJECT_TYPE).addAlternate(OBJECT_TYPE).addAlternate(STRING_TYPE);
+
+    UnionType collapsed = collapseBuilder.build().toMaybeUnionType();
+    assertThat(collapsed).isNotNull();
+    assertThat(collapsed.getAlternates()).containsExactly(STRING_TYPE, OBJECT_TYPE);
+  }
+
+  @Test
+  public void testDisjointFastSkips_valueTypesKnownSymbolsAndCleanInstanceObjects() {
+    // All 7 pure ValueType singletons are mutually disjoint, while identical repeats short-circuit.
+    UnionType allPureValues =
+        UnionType.builder(registry)
+            .addAlternate(BOOLEAN_TYPE)
+            .addAlternate(NUMBER_TYPE)
+            .addAlternate(BIGINT_TYPE)
+            .addAlternate(STRING_TYPE)
+            .addAlternate(VOID_TYPE)
+            .addAlternate(NULL_TYPE)
+            .addAlternate(SYMBOL_TYPE)
+            .addAlternate(STRING_TYPE)
+            .addAlternate(SYMBOL_TYPE)
+            .build()
+            .toMaybeUnionType();
+    assertThat(allPureValues).isNotNull();
+    assertThat(allPureValues.getAlternates())
+        .containsExactly(
+            BOOLEAN_TYPE,
+            NUMBER_TYPE,
+            BIGINT_TYPE,
+            STRING_TYPE,
+            VOID_TYPE,
+            NULL_TYPE,
+            SYMBOL_TYPE);
+
+    // KnownSymbolType extends SymbolType (a ValueType) and is a subtype of `symbol`, so it must NOT
+    // be fast-skipped as disjoint from SYMBOL_TYPE, while distinct KnownSymbolTypes stay separate.
+    KnownSymbolType symIterator = new KnownSymbolType(registry, "Symbol.iterator");
+    KnownSymbolType symAsyncIterator = new KnownSymbolType(registry, "Symbol.asyncIterator");
+    UnionType distinctKnownSymbols =
+        registry.createUnionType(symIterator, symAsyncIterator).toMaybeUnionType();
+    assertThat(distinctKnownSymbols).isNotNull();
+    assertThat(distinctKnownSymbols.getAlternates()).containsExactly(symIterator, symAsyncIterator);
+    assertThat(registry.createUnionType(symIterator, SYMBOL_TYPE)).isSameInstanceAs(SYMBOL_TYPE);
+    assertThat(registry.createUnionType(SYMBOL_TYPE, symIterator)).isSameInstanceAs(SYMBOL_TYPE);
+
+    // Pure ValueTypes and clean concrete InstanceObjectTypes (including boxed wrapper objects) are
+    // mutually disjoint regardless of insertion order.
+    UnionType valueThenObjects =
+        UnionType.builder(registry)
+            .addAlternate(STRING_TYPE)
+            .addAlternate(NUMBER_TYPE)
+            .addAlternate(BOOLEAN_TYPE)
+            .addAlternate(STRING_OBJECT_TYPE)
+            .addAlternate(NUMBER_OBJECT_TYPE)
+            .addAlternate(BOOLEAN_OBJECT_TYPE)
+            .addAlternate(base)
+            .addAlternate(DATE_TYPE)
+            .build()
+            .toMaybeUnionType();
+    UnionType objectsThenValues =
+        UnionType.builder(registry)
+            .addAlternate(STRING_OBJECT_TYPE)
+            .addAlternate(NUMBER_OBJECT_TYPE)
+            .addAlternate(BOOLEAN_OBJECT_TYPE)
+            .addAlternate(base)
+            .addAlternate(DATE_TYPE)
+            .addAlternate(STRING_TYPE)
+            .addAlternate(NUMBER_TYPE)
+            .addAlternate(BOOLEAN_TYPE)
+            .build()
+            .toMaybeUnionType();
+    assertThat(valueThenObjects).isNotNull();
+    assertThat(valueThenObjects.getAlternates()).hasSize(8);
+    assertType(valueThenObjects).isEqualTo(objectsThenValues);
+  }
+
+  @Test
+  public void testHoistedLoopInvariants_unresolvedNamedTypesAndTemplateTypes() {
+    List<ObjectType> classes = createDistinctInstanceTypes("InvCls", 8);
+    TemplateType templateT = registry.createTemplateType("T");
+    TemplatizedType arrayOfT1 = registry.createTemplatizedType(ARRAY_TYPE, templateT);
+    TemplatizedType arrayOfT2 =
+        new TemplatizedType(registry, ARRAY_TYPE, ImmutableList.of(templateT));
+    TemplatizedType arrayOfString = registry.createTemplatizedType(ARRAY_TYPE, STRING_TYPE);
+    TemplatizedType arrayOfNumber = registry.createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE);
+    TemplatizedType arrayOfUnknown = registry.createTemplatizedType(ARRAY_TYPE, UNKNOWN_TYPE);
+
+    // `Array<T>` is not itself an unknown type, so `altHasTemplateTypes` must prevent Case 7a from
+    // merging `(Array<T> | Array<string>)` into `Array<?>`, while deduplicating equal `Array<T>`s.
+    UnionType templateAndConcrete =
+        UnionType.builder(registry)
+            .addAlternate(arrayOfString)
+            .addAlternate(arrayOfT1)
+            .addAlternate(arrayOfT2)
+            .addAlternate(templateT)
+            .addAlternate(templateT)
+            .build()
+            .toMaybeUnionType();
+    assertThat(templateAndConcrete).isNotNull();
+    assertThat(templateAndConcrete.getAlternates())
+        .containsExactly(arrayOfString, arrayOfT1, templateT);
+
+    // Combine unresolved NamedTypes, template-bearing types, and Case 7a mid-loop rewrites across
+    // resolution.
+    registry.declareType(EMPTY_SCOPE, "AliasArrayNum", arrayOfNumber);
+    UnionType deferredUnion;
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      NamedType unresolvedAlias =
+          registry.createNamedType(EMPTY_SCOPE, "AliasArrayNum", "test.js", 1, 1);
+
+      UnionType.Builder builder = UnionType.builder(registry);
+      for (ObjectType cls : classes) {
+        builder.addAlternate(cls);
+      }
+      builder
+          .addAlternate(unresolvedAlias)
+          .addAlternate(unresolvedAlias)
+          .addAlternate(arrayOfString)
+          .addAlternate(arrayOfT1)
+          .addAlternate(arrayOfT2);
+
+      deferredUnion = builder.build().toMaybeUnionType();
+      assertThat(deferredUnion).isNotNull();
+      assertThat(deferredUnion.isResolved()).isFalse();
+      // Duplicate `unresolvedAlias` (by identity) and `arrayOfT2` (by template equality) are
+      // dropped immediately; `unresolvedAlias` defers merging with `arrayOfString` until close.
+      assertThat(deferredUnion.getAlternates()).hasSize(11);
+    }
+
+    assertThat(deferredUnion.isResolved()).isTrue();
+    // On resolution, `AliasArrayNum` resolves to `Array<number>` and merges with `Array<string>`
+    // into `Array<?>` via Case 7a (resetting hoisted invariants so `Array<T>` stays distinct).
+    assertThat(deferredUnion.getAlternates()).hasSize(10);
+    assertThat(deferredUnion.getAlternates()).containsAtLeastElementsIn(classes);
+    assertThat(deferredUnion.getAlternates()).contains(arrayOfT1);
+    assertType(deferredUnion)
+        .isEqualTo(
+            UnionType.builder(registry)
+                .addAlternates(classes)
+                .addAlternate(arrayOfUnknown)
+                .addAlternate(arrayOfT1)
+                .build());
   }
 
   private List<ObjectType> createDistinctInstanceTypes(String prefix, int count) {
