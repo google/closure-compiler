@@ -207,7 +207,7 @@ public final class SourceMapTest extends SourceMapTestCase {
             "version":3,
             "file":"testcode",
             "lineCount":1,
-            "mappings":"A,aAAAA,QAASA,IAAG,EAAG,E,MAASA,GAAAA;",
+            "mappings":"A,aAAAA,QAASA,IAAG,EAAG,E,MAASA;",
             "sources":["foo.js"],
             "names":["foo"]
             }

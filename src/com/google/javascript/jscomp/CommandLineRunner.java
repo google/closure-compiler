@@ -319,8 +319,9 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         usage =
             "Omits source map segments that map to the same original position and name as the"
                 + " previous segment on the same generated line. Reduces the size of source maps"
-                + " without changing the original position of any generated position.")
-    private boolean sourceMapMergeIdenticalSegments = false;
+                + " without changing the original position of any generated position. On by"
+                + " default; pass --source_map_merge_identical_segments=false to disable.")
+    private boolean sourceMapMergeIdenticalSegments = true;
 
     @Option(
         name = "--property_renaming_report",

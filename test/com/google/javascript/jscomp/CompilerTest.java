@@ -1573,7 +1573,7 @@ public final class CompilerTest {
 "version":3,
 "file":"output.js",
 "lineCount":1,
-"mappings":"AAQAA,OAAQC,CAAAA,GAAR,CAAY,IALVC,QAAA,EAAyB,EAKf,CAAM,CAAN,CAAZ;",
+"mappings":"AAQAA,OAAQC,IAAR,CAAY,IALVC,QAAA,EAAyB,EAKf,CAAM,CAAN,CAAZ;",
 "sources":["../test/foo.ts"],
 "sourcesContent":["var A = (function () {\\n    function A(input) {\\n        this.a = input;\\n    }\\n    return A;\\n}());\\nconsole.log(new A(1));"],
 "names":["console","log","X"]

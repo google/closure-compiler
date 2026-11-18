@@ -89,7 +89,7 @@ public final class TranspilerTest {
     assertThat(result.errors).isEmpty();
     assertThat(result.transformed).isTrue();
     assertThat(result.sourceMap)
-        .contains("\"mappings\":\"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA,SAAA,EAAA;AAAA,CAAhB;;\"");
+        .contains("\"mappings\":\"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA;AAAA,CAAhB;;\"");
   }
 
   @Test

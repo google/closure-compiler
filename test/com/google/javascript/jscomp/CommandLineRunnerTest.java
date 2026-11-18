@@ -329,7 +329,7 @@ public final class CommandLineRunnerTest {
     expectedSourceMap.addProperty("version", 3);
     expectedSourceMap.addProperty("file", compiledFile.getAbsolutePath());
     expectedSourceMap.addProperty("lineCount", 1);
-    expectedSourceMap.addProperty("mappings", "AAEAA,OAAQC,CAAAA,GAAR,CADkBC,MAClB;");
+    expectedSourceMap.addProperty("mappings", "AAEAA,OAAQC,IAAR,CADkBC,MAClB;");
     expectedSourceMap.add("sources", newJsonArrayOfStrings(srcFile.getAbsolutePath()));
     expectedSourceMap.add(
         "sourcesContent", newJsonArrayOfStrings(java.nio.file.Files.readString(srcFile.toPath())));
@@ -1532,14 +1532,14 @@ public final class CommandLineRunnerTest {
   @Test
   public void testSourceMapMergeIdenticalSegments_default() {
     testSame("var x = 3;");
-    assertThat(lastCompiler.getOptions().getSourceMapMergeIdenticalSegments()).isFalse();
+    assertThat(lastCompiler.getOptions().getSourceMapMergeIdenticalSegments()).isTrue();
   }
 
   @Test
   public void testSourceMapMergeIdenticalSegments_flag() {
-    args.add("--source_map_merge_identical_segments");
+    args.add("--source_map_merge_identical_segments=false");
     testSame("var x = 3;");
-    assertThat(lastCompiler.getOptions().getSourceMapMergeIdenticalSegments()).isTrue();
+    assertThat(lastCompiler.getOptions().getSourceMapMergeIdenticalSegments()).isFalse();
   }
 
   @Test
@@ -2748,7 +2748,7 @@ public final class CommandLineRunnerTest {
             \\"file\\":\\"bar.js\\",\\n\
             \\"lineCount\\":1,\\n\
             \\"mappings\\":\\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,\
-            OAAAF,CAAAA,GAAAE,CAAYD,CAAZC,CADc,CAGhBF,GAAAA,CAAI,QAAJA;\\",\\n\
+            OAAAF,IAAAE,CAAYD,CAAZC,CADc,CAGhBF,IAAI,QAAJA;\\",\\n\
             \\"sources\\":[\\"one.js\\"],\\n\
             \\"names\\":[\\"log\\",\\"a\\",\\"console\\"]\\n\
             }\\n\
@@ -2808,7 +2808,7 @@ public final class CommandLineRunnerTest {
             \\"file\\":\\"bar.js\\",\\n\
             \\"lineCount\\":1,\\n\
             \\"mappings\\":\\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,\
-            OAAAF,CAAAA,GAAAE,CAAYD,CAAZC,CADc,CAGhBF,GAAAA,CAAI,QAAJA;\\",\\n\
+            OAAAF,IAAAE,CAAYD,CAAZC,CADc,CAGhBF,IAAI,QAAJA;\\",\\n\
             \\"sources\\":[\\"one.js\\"],\\n\
             \\"names\\":[\\"log\\",\\"a\\",\\"console\\"]\\n\
             }\\n\
@@ -2939,8 +2939,7 @@ public final class CommandLineRunnerTest {
             \\"version\\":3,\\n\
             \\"file\\":\\"out.js\\",\\n\
             \\"lineCount\\":1,\\n\
-            \\"mappings\\":\\"AAAA,IAAA,WAAA,CAAA,QAAA,EAAA,CAAAA,QAAQC,CAAAA,GAAR,\
-            CAAY,KAAZ,C,CCAA,IAAA,WAAA,CAAA,QAAA,EAAA;\\",\\n\
+            \\"mappings\\":\\"AAAA,2BAAAA,QAAQC,IAAR,CAAY,KAAZ,C,CCAA;\\",\\n\
             \\"sources\\":[\\"bar.js\\",\\"foo.js\\"],\\n\
             \\"names\\":[\\"console\\",\\"log\\"]\\n\
             }\\n\

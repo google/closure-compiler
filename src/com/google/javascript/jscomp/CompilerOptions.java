@@ -1174,7 +1174,7 @@ public class CompilerOptions {
    * Whether to omit source map segments that are identical to the previous segment on the same
    * generated line. Lookups from a generated position still return the same original position.
    */
-  private boolean sourceMapMergeIdenticalSegments = false;
+  private boolean sourceMapMergeIdenticalSegments = true;
 
   /** Charset to use when generating code. If null, then output ASCII. */
   private transient Charset outputCharset;
@@ -3124,7 +3124,8 @@ public class CompilerOptions {
   /**
    * Sets whether to omit a source map segment whose source, original position, and name are
    * identical to those of the previous segment on the same generated line. Every generated position
-   * still resolves to the same original mapping, so this only reduces the source map size.
+   * still resolves to the same original mapping, so this only reduces the source map size. Enabled
+   * by default.
    */
   public void setSourceMapMergeIdenticalSegments(boolean sourceMapMergeIdenticalSegments) {
     this.sourceMapMergeIdenticalSegments = sourceMapMergeIdenticalSegments;

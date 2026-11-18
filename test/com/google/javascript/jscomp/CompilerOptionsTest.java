@@ -380,7 +380,7 @@ public final class CompilerOptionsTest {
             + " rewriteModulesBeforeTypechecking=false, rewritePolyfills=false,"
             + " runtimeLibraryMode=INJECT, skipNonTranspilationPasses=false,"
             + " smartNameRemoval=false, sourceMapDetailLevel=ALL, sourceMapFormat=DEFAULT,"
-            + " sourceMapLocationMappings=[], sourceMapMergeIdenticalSegments=false,"
+            + " sourceMapLocationMappings=[], sourceMapMergeIdenticalSegments=true,"
             + " strictMessageReplacement=false,"
             + " stripNamePrefixes=[prefixA, prefixB], stripNameSuffixes=[suffixA, suffixB],"
             + " stripTypes=[typeA, typeB], summaryDetailLevel=1, tracer=OFF, trustedStrings=false,"

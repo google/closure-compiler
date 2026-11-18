@@ -62,7 +62,7 @@ public abstract class SourceMapTestCase {
 
   protected DetailLevel detailLevel = DetailLevel.ALL;
   protected boolean sourceMapIncludeSourcesContent = false;
-  protected boolean sourceMapMergeIdenticalSegments = false;
+  protected boolean sourceMapMergeIdenticalSegments = true;
 
   protected static class RunResult {
     public String generatedSource;

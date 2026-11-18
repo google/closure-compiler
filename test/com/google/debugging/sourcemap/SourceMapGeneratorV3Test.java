@@ -338,7 +338,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             .setFile("testcode")
             .setLineCount(6)
             .setMappings(
-                "A;;;;aAGAA,OAAQC,CAAAA,GAAR,CAAYC,CAAZ,CAAgB,mxCAAhB;AAAsyCC,CAAtyC,CAA0yCC,CAA1yC,CAA8yCC,CAA9yC;")
+                "A;;;;aAGAA,OAAQC,IAAR,CAAYC,CAAZ,CAAgB,mxCAAhB;AAAsyCC,CAAtyC,CAA0yCC,CAA1yC,CAA8yCC,CAA9yC;")
             .setSources(getEncodedFileName())
             .setNames("console", "log", "a", "c", "d", "e")
             .build());
@@ -384,7 +384,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
             .setFile("testcode")
             .setLineCount(6)
             .setMappings(
-                "A;;;;aAGAA,OAAQC,CAAAA,GAAR,CAAYC,CAAZ;AAAsyCC,CAAtyC,CAA0yCC,CAA1yC,CAA8yCC,CAA9yC;")
+                "A;;;;aAGAA,OAAQC,IAAR,CAAYC,CAAZ;AAAsyCC,CAAtyC,CAA0yCC,CAA1yC,CAA8yCC,CAA9yC;")
             .setSources(getEncodedFileName())
             .setNames("console", "log", "a", "c", "d", "e")
             .build());
@@ -820,17 +820,20 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
   }
 
   @Test
-  public void testMergeIdenticalSegments_disabledByDefaultKeepsEverySegment() throws Exception {
+  public void testMergeIdenticalSegments_disabledKeepsEverySegment() throws Exception {
     String expectedMappings =
         "AACCA,EAAAA,GAAAA,GAAAA,EACE,EADFA,EAAAC,EAAAD,I,ECIDE;GAAAA,GAAAA,G,EAAAA,ECAAA;";
     assertThat(getMappings(buildMergeSampleMappings(false))).isEqualTo(expectedMappings);
+  }
 
+  @Test
+  public void testMergeIdenticalSegments_enabledByDefault() throws Exception {
     SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
     addMapping(generator, "a.js", "x", 1, 1, 0, 0, 0, 20);
     addMapping(generator, "a.js", "x", 1, 1, 0, 2, 0, 5);
     StringBuilder out = new StringBuilder();
     generator.appendTo(out, "out.js");
-    assertThat(countSegments(out.toString())).isEqualTo(3);
+    assertThat(countSegments(out.toString())).isEqualTo(1);
   }
 
   @Test

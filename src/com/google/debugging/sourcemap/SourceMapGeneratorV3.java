@@ -110,7 +110,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    * Whether to omit a mapped segment whose original position and name are identical to those of the
    * previous segment written on the same generated line.
    */
-  private boolean mergeIdenticalSegments = false;
+  private boolean mergeIdenticalSegments = true;
 
   /** {@inheritDoc} */
   @Override
@@ -142,6 +142,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    * to the closest preceding segment on the line, which carries the same original position and
    * name. The first segment of each generated line is always written, and unmapped segments are
    * never merged. Reverse lookups may report fewer generated columns for an original position.
+   * Enabled by default.
    */
   @Override
   public void setMergeIdenticalSegments(boolean mergeIdenticalSegments) {

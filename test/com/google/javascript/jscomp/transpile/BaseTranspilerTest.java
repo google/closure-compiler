@@ -92,7 +92,7 @@ public final class BaseTranspilerTest {
     assertThat(result.source).isEqualTo("var x = function() {\n  return 42;\n};\n");
     assertThat(result.transpiled).isTrue();
     assertThat(result.sourceMap)
-        .contains("\"mappings\":\"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA,SAAA,EAAA;AAAA,CAAhB;;\"");
+        .contains("\"mappings\":\"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA;AAAA,CAAhB;;\"");
   }
 
   @Test
@@ -146,7 +146,7 @@ public final class BaseTranspilerTest {
             "version":3,
             "file":"/source.js",
             "lineCount":4,
-            "mappings":"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA,SAAA,EAAA;AAAA,CAAhB;;",
+            "mappings":"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA;AAAA,CAAhB;;",
             "sources":["/source.ts"],
             "sourcesContent":["const x = () => 42;\\n"],
             "names":["x"]
