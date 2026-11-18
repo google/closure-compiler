@@ -84,6 +84,27 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSuperElsewhereInReceiverChain() {
+    testWithPrefix(
+        """
+        function Foo(){}
+        Foo.prototype.bar=function(){return this.baz};
+        class Base { getFoo() { return new Foo(); } }
+        """,
+        """
+        class Derived extends Base {
+          derivedMethod() { return super.getFoo().bar(); }
+        }
+        """,
+        // TODO(b/586967375): This could be inlined, since `super` is not the immediate receiver.
+        """
+        class Derived extends Base {
+          derivedMethod() { return super.getFoo().bar(); }
+        }
+        """);
+  }
+
+  @Test
   public void testSimpleInline1() {
     testWithPrefix(
         """
