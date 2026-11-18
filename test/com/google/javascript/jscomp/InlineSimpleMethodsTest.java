@@ -96,10 +96,9 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
           derivedMethod() { return super.getFoo().bar(); }
         }
         """,
-        // TODO(b/586967375): This could be inlined, since `super` is not the immediate receiver.
         """
         class Derived extends Base {
-          derivedMethod() { return super.getFoo().bar(); }
+          derivedMethod() { return super.getFoo().baz; }
         }
         """);
   }

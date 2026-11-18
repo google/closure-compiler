@@ -122,7 +122,11 @@ class InlineSimpleMethods implements CompilerPass {
       Node firstDefinition = definitions.iterator().next();
 
       // Do not inline if the callsite is a derived class calling a base method using `super.`
-      if (!argsMayHaveSideEffects(callNode) && !NodeUtil.referencesSuper(callNode)) {
+      // Only the immediate receiver matters: `super` elsewhere in the receiver chain or in the
+      // arguments stays at the call site, and InvocationsCallback guarantees the callee is a
+      // GETPROP. Avoid searching the whole call subtree, which is quadratic for long call chains.
+      Node receiver = callNode.getFirstChild().getFirstChild();
+      if (!argsMayHaveSideEffects(callNode) && !receiver.isSuper()) {
         // Verify this is a trivial return
         Node returned = returnedExpression(firstDefinition);
         if (returned != null) {
