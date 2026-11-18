@@ -4556,6 +4556,10 @@ google.maps.JourneySharingLibrary.prototype.WaypointType;
 /**
  * Contains details of the author of a KML document or feature.
  * @record
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlAuthor = function() {};
 
@@ -4582,6 +4586,10 @@ google.maps.KmlAuthor.prototype.uri;
  * clicked. The data contained in this object mirrors that associated with the
  * feature in the KML or GeoRSS markup in which it is declared.
  * @record
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlFeatureData = function() {};
 
@@ -4634,9 +4642,10 @@ google.maps.KmlFeatureData.prototype.snippet;
  * @param {?google.maps.KmlLayerOptions=} opts Options for this layer.
  * @extends {google.maps.MVCObject}
  * @constructor
- * @deprecated As of version 3.65, google.maps.KmlLayer is deprecated. For
- *     alternative methods of displaying KML data on the map, see <a
- *     href="https://developers.devsite.corp.google.com/maps/deprecations#kml_layer_deprecated_as_of_april_30_2026">https://developers.devsite.corp.google.com/maps/deprecations#kml_layer_deprecated_as_of_april_30_2026</a>
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlLayer = function(opts) {};
 
@@ -4708,6 +4717,10 @@ google.maps.KmlLayer.prototype.setZIndex = function(zIndex) {};
 /**
  * Metadata for a single KML layer, in JSON format.
  * @record
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlLayerMetadata = function() {};
 
@@ -4747,6 +4760,10 @@ google.maps.KmlLayerMetadata.prototype.snippet;
  * This object defines the properties that can be set on a <code>KmlLayer</code>
  * object.
  * @record
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlLayerOptions = function() {};
 
@@ -4806,6 +4823,10 @@ google.maps.KmlLayerOptions.prototype.zIndex;
  * google.maps.importLibrary("maps");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
  * @enum {string}
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlLayerStatus = {
   /**
@@ -4850,6 +4871,10 @@ google.maps.KmlLayerStatus = {
 /**
  * The properties of a click event on a KML/KMZ or GeoRSS document.
  * @record
+ * @deprecated The KmlLayer functionality in the Maps JavaScript API is no
+ *     longer available in the Maps JavaScript API as of version 3.66. For more
+ *     info, see <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>.
  */
 google.maps.KmlMouseEvent = function() {};
 
@@ -6833,7 +6858,6 @@ google.maps.Maps3DLibrary.prototype.FlattenerElement;
 google.maps.Maps3DLibrary.prototype.GestureHandling;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
  * @type {typeof google.maps.maps3d.Label3DElement}
  */
 google.maps.Maps3DLibrary.prototype.Label3DElement;
@@ -6842,6 +6866,11 @@ google.maps.Maps3DLibrary.prototype.Label3DElement;
  * @type {typeof google.maps.maps3d.LocationClickEvent}
  */
 google.maps.Maps3DLibrary.prototype.LocationClickEvent;
+
+/**
+ * @type {typeof google.maps.maps3d.LocationPointerEvent}
+ */
+google.maps.Maps3DLibrary.prototype.LocationPointerEvent;
 
 /**
  * @type {typeof google.maps.maps3d.Map3DElement}
@@ -6912,6 +6941,11 @@ google.maps.Maps3DLibrary.prototype.Polyline3DInteractiveElement;
  * @type {typeof google.maps.maps3d.PopoverElement}
  */
 google.maps.Maps3DLibrary.prototype.PopoverElement;
+
+/**
+ * @type {typeof google.maps.maps3d.QualityMode}
+ */
+google.maps.Maps3DLibrary.prototype.QualityMode;
 
 /**
  * @type {typeof google.maps.maps3d.SteadyChangeEvent}
@@ -8200,13 +8234,11 @@ google.maps.PlacesLibrary = function() {};
 google.maps.PlacesLibrary.prototype.AccessibilityOptions;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.ActionButtonPosition}
  */
 google.maps.PlacesLibrary.prototype.ActionButtonPosition;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.ActionLinkType}
  */
 google.maps.PlacesLibrary.prototype.ActionLinkType;
@@ -8222,25 +8254,26 @@ google.maps.PlacesLibrary.prototype.AddressComponent;
 google.maps.PlacesLibrary.prototype.AddressDescriptor;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.AdvancedPlaceDetailsCompactElement}
  */
 google.maps.PlacesLibrary.prototype.AdvancedPlaceDetailsCompactElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.AdvancedPlaceDetailsElement}
  */
 google.maps.PlacesLibrary.prototype.AdvancedPlaceDetailsElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.AdvancedPlaceItemElement}
+ */
+google.maps.PlacesLibrary.prototype.AdvancedPlaceItemElement;
+
+/**
  * @type {typeof google.maps.places.AdvancedPlaceListElement}
  */
 google.maps.PlacesLibrary.prototype.AdvancedPlaceListElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.AdvancedPlaceSearchElement}
  */
 google.maps.PlacesLibrary.prototype.AdvancedPlaceSearchElement;
@@ -8426,7 +8459,6 @@ google.maps.PlacesLibrary.prototype.Place;
 google.maps.PlacesLibrary.prototype.PlaceAccessibleEntranceIconElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.PlaceActionEvent}
  */
 google.maps.PlacesLibrary.prototype.PlaceActionEvent;
@@ -8452,7 +8484,6 @@ google.maps.PlacesLibrary.prototype.PlaceAttributionElement;
 google.maps.PlacesLibrary.prototype.PlaceAutocompleteElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.PlaceButtonElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceButtonElement;
@@ -8508,7 +8539,11 @@ google.maps.PlacesLibrary.prototype.PlaceDetailsPlaceRequestElement;
 google.maps.PlacesLibrary.prototype.PlaceFeatureListElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * @type {typeof google.maps.places.PlaceItemElement}
+ */
+google.maps.PlacesLibrary.prototype.PlaceItemElement;
+
+/**
  * @type {typeof google.maps.places.PlaceLinkElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceLinkElement;
@@ -8519,7 +8554,6 @@ google.maps.PlacesLibrary.prototype.PlaceLinkElement;
 google.maps.PlacesLibrary.prototype.PlaceMediaElement;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * @type {typeof google.maps.places.PlaceNameElement}
  */
 google.maps.PlacesLibrary.prototype.PlaceNameElement;
@@ -8545,9 +8579,26 @@ google.maps.PlacesLibrary.prototype.PlaceOpenNowStatusElement;
 google.maps.PlacesLibrary.prototype.PlacePhoneNumberElement;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {typeof google.maps.places.PlacePinElement}
+ */
+google.maps.PlacesLibrary.prototype.PlacePinElement;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * @type {typeof google.maps.places.PlacePinIcon}
+ */
+google.maps.PlacesLibrary.prototype.PlacePinIcon;
+
+/**
  * @type {typeof google.maps.places.PlacePlusCodeElement}
  */
 google.maps.PlacesLibrary.prototype.PlacePlusCodeElement;
+
+/**
+ * @type {typeof google.maps.places.PlacePopularTimesElement}
+ */
+google.maps.PlacesLibrary.prototype.PlacePopularTimesElement;
 
 /**
  * @type {typeof google.maps.places.PlacePrediction}
@@ -9870,6 +9921,19 @@ google.maps.Settings = function() {};
 
 /**
  * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * A collection of unique content tokens generated by other services. The
+ * returned value is a copy of the internal value that is stored in the
+ * <code>Settings</code> instance. Operations on <code>.contentTokens</code>
+ * will therefore only modify the copy and not the internal value.<br/><br/>To
+ * update the internal value, use <code>addContentTokens()</code> on the
+ * singleton instance (ex:
+ * <code>Settings.getInstance().addContentTokens([token])</code>).
+ * @type {!Iterable<string>}
+ */
+google.maps.Settings.prototype.contentTokens;
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
  * A collection of unique experience IDs to which to attribute Maps JS API
  * calls. The returned value is a copy of the internal value that is stored in
  * the <code>Settings</code> class singleton instance. Operations on
@@ -9894,6 +9958,14 @@ google.maps.Settings.prototype.fetchAppCheckToken;
  * @return {!google.maps.Settings}
  */
 google.maps.Settings.getInstance = function() {};
+
+/**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Registers content tokens.
+ * @param {!Iterable<string>|null|undefined} contentTokens
+ * @return {void}
+ */
+google.maps.Settings.prototype.addContentTokens = function(contentTokens) {};
 
 /**
  *
@@ -13052,9 +13124,12 @@ google.maps.geometry.encoding.encodePath = function(path) {};
 google.maps.geometry.poly = {};
 
 /**
- * Computes whether the given point lies inside the specified polygon.
+ * Computes whether the given point lies inside the specified polygon or circle.
+ * Passing a <code>Circle</code> requires <code>center</code> to be set and
+ * <code>radius</code> to be set to a non-negative value.
  * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} point
- * @param {!google.maps.Polygon} polygon
+ * @param {!google.maps.Polygon|!google.maps.Circle|!google.maps.CircleLiteral}
+ *     polygon
  * @return {boolean}
  */
 google.maps.geometry.poly.containsLocation = function(point, polygon) {};
@@ -16810,7 +16885,7 @@ google.maps.maps3d.CirclePathElement = function(options) {};
 
 /**
  * The center of the circle.
- * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.CirclePathElement.prototype.center;
 
@@ -16831,7 +16906,7 @@ google.maps.maps3d.CirclePathElementOptions = function() {};
 
 /**
  * See {@link google.maps.maps3d.CirclePathElement.center}.
- * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.CirclePathElementOptions.prototype.center;
 
@@ -16858,14 +16933,14 @@ google.maps.maps3d.FlattenerElement = function(options) {};
  * The ordered sequence of coordinates that designates a closed loop. These
  * paths define Exclusion Holes within the polygon&#39;s main path, which is the
  * Flattening Zone. Areas within an innerPath are exempt from flattening.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  */
 google.maps.maps3d.FlattenerElement.prototype.innerPaths;
 
 /**
  * The ordered sequence of coordinates that designates a closed loop. This loop
  * defines the Flattening Zone.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.FlattenerElement.prototype.path;
 
@@ -16878,13 +16953,13 @@ google.maps.maps3d.FlattenerElementOptions = function() {};
 
 /**
  * See {@link google.maps.maps3d.FlattenerElement.innerPaths}.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  */
 google.maps.maps3d.FlattenerElementOptions.prototype.innerPaths;
 
 /**
  * See {@link google.maps.maps3d.FlattenerElement.path}.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.FlattenerElementOptions.prototype.path;
 
@@ -16976,8 +17051,6 @@ google.maps.maps3d.GestureHandling = {
 };
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
  * Represents a text label associated with a 3D marker on a map, allowing
  * independent configuration of properties such as collision behavior.
  *
@@ -17006,8 +17079,6 @@ google.maps.maps3d.Label3DElement.prototype.collisionBehavior;
 google.maps.maps3d.Label3DElement.prototype.for;
 
 /**
- * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
- *
  * Label3DElementOptions object used to define the properties that can be set on
  * a Label3DElement.
  * @record
@@ -17047,6 +17118,28 @@ google.maps.maps3d.LocationClickEvent = function() {};
  * @type {!google.maps.LatLngAltitude|null}
  */
 google.maps.maps3d.LocationClickEvent.prototype.position;
+
+/**
+ * This event is created when a pointer interaction occurs on an interactive
+ * Map3DElement.
+ *
+ * Access by calling `const {LocationPointerEvent} = await
+ * google.maps.importLibrary("maps3d");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.maps3d.LocationPointerEvent = function() {};
+
+/**
+ * The latitude/longitude/altitude that was below the cursor when the event
+ * occurred. Please note, that at coarser levels, less accurate data will be
+ * returned. Also, sea floor elevation may be returned for the altitude value
+ * when clicking at the water surface from higher camera positions. This event
+ * bubbles up through the DOM tree.
+ * @type {!google.maps.LatLngAltitude|null}
+ */
+google.maps.maps3d.LocationPointerEvent.prototype.position;
 
 /**
  * Map3DElement is an HTML interface for the 3D Map view. Note that the
@@ -17099,11 +17192,19 @@ google.maps.maps3d.Map3DElement.prototype.cameraPosition;
  * above the mean sea level. Note that this is not necessarily where the camera
  * is located, as the <code>range</code> field affects the camera&#39;s distance
  * from the map center. If not set, defaults to <code>{lat: 0, lng: 0, altitude:
- * 63170000}</code>. 63170000 meters is a maximum allowed altitude (Earth radius
+ * 63710000}</code>. 63710000 meters is a maximum allowed altitude (Earth radius
  * multiplied by 10).
  * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.center;
+
+/**
+ * Specifies the color scheme for the map. If not set, defaults to {@link
+ * google.maps.ColorScheme.FOLLOW_SYSTEM}.
+ * @default {@link google.maps.ColorScheme.FOLLOW_SYSTEM}
+ * @type {!google.maps.ColorScheme|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.colorScheme;
 
 /**
  * When <code>true</code>, all default UI buttons are hidden.
@@ -17172,7 +17273,7 @@ google.maps.maps3d.Map3DElement.prototype.mapId;
 
 /**
  * The maximum altitude above the ground which will be displayed on the map. A
- * valid value is between <code>0</code> and <code>63170000</code> meters (Earth
+ * valid value is between <code>0</code> and <code>63710000</code> meters (Earth
  * radius multiplied by 10).
  * @type {number|null|undefined}
  */
@@ -17192,6 +17293,17 @@ google.maps.maps3d.Map3DElement.prototype.maxAltitude;
 google.maps.maps3d.Map3DElement.prototype.maxHeading;
 
 /**
+ * The maximum amount of memory, in megabytes, the map may use for rendering.
+ * Lower values reduce memory usage at the cost of visual detail; higher values
+ * allow more detail to be kept in memory. Valid values range from 64 to 2048.
+ * If not set, a limit is chosen automatically based on the device and the size
+ * of the map. Must be set before the map is initialized; changes made
+ * afterwards are ignored.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.maxMemoryMegabytes;
+
+/**
  * The maximum angle of incidence of the map. A valid value is between
  * <code>0</code> and <code>90</code> degrees.
  * @type {number|null|undefined}
@@ -17200,7 +17312,7 @@ google.maps.maps3d.Map3DElement.prototype.maxTilt;
 
 /**
  * The minimum altitude above the ground which will be displayed on the map. A
- * valid value is between <code>0</code> and <code>63170000</code> meters (Earth
+ * valid value is between <code>0</code> and <code>63710000</code> meters (Earth
  * radius multiplied by 10).
  * @type {number|null|undefined}
  */
@@ -17227,11 +17339,21 @@ google.maps.maps3d.Map3DElement.prototype.minHeading;
 google.maps.maps3d.Map3DElement.prototype.minTilt;
 
 /**
- * Specifies a mode the map should be rendered in. If not set, the map won&#39;t
- * be rendered.
+ * Specifies a mode the map should be rendered in. If not set, defaults
+ * to {@link google.maps.maps3d.MapMode.ROADMAP}.
+ * @default {@link google.maps.maps3d.MapMode.ROADMAP}
  * @type {!google.maps.maps3d.MapMode|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.mode;
+
+/**
+ * Specifies the rendering quality of the map. Set to {@link
+ * google.maps.maps3d.QualityMode.PERFORMANCE} to render with reduced visual
+ * detail, which lowers memory usage.
+ * @default {@link google.maps.maps3d.QualityMode.FIDELITY}
+ * @type {!google.maps.maps3d.QualityMode|null|undefined}
+ */
+google.maps.maps3d.Map3DElement.prototype.qualityMode;
 
 /**
  * The distance from camera to the center of the map, in meters.
@@ -17348,6 +17470,12 @@ google.maps.maps3d.Map3DElementOptions.prototype.cameraPosition;
 google.maps.maps3d.Map3DElementOptions.prototype.center;
 
 /**
+ * See {@link google.maps.maps3d.Map3DElement.colorScheme}.
+ * @type {!google.maps.ColorScheme|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.colorScheme;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.defaultUIHidden}.
  * @type {boolean|null|undefined}
  */
@@ -17408,6 +17536,12 @@ google.maps.maps3d.Map3DElementOptions.prototype.maxAltitude;
 google.maps.maps3d.Map3DElementOptions.prototype.maxHeading;
 
 /**
+ * See {@link google.maps.maps3d.Map3DElement.maxMemoryMegabytes}.
+ * @type {number|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.maxMemoryMegabytes;
+
+/**
  * See {@link google.maps.maps3d.Map3DElement.maxTilt}.
  * @type {number|null|undefined}
  */
@@ -17436,6 +17570,12 @@ google.maps.maps3d.Map3DElementOptions.prototype.minTilt;
  * @type {!google.maps.maps3d.MapMode|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.mode;
+
+/**
+ * See {@link google.maps.maps3d.Map3DElement.qualityMode}.
+ * @type {!google.maps.maps3d.QualityMode|null|undefined}
+ */
+google.maps.maps3d.Map3DElementOptions.prototype.qualityMode;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.range}.
@@ -17485,7 +17625,6 @@ google.maps.maps3d.MapMode = {
    */
   HYBRID: 'HYBRID',
   /**
-   * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
    * This map mode displays a normal street map.
    */
   ROADMAP: 'ROADMAP',
@@ -17566,7 +17705,7 @@ google.maps.maps3d.Marker3DElement.prototype.label;
 /**
  * The location of the tip of the marker. Altitude is ignored in certain modes
  * and thus optional.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.Marker3DElement.prototype.position;
 
@@ -17637,7 +17776,7 @@ google.maps.maps3d.Marker3DElementOptions.prototype.label;
 
 /**
  * See {@link google.maps.maps3d.Marker3DElement.position}.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.Marker3DElementOptions.prototype.position;
 
@@ -17784,7 +17923,7 @@ google.maps.maps3d.MarkerElement.prototype.collisionPriority;
 /**
  * The location of the tip of the marker. Altitude is ignored in certain modes
  * and thus optional.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.MarkerElement.prototype.position;
 
@@ -17842,7 +17981,7 @@ google.maps.maps3d.MarkerElementOptions.prototype.collisionPriority;
 
 /**
  * See {@link google.maps.maps3d.MarkerElement.position}.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.MarkerElementOptions.prototype.position;
 
@@ -17925,7 +18064,7 @@ google.maps.maps3d.Model3DElement.prototype.orientation;
 /**
  * Sets the <code>Model3DElement</code>&#39;s position. Altitude is ignored in
  * certain modes and thus optional.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.Model3DElement.prototype.position;
 
@@ -17970,7 +18109,7 @@ google.maps.maps3d.Model3DElementOptions.prototype.orientation;
 
 /**
  * See {@link google.maps.maps3d.Model3DElement.position}.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
  */
 google.maps.maps3d.Model3DElementOptions.prototype.position;
 
@@ -18110,14 +18249,14 @@ google.maps.maps3d.Polygon3DElement.prototype.geodesic;
  * The ordered sequence of coordinates that designates a closed loop. Unlike
  * polylines, a polygon may consist of one or more paths, which create multiple
  * cut-outs inside the polygon.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElement.prototype.innerPaths;
 
 /**
  * The ordered sequence of coordinates that designates a closed loop. Altitude
  * is ignored in certain modes and thus optional.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElement.prototype.path;
 
@@ -18142,7 +18281,7 @@ google.maps.maps3d.Polygon3DElement.prototype.zIndex;
 /**
  * The ordered sequence of coordinates that designates a closed loop. Altitude
  * is ignored in certain modes and thus optional.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  * @deprecated Use <code>path</code> instead. This property will be removed in a
  *     future release.
  */
@@ -18152,7 +18291,7 @@ google.maps.maps3d.Polygon3DElement.prototype.outerCoordinates;
  * The ordered sequence of coordinates that designates a closed loop. Unlike
  * polylines, a polygon may consist of one or more paths, which create multiple
  * cut-outs inside the polygon.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  * @deprecated Use <code>innerPaths</code> instead. This property will be
  *     removed in a future release.
  */
@@ -18204,25 +18343,25 @@ google.maps.maps3d.Polygon3DElementOptions.prototype.geodesic;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.innerCoordinates}.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.innerCoordinates;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.innerPaths}.
- * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLngLiteral>>|null|undefined}
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLng|!google.maps.LatLngLiteral>>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.innerPaths;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.outerCoordinates}.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.outerCoordinates;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.path}.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.path;
 
@@ -18340,7 +18479,7 @@ google.maps.maps3d.Polyline3DElement.prototype.outerWidth;
 /**
  * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
  * certain modes and thus optional.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polyline3DElement.prototype.path;
 
@@ -18365,7 +18504,7 @@ google.maps.maps3d.Polyline3DElement.prototype.zIndex;
 /**
  * The ordered sequence of coordinates of the Polyline. Altitude is ignored in
  * certain modes and thus optional.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  * @deprecated Use <code>path</code> instead. This property will be removed in a
  *     future release.
  */
@@ -18393,7 +18532,7 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.autofitsCamera;
 
 /**
  * See {@link google.maps.maps3d.Polyline3DElement.coordinates}.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.coordinates;
 
@@ -18429,7 +18568,7 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.outerWidth;
 
 /**
  * See {@link google.maps.maps3d.Polyline3DElement.path}.
- * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLng|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.path;
 
@@ -18526,7 +18665,7 @@ google.maps.maps3d.PopoverElement.prototype.open;
 /**
  * The position at which to display this popover. If the popover is anchored to
  * an interactive marker, the marker&#39;s position will be used instead.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|!google.maps.maps3d.Marker3DInteractiveElement|!google.maps.maps3d.MarkerInteractiveElement|string|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.maps3d.Marker3DInteractiveElement|!google.maps.maps3d.MarkerInteractiveElement|string|null|undefined}
  */
 google.maps.maps3d.PopoverElement.prototype.positionAnchor;
 
@@ -18563,9 +18702,30 @@ google.maps.maps3d.PopoverElementOptions.prototype.open;
 
 /**
  * See {@link google.maps.maps3d.PopoverElement.positionAnchor}.
- * @type {!google.maps.LatLngLiteral|!google.maps.LatLngAltitudeLiteral|string|!google.maps.maps3d.Marker3DInteractiveElement|!google.maps.maps3d.MarkerInteractiveElement|null|undefined}
+ * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|string|!google.maps.maps3d.Marker3DInteractiveElement|!google.maps.maps3d.MarkerInteractiveElement|null|undefined}
  */
 google.maps.maps3d.PopoverElementOptions.prototype.positionAnchor;
+
+/**
+ * Specifies the rendering quality of the 3D map.
+ *
+ * Access by calling `const {QualityMode} = await
+ * google.maps.importLibrary("maps3d");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.maps3d.QualityMode = {
+  /**
+   * Renders the map with standard visual detail.
+   */
+  FIDELITY: 'FIDELITY',
+  /**
+   * Renders the map with reduced visual detail to lower memory usage. Useful on
+   * memory-constrained devices or when the map shares the page with other
+   * memory-intensive content.
+   */
+  PERFORMANCE: 'PERFORMANCE',
+};
 
 /**
  * This event is created from monitoring a steady state of
@@ -19016,8 +19176,6 @@ google.maps.places.AccessibilityOptions.prototype
     .hasWheelchairAccessibleSeating;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The slotted position of the control in the place details widget.
  *
  * Access by calling `const {ActionButtonPosition} = await
@@ -19039,8 +19197,6 @@ google.maps.places.ActionButtonPosition = {
 };
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The action taken by a {@link google.maps.places.PlaceLinkElement} when
  * clicked. Determines the icon, label and href destination.
  *
@@ -19135,8 +19291,6 @@ google.maps.places.AddressDescriptor.prototype.areas;
 google.maps.places.AddressDescriptor.prototype.landmarks;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays details for a place in a compact layout. Append a {@link
  * google.maps.places.PlaceDetailsPlaceRequestElement} or {@link
  * google.maps.places.PlaceDetailsLocationRequestElement} to specify the place
@@ -19174,8 +19328,6 @@ google.maps.places.AdvancedPlaceDetailsCompactElement.prototype
 google.maps.places.AdvancedPlaceDetailsCompactElement.prototype.place;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>AdvancedPlaceDetailsCompactElement</code>.
  * @extends {google.maps.places.PlaceDetailsCompactElementOptions}
  * @record
@@ -19190,8 +19342,6 @@ google.maps.places.AdvancedPlaceDetailsCompactElementOptions.prototype
     .internalUsageAttributionIds;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays details for a place in a full layout. Append either a {@link
  * google.maps.places.PlaceDetailsPlaceRequestElement} or {@link
  * google.maps.places.PlaceDetailsLocationRequestElement} to specify the place
@@ -19235,8 +19385,6 @@ google.maps.places.AdvancedPlaceDetailsElement.prototype
 google.maps.places.AdvancedPlaceDetailsElement.prototype.place;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>AdvancedPlaceDetailsElement</code>.
  * @extends {google.maps.places.PlaceDetailsElementOptions}
  * @record
@@ -19251,8 +19399,33 @@ google.maps.places.AdvancedPlaceDetailsElementOptions.prototype
     .internalUsageAttributionIds;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Public web component wrapper (<code>&lt;gmp-advanced-place-item&gt;</code>)
+ * for advanced place list items. The
+ * <code>&lt;gmp-advanced-place-item&gt;</code> custom element renders an
+ * individual rich place result card inside an advanced search or collection
+ * container, such as <code>&lt;gmp-advanced-place-search&gt;</code> or
+ * <code>&lt;gmp-advanced-place-list&gt;</code>. Each
+ * <code>&lt;gmp-advanced-place-item&gt;</code> presents rich place details,
+ * media collages, editorial summaries, and interactive action buttons composed
+ * of child visual components from the Places UI Kit.
  *
+ * Access by calling `const {AdvancedPlaceItemElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.AdvancedPlaceItemElementOptions}
+ * @extends {google.maps.places.PlaceItemElement}
+ * @constructor
+ */
+google.maps.places.AdvancedPlaceItemElement = function() {};
+
+/**
+ * Options for <code>AdvancedPlaceItemElement</code>.
+ * @extends {google.maps.places.PlaceItemElementOptions}
+ * @record
+ */
+google.maps.places.AdvancedPlaceItemElementOptions = function() {};
+
+/**
  * Displays the results of a place search in a list. Append one or more {@link
  * google.maps.places.PlaceDetailsPlaceRequestElement} or set the
  * <code>places</code> property to specify the places to display. Append
@@ -19329,8 +19502,6 @@ google.maps.places.AdvancedPlaceListElement.prototype.selectable;
 google.maps.places.AdvancedPlaceListElement.prototype.truncationPreferred;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>AdvancedPlaceListElement</code>.
  * @record
  */
@@ -19376,8 +19547,6 @@ google.maps.places.AdvancedPlaceListElementOptions.prototype
     .truncationPreferred;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays the results of an advanced place search in a list. Append a {@link
  * google.maps.places.PlaceTextSearchRequestElement} or {@link
  * google.maps.places.PlaceNearbySearchRequestElement} to specify the request to
@@ -19446,8 +19615,6 @@ google.maps.places.AdvancedPlaceSearchElement.prototype.selectable;
 google.maps.places.AdvancedPlaceSearchElement.prototype.truncationPreferred;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>AdvancedPlaceSearchElement</code>.
  * @extends {google.maps.places.PlaceSearchElementOptions}
  * @record
@@ -22325,8 +22492,6 @@ google.maps.places.PlaceAccessibleEntranceIconElement = function(options) {};
 google.maps.places.PlaceAccessibleEntranceIconElementOptions = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * The event fired when the action button is clicked.
  *
  * Access by calling `const {PlaceActionEvent} = await
@@ -22775,8 +22940,6 @@ google.maps.places.PlaceAutocompleteElementOptions.prototype.unitSystem;
 google.maps.places.PlaceAutocompleteElementOptions.prototype.value;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays a button slotted into either the <code>action-main</code> slot or
  * the <code>action-corner</code> slot. <code>PlaceButtonElement</code> has no
  * default behavior. Attach an event listener to the element to define its
@@ -22813,8 +22976,6 @@ google.maps.places.PlaceButtonElement.prototype.actionAriaLabel;
 google.maps.places.PlaceButtonElement.prototype.label;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceButtonElement</code>.
  * @record
  */
@@ -22883,12 +23044,36 @@ google.maps.places.PlaceButtonElementOptions.prototype.label;
  * @implements {google.maps.places.PlaceContentConfigElementOptions}
  * @extends {HTMLElement}
  * @constructor
+ * @deprecated Append content elements or preset elements ({@link
+ *     google.maps.places.PlaceAllContentElement}, {@link
+ *     google.maps.places.PlaceStandardContentElement}) directly to {@link
+ *     google.maps.places.PlaceDetailsElement} or {@link
+ *     google.maps.places.PlaceDetailsCompactElement}, or inside a
+ *     <code>&lt;template slot=&quot;details-item&quot;&gt;</code> child element
+ *     in {@link google.maps.places.PlaceSearchElement}. At this time,
+ *     PlaceContentConfigElement is not scheduled to be discontinued. At least
+ *     12 months notice will be given before support is discontinued. Please see
+ *     <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>
+ *     for additional details.
  */
 google.maps.places.PlaceContentConfigElement = function(options) {};
 
 /**
  * Options for <code>PlaceContentConfigElement</code>.
  * @record
+ * @deprecated Append content elements or preset elements ({@link
+ *     google.maps.places.PlaceAllContentElement}, {@link
+ *     google.maps.places.PlaceStandardContentElement}) directly to {@link
+ *     google.maps.places.PlaceDetailsElement} or {@link
+ *     google.maps.places.PlaceDetailsCompactElement}, or inside a
+ *     <code>&lt;template slot=&quot;details-item&quot;&gt;</code> child element
+ *     in {@link google.maps.places.PlaceSearchElement}. At this time,
+ *     PlaceContentConfigElement is not scheduled to be discontinued. At least
+ *     12 months notice will be given before support is discontinued. Please see
+ *     <a
+ *     href="https://developers.google.com/maps/deprecations">https://developers.google.com/maps/deprecations</a>
+ *     for additional details.
  */
 google.maps.places.PlaceContentConfigElementOptions = function() {};
 
@@ -23350,8 +23535,28 @@ google.maps.places.PlaceGeometry.prototype.location;
 google.maps.places.PlaceGeometry.prototype.viewport;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ * Public web component wrapper (<code>&lt;gmp-place-item&gt;</code>) for place
+ * list items. The <code>&lt;gmp-place-item&gt;</code> custom element renders an
+ * individual place result card inside <code>&lt;gmp-place-search&gt;</code>.
+ * Each <code>&lt;gmp-place-item&gt;</code> displays place information composed
+ * of child visual components from the Places UI Kit.
  *
+ * Access by calling `const {PlaceItemElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlaceItemElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlaceItemElement = function() {};
+
+/**
+ * Options for <code>PlaceItemElement</code>.
+ * @record
+ */
+google.maps.places.PlaceItemElementOptions = function() {};
+
+/**
  * Displays a link slotted into either the <code>action-main</code> slot or the
  * <code>action-corner</code> slot. By default the link will be shown in the
  * <code>action-main</code> slot. Use the <code>action</code> attribute to
@@ -23389,6 +23594,13 @@ google.maps.places.PlaceLinkElement.prototype.action;
 google.maps.places.PlaceLinkElement.prototype.actionAriaLabel;
 
 /**
+ * Whether the default icon is hidden for all link types except custom.
+ * @default <code>false</code>
+ * @type {boolean|null|undefined}
+ */
+google.maps.places.PlaceLinkElement.prototype.defaultIconHidden;
+
+/**
  * The URL to open when the link is clicked. This is only used when the
  * <code>action</code> attribute is set to <code>custom</code>.
  * @default <code>undefined</code>
@@ -23415,8 +23627,6 @@ google.maps.places.PlaceLinkElement.prototype.label;
 google.maps.places.PlaceLinkElement.prototype.target;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceLinkElement</code>.
  * @record
  */
@@ -23516,8 +23726,6 @@ google.maps.places.PlaceMediaElementOptions.prototype.lightboxPreferred;
 google.maps.places.PlaceMediaElementOptions.prototype.preferredSize;
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Displays the name of a place within a place details element.
  *
  * Access by calling `const {PlaceNameElement} = await
@@ -23530,8 +23738,6 @@ google.maps.places.PlaceMediaElementOptions.prototype.preferredSize;
 google.maps.places.PlaceNameElement = function() {};
 
 /**
- * Available only in the v=beta channel: https://goo.gle/3oAthT3.
- *
  * Options for <code>PlaceNameElement</code>.
  * @record
  */
@@ -23971,6 +24177,116 @@ google.maps.places.PlacePhoto.prototype.width;
 google.maps.places.PlacePhoto.prototype.getUrl = function(opts) {};
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Displays a map pin for a place, using the place&#39;s category icon or photo.
+ * Append a {@link google.maps.places.PlaceDetailsPlaceRequestElement} or {@link
+ * google.maps.places.PlaceDetailsLocationRequestElement} to specify the place.
+ * Use the pin as the content of an {@link
+ * google.maps.marker.AdvancedMarkerElement}. Not supported in 3D maps. <br><br>
+ * Example: <pre><code> &lt;gmp-advanced-marker&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-pin&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-details-place-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;place="<var>PLACE_ID</var>"<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&gt;&lt;/gmp-place-details-place-request&gt;<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;&lt;gmp-place-rating&gt;&lt;/gmp-place-rating&gt;<br>
+ * &nbsp;&nbsp;&lt;/gmp-place-pin&gt;<br> &lt;/gmp-advanced-marker&gt;
+ * </code></pre> <br> To use this element, enable the <a
+ * href="https://console.cloud.google.com/marketplace/product/google/placewidgets.googleapis.com"
+ * >Places UI Kit API</a> for your project in the Google Cloud console.
+ *
+ * Access by calling `const {PlacePinElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @param {!google.maps.places.PlacePinElementOptions=} options
+ * @implements {google.maps.places.PlacePinElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlacePinElement = function(options) {};
+
+/**
+ * The icon shown inside the pin. See {@link google.maps.places.PlacePinIcon}.
+ * @default <code>PlacePinIcon.TYPE</code>
+ * @type {!google.maps.places.PlacePinIcon|null|undefined}
+ */
+google.maps.places.PlacePinElement.prototype.icon;
+
+/**
+ * Read only. True if the pin is showing the place&#39;s photo. Always false if
+ * <code>icon</code> isn&#39;t <code>PHOTO</code>. If <code>icon</code> is
+ * <code>PHOTO</code> but the place has no photo, or the photo failed to load,
+ * this is false and the pin shows the place type icon instead. Set before
+ * <code>gmp-load</code> fires.
+ * @type {boolean}
+ */
+google.maps.places.PlacePinElement.prototype.photoRendered;
+
+/**
+ * Read only. Place object containing the ID, location, and viewport of the
+ * currently rendered place. <code>undefined</code> if the place hasn&#39;t
+ * loaded yet or failed to load.
+ * @type {!google.maps.places.Place|undefined}
+ */
+google.maps.places.PlacePinElement.prototype.place;
+
+/**
+ * Size multiplier for the pin.
+ * @default <code>1</code>
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlacePinElement.prototype.scale;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Options for constructing a {@link google.maps.places.PlacePinElement}.
+ * @record
+ */
+google.maps.places.PlacePinElementOptions = function() {};
+
+/**
+ * See {@link google.maps.places.PlacePinElement.icon}.
+ * @type {!google.maps.places.PlacePinIcon|null|undefined}
+ */
+google.maps.places.PlacePinElementOptions.prototype.icon;
+
+/**
+ * See {@link google.maps.places.PlacePinElement.scale}.
+ * @type {number|null|undefined}
+ */
+google.maps.places.PlacePinElementOptions.prototype.scale;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ *
+ * Icon options for {@link google.maps.places.PlacePinElement}.
+ * <code>TYPE</code> is the default. If the data needed for the selected icon is
+ * missing, the pin falls back to <code>TYPE</code>. If the data needed for
+ * <code>TYPE</code> is missing, a generic icon is shown instead.
+ *
+ * Access by calling `const {PlacePinIcon} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @enum {string}
+ */
+google.maps.places.PlacePinIcon = {
+  /**
+   * Shows no icon, only the slotted content.
+   */
+  NONE: 'NONE',
+  /**
+   * Shows the place&#39;s photo in a circle. Falls back to <code>TYPE</code> if
+   * the place has no photo.
+   */
+  PHOTO: 'PHOTO',
+  /**
+   * Shows the place&#39;s category icon.
+   */
+  TYPE: 'TYPE',
+};
+
+/**
  * Defines Open Location Codes or &quot;<a href="https://plus.codes/">plus
  * codes</a>&quot; for a Place. Plus codes can be used as a replacement for
  * street addresses in places where they do not exist (where buildings are not
@@ -24018,6 +24334,44 @@ google.maps.places.PlacePlusCodeElement = function() {};
  * @record
  */
 google.maps.places.PlacePlusCodeElementOptions = function() {};
+
+/**
+ * Configures a {@link google.maps.places.PlaceDetailsElement} or {@link
+ * google.maps.places.AdvancedPlaceDetailsElement} to show a place&#39;s popular
+ * times: a chart of how busy the place usually is throughout the day, along
+ * with live busyness information when available. Nothing is shown for places
+ * without popular times data. Append this element as a child of the place
+ * details element to use it. For example: <pre><code>
+ * &lt;gmp-place-details&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-details-place-request<br>
+ * &nbsp;&nbsp;&nbsp;&nbsp;place="<var>PLACE_ID</var>"<br>
+ * &nbsp;&nbsp;&gt;&lt;/gmp-place-details-place-request&gt;<br>
+ * &nbsp;&nbsp;&lt;gmp-place-popular-times&gt;&lt;/gmp-place-popular-times&gt;<br>
+ * &lt;/gmp-place-details&gt; </code></pre>
+ *
+ * Access by calling `const {PlacePopularTimesElement} = await
+ * google.maps.importLibrary("places");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {google.maps.places.PlacePopularTimesElementOptions}
+ * @extends {HTMLElement}
+ * @constructor
+ */
+google.maps.places.PlacePopularTimesElement = function() {};
+
+/**
+ * Read only. True if the element is showing popular times for the place. False
+ * if the place has no popular times data, or if the element isn&#39;t a child
+ * of a supported place details element. Set before the parent element&#39;s
+ * <code>gmp-load</code> event fires.
+ * @type {boolean}
+ */
+google.maps.places.PlacePopularTimesElement.prototype.rendered;
+
+/**
+ * Options for <code>PlacePopularTimesElement</code>.
+ * @record
+ */
+google.maps.places.PlacePopularTimesElementOptions = function() {};
 
 /**
  * Prediction results for a Place Autocomplete prediction.
@@ -27997,6 +28351,12 @@ google.maps.routes.Route.prototype.createWaypointAdvancedMarkers = function(
  * Intermediate waypoints are not currently supported. <br><br> Created markers
  * have their {@link google.maps.CollisionBehavior} set to {@link
  * google.maps.CollisionBehavior.REQUIRED_AND_HIDES_OPTIONAL} by default.
+ * Created markers have a localized <code>title</code> (&quot;Origin&quot; or
+ * &quot;Destination&quot;) by default, which can be overridden in
+ * <code>forEach</code>. For <code>Marker3DElement</code> and
+ * <code>Marker3DInteractiveElement</code> markers, <code>sizePreserved</code>
+ * is set to <code>true</code> by default, which can also be overridden in
+ * <code>forEach</code>.
  * @template T
  * @param {!google.maps.routes.CreateWaypointMarkersOptions<T>=} options
  * @return {!Promise<!Array<T>>}
@@ -28905,17 +29265,6 @@ google.maps.routes.RouteModifiers.prototype.vehicleInfo;
  * @record
  */
 google.maps.routes.RoutePolyline3DOptions = function() {};
-
-/**
- * The color scheme to use for the 3D polyline. When specified as
- * <code>FOLLOW_SYSTEM</code> while the map <code>colorScheme</code> is also
- * <code>FOLLOW_SYSTEM</code>, the polylines will be drawn in the same
- * dark/light mode as the map. When not specified, {@link
- * google.maps.routes.Route.create3DPolylines} attempts to use the
- * <code>colorScheme</code> of the map or falls back to the system default.
- * @type {!google.maps.ColorScheme|undefined}
- */
-google.maps.routes.RoutePolyline3DOptions.prototype.colorScheme;
 
 /**
  * Options for customizing the style of a 3D polyline.
