@@ -43,6 +43,7 @@
 'require es6/map';
 'require es6/set';
 'require util/global';
+'require util/owns';
 
 (function() {
 /**
@@ -64,9 +65,12 @@ var Module = function(id, opt_exports) {
  */
 Module.prototype.exportAllFrom = function(other) {
   var module = this;
-  var define = {};
+  var define = $jscomp.global.Object.create(null);
   for (var key in other) {
-    if (key == 'default' || key in module.exports || key in define) {
+    if (!$jscomp.owns(other, key) ||
+        key == 'default' ||
+        $jscomp.owns(module.exports, key) ||
+        $jscomp.owns(define, key)) {
       continue;
     }
     define[key] = {
