@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -367,5 +370,25 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
           return CLASS_DECL$1;
         })())();
         """);
+  }
+
+  @Test
+  public void testAwaitInExtends_wrappedInAsyncIife_knownBug() {
+    disableTypeCheck();
+    disableTypeInfoValidation();
+    // TODO(b/586787351): This should produce `return await (async () => { ... })();`. Instead the
+    // class is wrapped in a non-async arrow function IIFE, which moves the enclosing function's
+    // `await` into it. The AST is invalid (and InstrumentAsyncContext crashes on it).
+    IllegalStateException e =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                testSame(
+                    """
+                    async function f() {
+                      return class extends (await base()) {};
+                    }
+                    """));
+    assertThat(e).hasMessageThat().contains("'await' expression is not within an async function");
   }
 }
