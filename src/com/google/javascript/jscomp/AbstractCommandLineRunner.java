@@ -1979,6 +1979,21 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     return basePath;
   }
 
+  /** Returns the CLI flag name for {@link CommandLineConfig#setVariableMapOutputFile}. */
+  String getVariableMapOutputFlagName() {
+    return "variable_map_output_file";
+  }
+
+  /** Returns the CLI flag name for {@link CommandLineConfig#setPropertyMapOutputFile}. */
+  String getPropertyMapOutputFlagName() {
+    return "property_map_output_file";
+  }
+
+  /** Returns the CLI flag name for {@link CommandLineConfig#setCreateNameMapFiles}. */
+  String getCreateNameMapFilesFlagName() {
+    return "create_name_map_files";
+  }
+
   /**
    * Outputs the variable and property name maps for the specified compiler if the proper FLAGS are
    * set.
@@ -1988,7 +2003,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     String propertyMapOutputPath = null;
     String variableMapOutputPath = null;
 
-    // Check the create_name_map_files FLAG.
+    // Check config.createNameMapFiles.
     if (config.createNameMapFiles) {
       String basePath = getMapPath(config.jsOutputFile);
 
@@ -2000,8 +2015,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     if (!config.variableMapOutputFile.isEmpty()) {
       if (variableMapOutputPath != null) {
         throw new FlagUsageException(
-            "The flags variable_map_output_file and "
-                + "create_name_map_files cannot both be used simultaneously.");
+            "The flags "
+                + getVariableMapOutputFlagName()
+                + " and "
+                + getCreateNameMapFilesFlagName()
+                + " cannot both be used simultaneously.");
       }
 
       variableMapOutputPath = config.variableMapOutputFile;
@@ -2010,8 +2028,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
     if (!config.propertyMapOutputFile.isEmpty()) {
       if (propertyMapOutputPath != null) {
         throw new FlagUsageException(
-            "The flags property_map_output_file and "
-                + "create_name_map_files cannot both be used simultaneously.");
+            "The flags "
+                + getPropertyMapOutputFlagName()
+                + " and "
+                + getCreateNameMapFilesFlagName()
+                + " cannot both be used simultaneously.");
       }
 
       propertyMapOutputPath = config.propertyMapOutputFile;
@@ -2641,8 +2662,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler, B extends Co
 
     /**
      * If true, variable renaming and property renaming map files will be produced as {binary
-     * name}_vars_map.out and {binary name}_props_map.out. Note that this flag cannot be used in
-     * conjunction with either variable_map_output_file or property_map_output_file
+     * name}_vars_map.out and {binary name}_props_map.out. Note that this cannot be used in
+     * conjunction with {@link #setVariableMapOutputFile} or {@link #setPropertyMapOutputFile}.
      */
     @CanIgnoreReturnValue
     public CommandLineConfig setCreateNameMapFiles(boolean createNameMapFiles) {
