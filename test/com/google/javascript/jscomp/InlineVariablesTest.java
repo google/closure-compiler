@@ -1575,6 +1575,107 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoInlineCaseTestAssignmentIntoFallthroughBody() {
+    // `case 1` falls through into the body of `case (t = 2)` without evaluating `t = 2`.
+    // TODO(b/586571469): This is wrong: `t` should not be inlined into the case body.
+    test(
+        """
+        function f(x) {
+          let t;
+          switch (x) {
+            case 1:
+            case (t = 2):
+              alert(t);
+              alert(t);
+          }
+        }
+        """,
+        """
+        function f(x) {
+          switch (x) {
+            case 1:
+            case 2:
+              alert(2);
+              alert(2);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testNoInlineNestedCaseTestAssignmentIntoFallthroughBody() {
+    testSame(
+        """
+        function f(x) {
+          let t;
+          switch (x) {
+            case 1:
+            case (window.c && (t = 2)):
+              alert(t);
+              alert(t);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testNoInlineCaseTestAssignmentIntoBodyReachedThroughDefault() {
+    // When x === 1, `case 1` falls through `default` into the body without evaluating `t = 2`.
+    // TODO(b/586571469): This is wrong: `t` should not be inlined into the case body.
+    test(
+        """
+        function f(x) {
+          let t;
+          switch (x) {
+            case 1:
+            default:
+            case (t = 2):
+              alert(t);
+              alert(t);
+          }
+        }
+        """,
+        """
+        function f(x) {
+          switch (x) {
+            case 1:
+            default:
+            case 2:
+              alert(2);
+              alert(2);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testInlineAssignmentWithinCaseBody() {
+    // The case body is its own basic block, but code within it is still sequential.
+    test(
+        """
+        function f(x) {
+          let t;
+          switch (x) {
+            case 1:
+              t = 2;
+              alert(t);
+              alert(t);
+          }
+        }
+        """,
+        """
+        function f(x) {
+          switch (x) {
+            case 1:
+              2;
+              alert(2);
+              alert(2);
+          }
+        }
+        """);
+  }
+
+  @Test
   public void testNoInlineAssignmentSkippedByLabeledBreak() {
     testSame(
         """
@@ -2660,6 +2761,13 @@ public final class InlineVariablesTest extends CompilerTestCase {
     test(
         "var C = class extends Base { foo() {} }; use(C);",
         "use(class extends Base { foo() {} });");
+  }
+
+  @Test
+  public void testNotInlinedIntoClassExtends() {
+    testSame("function Super() {} class Sub extends Super {} use(Sub);");
+    testSame("var Base = class {}; class Sub extends Base {} use(Sub);");
+    testSame("var Base = class {}; use(class extends Base {});");
   }
 
   @Test
