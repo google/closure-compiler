@@ -101,6 +101,52 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
         });
   }
 
+  private static final Correspondence<Reference, Boolean> IS_LVALUE =
+      Correspondence.transforming(Reference::isLvalue, "isLvalue() is");
+
+  @Test
+  public void testDestructuringAssign_rhsCollectedBeforePattern() {
+    testBehavior(
+        "let x = 0; [x] = [x];",
+        (NodeTraversal t, ReferenceMap rm) -> {
+          ReferenceCollection xRefs = rm.getReferences(t.getScope().getVar("x"));
+          // TODO(b/586571469): This is wrong: the RHS read should be collected before the pattern
+          // write.
+          assertThat(xRefs)
+              .comparingElementsUsing(IS_LVALUE)
+              .containsExactly(true, true, false)
+              .inOrder();
+          assertThat(xRefs.references.get(1).getParent().isArrayPattern()).isTrue();
+          assertThat(xRefs.references.get(2).getParent().isArrayLit()).isTrue();
+        });
+  }
+
+  @Test
+  public void testDefaultValueWithPropertyTarget_targetCollectedBeforeDefault() {
+    testBehavior(
+        "let o = {}; let x = 0; [o[x] = x] = [];",
+        (NodeTraversal t, ReferenceMap rm) -> {
+          ReferenceCollection xRefs = rm.getReferences(t.getScope().getVar("x"));
+          assertThat(xRefs.references).hasSize(3);
+          // TODO(b/586571469): This is wrong: `o[x]` is evaluated before the default value `x`.
+          assertThat(xRefs.references.get(1).getParent().isDefaultValue()).isTrue();
+          assertThat(xRefs.references.get(2).getParent().isGetElem()).isTrue();
+        });
+  }
+
+  @Test
+  public void testDefaultValueWithNameTarget_defaultCollectedBeforeTarget() {
+    testBehavior(
+        "let x = 0; [x = x] = [];",
+        (NodeTraversal t, ReferenceMap rm) -> {
+          ReferenceCollection xRefs = rm.getReferences(t.getScope().getVar("x"));
+          assertThat(xRefs)
+              .comparingElementsUsing(IS_LVALUE)
+              .containsExactly(true, false, true)
+              .inOrder();
+        });
+  }
+
   @Test
   public void testClass() {
     testBehavior(
