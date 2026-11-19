@@ -611,8 +611,8 @@ public final class ConformanceRules {
     private static final Precondition IS_CANDIDATE_NODE =
         (Node n) ->
             switch (n.getToken()) {
-              case GETPROP -> n.getFirstChild().isQualifiedName();
-              case OPTCHAIN_GETPROP -> true;
+              case GETPROP, OPTCHAIN_GETPROP ->
+                  ConformanceUtil.isNormalOrOptChainQualifiedName(n.getFirstChild());
               case NAME -> !n.getString().isEmpty();
               default -> false;
             };
@@ -956,11 +956,33 @@ public final class ConformanceRules {
       if (n.isQualifiedName()) {
         return n;
       }
-      if (!n.isOptChainGetProp()) {
+      if (!NodeUtil.isNormalOrOptChainGetProp(n)) {
         return null;
       }
       Node owner = asQualifiedName(n.getFirstChild());
-      return owner == null ? null : IR.getprop(owner.cloneTree(), n.getString());
+      if (owner == null) {
+        return null;
+      }
+      // Only the original AST node needs copying; a rebuilt owner is already detached.
+      return IR.getprop(owner.getParent() != null ? owner.cloneTree() : owner, n.getString());
+    }
+
+    /**
+     * Whether {@code n} would be a qualified name with any optional chaining removed, e.g. {@code
+     * a?.b.c} or {@code (a?.b).c}. Cheaper than {@link #asQualifiedName} since it doesn't build a
+     * new node.
+     */
+    static boolean isNormalOrOptChainQualifiedName(Node n) {
+      while (NodeUtil.isNormalOrOptChainGetProp(n)) {
+        n = n.getFirstChild();
+      }
+      return n.isQualifiedName();
+    }
+
+    /** Whether {@code n} reads {@code name}, looking through any optional chaining. */
+    static boolean matchesQualifiedName(QualifiedName name, Node n) {
+      Node qname = asQualifiedName(n);
+      return qname != null && name.matches(qname);
     }
 
     static boolean isLooseType(JSType type) {
@@ -2107,7 +2129,7 @@ public final class ConformanceRules {
       }
 
       Node srcObj = target.getFirstChild();
-      if (GOOG_DOM.matches(srcObj)) {
+      if (ConformanceUtil.matchesQualifiedName(GOOG_DOM, srcObj)) {
         return ConformanceResult.VIOLATION;
       }
       JSType type = srcObj.getJSType();
@@ -2244,7 +2266,8 @@ public final class ConformanceRules {
     private @Nullable ImmutableCollection<String> getTagNames(Node tag) {
       if (tag.isStringLit()) {
         return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));
-      } else if (tag.isGetProp() && GOOG_DOM_TAGNAME.matches(tag.getFirstChild())) {
+      } else if (NodeUtil.isNormalOrOptChainGetProp(tag)
+          && ConformanceUtil.matchesQualifiedName(GOOG_DOM_TAGNAME, tag.getFirstChild())) {
         return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));
       }
       // TODO(jakubvrana): Support union, e.g. {!TagName<!HTMLDivElement>|!TagName<!HTMLBRElement>}.
@@ -2354,14 +2377,18 @@ public final class ConformanceRules {
       }
 
       Node srcObj = target.getFirstChild();
-      if (GOOG_DOM.matches(srcObj)) {
+      if (ConformanceUtil.matchesQualifiedName(GOOG_DOM, srcObj)) {
         return true;
       }
       JSType type = srcObj.getJSType();
       if (type == null) {
         return false;
       }
-      if (type.restrictByNotNullOrUndefined().equals(domHelperType)) {
+      if (n.isOptChainCall() || target.isOptChainGetProp()) {
+        // Only for ?. calls, whose receivers are usually nullable; plain calls are unchanged.
+        type = type.restrictByNotNullOrUndefined();
+      }
+      if (type.equals(domHelperType)) {
         return true;
       }
       return false;
@@ -2604,7 +2631,8 @@ public final class ConformanceRules {
       if (type == null) {
         return Optional.absent();
       }
-      if (elementType != null && type.restrictByNotNullOrUndefined().isSubtypeOf(elementType)) {
+      type = type.restrictByNotNullOrUndefined();
+      if (elementType != null && !type.isEmptyType() && type.isSubtypeOf(elementType)) {
         return Optional.of(propertyName);
       }
       return Optional.absent();
@@ -2762,11 +2790,18 @@ public final class ConformanceRules {
       if (type == null) {
         return Optional.absent();
       }
+      if (node.isOptChainCall() || target.isOptChainGetProp()) {
+        // Only for ?. calls, whose receivers are usually nullable; plain calls are unchanged.
+        type = type.restrictByNotNullOrUndefined();
+      }
+      if (type.isEmptyType()) {
+        return Optional.absent();
+      }
       String propertyName = target.getString();
       for (AttributeSettingRestriction restricted : restrictions) {
         if (propertyName.equals(restricted.property)
             && restricted.type != null
-            && type.restrictByNotNullOrUndefined().isSubtypeOf(restricted.type)) {
+            && type.isSubtypeOf(restricted.type)) {
           return Optional.of(propertyName);
         }
       }
@@ -2837,8 +2872,9 @@ public final class ConformanceRules {
       if (type == null) {
         return false;
       }
+      type = type.restrictByNotNullOrUndefined();
       JSType documentType = compiler.getTypeRegistry().getGlobalType("Document");
-      if (documentType == null || !type.restrictByNotNullOrUndefined().isSubtypeOf(documentType)) {
+      if (documentType == null || type.isEmptyType() || !type.isSubtypeOf(documentType)) {
         return false;
       }
       return true;

@@ -4811,7 +4811,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: foo.bar.baz is not allowed");
 
+    testWarning(
+        externs(externs),
+        srcs("(foo?.bar).baz();"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: foo.bar.baz is not allowed");
+
     testNoWarning(externs(externs), srcs("foo?.bar.qux();"));
+    testNoWarning(externs(externs), srcs("(foo?.bar).qux();"));
     testNoWarning(externs(externs), srcs("getFoo()?.bar.baz();"));
     testNoWarning(externs(externs), srcs("function f(foo) { foo?.bar.baz(); }"));
 
@@ -4871,6 +4878,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testWarning(code + "ns?.f('str');", CheckConformance.CONFORMANCE_VIOLATION);
     testWarning(code + "ns.f?.('str');", CheckConformance.CONFORMANCE_VIOLATION);
     testWarning(code + "ns?.f.call(null, 'str');", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "(ns?.f).call(null, 'str');", CheckConformance.CONFORMANCE_VIOLATION);
+    testNoWarning(code + "(ns?.f).call(null, 1);");
   }
 
   @Test
@@ -4905,6 +4914,18 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: BanCreateElement Message");
 
     testNoWarning(externs(externs), srcs("document?.createElement('div');"));
+
+    testWarning(
+        "goog?.dom.createElement('script');",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testWarning(
+        "goog?.dom.createDom('script', {});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testNoWarning("goog?.dom.createElement('div');");
   }
 
   @Test
@@ -4949,6 +4970,27 @@ public final class CheckConformanceTest extends CompilerTestCase {
             /** @param {?goog.dom.DomHelper} helper */
             function f(helper) { helper?.createDom('iframe', {'class': src}); }
             """));
+
+    // Null stripping only applies to ?. calls; plain calls on a nullable helper are unchanged.
+    testNoWarning(
+        externs(externs),
+        srcs(
+            """
+            /** @param {?goog.dom.DomHelper} helper */
+            function f(helper) { helper.createDom(goog.dom.TagName.IFRAME, attrs); }
+            """));
+
+    testWarning(
+        "goog?.dom.createDom('iframe', {'src': src});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testWarning(
+        "goog.dom.createDom(goog?.dom.TagName.IFRAME, {'src': src});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testNoWarning("goog?.dom.createDom('iframe', {'src': ''});");
   }
 
   @Test
@@ -4983,6 +5025,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: BanSetAttribute Message");
 
     testNoWarning(externs(externs), srcs("(new Element)?.setAttribute('id', 'xxx');"));
+    testNoWarning(externs(externs), srcs("const x = null; x?.setAttribute('src', 'xxx');"));
+    testNoWarning(externs(externs), srcs("undefined?.setAttribute('src', 'xxx');"));
   }
 
   @Test
@@ -5016,6 +5060,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: BanSettingAttributes Message");
 
     testNoWarning(externs(externs), srcs("(new Element)?.attr('id', 'xxx');"));
+    testNoWarning(externs(externs), srcs("const x = null; x?.attr('src', 'xxx');"));
+    testNoWarning(externs(externs), srcs("undefined?.attr('src', 'xxx');"));
   }
 
   @Test
@@ -5045,6 +5091,9 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: BanExecCommand message");
 
     testNoWarning(externs(externs), srcs("(new Document)?.execCommand('bold')"));
+    testNoWarning(
+        externs(externs), srcs("const x = null; x?.execCommand('insertHtml', false, 'xxx')"));
+    testNoWarning(externs(externs), srcs("undefined?.execCommand('insertHtml', false, 'xxx')"));
   }
 
   @Test
