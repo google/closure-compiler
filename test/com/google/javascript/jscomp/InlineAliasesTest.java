@@ -52,6 +52,7 @@ public class InlineAliasesTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     enableTypeInfoValidation();
     enableTypeCheck();
+    enableNormalize();
     return options;
   }
 
@@ -62,17 +63,25 @@ public class InlineAliasesTest extends CompilerTestCase {
    */
   @Test
   public void testSimpleAliasInJSDoc_isUnchanged() {
-    testSame("/** @constructor */ function Foo(){} const alias = Foo; /** @type {alias} */ var x;");
+    test(
+        "/** @constructor */ function Foo(){} const alias = Foo; /** @type {alias} */ var x;",
+        "/** @constructor */ function Foo(){} const alias = Foo; var x;");
 
-    testSame(
+    test(
         """
         var ns={};
         /** @constructor */ function Foo(){};
         /** @const */ ns.alias = Foo;
         /** @type {ns.alias} */ var x;
+        """,
+        """
+        var ns={};
+        /** @constructor */ function Foo(){};
+        /** @const */ ns.alias = Foo;
+        var x;
         """);
 
-    testSame(
+    test(
         """
         /** @const */
         var ns={};
@@ -80,6 +89,14 @@ public class InlineAliasesTest extends CompilerTestCase {
         Foo.Subfoo = class {};
         /** @const */ ns.alias = Foo;
         /** @type {ns.alias.Subfoo} */ var x;
+        """,
+        """
+        /** @const */
+        var ns={};
+        /** @constructor */ function Foo(){};
+        Foo.Subfoo = class {};
+        /** @const */ ns.alias = Foo;
+        var x;
         """);
   }
 
@@ -123,7 +140,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testAliasQualifiedName() {
-    testSame(
+    test(
         """
         /** @const */
         var ns = {};
@@ -131,6 +148,14 @@ public class InlineAliasesTest extends CompilerTestCase {
         ns.Foo.Subfoo = class {};
         /** @const */ ns.alias = ns.Foo;
         /** @type {ns.alias.Subfoo} */ var x;
+        """,
+        """
+        /** @const */
+        var ns = {};
+        ns.Foo = function(){};
+        ns.Foo.Subfoo = class {};
+        /** @const */ ns.alias = ns.Foo;
+        var x;
         """);
 
     test(
@@ -255,7 +280,8 @@ public class InlineAliasesTest extends CompilerTestCase {
   public void testAliasedEnums() {
     test(
         "/** @enum {number} */ var E = { A : 1 }; var /** @const */ alias = E.A; alias;",
-        "/** @enum {number} */ var E = { A : 1 }; var /** @const */ alias = E.A; E.A;");
+        "/** @enum {!JSDocSerializer_placeholder_type} */ var E = { A : 1 }; var /** @const */"
+            + " alias = E.A; E.A;");
   }
 
   @Test
@@ -271,22 +297,30 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testDefinesAreNotInlined() {
-    testSame("var ns = {Foo: 0}; var /** @define {number} */ alias = ns.Foo; use(alias);");
+    test(
+        "var ns = {Foo: 0}; var /** @define {number} */ alias = ns.Foo; use(alias);",
+        "var ns = {Foo: 0}; var /** @define {!JSDocSerializer_placeholder_type} */ alias = ns.Foo;"
+            + " use(alias);");
   }
 
   @Test
   public void testConstWithTypesAreNotInlined() {
-    testSame(
+    test(
         """
         var /** @type {number} */ n = 5
         var /** @const {number} */ alias = n;
         var x = use(alias)
+        """,
+        """
+        var n = 5;
+        var /** @const */ alias = n;
+        var x = use(n);
         """);
   }
 
   @Test
   public void testShadowedAliasesNotRenamed() {
-    testSame(
+    test(
         """
         var ns = {};
         ns.Foo = function(){};
@@ -294,9 +328,17 @@ public class InlineAliasesTest extends CompilerTestCase {
         function f(alias) {
           var x = alias
         }
+        """,
+        """
+        var ns = {};
+        ns.Foo = function(){};
+        var /** @const */ alias = ns.Foo;
+        function f(alias$jscomp$1) {
+          var x = alias$jscomp$1
+        }
         """);
 
-    testSame(
+    test(
         """
         var ns = {};
         ns.Foo = function(){};
@@ -305,9 +347,18 @@ public class InlineAliasesTest extends CompilerTestCase {
           var /** @const */ alias = 5;
           var x = alias
         }
+        """,
+        """
+        var ns = {};
+        ns.Foo = function(){};
+        var /** @const */ alias = ns.Foo;
+        function f() {
+          var /** @const */ alias$jscomp$1 = 5;
+          var x = alias$jscomp$1
+        }
         """);
 
-    testSame(
+    test(
         """
         /** @const */
         var x = y;
@@ -317,12 +368,22 @@ public class InlineAliasesTest extends CompilerTestCase {
             return x;
           }
         }
+        """,
+        """
+        /** @const */
+        var x = y;
+        function f() {
+          function g() {
+            return x$jscomp$1;
+          }
+          var x$jscomp$1 = 123;
+        }
         """);
   }
 
   @Test
   public void testShadowedAliasesNotRenamed_withBlockScope() {
-    testSame(
+    test(
         """
         var ns = {};
         ns.Foo = function(){};
@@ -331,9 +392,18 @@ public class InlineAliasesTest extends CompilerTestCase {
           const alias = 5;
           var x = alias
         }
+        """,
+        """
+        var ns = {};
+        ns.Foo = function(){};
+        var /** @const */ alias = ns.Foo;
+        if (true) {
+          const alias$jscomp$1 = 5;
+          var x = alias$jscomp$1
+        }
         """);
 
-    testSame(
+    test(
         """
         /** @const */
         var x = y;
@@ -341,6 +411,16 @@ public class InlineAliasesTest extends CompilerTestCase {
           const x = 123;
           function g() {
             return x;
+          }
+        }
+        """,
+        """
+        /** @const */
+        var x = y;
+        if (true) {
+          const x$jscomp$1 = 123;
+          function g() {
+            return x$jscomp$1;
           }
         }
         """);
@@ -389,7 +469,9 @@ public class InlineAliasesTest extends CompilerTestCase {
         var Foo = class {};
         var /** @const */ A = Foo;
         var a = [5, Foo];
-        var [one, two] = a;
+        var one;
+        var two;
+        [one, two] = a;
         """);
   }
 
@@ -411,7 +493,8 @@ public class InlineAliasesTest extends CompilerTestCase {
         function f() {
           return [Foo, 3];
         }
-        var a, b;
+        var a;
+        var b;
         [a, b] = f();
         """);
   }
@@ -468,7 +551,9 @@ public class InlineAliasesTest extends CompilerTestCase {
         var Foo = class {};
         var /** @const */ A = Foo;
         var o = {p: Foo, q: 5};
-        var {p, q} = o;
+        var p;
+        var q;
+        ({p, q} = o);
         """);
   }
 
@@ -500,7 +585,9 @@ public class InlineAliasesTest extends CompilerTestCase {
         var Foo = class {};
         var /** @const */ A = Foo;
         var o = {p: Foo, q: true};
-        var {p: newName1, q: newName2} = o;
+        var newName1;
+        var newName2;
+        ({p: newName1, q: newName2} = o);
         """);
   }
 
@@ -516,7 +603,9 @@ public class InlineAliasesTest extends CompilerTestCase {
         """
         var Foo = class {};
         var /** @const */ A = Foo;
-        var {a = Foo, b = Foo} = {a: 13};
+        var a;
+        var b;
+        ({a = Foo, b = Foo} = {a: 13});
         """);
   }
 
@@ -684,7 +773,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testForwardedExport() {
-    testSame(
+    test(
         """
         const proto = {};
         /** @const */
@@ -697,12 +786,25 @@ public class InlineAliasesTest extends CompilerTestCase {
           const d = new alias.google.type.Date();
           const proto = 0;
         }
+        """,
+        """
+        const proto = {};
+        /** @const */
+        proto.google = {};
+        /** @const */
+        proto.google.type = {};
+        proto.google.type.Date = class {};
+        const alias = proto;
+        function f() {
+          const d = new proto.google.type.Date();
+          const proto$jscomp$1 = 0;
+        }
         """);
   }
 
   @Test
   public void testForwardedExportNested() {
-    testSame(
+    test(
         """
         const proto = {};
         /** @const */
@@ -714,6 +816,19 @@ public class InlineAliasesTest extends CompilerTestCase {
         function f() {
           const d = new alias.type.Date();
           const proto = 0;
+        }
+        """,
+        """
+        const proto = {};
+        /** @const */
+        proto.google = {};
+        /** @const */
+        proto.google.type = {};
+        proto.google.type.Date = class {};
+        const alias = proto.google;
+        function f() {
+          const d = new proto.google.type.Date();
+          const proto$jscomp$1 = 0;
         }
         """);
   }

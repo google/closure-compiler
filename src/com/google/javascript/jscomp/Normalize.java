@@ -690,27 +690,9 @@ final class Normalize implements CompilerPass {
     }
 
     private void normalizeAssignShorthand(Node shorthand) {
-      if (!shorthand.getFirstChild().isName()) {
-        return;
+      if (maybeNormalizeAssignShorthand(shorthand)) {
+        reportCodeChange("assign shorthand", shorthand);
       }
-
-      checkArgument(shorthand.hasTwoChildren(), "Expected two children for shorthand assignment.");
-      Node lhs = shorthand.getFirstChild();
-      Node rhs = shorthand.getSecondChild();
-      lhs.detach();
-      rhs.detach();
-
-      Token op = NodeUtil.getOpFromAssignmentOp(shorthand);
-      Node opNode =
-          new Node(op, lhs.cloneNode().srcref(lhs), rhs).srcref(shorthand).copyTypeFrom(shorthand);
-
-      // Change the original ASSIGN_X to an ASSIGN.
-      shorthand.setToken(Token.ASSIGN);
-      lhs.copyTypeFrom(shorthand);
-      shorthand.addChildToBack(lhs);
-      shorthand.addChildToBack(opNode);
-
-      reportCodeChange("assign shorthand", shorthand);
     }
 
     /**
@@ -727,6 +709,32 @@ final class Normalize implements CompilerPass {
       }
       return newChild;
     }
+  }
+
+  @CanIgnoreReturnValue
+  static boolean maybeNormalizeAssignShorthand(Node shorthand) {
+    if (!NodeUtil.isCompoundAssignmentOp(shorthand)
+        || NodeUtil.isLogicalAssignmentOp(shorthand)
+        || !shorthand.getFirstChild().isName()) {
+      return false;
+    }
+
+    checkArgument(shorthand.hasTwoChildren(), "Expected two children for shorthand assignment.");
+    Node lhs = shorthand.getFirstChild();
+    Node rhs = shorthand.getSecondChild();
+    lhs.detach();
+    rhs.detach();
+
+    Token op = NodeUtil.getOpFromAssignmentOp(shorthand);
+    Node opNode =
+        new Node(op, lhs.cloneNode().srcref(lhs), rhs).srcref(shorthand).copyTypeFrom(shorthand);
+
+    // Change the original ASSIGN_X to an ASSIGN.
+    shorthand.setToken(Token.ASSIGN);
+    lhs.copyTypeFrom(shorthand);
+    shorthand.addChildToBack(lhs);
+    shorthand.addChildToBack(opNode);
+    return true;
   }
 
   /** ScopeCreator duplicate declaration handler. */

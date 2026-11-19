@@ -60,6 +60,11 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 .setInternalFactory(
                     (x) -> new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()))
                 .build());
+        factories.maybeAdd(
+            PassFactory.builder()
+                .setName(PassNames.NORMALIZE)
+                .setInternalFactory(Normalize::createNormalizeForOptimizations)
+                .build());
         TranspilationPasses.addEs6ModulePass(
             factories, new PreprocessorSymbolTable.CachedInstanceFactory());
         factories.maybeAdd(
@@ -77,14 +82,13 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
             PassFactory.builder()
                 .setName(PassNames.COLLAPSE_PROPERTIES)
                 .setRunInFixedPointLoop(true)
-                .setInternalFactory(
-                    (x) ->
-                        InlineAndCollapseProperties.builder(compiler)
-                            .setPropertyCollapseLevel(collapseLevel)
-                            .setChunkOutputType(chunkOutputType)
-                            .setHaveModulesBeenRewritten(true)
-                            .setModuleResolutionMode(options.getModuleResolutionMode())
-                            .build())
+                .setInternalFactory((x) ->
+                    InlineAndCollapseProperties.builder(compiler)
+                        .setPropertyCollapseLevel(collapseLevel)
+                        .setChunkOutputType(chunkOutputType)
+                        .setHaveModulesBeenRewritten(true)
+                        .setModuleResolutionMode(options.getModuleResolutionMode())
+                        .build())
                 .build());
 
         for (PassFactory factory : factories.build()) {
@@ -127,7 +131,9 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
             """
             import('./mod1.js')
                 .then(jscomp$DynamicImportCallback(() => module$mod1 ))
-                .then(ns => console.log(ns.Foo.bar()));
+                .then(ns => {
+                  return console.log(ns.Foo.bar());
+                });
             """));
     expectedChunks[1].add(
         SourceFile.fromCode(

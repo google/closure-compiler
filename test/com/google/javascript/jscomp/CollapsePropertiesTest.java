@@ -2401,17 +2401,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testInlineAliasWithModifications() {
-    // TODO(bradfordcsmith): Stop normalizing the expected output or document why it is necessary.
-    enableNormalizeExpectedOutput();
     testSame("var x = 10; function f() { var y = x; x++; alert(y)} ");
-    testSame("var x = 10; function f() { var y = x; x+=1; alert(y)} ");
+    test(
+        srcs("var x = 10; function f() { var y = x; x+=1; alert(y)} "),
+        expected("var x = 10; function f() { var y = x; x = x + 1; alert(y)} "));
     test(
         srcs("var x = {}; x.x = 10; function f() {var y=x.x; x.x++; alert(y)}"),
         expected("var x$x = 10; function f() {var y=x$x; x$x++; alert(y)}"));
-    disableNormalize();
     test(
         srcs("var x = {}; x.x = 10; function f() {var y=x.x; x.x+=1; alert(y)}"),
-        expected("var x$x = 10; function f() {var y=x$x; x$x+=1; alert(y)}"));
+        expected("var x$x = 10; function f() {var y=x$x; x$x = x$x + 1; alert(y)}"));
   }
 
   @Test

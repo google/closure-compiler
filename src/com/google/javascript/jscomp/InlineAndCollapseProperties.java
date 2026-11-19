@@ -186,6 +186,7 @@ class InlineAndCollapseProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     checkState(
         !testAggressiveInliningOnly || propertyCollapseLevel == PropertyCollapseLevel.ALL,
         "testAggressiveInlining is invalid for: %s",
@@ -1788,6 +1789,9 @@ class InlineAndCollapseProperties implements CompilerPass {
       }
 
       n.replaceWith(ref);
+      if (ref.isFirstChildOf(parent)) {
+        Normalize.maybeNormalizeAssignShorthand(parent);
+      }
       compiler.reportChangeToEnclosingScope(ref);
     }
 
