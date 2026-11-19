@@ -1577,8 +1577,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
   @Test
   public void testNoInlineCaseTestAssignmentIntoFallthroughBody() {
     // `case 1` falls through into the body of `case (t = 2)` without evaluating `t = 2`.
-    // TODO(b/586571469): This is wrong: `t` should not be inlined into the case body.
-    test(
+    testSame(
         """
         function f(x) {
           let t;
@@ -1587,16 +1586,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
             case (t = 2):
               alert(t);
               alert(t);
-          }
-        }
-        """,
-        """
-        function f(x) {
-          switch (x) {
-            case 1:
-            case 2:
-              alert(2);
-              alert(2);
           }
         }
         """);
@@ -1621,8 +1610,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
   @Test
   public void testNoInlineCaseTestAssignmentIntoBodyReachedThroughDefault() {
     // When x === 1, `case 1` falls through `default` into the body without evaluating `t = 2`.
-    // TODO(b/586571469): This is wrong: `t` should not be inlined into the case body.
-    test(
+    testSame(
         """
         function f(x) {
           let t;
@@ -1632,17 +1620,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
             case (t = 2):
               alert(t);
               alert(t);
-          }
-        }
-        """,
-        """
-        function f(x) {
-          switch (x) {
-            case 1:
-            default:
-            case 2:
-              alert(2);
-              alert(2);
           }
         }
         """);

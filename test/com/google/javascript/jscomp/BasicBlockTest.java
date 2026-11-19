@@ -98,7 +98,9 @@ public final class BasicBlockTest {
     Node caseNode = switchBody.getFirstChild();
     assertThat(BasicBlock.isBlockBoundary(switchCond, switchNode)).isFalse();
     assertThat(BasicBlock.isBlockBoundary(caseNode, switchBody)).isTrue();
+    // The case body can be entered by fallthrough without evaluating the case test.
     assertThat(BasicBlock.isBlockBoundary(caseNode.getFirstChild(), caseNode)).isFalse();
+    assertThat(BasicBlock.isBlockBoundary(caseNode.getLastChild(), caseNode)).isTrue();
 
     Node labelNode = parse("label: { a(); }").getFirstChild();
     assertThat(BasicBlock.isBlockBoundary(labelNode.getFirstChild(), labelNode)).isFalse();
@@ -129,6 +131,26 @@ public final class BasicBlockTest {
     assertThat(thenBlock.provablyExecutesBefore(nestedThenBlock)).isTrue();
     assertThat(thenBlock.provablyExecutesBefore(elseBlock)).isFalse();
     assertThat(nestedThenBlock.provablyExecutesBefore(thenBlock)).isFalse();
+  }
+
+  @Test
+  public void provablyExecutesBefore_caseBodyNotDominatedByCaseTest() {
+    Node script = parse("switch (x) { case 1: case 2: { if (a) {} } }");
+    Node switchBody = script.getFirstChild().getSecondChild();
+    Node secondCase = switchBody.getSecondChild();
+    Node caseBodyNode = secondCase.getLastChild();
+    Node nestedIfBlockNode = caseBodyNode.getFirstChild().getFirstChild().getSecondChild();
+
+    BasicBlock rootBlock = new BasicBlock(/* parent= */ null, script);
+    BasicBlock caseBlock = new BasicBlock(rootBlock, secondCase);
+    BasicBlock caseBodyBlock = new BasicBlock(caseBlock, caseBodyNode);
+    BasicBlock nestedIfBlock = new BasicBlock(caseBodyBlock, nestedIfBlockNode);
+
+    assertThat(caseBlock.provablyExecutesBefore(caseBodyBlock)).isFalse();
+    assertThat(caseBlock.provablyExecutesBefore(nestedIfBlock)).isFalse();
+    assertThat(caseBodyBlock.provablyExecutesBefore(nestedIfBlock)).isTrue();
+    assertThat(rootBlock.provablyExecutesBefore(caseBodyBlock)).isTrue();
+    assertThat(rootBlock.provablyExecutesBefore(nestedIfBlock)).isTrue();
   }
 
   private Node parse(String js) {

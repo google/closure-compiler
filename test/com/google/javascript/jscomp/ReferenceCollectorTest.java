@@ -528,7 +528,11 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
               assertThat(x.references).hasSize(3);
               assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
               assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
-              assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
+              // The case body is its own block, nested in the CASE's block, because it can be
+              // reached by fallthrough without evaluating the case test.
+              BasicBlock caseBodyBlock = x.references.get(2).getBasicBlock();
+              assertNode(caseBodyBlock.getRoot()).hasType(Token.BLOCK);
+              assertNode(caseBodyBlock.getParent().getRoot()).hasType(Token.CASE);
             }
           }
         });

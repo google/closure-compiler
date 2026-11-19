@@ -146,7 +146,9 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
     assertThat(xRefs.references).hasSize(3);
     assertNode(xRefs.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
     assertNode(xRefs.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
-    assertNode(xRefs.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
+    BasicBlock caseBodyBlock = xRefs.references.get(2).getBasicBlock();
+    assertNode(caseBodyBlock.getRoot()).hasType(Token.BLOCK);
+    assertNode(caseBodyBlock.getParent().getRoot()).hasType(Token.CASE);
   }
 
   @Test

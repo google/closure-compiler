@@ -55,6 +55,11 @@ final class BasicBlock implements Serializable {
           // The if condition or label name is not a boundary, but the corresponding block is.
           return n != parent.getFirstChild();
         }
+        case CASE -> {
+          // The case body is a boundary: it can be entered by fallthrough from an earlier case
+          // without evaluating this case's test expression. See provablyExecutesBefore.
+          return n != parent.getFirstChild();
+        }
         default -> {}
       }
       if (EvaluationOrder.isConditionalChild(n)) {
@@ -77,6 +82,12 @@ final class BasicBlock implements Serializable {
   private final boolean isLoop;
 
   /**
+   * Whether this block is the body of a {@code CASE}, which may be entered by fallthrough without
+   * executing its parent block (the {@code CASE} test).
+   */
+  private final boolean isCaseBody;
+
+  /**
    * Creates a new block.
    *
    * @param parent The containing block.
@@ -97,8 +108,10 @@ final class BasicBlock implements Serializable {
               || pType == Token.FOR_OF
               || pType == Token.FOR_AWAIT_OF
               || pType == Token.FOR_IN;
+      this.isCaseBody = pType == Token.CASE && root.isBlock();
     } else {
       this.isLoop = false;
+      this.isCaseBody = false;
     }
   }
 
@@ -121,10 +134,16 @@ final class BasicBlock implements Serializable {
   boolean provablyExecutesBefore(BasicBlock thatBlock) {
     // If thatBlock is a descendant of this block, and there are no hoisted
     // blocks between them, then this block must start before thatBlock.
-    BasicBlock currentBlock;
-    for (currentBlock = thatBlock;
-        currentBlock != null && currentBlock != this;
-        currentBlock = currentBlock.getParent()) {}
+    BasicBlock currentBlock = thatBlock;
+    while (currentBlock != null && currentBlock != this) {
+      BasicBlock parentBlock = currentBlock.getParent();
+      if (currentBlock.isCaseBody && parentBlock == this) {
+        // In `case init: body`, the body can be reached by fallthrough from an earlier case
+        // without evaluating the `init` test expression.
+        return false;
+      }
+      currentBlock = parentBlock;
+    }
 
     if (currentBlock == this) {
       return true;
