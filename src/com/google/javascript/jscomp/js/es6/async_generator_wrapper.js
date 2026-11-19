@@ -430,7 +430,9 @@ $jscomp.AsyncGeneratorWrapper.prototype.runDelegateFrame_ = function() {
       if (param instanceof $jscomp.AsyncGeneratorWrapper$ActionRecord) {
         param = param.value;
       }
-      this.delegate_[frame.method](param)
+      // Per the spec, `yield*` awaits the inner result, so the delegate may
+      // return a plain {value, done} object instead of a Promise.
+      Promise.resolve(this.delegate_[frame.method](param))
           .then(this.boundHandleDelegateResult_, this.boundHandleDelegateError_)
           .catch(this.boundRejectAndClose_);
     } catch (err) {
