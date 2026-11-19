@@ -110,14 +110,13 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
         "let x = 0; [x] = [x];",
         (NodeTraversal t, ReferenceMap rm) -> {
           ReferenceCollection xRefs = rm.getReferences(t.getScope().getVar("x"));
-          // TODO(b/586571469): This is wrong: the RHS read should be collected before the pattern
-          // write.
+          // declaration, read in the RHS, then write in the pattern
           assertThat(xRefs)
               .comparingElementsUsing(IS_LVALUE)
-              .containsExactly(true, true, false)
+              .containsExactly(true, false, true)
               .inOrder();
-          assertThat(xRefs.references.get(1).getParent().isArrayPattern()).isTrue();
-          assertThat(xRefs.references.get(2).getParent().isArrayLit()).isTrue();
+          assertThat(xRefs.references.get(1).getParent().isArrayLit()).isTrue();
+          assertThat(xRefs.references.get(2).getParent().isArrayPattern()).isTrue();
         });
   }
 
@@ -128,9 +127,9 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
         (NodeTraversal t, ReferenceMap rm) -> {
           ReferenceCollection xRefs = rm.getReferences(t.getScope().getVar("x"));
           assertThat(xRefs.references).hasSize(3);
-          // TODO(b/586571469): This is wrong: `o[x]` is evaluated before the default value `x`.
-          assertThat(xRefs.references.get(1).getParent().isDefaultValue()).isTrue();
-          assertThat(xRefs.references.get(2).getParent().isGetElem()).isTrue();
+          // `o[x]` is evaluated before the default value `x`.
+          assertThat(xRefs.references.get(1).getParent().isGetElem()).isTrue();
+          assertThat(xRefs.references.get(2).getParent().isDefaultValue()).isTrue();
         });
   }
 

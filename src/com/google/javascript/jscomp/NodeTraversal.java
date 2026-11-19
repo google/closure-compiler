@@ -923,9 +923,9 @@ public class NodeTraversal {
         handleClassMembers(n, parent);
         return;
       }
-      case DEFAULT_VALUE, DESTRUCTURING_LHS -> {
-        // TODO(nickreid): Handle ASSIGN with destructuring target.
-        if (this.obeyDestructuringAndDefaultValueExecutionOrder) {
+      case DEFAULT_VALUE, DESTRUCTURING_LHS, ASSIGN -> {
+        if (this.obeyDestructuringAndDefaultValueExecutionOrder
+            && EvaluationOrder.evaluatesLastChildFirst(n)) {
           handleDestructuringOrDefaultValue(n, parent);
           return;
         }
