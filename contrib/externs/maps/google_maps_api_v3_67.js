@@ -151,6 +151,32 @@ google.maps.AirQualityLibrary = function() {};
 google.maps.AirQualityLibrary.prototype.AirQualityMeterElement;
 
 /**
+ * Available only in the v=beta channel: https://goo.gle/3oAthT3.
+ *
+ * This event is dispatched on the <code>google.maps.Settings</code> singleton
+ * instance for developer-facing analytics.
+ *
+ * Access by calling `const {AnalyticsEvent} = await
+ * google.maps.importLibrary("core");`. See
+ * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @extends {Event}
+ * @constructor
+ */
+google.maps.AnalyticsEvent = function() {};
+
+/**
+ * The element associated with the interaction, if any.
+ * @type {!Element|null}
+ */
+google.maps.AnalyticsEvent.prototype.element;
+
+/**
+ * A set of tags describing the interaction that triggered this event.
+ * @type {!Set<string>}
+ */
+google.maps.AnalyticsEvent.prototype.tags;
+
+/**
  * Animations that can be played on a marker. Use the {@link
  * google.maps.Marker.setAnimation} method on Marker or the {@link
  * google.maps.MarkerOptions.animation} option to play an animation.
@@ -793,6 +819,11 @@ google.maps.CoordinateTransformer.prototype.getCameraParams = function() {};
  * @record
  */
 google.maps.CoreLibrary = function() {};
+
+/**
+ * @type {typeof google.maps.AnalyticsEvent}
+ */
+google.maps.CoreLibrary.prototype.AnalyticsEvent;
 
 /**
  * @type {typeof google.maps.ColorScheme}
@@ -9915,6 +9946,7 @@ google.maps.ScaleControlStyle = {
  * Access by calling `const {Settings} = await
  * google.maps.importLibrary("core");`. See
  * https://developers.google.com/maps/documentation/javascript/libraries.
+ * @implements {EventTarget}
  * @constructor
  */
 google.maps.Settings = function() {};
@@ -29574,7 +29606,7 @@ google.maps.routes.TransitAgency = function() {};
 google.maps.routes.TransitAgency.prototype.name;
 
 /**
- * The transit agency&#39;s locale-specific formatted phone number.
+ * The transit agency&#39;s phone number in international format.
  * @type {string|null}
  */
 google.maps.routes.TransitAgency.prototype.phoneNumber;
