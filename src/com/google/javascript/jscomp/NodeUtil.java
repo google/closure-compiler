@@ -5372,18 +5372,12 @@ public final class NodeUtil {
     inspect:
     do {
       Node parent = n.getParent();
+      if (EvaluationOrder.isConditionalChild(n)) {
+        // e.g. the right-hand side of `&&`, either arm of `?:`, or a destructuring default value.
+        return false;
+      }
       switch (parent.getToken()) {
-        case IF,
-            HOOK,
-            AND,
-            OR,
-            COALESCE,
-            ASSIGN_OR,
-            ASSIGN_AND,
-            ASSIGN_COALESCE,
-            OPTCHAIN_GETELEM,
-            OPTCHAIN_CALL,
-            DEFAULT_VALUE -> {
+        case IF -> {
           if (parent.getFirstChild() != n) {
             return false;
           }
