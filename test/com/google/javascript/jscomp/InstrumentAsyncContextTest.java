@@ -472,6 +472,48 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  @Test
+  public void testAwaitInsideTryAndCatchWithFinally_knownBug() {
+    // TODO(b/586787047): The finally block should start with `ᵃᶜresume$0();`. If the await in the
+    // catch block rejects, the `ᵃᶜresume$0(...)` wrapper around it never runs, so the finally block
+    // runs without the function's context. Only the catch block gets a resume call today.
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          try {
+            await a();
+          } catch (e) {
+            await b(e);
+          } finally {
+            c();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            try {
+              ᵃᶜresume$0(await ᵃᶜsuspend$0(a()));
+            } catch (e) {
+              ᵃᶜresume$0();
+              ᵃᶜresume$0(await ᵃᶜsuspend$0(b(e)));
+            } finally {
+              c();
+            }
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
   // `return await` does not require any instrumentation if it's not inside a try block.
   @Test
   public void testReturnAwait() {
