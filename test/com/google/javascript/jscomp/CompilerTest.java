@@ -1017,6 +1017,26 @@ public final class CompilerTest {
         null);
   }
 
+  // A license must not be able to end the script element when the output is inlined in HTML.
+  @Test
+  public void testLicenseBreaksHtmlScriptSequences() {
+    String js =
+        "/** @license a </script><script>alert(1)</script> b </STYLE> c <!-- d <e> */"
+            + " console.log(0);";
+    String license = " a <\\/script><script>alert(1)<\\/script> b <\\/STYLE> c <\\!-- d <e> ";
+    test(js, "/*\n" + license + "*/\nconsole.log(0);", null);
+
+    Compiler compiler = new Compiler();
+    compiler.compile(
+        EMPTY_EXTERNS,
+        ImmutableList.of(
+            SourceFile.fromCode("testcode", js),
+            SourceFile.fromCode("stdexterns", new TestExternsBuilder().addConsole().build())),
+        createNewFlagBasedOptions());
+    Node script = compiler.getJsRoot().getFirstChild();
+    assertThat(compiler.toSource(script)).isEqualTo("/*\n" + license + "*/\nconsole.log(0)");
+  }
+
   // Do we correctly handle the license if it's not at the top level, but
   // inside another declaration?
   @Test
