@@ -43,6 +43,7 @@ public final class DefaultExterns {
           "ie_event.js",
           "webkit_event.js",
           "w3c_device_sensor_event.js",
+          "w3c_aria_mixin.js",
           "w3c_dom1.js",
           "w3c_dom2.js",
           "w3c_dom3.js",
