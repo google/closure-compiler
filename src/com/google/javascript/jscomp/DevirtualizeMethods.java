@@ -272,6 +272,11 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
       return false;
     }
 
+    if (definitionSite.isPrivateIdentifier()) {
+      // Private methods cannot be devirtualized with `#` in the global function name.
+      return false;
+    }
+
     return true;
   }
 
@@ -314,6 +319,12 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     if (NodeUtil.has(definitionFunction, Node::isSuper, alwaysTrue())) {
       // TODO(b/120452418): Remove this when we have a rewrite for `super`. We punted initially due
       // to complexity.
+      return false;
+    }
+
+    if (NodeUtil.referencesPrivateName(NodeUtil.getFunctionParameters(definitionFunction))
+        || NodeUtil.referencesPrivateName(NodeUtil.getFunctionBody(definitionFunction))) {
+      // A method whose parameters or body use a `#private` name must stay inside its class.
       return false;
     }
 
