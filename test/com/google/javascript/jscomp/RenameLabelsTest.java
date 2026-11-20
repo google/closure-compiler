@@ -110,6 +110,15 @@ public final class RenameLabelsTest extends CompilerTestCase {
     test(
         "Foo:Goo:while(1){a(); continue Goo; break Foo;}",
         "a:b:while(1){a(); continue b;break a;}");
+    test(
+        "Foo:Goo:while(1){a(); continue Foo; break Goo;}",
+        "a:b:while(1){a(); continue a;break b;}");
+    test("Foo:Goo:while(1){a(); continue Foo;}", "a:while(1){a(); continue a;}");
+    test(
+        "async function f(xs) { Foo: Goo: for await (const x of xs) { if (x) continue Foo; break"
+            + " Goo; } }",
+        "async function f(xs) { a: b: for await (const x of xs) { if (x) continue a; break b; }"
+            + " }");
 
     test("Foo:Bar:X:{ break Bar; }", "b:{ break b; }");
     test("Foo:Bar:X:{ break Bar; break X; }", "b:c:{ break b; break c;}");

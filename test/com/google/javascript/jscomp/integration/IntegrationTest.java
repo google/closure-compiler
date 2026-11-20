@@ -6462,5 +6462,99 @@ async function abc() {
         b.out = [c, d];
         """);
   }
+
+  @Test
+  public void testContinueOuterLabelOfDoublyLabeledForAwait_whitespaceOnly() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.WHITESPACE_ONLY.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    // Stay on ECMASCRIPT_NEXT; RewriteAsyncIteration multi-label support is b/572973112.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+
+    testSame(
+        options,
+        "async function f(xs) { a: b: for await (const x of xs) { if (x) continue a; break b; } }");
+  }
+
+  @Test
+  public void testContinueOuterLabelOfDoublyLabeledForAwait_simple() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    // Stay on ECMASCRIPT_NEXT; RewriteAsyncIteration multi-label support is b/572973112.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "testExterns.js",
+                new TestExternsBuilder().addConsole().addExtra("var window;").build()));
+
+    test(
+        options,
+        """
+        async function f(xs, cond) {
+          outer: inner: for await (const x of xs) {
+            for (let i = 0; i < 2; i++) {
+              if (cond(x, i)) continue outer;
+              if (x) break inner;
+            }
+            console.log(x);
+          }
+        }
+        window['f'] = f;
+        """,
+        """
+        async function f(a, c) {
+          a: b: for await (let b of a) {
+            for (a = 0; a < 2; a++) {
+              if (c(b, a)) continue a;
+              if (b) break b;
+            }
+            console.log(b);
+          }
+        }
+        window.f = f;
+        """);
+  }
+
+  @Test
+  public void testContinueOuterLabelOfDoublyLabeledForAwait_advanced() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    // Stay on ECMASCRIPT_NEXT; RewriteAsyncIteration multi-label support is b/572973112.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "testExterns.js",
+                new TestExternsBuilder().addConsole().addExtra("var window;").build()));
+
+    test(
+        options,
+        """
+        async function f(xs, cond) {
+          outer: inner: for await (const x of xs) {
+            for (let i = 0; i < 2; i++) {
+              if (cond(x, i)) continue outer;
+              if (x) break inner;
+            }
+            console.log(x);
+          }
+        }
+        window['f'] = f;
+        """,
+        """
+        window.f = async function(a, c) {
+          a: b: for await (let b of a) {
+            for (a = 0; a < 2; a++) {
+              if (c(b, a)) continue a;
+              if (b) break b;
+            }
+            console.log(b);
+          }
+        };
+        """);
+  }
 }
 

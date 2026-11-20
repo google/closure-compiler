@@ -271,6 +271,18 @@ public final class ControlFlowAnalysisTest {
     return createCfg(input, false);
   }
 
+  private ControlFlowGraph<Node> createCfgWithNoErrors(String input) {
+    Compiler compiler = new Compiler();
+    Node root = compiler.parseSyntheticCode("cfgtest", input);
+    assertThat(compiler.getErrors()).isEmpty();
+    return ControlFlowAnalysis.builder()
+        .setCompiler(compiler)
+        .setCfgRoot(root)
+        .setTraverseFunctions(true)
+        .setIncludeEdgeAnnotations(true)
+        .computeCfg();
+  }
+
   @Test
   public void testSimpleStatementsInScript() {
     String src = "var a; a = a; a = a";
@@ -333,6 +345,31 @@ public final class ControlFlowAnalysisTest {
     String src = "La: Lb: break La;";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertReturnEdge(cfg, Token.BREAK);
+  }
+
+  @Test
+  public void testContinueWithMultipleLabels_while() {
+    String src = "La: Lb: while (true) { continue La; }";
+    ControlFlowGraph<Node> cfg = createCfgWithNoErrors(src);
+    assertEdge(cfg, Token.CONTINUE, Token.WHILE, Branch.UNCOND);
+  }
+
+  @Test
+  public void testContinueWithMultipleLabels_for() {
+    String src = "La: Lb: for (var i = 0; i < 10; i++) { while (x) { continue La; } }";
+    ControlFlowGraph<Node> cfg = createCfgWithNoErrors(src);
+    assertCrossEdge(cfg, Token.CONTINUE, Token.INC, Branch.UNCOND);
+    assertNoEdge(cfg, Token.CONTINUE, Token.WHILE);
+  }
+
+  @Test
+  public void testContinueWithMultipleLabels_forAwaitOf() {
+    String src =
+        "async function f(xs) { La: Lb: for await (const x of xs) { if (x) continue La; break Lb;"
+            + " } return 0; }";
+    ControlFlowGraph<Node> cfg = createCfgWithNoErrors(src);
+    assertEdge(cfg, Token.CONTINUE, Token.FOR_AWAIT_OF, Branch.UNCOND);
+    assertCrossEdge(cfg, Token.BREAK, Token.RETURN, Branch.UNCOND);
   }
 
   @Test

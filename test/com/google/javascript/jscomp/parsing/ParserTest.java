@@ -470,6 +470,99 @@ public final class ParserTest extends BaseJSTypeTestCase {
         """);
   }
 
+  @Test
+  public void testContinueToOuterLabelOfStackedLabeledLoops() {
+    parse("a: b: for (;;) { continue a; continue b; }");
+    parse("a: b: for (;;) continue a;");
+    parse("a: b: for (var k in o) { continue a; continue b; }");
+    parse("a: b: while (1) { continue a; continue b; }");
+    parse("a: b: while (1) continue a;");
+    parse("a: b: do { continue a; continue b; } while (1);");
+    parse("a: b: c: while (1) { continue a; continue b; continue c; }");
+    parse("a: b: for (;;) { c: for (;;) { continue a; continue b; continue c; } }");
+    parse("a: { b: c: while (1) { continue b; continue c; } }");
+    parse("class C { static { a: b: while (true) { continue a; } } }");
+  }
+
+  @Test
+  public void testContinueToOuterLabelOfStackedLabeledForOf() {
+    expectFeatures(Feature.FOR_OF);
+    parse("a: b: for (const x of xs) { if (x) continue a; break b; }");
+  }
+
+  @Test
+  public void testContinueToOuterLabelOfStackedLabeledForAwaitOf() {
+    expectFeatures(Feature.FOR_AWAIT_OF);
+    parse(
+        """
+        async function f(xs) {
+          a: b: for await (const x of xs) {
+            if (x) continue a;
+            break b;
+          }
+        }
+        """);
+    parse(
+        """
+        async function f(xs) {
+          a: b: c: for await (const x of xs) {
+            continue a;
+            continue b;
+            continue c;
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testContinueToOuterLabelOfStackedLabeledNonLoops_error() {
+    parseError("a: b: { while (1) { continue a; } }", UNEXPECTED_LABELLED_CONTINUE);
+    parseError("a: b: { while (1) { continue b; } }", UNEXPECTED_LABELLED_CONTINUE);
+    parseError("a: b: c: { while (1) { continue a; } }", UNEXPECTED_LABELLED_CONTINUE);
+    parseError("a: { b: while (1) { continue a; } }", UNEXPECTED_LABELLED_CONTINUE);
+    parseError(
+        "while (1) { a: b: switch (1) { case 1: continue a; } }", UNEXPECTED_LABELLED_CONTINUE);
+    parseError("a: b: if (x) { while (1) { continue a; } }", UNEXPECTED_LABELLED_CONTINUE);
+    parseError("a: b: try { while (1) { continue a; } } finally {}", UNEXPECTED_LABELLED_CONTINUE);
+    parseError("while (1) { a: b: continue a; }", UNEXPECTED_LABELLED_CONTINUE);
+    parseError(
+        "class C { static { a: b: { while (true) { continue a; } } } }",
+        UNEXPECTED_LABELLED_CONTINUE);
+  }
+
+  @Test
+  public void testContinueToOuterLabelOfStackedLabeledWith_error() {
+    strictMode = SLOPPY;
+    parseError("a: b: with (o) { while (1) { continue a; } }", UNEXPECTED_LABELLED_CONTINUE);
+  }
+
+  @Test
+  public void testContinueToStackedLabel_duplicateLabels_error() {
+    parseError("a: a: while (1) { continue a; }", "Duplicate label \"a\"");
+    parseError("a: { a: b: while (1) { continue a; } }", "Duplicate label \"a\"");
+    parseError(
+        "a: while (1) { a: b: { continue a; } }",
+        "Duplicate label \"a\"",
+        UNEXPECTED_LABELLED_CONTINUE);
+  }
+
+  @Test
+  public void testContinueToStackedLabel_ideModeErrorRecovery() {
+    isIdeMode = true;
+    parseError("a: b:", "primary expression expected");
+    parseError("a: b: continue a;", UNEXPECTED_LABELLED_CONTINUE);
+    parseError("a: b: for (;;) { continue a;", "'}' expected");
+  }
+
+  @Test
+  public void testContinueToStackedLabelCrossingBoundary_error() {
+    parseError(
+        "a: b: while (1) { var f = function() { continue a; }; }", UNDEFINED_LABEL + " \"a\"");
+    parseError("a: b: while (1) { () => { continue a; }; }", UNDEFINED_LABEL + " \"a\"");
+    parseError(
+        "a: b: while (1) { class C { static { continue a; } } }", UNDEFINED_LABEL + " \"a\"");
+  }
+
   /**
    * @bug 19100575
    */

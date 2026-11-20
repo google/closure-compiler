@@ -621,10 +621,19 @@ class IRFactory {
       }
 
       if (parent.isLabel() && labelsMatch(parent, labelName)) {
-        if (n.isContinue() && !isContinueTarget(parent.getLastChild())) {
-          // report invalid continue target
-          errorReporter.error(
-              UNEXPECTED_LABELLED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
+        if (n.isContinue()) {
+          // Consecutive labels (e.g. `a: b: for (...) {}`) share the same label set for the
+          // labeled statement per ECMA-262 ContainsUndefinedContinueTarget. Unwrap nested LABEL
+          // nodes to inspect the underlying statement.
+          Node target = parent.getLastChild();
+          while (target.isLabel()) {
+            target = target.getLastChild();
+          }
+          if (!isContinueTarget(target)) {
+            // report invalid continue target
+            errorReporter.error(
+                UNEXPECTED_LABELLED_CONTINUE, sourceName, n.getLineno(), n.getCharno());
+          }
         }
       }
     } else if (n.isContinue()) {

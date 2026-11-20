@@ -393,6 +393,26 @@ try {
           $jscomp.iteratorClose(ITER$0, KEY$1$x);
         }
         """);
+    test(
+        "a: b: for (var x of [1, 2]) { if (x) continue a; break b; }",
+        """
+        var x;
+        var ITER$0 = (0, $jscomp.makeIterator)([1, 2]);
+        var KEY$1$x = ITER$0.next();
+        try {
+          a: b: for (; !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+            x = KEY$1$x.value;
+            {
+              if (x) {
+                continue a;
+              }
+              break b;
+            }
+          }
+        } finally {
+          $jscomp.iteratorClose(ITER$0, KEY$1$x);
+        }
+        """);
   }
 
   @Test
@@ -427,6 +447,22 @@ try {
           x = KEY$1$x.value;
           {
             console.log(x);
+          }
+        }
+        """);
+    test(
+        "a: b: for (var x of [1, 2]) { if (x) continue a; break b; }",
+        """
+        var x;
+        var ITER$0 = (0, $jscomp.makeIterator)([1, 2]);
+        var KEY$1$x = ITER$0.next();
+        a: b: for (; !KEY$1$x.done; KEY$1$x = ITER$0.next()) {
+          x = KEY$1$x.value;
+          {
+            if (x) {
+              continue a;
+            }
+            break b;
           }
         }
         """);
