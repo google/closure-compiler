@@ -901,7 +901,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoInlineOfGetterThatReadsPrivateField_knownBug() {
+  public void testNoInlineOfGetterThatReadsPrivateField() {
     // Expected behavior: `InlineSimpleMethods` leaves this code unchanged. `this.#a` is valid only
     // inside the body of `C`, so `new C().getA()` can't be replaced by `new C().#a`.
     String js =
@@ -912,13 +912,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
         }
         var x = new C().getA();
         """;
-    // TODO(b/236744850): `getA()` is inlined, although it reads a private field.
-    // Current behavior: `var x = new C().getA();` becomes `var x = new C().#a;`. So
-    //   `testSame(js)` fails.
-    // Why it's a bug: `new C().#a` outside the body of `C` is a SyntaxError, so the whole script
-    //   fails to load.
-    var ex = assertThrows(AssertionError.class, () -> testSame(js));
-    assertThat(ex).hasMessageThat().contains("var x = (new C()).#a;");
+    testSame(js);
   }
 
   @Test

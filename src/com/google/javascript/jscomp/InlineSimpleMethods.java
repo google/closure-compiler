@@ -150,7 +150,8 @@ class InlineSimpleMethods implements CompilerPass {
    * and for which the right side is a string.
    */
   private static boolean isPropertyTree(Node expectedGetprop) {
-    if (!expectedGetprop.isGetProp()) {
+    // A private read (`this.#a`) is valid only inside its class, but call sites may be anywhere.
+    if (!expectedGetprop.isGetProp() || expectedGetprop.isPrivateIdentifier()) {
       return false;
     }
 
