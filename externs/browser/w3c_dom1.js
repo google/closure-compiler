@@ -1323,6 +1323,7 @@ var GetHTMLOptions;
 /**
  * @constructor
  * @extends {Node}
+ * @implements {ARIAMixin}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-745549614
  */
 function Element() {}
@@ -1493,6 +1494,314 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 /** @type {?function (!DragEvent)} */ Element.prototype.ondragover;
 /** @type {?function (!DragEvent)} */ Element.prototype.ondragstart;
 /** @type {?function (!DragEvent)} */ Element.prototype.ondrop;
+
+// ARIAMixin
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.role;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaAtomic;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaAutoComplete;
+
+/**
+ * @type {?Element}
+ * @override
+ */
+Element.prototype.ariaActiveDescendantElement;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaBrailleLabel;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaBrailleRoleDescription;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaBusy;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaChecked;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaColCount;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaColIndex;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaColIndexText;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaColSpan;
+
+/**
+ * @type {?Array<!Element>}
+ * @override
+ */
+Element.prototype.ariaControlsElements;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaCurrent;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaDescription;
+
+/**
+ * @type {?Array<!Element>}
+ * @override
+ */
+Element.prototype.ariaDescribedByElements;
+
+/**
+ * @type {?Array<!Element>}
+ * @override
+ */
+Element.prototype.ariaDetailsElements;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaDisabled;
+
+/**
+ * @type {?Array<!Element>}
+ * @override
+ */
+Element.prototype.ariaFlowToElements;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaExpanded;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaHasPopup;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaHidden;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaInvalid;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaKeyShortcuts;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaLabel;
+
+/**
+ * @type {?Array<!Element>}
+ * @override
+ */
+Element.prototype.ariaLabelledByElements;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaLevel;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaLive;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaModal;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaMultiLine;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaMultiSelectable;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaOrientation;
+
+/**
+ * @type {?Array<!Element>}
+ * @override
+ */
+Element.prototype.ariaOwnsElements;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaPlaceholder;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaPosInSet;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaPressed;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaReadOnly;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaRelevant;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaRequired;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaRoleDescription;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaRowCount;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaRowIndex;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaRowIndexText;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaRowSpan;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaSelected;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaSetSize;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaSort;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaValueMax;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaValueMin;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaValueNow;
+
+/**
+ * @type {string|undefined}
+ * @override
+ */
+Element.prototype.ariaValueText;
 
 /**
  * @constructor
