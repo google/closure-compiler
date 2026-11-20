@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.testing.CodeSubTree;
@@ -1459,7 +1458,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPrivateNameArgumentIsNotMoved_knownBug() {
+  public void testPrivateNameArgumentIsNotMoved() {
     // Expected behavior: `OptimizeParameters` leaves this code unchanged. `C.#n` is valid only
     // inside the body of `C`, so it can't be moved into `fn`, which is outside `C`.
     String js =
@@ -1472,16 +1471,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
           static b() { return fn(C.#n); }
         }
         """;
-    // TODO(b/236744850): `C.#n` is moved out of `C`.
-    // Current behavior: `fn` becomes `function fn() { var p1 = C.#n; return p1; }` and both
-    //   calls become `fn()`, so `testSame(js)` fails.
-    // Why it's a bug: `C.#n` outside the body of `C` is a SyntaxError, so the whole script
-    //   fails to load.
-    // In a full build: with property collapsing, as in ADVANCED builds, `CollapseProperties`
-    //   crashes on `static #n` before this pass runs; without that crash, this pass makes the
-    //   output a SyntaxError.
-    var ex = assertThrows(AssertionError.class, () -> testSame(js));
-    assertThat(ex).hasMessageThat().contains("var p1 = C.#n;");
+    testSame(js);
   }
 
   @Test

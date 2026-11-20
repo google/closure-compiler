@@ -1070,6 +1070,10 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
   /** @return Whether the expression can be safely moved to another function in another scope. */
   private static boolean isMovableValue(Node n, Scope globalScope) {
+    // A private name is valid only inside the body of the class that declares it.
+    if (n.isPrivateIdentifier()) {
+      return false;
+    }
     // Things that can change value or are inaccessible can't be moved, these
     // are "this", "arguments", local names, and functions that capture local
     // values.
