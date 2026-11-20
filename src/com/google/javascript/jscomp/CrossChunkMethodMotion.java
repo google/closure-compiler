@@ -89,6 +89,7 @@ public class CrossChunkMethodMotion implements CompilerPass {
 
   @Override
   public void process(Node externRoot, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     // If there are < 2 chunks, then we will never move anything,
     // so we're done.
     if (chunkGraph.getChunkCount() > 1) {

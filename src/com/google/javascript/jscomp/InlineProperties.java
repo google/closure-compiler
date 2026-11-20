@@ -86,6 +86,7 @@ final class InlineProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     // Find and replace the properties in non-extern AST.
     NodeTraversal.traverse(compiler, root, new GatherCandidates());
     NodeTraversal.traverse(compiler, root, new ReplaceCandidates());

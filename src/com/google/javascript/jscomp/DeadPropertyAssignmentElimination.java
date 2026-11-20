@@ -64,6 +64,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     // GatherExternProperties must be enabled for this pass to safely know what property writes are
     // eligible for removal.
     if (compiler.getExternProperties() == null || compiler.getAccessorSummary() == null) {

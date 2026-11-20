@@ -28,6 +28,8 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
+    enableNormalizeExpectedOutput();
     enableGatherExternProperties();
   }
 
@@ -573,21 +575,38 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
         }
         """);
 
-    testSame(
+    test(
         """
         function f(x) {
           x.p = 1;
           for(x.p = 2;;) {
           }
         }
+        """,
+        """
+        function f(x) {
+          1;
+          x.p = 2;
+          for(;;) {
+          }
+        }
         """);
 
-    testSame(
+    test(
         """
         function f(x) {
           x.p = 1;
           for(x.p = 2;;x.p=3) {
             return x.p; // Reads the "x.p = 2" assignment.
+          }
+        }
+        """,
+        """
+        function f(x) {
+          1;
+          x.p = 2;
+          for(;;x.p=3) {
+            return x.p;
           }
         }
         """);
@@ -658,23 +677,18 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
         }
         """);
 
-    test(
+    // Normalize rewrites `while` loops into `for` loops, which DeadPropertyAssignmentElimination
+    // conservatively bails out on (`case FOR`), preserving dead writes around and inside them.
+    testSame(
         """
         function f(x) {
           x.p = 1;
           while(x.p = 2) {
           }
         }
-        """,
-        """
-        function f(x) {
-          1;
-          while(x.p = 2) {
-          }
-        }
         """);
 
-    test(
+    testSame(
         """
         function f(x) {
           while(true) {
@@ -682,27 +696,12 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             x.p = 2;
           }
         }
-        """,
-        """
-        function f(x) {
-          while(true) {
-            1;
-            x.p = 2;
-          }
-        }
         """);
 
-    test(
+    testSame(
         """
         function f(x) {
           x.p = 1;
-          while(1) {}
-          x.p = 2;
-        }
-        """,
-        """
-        function f(x) {
-          1;
           while(1) {}
           x.p = 2;
         }

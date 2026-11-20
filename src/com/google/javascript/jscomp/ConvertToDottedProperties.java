@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -37,6 +39,7 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback implements Com
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverse(compiler, root, this);
     GatherGetterAndSetterProperties.update(this.compiler, externs, root);
   }

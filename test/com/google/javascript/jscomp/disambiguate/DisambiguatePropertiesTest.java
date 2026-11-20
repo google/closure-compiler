@@ -70,6 +70,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    this.enableNormalize();
     this.enableTypeCheck();
     replaceTypesWithColors();
     disableCompareJsDoc();

@@ -97,6 +97,7 @@ class CrossChunkCodeMotion implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     try (LogFile logFile = compiler.createOrReopenIndexedLog(this.getClass(), "cccm.log")) {
       cccmLog = logFile;
       cccmLog.log("doing cccm");

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -33,11 +34,18 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
       asserts.assert = function(...args) {};
 
       /** @closurePrimitive {asserts.fail} */
-      asserts.fail = function(...args) {};
+      asserts.fail = function(...failArgs) {};
       """;
 
   public ClosureCodeRemovalTest() {
     super(EXTERNS);
+  }
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
   }
 
   @Test
@@ -165,30 +173,35 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
   @Test
   public void testClosurePrimitiveAssertionRemoval1() {
     enableTypeCheck();
+    disableCompareJsDoc();
     test(ASSERTIONS + "var x = asserts.assert(y(), 'message');", ASSERTIONS + "var x = y();");
   }
 
   @Test
   public void testClosurePrimitiveAssertionRemoval2() {
     enableTypeCheck();
+    disableCompareJsDoc();
     test(ASSERTIONS + "asserts.assert(y(), 'message');", ASSERTIONS);
   }
 
   @Test
   public void testClosurePrimitiveAssertionRemoval3() {
     enableTypeCheck();
+    disableCompareJsDoc();
     test(ASSERTIONS + "asserts.assert();", ASSERTIONS);
   }
 
   @Test
   public void testClosurePrimitiveAssertionRemoval4() {
     enableTypeCheck();
+    disableCompareJsDoc();
     test(ASSERTIONS + "var x = asserts.assert();", ASSERTIONS + "var x = void 0;");
   }
 
   @Test
   public void testClosurePrimitiveAssertionRemoval_keepsAssertsFail() {
     enableTypeCheck();
+    disableCompareJsDoc();
     testSame(ASSERTIONS + "var x = asserts.fail();");
   }
 

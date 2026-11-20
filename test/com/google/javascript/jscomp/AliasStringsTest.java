@@ -51,6 +51,7 @@ public final class AliasStringsTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
     aliasStringsMode = AliasStringsMode.ALL;
   }
 
@@ -257,8 +258,8 @@ public final class AliasStringsTest extends CompilerTestCase {
             var $$S_hhhhhhhhhhhhhhhhhhhh = 'hhhhhhhhhhhhhhhhhhhh';
             f($$S_$2d$2d$2d$2d$2d$2d$2d$2d$2dhi$2d$2d$2d$2d$2d$2d$2d$2d$2d);
             f('bye');
-            function h(a) {
-              alert($$S_hhhhhhhhhhhhhhhhhhhh + $$S_hhhhhhhhhhhhhhhhhhhh + a);
+            function h(a$jscomp$1) {
+              alert($$S_hhhhhhhhhhhhhhhhhhhh + $$S_hhhhhhhhhhhhhhhhhhhh + a$jscomp$1);
             }
             """,
             // m3

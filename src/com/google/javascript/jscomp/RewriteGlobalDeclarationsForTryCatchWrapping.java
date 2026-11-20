@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -67,6 +69,7 @@ class RewriteGlobalDeclarationsForTryCatchWrapping implements NodeTraversal.Call
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverse(compiler, root, this);
     for (Entry<JSChunk, List<Node>> entry : Multimaps.asMap(functions).entrySet()) {
       Node addingRoot = compiler.getNodeForCodeInsertion(entry.getKey());

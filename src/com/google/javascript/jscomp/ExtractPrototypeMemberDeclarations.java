@@ -155,6 +155,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     GatherExtractionInfo extractionInfo = new GatherExtractionInfo();
     NodeTraversal.traverse(compiler, root, extractionInfo);
     maybeDoExtraction(extractionInfo);

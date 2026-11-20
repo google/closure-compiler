@@ -95,6 +95,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
 
   @Override
   public void process(Node externs, Node root, ReferenceMap refMap) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     checkState(this.refMap == null, "`process` should only be called once.");
 
     this.refMap = refMap;

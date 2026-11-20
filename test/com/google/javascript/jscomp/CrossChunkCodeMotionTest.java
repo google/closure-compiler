@@ -37,6 +37,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
 
     parentChunkCanSeeSymbolsDeclaredInChildren = false;
   }
@@ -78,16 +79,16 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(chunks),
         expected(
             // m1
-            "function f3(a) { alert(a); } function g() { alert('ciao'); }",
+            "function f3(a$jscomp$3) { alert(a$jscomp$3); } function g() { alert('ciao'); }",
             // m2
             """
-            function f1(a) { alert(a); }
+            function f1(a$jscomp$1) { alert(a$jscomp$1); }
             function f4() { alert(1); }
             f1('hi'); f3('bye'); var a = f4;
-            function h(a) { alert('h:' + a); }
+            function h(a$jscomp$4) { alert('h:' + a$jscomp$4); }
             """,
             // m3
-            "function f2(a) { alert(a); } f2('hi'); f2('hi'); f3('bye');"));
+            "function f2(a$jscomp$2) { alert(a$jscomp$2); } f2('hi'); f2('hi'); f3('bye');"));
   }
 
   @Test
@@ -105,7 +106,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(chunks),
         expected(
             // m1
-            "function g() {var f = 1; f++}",
+            "function g() {var f$jscomp$1 = 1; f$jscomp$1++}",
             // m2
             "function f(a) { alert(a); } f(1);"));
   }
@@ -125,7 +126,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
         srcs(chunks),
         expected(
             // m1
-            "function g(f) {f++}",
+            "function g(f$jscomp$1) {f$jscomp$1++}",
             // m2
             "function f(a) { alert(a); } f(1);"));
   }
@@ -147,7 +148,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
             // m1
             "",
             // m2
-            "function f(){return function(a){}} var a = f();"));
+            "function f(){return function(a$jscomp$1){}} var a = f();"));
   }
 
   @Test
@@ -308,7 +309,7 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                     """
                     function f(){};f.prototype.bar=new f;
                     if(a)function f2(){}
-                    {{while(a)function f3(){}}}
+                    {{for(;a;)function f3(){}}}
                     """)
                 .addChunk("var a = new f();f2();f3();")
                 .build()));

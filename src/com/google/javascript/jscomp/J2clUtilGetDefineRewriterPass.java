@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -35,6 +37,7 @@ public class J2clUtilGetDefineRewriterPass extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
       return;
     }

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
 import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
@@ -80,6 +81,7 @@ public final class DisambiguateProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(this.compiler.getLifeCycleStage().isNormalized());
     checkArgument(externs.getParent() == root.getParent());
 
     ColorGraphNodeFactory flattener = ColorGraphNodeFactory.createFactory(this.registry);

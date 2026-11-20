@@ -278,6 +278,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.builder()
         .setCompiler(compiler)
         .setCallback(this)

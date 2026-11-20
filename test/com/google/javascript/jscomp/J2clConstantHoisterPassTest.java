@@ -15,12 +15,21 @@
  */
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class J2clConstantHoisterPassTest extends CompilerTestCase {
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
+    enableNormalizeExpectedOutput();
+  }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {

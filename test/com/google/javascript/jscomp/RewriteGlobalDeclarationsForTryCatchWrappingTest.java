@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -24,6 +25,13 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link RewriteGlobalDeclarationsForTryCatchWrapping} */
 @RunWith(JUnit4.class)
 public final class RewriteGlobalDeclarationsForTryCatchWrappingTest extends CompilerTestCase {
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

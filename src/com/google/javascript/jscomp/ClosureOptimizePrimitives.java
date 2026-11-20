@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.dtoa.DToA.numberToString;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -86,6 +87,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     FindPrimitives pass = new FindPrimitives();
     NodeTraversal.traverse(compiler, root, pass);
   }

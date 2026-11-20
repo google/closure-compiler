@@ -99,6 +99,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     logger.fine("Aliasing common strings");
 
     // Traverse the tree and collect strings

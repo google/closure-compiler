@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.ClosureOptimizePrimitives.DUPLICATE_S
 import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,6 +30,13 @@ import org.junit.runners.JUnit4;
 public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
   private boolean canUseEs6Syntax = true;
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
+  }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -229,7 +237,7 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   @Test
   public void testEs6ArrowCompatibility() {
     // Arrow
-    test("var f = () => goog.object.create(1, 2);", "var f = () => ({1: 2});");
+    test("var f = () => goog.object.create(1, 2);", "var f = () => { return {1: 2}; };");
   }
 
   @Test
@@ -304,7 +312,7 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
   @Test
   public void testEs6DestructuringCompatibility() {
-    test("var {a: x} = goog.object.create('a', 2);", "var {a: x} = {'a': 2};");
+    test("var {a: x} = goog.object.create('a', 2);", "var x; ({a: x} = {'a': 2});");
   }
 
   @Test

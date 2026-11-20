@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.J2clUtilGetDefineRewriterPass.J2CL_SY
 import static com.google.javascript.jscomp.J2clUtilGetDefineRewriterPass.J2CL_SYSTEM_GET_PROPERTY_UNKNOWN_PROPERTY;
 
 import com.google.javascript.jscomp.ProcessDefines.Mode;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,6 +29,13 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link J2clUtilGetDefineRewriterPass}. */
 @RunWith(JUnit4.class)
 public class J2clUtilGetDefineRewriterPassTest extends CompilerTestCase {
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
+  }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -48,6 +56,7 @@ public class J2clUtilGetDefineRewriterPassTest extends CompilerTestCase {
 
   @Test
   public void testUtilGetDefine() {
+    disableCompareJsDoc();
     test(
         """
         var a = {};

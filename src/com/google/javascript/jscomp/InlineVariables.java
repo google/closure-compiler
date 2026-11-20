@@ -97,6 +97,7 @@ class InlineVariables implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     ReferenceCollector callback =
         new ReferenceCollector(
             compiler,

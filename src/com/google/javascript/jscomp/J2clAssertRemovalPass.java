@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
@@ -29,6 +31,7 @@ public class J2clAssertRemovalPass extends AbstractPostOrderCallback implements 
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
       return;
     }

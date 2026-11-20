@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -23,6 +24,13 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link ConvertToDottedProperties}. */
 @RunWith(JUnit4.class)
 public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -129,7 +137,7 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     test("class C {'m'() {} }", "class C {m() {}}");
 
     test("const o = {'b'() {}, ['c']() {}};", "const o = {b: function() {}, c:function(){}};");
-    test("o = {['x']: () => this};", "o = {x: () => this};");
+    test("o = {['x']: () => this};", "o = {x: () => { return this; }};");
 
     test("const o = {get ['d']() {}};", "const o = {get d() {}};");
     test("const o = { set ['e'](x) {}};", "const o = { set e(x) {}};");
@@ -238,7 +246,7 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
 
   @Test
   public void testClassPrivateProp_notPrivateProp_setterDef() {
-    testSame("const x = {set '#notAPrivateProp'(x) {}}");
+    testSame("const x = {set '#notAPrivateProp'(y) {}}");
     testSame("class C {set '#notAPrivateProp'(x) {}}");
   }
 
