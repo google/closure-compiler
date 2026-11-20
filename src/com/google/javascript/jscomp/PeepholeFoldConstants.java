@@ -1306,7 +1306,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
     ValueType rightValueType = NodeUtil.getKnownValueType(right);
     // First, check for a string comparison.
-    if (isStringPrimitive(left, leftValueType) && isStringPrimitive(right, rightValueType)) {
+    if (toPrimitiveIsKnownString(left, leftValueType)
+        && toPrimitiveIsKnownString(right, rightValueType)) {
       String lvStr = peepholeOptimization.getSideEffectFreeStringValue(left);
       String rvStr = peepholeOptimization.getSideEffectFreeStringValue(right);
       if (lvStr != null && rvStr != null) {
@@ -1330,7 +1331,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // Per ECMA-262, comparing a BigInt with a String converts the String to a BigInt via
     // StringToBigInt(string). If StringToBigInt returns undefined (invalid BigInt syntax like
     // "foo", "1e2", "1.5"), all relational comparisons (<, >, <=, >=) return false.
-    if (leftValueType == ValueType.BIGINT && rightValueType == ValueType.STRING) {
+    if (leftValueType == ValueType.BIGINT && toPrimitiveIsKnownString(right, rightValueType)) {
       String rvStr = peepholeOptimization.getSideEffectFreeStringValue(right);
       if (rvStr != null) {
         BigInteger rvBig = NodeUtil.getStringBigIntValue(rvStr);
@@ -1344,7 +1345,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
       return Tri.UNKNOWN;
     }
-    if (leftValueType == ValueType.STRING && rightValueType == ValueType.BIGINT) {
+    if (toPrimitiveIsKnownString(left, leftValueType) && rightValueType == ValueType.BIGINT) {
       String lvStr = peepholeOptimization.getSideEffectFreeStringValue(left);
       if (lvStr != null) {
         BigInteger lvBig = NodeUtil.getStringBigIntValue(lvStr);
@@ -1398,11 +1399,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Whether ToPrimitive(n) is a string. valueOf on an array or object literal returns the object
-   * itself, so ToPrimitive falls back to toString and {@code [10] < '9'} compares "10" with "9".
+   * Whether ToPrimitive(n, number) is known to produce a string: either n is already a string, or
+   * it is an array literal or an empty object literal. For those literals valueOf returns the
+   * object itself, so ToPrimitive falls back to toString and {@code [10] < '9'} compares "10" with
+   * "9". An object literal with its own members may define valueOf, toString or
+   * [Symbol.toPrimitive], so it is not included.
    */
-  private static boolean isStringPrimitive(Node n, ValueType valueType) {
-    return valueType == ValueType.STRING || n.isArrayLit() || n.isObjectLit();
+  private static boolean toPrimitiveIsKnownString(Node n, ValueType valueType) {
+    return valueType == ValueType.STRING || n.isArrayLit() || (n.isObjectLit() && !n.hasChildren());
   }
 
   private static Tri bigintLessThanDouble(
