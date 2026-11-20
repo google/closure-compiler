@@ -202,6 +202,9 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
    * owner}.
    */
   private void registerPropertyUse(NodeTraversal t, Node site, Color owner) {
+    if (site.isPrivateIdentifier()) {
+      return; // Private names are lexically scoped to their class; renaming them is unsafe.
+    }
     PropertyClustering prop =
         this.propIndex.computeIfAbsent(site.getString(), PropertyClustering::new);
     ColorGraphNode flatOwner = this.colorGraphNodeFactory.createNode(owner);
