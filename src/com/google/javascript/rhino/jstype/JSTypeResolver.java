@@ -104,6 +104,7 @@ public final class JSTypeResolver {
   private ArrayDeque<JSType> resolutionQueue = new ArrayDeque<>();
 
   private State state = State.CLOSED;
+  private int definitionEpoch = 0;
 
   private JSTypeResolver(JSTypeRegistry registry) {
     this.registry = registry;
@@ -163,8 +164,25 @@ public final class JSTypeResolver {
     checkState(this.state.equals(State.CLOSED));
     checkState(this.captureStack.isEmpty());
 
+    this.definitionEpoch++;
     this.state = State.OPEN;
     return new Closer();
+  }
+
+  boolean isOpen() {
+    return this.state == State.OPEN;
+  }
+
+  boolean isClosed() {
+    return this.state == State.CLOSED;
+  }
+
+  boolean isOpenOrClosed() {
+    return this.state != State.CLOSING;
+  }
+
+  int getDefinitionEpoch() {
+    return this.definitionEpoch;
   }
 
   private void resolveAll() {
@@ -181,6 +199,7 @@ public final class JSTypeResolver {
     this.resolutionQueue = new ArrayDeque<>();
 
     this.state = State.CLOSED;
+    this.definitionEpoch++;
 
     // TODO(sdh): Stop doing this here. It's obviously the wrong place.
     // By default, the global "this" type is just an anonymous object.

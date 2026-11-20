@@ -102,9 +102,7 @@ final class JSTypeIterations {
 
   /** @return the union of applying {@code mapper} to all elements of {@code types}. */
   static JSType mapTypes(Function<? super JSType, ? extends JSType> mapper, UnionType union) {
-    return UnionType.builder(union.registry)
-        .addAlternates(mapTypes(mapper, union.getAlternates()))
-        .build();
+    return union.registry.createUnionType(mapTypes(mapper, union.getAlternates()));
   }
 
   private JSTypeIterations() {

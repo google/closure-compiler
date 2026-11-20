@@ -780,8 +780,8 @@ public class JSTypeRegistryTest {
         () -> pipeNode(new Node(Token.VOID), IR.string("null")),
         ImmutableList.of(nullType, voidType),
         ImmutableList.of(voidType, nullType));
-    assertType(evalComment(closedRegistry, pipeNode(IR.string("null"), new Node(Token.VOID))))
-        .isEqualTo(closedRegistry.getNativeType(NULL_VOID));
+    assertThat(evalComment(closedRegistry, pipeNode(IR.string("null"), new Node(Token.VOID))))
+        .isSameInstanceAs(closedRegistry.getNativeType(NULL_VOID));
 
     assertOrderedUnionPair(
         closedRegistry,
@@ -811,7 +811,7 @@ public class JSTypeRegistryTest {
     assertThat(case7aType.toMaybeUnionType().getAlternates())
         .containsExactly(stringType, arrayUnknown)
         .inOrder();
-    assertType(evalComment(closedRegistry, case7aNode)).isEqualTo(case7aType);
+    assertThat(evalComment(closedRegistry, case7aNode)).isSameInstanceAs(case7aType);
 
     reporter.verifyHasEncounteredAllWarningsAndErrors();
   }
@@ -831,8 +831,8 @@ public class JSTypeRegistryTest {
         .containsExactlyElementsIn(expectedReverseAlts)
         .inOrder();
     assertThat(reverse).isNotSameInstanceAs(forward);
-    assertType(evalComment(registry, forwardNode.get())).isEqualTo(forward);
-    assertType(evalComment(registry, reverseNode.get())).isEqualTo(reverse);
+    assertThat(evalComment(registry, forwardNode.get())).isSameInstanceAs(forward);
+    assertThat(evalComment(registry, reverseNode.get())).isSameInstanceAs(reverse);
   }
 
   @Test
@@ -847,12 +847,12 @@ public class JSTypeRegistryTest {
     assertThat(preOpenArrayStr.isResolved()).isTrue();
     assertThat(preOpenUnion.isResolved()).isTrue();
     assertThat(preOpenMap.isResolved()).isTrue();
-    assertType(evalComment(closedRegistry, bangGeneric("Array", "string")))
-        .isEqualTo(preOpenArrayStr);
-    assertType(evalComment(closedRegistry, pipeStrings("string", "number")))
-        .isEqualTo(preOpenUnion);
-    assertType(evalComment(closedRegistry, bangGeneric("Map", "string", "number")))
-        .isEqualTo(preOpenMap);
+    assertThat(evalComment(closedRegistry, bangGeneric("Array", "string")))
+        .isSameInstanceAs(preOpenArrayStr);
+    assertThat(evalComment(closedRegistry, pipeStrings("string", "number")))
+        .isSameInstanceAs(preOpenUnion);
+    assertThat(evalComment(closedRegistry, bangGeneric("Map", "string", "number")))
+        .isSameInstanceAs(preOpenMap);
 
     // 2. Inside openForDefinition(), newly constructed types remain unresolved until Closer.close()
     // and are distinct instances from pre-open CLOSED types.
@@ -871,12 +871,12 @@ public class JSTypeRegistryTest {
       assertThat(openUnion).isNotSameInstanceAs(preOpenUnion);
       assertThat(openMap).isNotSameInstanceAs(preOpenMap);
 
-      assertThat(evalComment(closedRegistry, bangGeneric("Array", "string")).isResolved())
-          .isFalse();
-      assertThat(evalComment(closedRegistry, pipeStrings("string", "number")).isResolved())
-          .isFalse();
-      assertThat(evalComment(closedRegistry, bangGeneric("Map", "string", "number")).isResolved())
-          .isFalse();
+      assertThat(evalComment(closedRegistry, bangGeneric("Array", "string")))
+          .isSameInstanceAs(openArrayStr);
+      assertThat(evalComment(closedRegistry, pipeStrings("string", "number")))
+          .isSameInstanceAs(openUnion);
+      assertThat(evalComment(closedRegistry, bangGeneric("Map", "string", "number")))
+          .isSameInstanceAs(openMap);
     }
 
     // 3. Completing Closer.close() resolves the OPEN types, and subsequent CLOSED evaluations
@@ -896,12 +896,12 @@ public class JSTypeRegistryTest {
     assertThat(postCloseMap).isNotSameInstanceAs(openMap);
     assertThat(postCloseMap).isNotSameInstanceAs(preOpenMap);
 
-    assertType(evalComment(closedRegistry, bangGeneric("Array", "string")))
-        .isEqualTo(postCloseArrayStr);
-    assertType(evalComment(closedRegistry, pipeStrings("string", "number")))
-        .isEqualTo(postCloseUnion);
-    assertType(evalComment(closedRegistry, bangGeneric("Map", "string", "number")))
-        .isEqualTo(postCloseMap);
+    assertThat(evalComment(closedRegistry, bangGeneric("Array", "string")))
+        .isSameInstanceAs(postCloseArrayStr);
+    assertThat(evalComment(closedRegistry, pipeStrings("string", "number")))
+        .isSameInstanceAs(postCloseUnion);
+    assertThat(evalComment(closedRegistry, bangGeneric("Map", "string", "number")))
+        .isSameInstanceAs(postCloseMap);
 
     reporter.verifyHasEncounteredAllWarningsAndErrors();
   }
@@ -926,8 +926,8 @@ public class JSTypeRegistryTest {
     }
 
     JSType globalArrayStr = evalComment(closedRegistry, bangGeneric("Array", "string"), globalScope);
-    assertType(evalComment(closedRegistry, bangGeneric("Array", "string"), globalScope))
-        .isEqualTo(globalArrayStr);
+    assertThat(evalComment(closedRegistry, bangGeneric("Array", "string"), globalScope))
+        .isSameInstanceAs(globalArrayStr);
 
     // Local nominal type declaration shadowing Array resolves to the local nominal type.
     StaticTypedScope localTypeScope =
@@ -941,8 +941,8 @@ public class JSTypeRegistryTest {
     assertThat(fromLocalTypeScope).isNotSameInstanceAs(globalArrayStr);
 
     // Clean globalScope continues resolving to built-in types without contamination.
-    assertType(evalComment(closedRegistry, bangGeneric("Array", "string"), globalScope))
-        .isEqualTo(globalArrayStr);
+    assertThat(evalComment(closedRegistry, bangGeneric("Array", "string"), globalScope))
+        .isSameInstanceAs(globalArrayStr);
 
     reporter.verifyHasEncounteredAllWarningsAndErrors();
   }
@@ -978,9 +978,9 @@ public class JSTypeRegistryTest {
             bangNode(
                 templatizedCommentNode("Map", IR.string("string"), IR.string("number"), extraMapArg)));
 
-    assertType(extraArray1).isEqualTo(canonicalArrayStr);
-    assertType(extraArray2).isEqualTo(canonicalArrayStr);
-    assertType(extraMap).isEqualTo(canonicalMapStrNum);
+    assertThat(extraArray1).isSameInstanceAs(canonicalArrayStr);
+    assertThat(extraArray2).isSameInstanceAs(canonicalArrayStr);
+    assertThat(extraMap).isSameInstanceAs(canonicalMapStrNum);
     reporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
@@ -1003,8 +1003,8 @@ public class JSTypeRegistryTest {
     JSType optStr1 = closedRegistry.createOptionalType(stringType);
     JSType optStr2 = closedRegistry.createOptionalType(stringType);
     JSType optStrComment = evalComment(closedRegistry, new Node(Token.EQUALS, IR.string("string")));
-    assertType(optStr2).isEqualTo(optStr1);
-    assertType(optStrComment).isEqualTo(optStr1);
+    assertThat(optStr2).isSameInstanceAs(optStr1);
+    assertThat(optStrComment).isSameInstanceAs(optStr1);
     assertThat(optStrComment.toMaybeUnionType().getAlternates())
         .containsExactly(stringType, voidType)
         .inOrder();
@@ -1012,28 +1012,28 @@ public class JSTypeRegistryTest {
     JSType nullableArr1 = closedRegistry.createNullableType(arrayOfString);
     JSType nullableArr2 = closedRegistry.createNullableType(arrayOfString);
     JSType nullableArrComment = evalComment(closedRegistry, nullableArrayStrNode());
-    assertType(nullableArr2).isEqualTo(nullableArr1);
-    assertType(nullableArrComment).isEqualTo(nullableArr1);
+    assertThat(nullableArr2).isSameInstanceAs(nullableArr1);
+    assertThat(nullableArrComment).isSameInstanceAs(nullableArr1);
 
     JSType optNullStr1 = closedRegistry.createOptionalNullableType(stringType);
     JSType optNullStr2 = closedRegistry.createOptionalNullableType(stringType);
     JSType optNullStrComment =
         evalComment(
             closedRegistry, pipeNode(IR.string("string"), new Node(Token.VOID), IR.string("null")));
-    assertType(optNullStr2).isEqualTo(optNullStr1);
-    assertType(optNullStrComment).isEqualTo(optNullStr1);
+    assertThat(optNullStr2).isSameInstanceAs(optNullStr1);
+    assertThat(optNullStrComment).isSameInstanceAs(optNullStr1);
     assertThat(optNullStrComment.toMaybeUnionType().getAlternates())
         .containsExactly(stringType, voidType, nullType)
         .inOrder();
 
     JSType optNullArr1 = closedRegistry.createOptionalNullableType(arrayOfString);
     JSType optNullArr2 = closedRegistry.createOptionalNullableType(arrayOfString);
-    assertType(optNullArr2).isEqualTo(optNullArr1);
+    assertThat(optNullArr2).isSameInstanceAs(optNullArr1);
 
     // 3-way unions with duplicate alternates collapse to exact 2-way insertion order (or the
     // single alternate when all 3 are identical).
     JSType strOrNum = evalComment(closedRegistry, pipeStrings("string", "number"));
-    assertType(closedRegistry.createUnionType(stringType, numberType)).isEqualTo(strOrNum);
+    assertThat(closedRegistry.createUnionType(stringType, numberType)).isSameInstanceAs(strOrNum);
     assertThat(strOrNum.toMaybeUnionType().getAlternates())
         .containsExactly(stringType, numberType)
         .inOrder();
@@ -1044,7 +1044,7 @@ public class JSTypeRegistryTest {
             pipeStrings("string", "number", "number"),
             pipeStrings("string", "number", "string"))) {
       JSType collapsed = evalComment(closedRegistry, duplicateUnionNode);
-      assertType(collapsed).isEqualTo(strOrNum);
+      assertThat(collapsed).isSameInstanceAs(strOrNum);
       assertThat(collapsed.toMaybeUnionType().getAlternates())
           .containsExactly(stringType, numberType)
           .inOrder();
@@ -1052,10 +1052,10 @@ public class JSTypeRegistryTest {
 
     assertThat(evalComment(closedRegistry, pipeStrings("string", "string", "string")))
         .isSameInstanceAs(stringType);
-    assertType(closedRegistry.createUnionType(stringType, numberType, numberType))
-        .isEqualTo(strOrNum);
-    assertType(closedRegistry.createUnionType(stringType, numberType, stringType))
-        .isEqualTo(strOrNum);
+    assertThat(closedRegistry.createUnionType(stringType, numberType, numberType))
+        .isSameInstanceAs(strOrNum);
+    assertThat(closedRegistry.createUnionType(stringType, numberType, stringType))
+        .isSameInstanceAs(strOrNum);
 
     reporter.verifyHasEncounteredAllWarningsAndErrors();
   }
@@ -1080,8 +1080,8 @@ public class JSTypeRegistryTest {
     JSType mapNumStrFromComment =
         evalComment(closedRegistry, bangGeneric("Map", "number", "string"));
 
-    assertType(mapStrNumFromComment2).isEqualTo(mapStrNumFromComment1);
-    assertType(mapStrNumFromApi).isEqualTo(mapStrNumFromComment1);
+    assertThat(mapStrNumFromComment2).isSameInstanceAs(mapStrNumFromComment1);
+    assertThat(mapStrNumFromApi).isSameInstanceAs(mapStrNumFromComment1);
     assertType(mapNumStrFromComment).isNotEqualTo(mapStrNumFromComment1);
     assertThat(mapNumStrFromComment).isNotSameInstanceAs(mapStrNumFromComment1);
 
@@ -1095,7 +1095,7 @@ public class JSTypeRegistryTest {
                     "ReadonlyMap", IR.string("string"), bangGeneric("Array", "number"))));
     JSType readonlyMapNestedApi =
         closedRegistry.createTemplatizedType(readonlyMapBase, stringType, arrayOfNumber);
-    assertType(readonlyMapNestedApi).isEqualTo(readonlyMapNestedComment);
+    assertThat(readonlyMapNestedApi).isSameInstanceAs(readonlyMapNestedComment);
 
     JSType mapWildcardComment1 =
         evalComment(
@@ -1107,8 +1107,8 @@ public class JSTypeRegistryTest {
             bangNode(templatizedCommentNode("Map", new Node(Token.QMARK), new Node(Token.QMARK))));
     JSType mapWildcardApi =
         closedRegistry.createTemplatizedType(mapBase, unknownType, unknownType);
-    assertType(mapWildcardComment2).isEqualTo(mapWildcardComment1);
-    assertType(mapWildcardApi).isEqualTo(mapWildcardComment1);
+    assertThat(mapWildcardComment2).isSameInstanceAs(mapWildcardComment1);
+    assertThat(mapWildcardApi).isSameInstanceAs(mapWildcardComment1);
 
     reporter.verifyHasEncounteredAllWarningsAndErrors();
   }
@@ -1203,11 +1203,12 @@ public class JSTypeRegistryTest {
       assertThat(openNumberString.isResolved()).isFalse();
       assertThat(openNumberString)
           .isNotSameInstanceAs(closedRegistry.getNativeType(JSTypeNative.NUMBER_STRING));
-      assertThat(closedRegistry.createUnionType(numberType, stringType).isResolved()).isFalse();
+      assertThat(closedRegistry.createUnionType(numberType, stringType))
+          .isSameInstanceAs(openNumberString);
     }
     assertThat(openNumberString.isResolved()).isTrue();
-    assertType(evalComment(closedRegistry, pipeStrings("number", "string")))
-        .isEqualTo(closedRegistry.getNativeType(JSTypeNative.NUMBER_STRING));
+    assertThat(evalComment(closedRegistry, pipeStrings("number", "string")))
+        .isSameInstanceAs(closedRegistry.getNativeType(JSTypeNative.NUMBER_STRING));
 
     reporter.verifyHasEncounteredAllWarningsAndErrors();
   }
@@ -1223,11 +1224,11 @@ public class JSTypeRegistryTest {
     JSType fromCanonicalComment = evalComment(registry, canonicalComment);
     JSType fromCanonicalApi = registry.createUnionType(canonicalAlternates);
     JSType fromReorderedComment = evalComment(registry, reorderedComment);
-    assertType(fromCanonicalComment).isEqualTo(expectedNative);
+    assertThat(fromCanonicalComment).isSameInstanceAs(expectedNative);
     assertThat(fromCanonicalComment.toMaybeUnionType().getAlternates())
         .containsExactlyElementsIn(expectedAlternates)
         .inOrder();
-    assertType(fromCanonicalApi).isEqualTo(expectedNative);
+    assertThat(fromCanonicalApi).isSameInstanceAs(expectedNative);
     assertThat(fromCanonicalApi.toMaybeUnionType().getAlternates())
         .containsExactlyElementsIn(expectedAlternates)
         .inOrder();
@@ -1260,16 +1261,16 @@ public class JSTypeRegistryTest {
                     new Node(Token.VOID),
                     IR.string("number"))));
 
-    assertType(bangStrNumNull).isEqualTo(strOrNum);
-    assertType(bangStrNumVoid).isEqualTo(strOrNum);
-    assertType(bangNullStrVoidNum).isEqualTo(strOrNum);
+    assertThat(bangStrNumNull).isSameInstanceAs(strOrNum);
+    assertThat(bangStrNumVoid).isSameInstanceAs(strOrNum);
+    assertThat(bangNullStrVoidNum).isSameInstanceAs(strOrNum);
     assertThat(bangNullStrVoidNum.toMaybeUnionType().getAlternates())
         .containsExactly(stringType, numberType)
         .inOrder();
 
     // Restricting (number|string|null) equals NUMBER_STRING, and !(null|undefined) is NO_TYPE.
-    assertType(evalComment(closedRegistry, bangNode(pipeStrings("number", "string", "null"))))
-        .isEqualTo(closedRegistry.getNativeType(JSTypeNative.NUMBER_STRING));
+    assertThat(evalComment(closedRegistry, bangNode(pipeStrings("number", "string", "null"))))
+        .isSameInstanceAs(closedRegistry.getNativeType(JSTypeNative.NUMBER_STRING));
     assertThat(
             evalComment(closedRegistry, bangNode(pipeNode(IR.string("null"), new Node(Token.VOID)))))
         .isSameInstanceAs(closedRegistry.getNativeType(JSTypeNative.NO_TYPE));
@@ -1284,7 +1285,7 @@ public class JSTypeRegistryTest {
             closedRegistry,
             bangNode(
                 templatizedCommentNode("Array", bangNode(pipeStrings("string", "number", "null")))));
-    assertType(arrayOfBangStrNumNull).isEqualTo(arrayOfStrOrNum);
+    assertThat(arrayOfBangStrNumNull).isSameInstanceAs(arrayOfStrOrNum);
 
     reporter.verifyHasEncounteredAllWarningsAndErrors();
   }
@@ -1318,6 +1319,7 @@ public class JSTypeRegistryTest {
               closingEvaluations.add(evalComment(closedRegistry, pipeStrings("string", "number")));
               // Verify we are mid-drain inside CLOSING: later queue entries are still unresolved,
               // whereas types synthesized during CLOSING resolve eagerly.
+              assertThat(closedRegistry.getResolver().isOpenOrClosed()).isFalse();
               assertThat(queuedAfterProbe.get().isResolved()).isFalse();
               assertThat(closingEvaluations.get(0).isResolved()).isTrue();
               observedClosingState.set(true);
@@ -1354,8 +1356,8 @@ public class JSTypeRegistryTest {
         .isNotSameInstanceAs(forwardAliasToArray.toMaybeNamedType().getReferencedType());
     assertThat(postCloseUnion).isNotSameInstanceAs(closingEvaluations.get(2));
     assertThat(postCloseUnion).isNotSameInstanceAs(closingEvaluations.get(3));
-    assertType(evalComment(closedRegistry, bangGeneric("Array", "string")))
-        .isEqualTo(postCloseArrayStr);
+    assertThat(evalComment(closedRegistry, bangGeneric("Array", "string")))
+        .isSameInstanceAs(postCloseArrayStr);
 
     reporter.verifyHasEncounteredAllWarningsAndErrors();
   }
@@ -1387,7 +1389,7 @@ public class JSTypeRegistryTest {
         evalComment(closedRegistry, bangGeneric("Array", "string"), mutableThisScope);
     JSType canonicalArrayStr =
         evalComment(closedRegistry, bangGeneric("Array", "string"), globalScope);
-    assertType(beforeMutation).isEqualTo(canonicalArrayStr);
+    assertThat(beforeMutation).isSameInstanceAs(canonicalArrayStr);
 
     // Mutating getTypeOfThis() on the same StaticTypedScope instance switches resolution to the
     // owner's @template Array parameter.
@@ -1400,7 +1402,94 @@ public class JSTypeRegistryTest {
     currentThisType.set(null);
     JSType afterRestore =
         evalComment(closedRegistry, bangGeneric("Array", "string"), mutableThisScope);
-    assertType(afterRestore).isEqualTo(canonicalArrayStr);
+    assertThat(afterRestore).isSameInstanceAs(canonicalArrayStr);
+
+    reporter.verifyHasEncounteredAllWarningsAndErrors();
+  }
+
+  @Test
+  public void testBuiltinTypeInterner_deepOpenEpochDagAndGenericSubclassInterning() {
+    TestErrorReporter reporter = new TestErrorReporter();
+    JSTypeRegistry closedRegistry = new JSTypeRegistry(reporter);
+    ObjectType arrayBase = closedRegistry.getNativeObjectType(JSTypeNative.ARRAY_TYPE);
+    ObjectType readonlyArrayBase =
+        closedRegistry.getNativeObjectType(JSTypeNative.READONLY_ARRAY_TYPE);
+    JSType stringType = closedRegistry.getNativeType(JSTypeNative.STRING_TYPE);
+    JSType numberType = closedRegistry.getNativeType(JSTypeNative.NUMBER_TYPE);
+
+    TemplateType superParam = new TemplateType(closedRegistry, "S");
+    TemplateType subParam = new TemplateType(closedRegistry, "T");
+    TemplateType outerParam = new TemplateType(closedRegistry, "W");
+    TemplateType capturingParam = new TemplateType(closedRegistry, "U");
+    ObjectType subInstance;
+    ObjectType capturingSubInstance;
+    try (JSTypeResolver.Closer closer = closedRegistry.getResolver().openForDefinition()) {
+      FunctionType superCtor =
+          FunctionType.builder(closedRegistry)
+              .forConstructor()
+              .withName("GenericSuper")
+              .withTemplateKeys(superParam)
+              .build();
+      ObjectType superBase = superCtor.getInstanceType();
+
+      FunctionType subCtor =
+          FunctionType.builder(closedRegistry)
+              .forConstructor()
+              .withName("GenericSub")
+              .withTemplateKeys(subParam)
+              .build();
+      TemplatizedType superWithSubParam =
+          closedRegistry.createTemplatizedType(superBase, ImmutableList.of(subParam));
+      subCtor.setPrototypeBasedOn(superWithSubParam);
+      subInstance = subCtor.getInstanceType();
+      subInstance.mergeSupertypeTemplateTypes(superWithSubParam);
+
+      FunctionType capturingCtor =
+          FunctionType.builder(closedRegistry)
+              .forConstructor()
+              .withName("CapturingSub")
+              .withTemplateKeys(capturingParam)
+              .build();
+      TemplatizedType superWithOuterParam =
+          closedRegistry.createTemplatizedType(superBase, ImmutableList.of(outerParam));
+      capturingCtor.setPrototypeBasedOn(superWithOuterParam);
+      capturingSubInstance = capturingCtor.getInstanceType();
+      capturingSubInstance.mergeSupertypeTemplateTypes(superWithOuterParam);
+    }
+
+    // A depth-16 shared (!Array<U>|!ReadonlyArray<U>|string) DAG (65,536 virtual paths) in an OPEN
+    // epoch interns into O(depth) shared instances without unmemoized hasAnyTemplateTypes() walks.
+    try (JSTypeResolver.Closer closer = closedRegistry.getResolver().openForDefinition()) {
+      JSType current = stringType;
+      for (int depth = 0; depth < 16; depth++) {
+        TemplatizedType arr = closedRegistry.createTemplatizedType(arrayBase, current);
+        TemplatizedType roArr = closedRegistry.createTemplatizedType(readonlyArrayBase, current);
+        JSType union1 = closedRegistry.createUnionType(arr, roArr, stringType);
+        JSType union2 =
+            closedRegistry.createUnionType(
+                closedRegistry.createTemplatizedType(arrayBase, current),
+                closedRegistry.createTemplatizedType(readonlyArrayBase, current),
+                stringType);
+        assertThat(union1.isResolved()).isFalse();
+        assertThat(union2).isSameInstanceAs(union1);
+        current = union1;
+      }
+    }
+
+    // GenericSub<string> fills superclass binding [S -> string], so it is template-free and
+    // eligible as an interned union alternate.
+    TemplatizedType subStr = closedRegistry.createTemplatizedType(subInstance, stringType);
+    assertThat(subStr.hasAnyTemplateTypes()).isFalse();
+    assertThat(closedRegistry.createNullableType(subStr))
+        .isSameInstanceAs(closedRegistry.createNullableType(subStr));
+
+    // CapturingSub<string> retains unbound outer template parameter W in [S -> W], so it is not
+    // added to internedTypes.
+    TemplatizedType capturingStr =
+        closedRegistry.createTemplatizedType(capturingSubInstance, stringType);
+    assertThat(capturingStr.hasAnyTemplateTypes()).isTrue();
+    assertThat(closedRegistry.createUnionType(capturingStr, numberType))
+        .isNotSameInstanceAs(closedRegistry.createUnionType(capturingStr, numberType));
 
     reporter.verifyHasEncounteredAllWarningsAndErrors();
   }

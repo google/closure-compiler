@@ -76,6 +76,7 @@ import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -278,6 +279,8 @@ public final class JSTypeRegistry {
 
   private final JSTypeResolver resolver;
 
+  private @Nullable BuiltinTypeInterner builtinInterner;
+
   public JSTypeRegistry(ErrorReporter reporter) {
     this(reporter, ImmutableSet.<String>of());
   }
@@ -294,6 +297,7 @@ public final class JSTypeRegistry {
       initializeBuiltInTypes();
       initializeRegistry();
     }
+    this.builtinInterner = new BuiltinTypeInterner(this);
   }
 
   private JSType getSentinelObjectLiteral() {
@@ -1825,10 +1829,17 @@ public final class JSTypeRegistry {
 
   /** Creates a union type whose variants are the arguments. */
   public JSType createUnionType(JSType... variants) {
-    return createUnionType(ImmutableList.copyOf(variants));
+    return createUnionType(Arrays.asList(variants));
   }
 
   public JSType createUnionType(List<? extends JSType> variants) {
+    BuiltinTypeInterner interner = activeBuiltinInterner();
+    if (interner != null) {
+      JSType interned = interner.tryInternUnion(variants);
+      if (interned != null) {
+        return interned;
+      }
+    }
     return UnionType.builder(this).addAlternates(variants).build();
   }
 
@@ -2098,10 +2109,7 @@ public final class JSTypeRegistry {
    */
   public TemplatizedType createTemplatizedType(
       ObjectType baseType, ImmutableList<JSType> templatizedTypes) {
-    checkNotNull(baseType);
-    // Only ObjectTypes can currently be templatized; extend this logic when
-    // more types can be templatized.
-    return new TemplatizedType(this, baseType, templatizedTypes);
+    return createTemplatizedTypeFromList(baseType, templatizedTypes);
   }
 
   /**
@@ -2132,7 +2140,24 @@ public final class JSTypeRegistry {
    *     template keys on the base type.
    */
   public TemplatizedType createTemplatizedType(ObjectType baseType, JSType... templatizedTypes) {
-    return createTemplatizedType(baseType, ImmutableList.copyOf(templatizedTypes));
+    return createTemplatizedTypeFromList(baseType, Arrays.asList(templatizedTypes));
+  }
+
+  private TemplatizedType createTemplatizedTypeFromList(
+      ObjectType baseType, List<JSType> templatizedTypes) {
+    checkNotNull(baseType);
+    BuiltinTypeInterner interner = activeBuiltinInterner();
+    if (interner != null) {
+      TemplatizedType interned = interner.tryInternTemplatized(baseType, templatizedTypes);
+      if (interned != null) {
+        return interned;
+      }
+    }
+    ImmutableList<JSType> args =
+        templatizedTypes instanceof ImmutableList<JSType> immutable
+            ? immutable
+            : ImmutableList.copyOf(templatizedTypes);
+    return new TemplatizedType(this, baseType, args);
   }
 
   /** Creates a named type. */
@@ -2581,6 +2606,15 @@ public final class JSTypeRegistry {
   /** Registers a goog.provide or legacy goog.module namespace with the type registry */
   public void registerLegacyClosureNamespace(String moduleName) {
     closureNamespaces.put(moduleName, ClosureNamespace.create(/* isLegacy= */ true, null, null));
+  }
+
+  private @Nullable BuiltinTypeInterner activeBuiltinInterner() {
+    BuiltinTypeInterner interner = this.builtinInterner;
+    if (interner != null && this.resolver.isOpenOrClosed()) {
+      interner.ensureCurrentEpoch();
+      return interner;
+    }
+    return null;
   }
 
   /** Stores information about a Closure namespace. */
