@@ -1736,31 +1736,22 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSingleClass_withPrivateMembers_notAmbiguated_knownBug() {
-    // Expected behavior: `AmbiguateProperties` keeps the private names and renames only `pub`, to
-    // `a`. Renaming `#field` to `a` would turn the private field into a public property that any
-    // code can read and write.
-    //
-    // TODO(b/236744850): Private names are renamed to public names.
-    // Current behavior: `#field`, `#method` and `pub` become `a`, `b` and `c`.
-    // Why it's a bug: `a` and `b` are public properties that any code can read and write. For
-    //   example, `JSON.stringify(new Foo())` returns `{"a":2}` instead of `{}`.
-    // In a full build: `RenameProperties` runs right after this pass and has the same bug today.
-    //   Fixing only this pass doesn't change the output, and fixing only `RenameProperties` makes
-    //   it a SyntaxError.
+  public void testSingleClass_withPrivateMembers_notAmbiguated() {
+    // `AmbiguateProperties` is a type-based optimization and skips `#private` identifiers,
+    // which are lexically scoped and renamed per class by `RenameProperties`.
     test(
         """
         class Foo {
           #field = 2;
           #method() { return this.#field; }
-          pub() { return this.#method(); }
+          pub(/** !Object */ o) { return #field in o ? this.#method() : 0; }
         }
         """,
         """
         class Foo {
-          a = 2;
-          b() { return this.a; }
-          c() { return this.b(); }
+          #field = 2;
+          #method() { return this.#field; }
+          a(o) { return #field in o ? this.#method() : 0; }
         }
         """);
   }

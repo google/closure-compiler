@@ -569,7 +569,8 @@ public class AmbiguateProperties implements CompilerPass {
      */
     private void maybeMarkCandidate(Node n, Color type) {
       String name = n.getString();
-      if (!externedNames.contains(name)) {
+      // Private identifiers are lexically scoped and renamed per class by RenameProperties.
+      if (!externedNames.contains(name) && !n.isPrivateIdentifier()) {
         stringNodesToRename.add(n);
         recordProperty(name, type);
       }
