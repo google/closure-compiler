@@ -7681,13 +7681,8 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         }
         O.STATIC_INIT$0();
         """;
-    // TODO(b/236744850): A static initializer that uses `#f` is moved out of `O`.
-    // Current behavior: the initializer moves out of `O`, to `O.d = {read(o) { return o.#f; }};`
-    //   after the class. So `test(options, js, expected)` fails.
-    // Why it's a bug: `o.#f` outside the body of `O` is a SyntaxError, so the whole script fails
-    //   to load.
-    var ex = assertThrows(AssertionError.class, () -> test(options, js, expected));
-    assertThat(ex).hasMessageThat().contains("+O.d = {read(o) {");
+    // A static initializer that uses `#f` inside a nested method must stay inside `O`.
+    test(options, js, expected);
   }
 
   @Test

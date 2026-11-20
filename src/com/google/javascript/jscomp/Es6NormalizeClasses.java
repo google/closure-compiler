@@ -1799,13 +1799,15 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     }
 
     // If there are no super references or private field references, place all the static
-    // initialization code after the class.
+    // initialization code after the class. Unlike `super`, a native private name inside a nested
+    // function or class can still refer to this class.
     if (!hasPriv
         && !NodeUtil.has(
             staticInitTempParent,
             /* pred= */ (n) -> n.isSuper() || n.isPrivateIdentifier(),
             /* traverseChildrenPred= */ (n) ->
-                !n.isClass() && (!n.isFunction() || n.isArrowFunction()))) {
+                !n.isClass() && (!n.isFunction() || n.isArrowFunction()))
+        && (transpilePrivateClassFields || !NodeUtil.referencesPrivateName(staticInitTempParent))) {
       while (staticInitTempParent.hasChildren()) {
         staticInitTempParent.getLastChild().detach().insertAfter(insertionPoint);
       }
