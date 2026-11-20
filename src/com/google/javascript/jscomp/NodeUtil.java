@@ -2024,6 +2024,14 @@ public final class NodeUtil {
     return false;
   }
 
+  /**
+   * Returns true if this subtree contains a private name ({@code #x}), also in nested functions and
+   * classes, where a private name can still refer to an enclosing class.
+   */
+  static boolean referencesPrivateName(Node n) {
+    return has(n, Node::isPrivateIdentifier, Predicates.alwaysTrue());
+  }
+
   /** Is this a GETPROP, OPTCHAIN_GETPROP, GETELEM, or OPTCHAIN_GETELEM? */
   public static boolean isNormalOrOptChainGet(Node n) {
     return isNormalGet(n) || isOptChainGet(n);

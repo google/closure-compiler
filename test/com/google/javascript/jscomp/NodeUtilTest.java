@@ -5929,6 +5929,35 @@ public final class NodeUtilTest {
   }
 
   @RunWith(JUnit4.class)
+  public static class ReferencesPrivateNameTests {
+    @Test
+    public void testReferencesPrivateName() {
+      assertThat(
+              NodeUtil.referencesPrivateName(
+                  parseFirst(FUNCTION, "class C { #x = 1; m() { return this.x; } }")))
+          .isFalse();
+      assertThat(
+              NodeUtil.referencesPrivateName(
+                  parseFirst(FUNCTION, "class C { #x = 1; m() { return this.#x; } }")))
+          .isTrue();
+      assertThat(
+              NodeUtil.referencesPrivateName(
+                  parseFirst(FUNCTION, "class C { #x = 1; m() { return () => this.#x; } }")))
+          .isTrue();
+      assertThat(
+              NodeUtil.referencesPrivateName(
+                  parseFirst(FUNCTION, "class C { #x = 1; m(o) { return #x in o; } }")))
+          .isTrue();
+      assertThat(
+              NodeUtil.referencesPrivateName(
+                  parseFirst(
+                      FUNCTION,
+                      "class C { #x = 1; m() { return class { f(c) { return c.#x; } }; } }")))
+          .isTrue();
+    }
+  }
+
+  @RunWith(JUnit4.class)
   public static class DelegatedHelpersTests {
     @Test
     public void testDelegatedHelpersWithNarrowDependencies() {
