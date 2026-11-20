@@ -39,6 +39,7 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
+    enableNormalize();
     enableTypeCheck();
     ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     enableTypeInfoValidation();
@@ -140,8 +141,8 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
           return CLASS_DECL$1;
         })();
         class __TEST_WebChannelConnection extends CLASS_EXTENDS$0 {
-          constructor(e) {
-            super(e), this.forceLongPolling = e.forceLongPolling, this.autoDetectLongPolling = e.autoDetectLongPolling, this.useFetchStreams = e.useFetchStreams, this.longPollingOptions = e.longPollingOptions;
+          constructor(e$jscomp$1) {
+            super(e$jscomp$1), this.forceLongPolling = e$jscomp$1.forceLongPolling, this.autoDetectLongPolling = e$jscomp$1.autoDetectLongPolling, this.useFetchStreams = e$jscomp$1.useFetchStreams, this.longPollingOptions = e$jscomp$1.longPollingOptions;
             console.log('test');
           }
         }
@@ -311,11 +312,9 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
         """
         const foo = { 'bar': Object};
         function mayHaveSideEffects() {}
-        var baz = mayHaveSideEffects(), Foo = (() => {
-          const CLASS_EXTENDS$0 = foo['bar'];
-          const CLASS_DECL$1 = class extends CLASS_EXTENDS$0 {};
-          return CLASS_DECL$1;
-        })();
+        var baz = mayHaveSideEffects();
+        const CLASS_EXTENDS$0 = foo['bar'];
+        var Foo = class extends CLASS_EXTENDS$0 {};
         """);
 
     test(
@@ -326,7 +325,8 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
         """
         const foo = {'bar': Object};
         const CLASS_EXTENDS$0 = foo['bar'];
-        const Foo = class extends CLASS_EXTENDS$0 {}, baz = false;
+        const Foo = class extends CLASS_EXTENDS$0 {};
+        const baz = false;
         """);
   }
 

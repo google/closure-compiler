@@ -423,6 +423,7 @@ public final class RewriteOptionalChainingOperatorTest {
     @Before
     public void setUp() throws Exception {
       super.setUp();
+      enableNormalize();
       enableTypeCheck();
       enableTypeInfoValidation();
       replaceTypesWithColors();

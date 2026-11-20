@@ -75,6 +75,11 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
                 .build());
         factories.maybeAdd(
             PassFactory.builder()
+                .setName(PassNames.NORMALIZE)
+                .setInternalFactory(x -> Normalize.createNormalizeForOptimizations(compiler))
+                .build());
+        factories.maybeAdd(
+            PassFactory.builder()
                 .setName(PassNames.ES6_NORMALIZE_CLASSES)
                 .setInternalFactory(Es6NormalizeClasses::new)
                 .build());
@@ -130,7 +135,9 @@ public class CollapsePropertiesAndModuleRewritingTest extends CompilerTestCase {
             "entry.js",
             """
             import('./mod1.js')
-                .then(jscomp$DynamicImportCallback(() => module$mod1 ))
+                .then(jscomp$DynamicImportCallback(() => {
+                  return module$mod1;
+                }))
                 .then(ns => {
                   return console.log(ns.Foo.bar());
                 });

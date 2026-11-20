@@ -38,6 +38,7 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
 
+    enableNormalize();
     enableTypeInfoValidation();
     enableRewriteClosureCode();
     enableTypeCheck();
@@ -144,8 +145,8 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
         """
         const CLASS_DECL$0 = class {
           m1() {
-            class C {};
-            alert(C);
+            class C$jscomp$1 {};
+            alert(C$jscomp$1);
           }
           m2() {
             alert(CLASS_DECL$0);
@@ -372,11 +373,11 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
   public void testCannotExtract() {
     test(
         "let x; while(x = class A{}) {use(x);}",
-"""
-let x;
-while(x = (() => { const CLASS_DECL$0 = class {}; return CLASS_DECL$0;})())
-{use(x);}
-""");
+        """
+        let x;
+        for (; x = (() => { const CLASS_DECL$0 = class {}; return CLASS_DECL$0;})();)
+        {use(x);}
+        """);
 
     test(
         """
@@ -386,13 +387,13 @@ while(x = (() => { const CLASS_DECL$0 = class {}; return CLASS_DECL$0;})())
         """,
         """
         var x = 0;
-        function f(x, y) {}
-        while(
+        function f(x$jscomp$1, y) {}
+        for(;
           f(x = 2,
             (() => { const CLASS_DECL$0 = class { bar() {} };
                   return CLASS_DECL$0;
                  })()
-        )){}
+        );){}
         """);
   }
 

@@ -223,6 +223,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, Comp
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     checkState(contextStack.isEmpty());
     contextStack.push(LexicalContext.newGlobalContext(root));
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);

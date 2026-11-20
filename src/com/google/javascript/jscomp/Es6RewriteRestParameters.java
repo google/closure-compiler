@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.AstFactory.type;
 
 import com.google.javascript.jscomp.js.RuntimeJsLibManager.JsLibField;
@@ -46,6 +47,7 @@ public final class Es6RewriteRestParameters extends NodeTraversal.AbstractPostOr
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     TranspilationPasses.processTranspile(compiler, root, TRANSPILED_FEATURES, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, TRANSPILED_FEATURES);
   }

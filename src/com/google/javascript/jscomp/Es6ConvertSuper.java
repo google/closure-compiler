@@ -279,6 +279,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     // Might need to synthesize constructors for ambient classes in .d.ts externs
     TranspilationPasses.processTranspile(compiler, externs, FEATURES_TO_RUN_FOR, this);
     TranspilationPasses.processTranspile(compiler, root, FEATURES_TO_RUN_FOR, this);

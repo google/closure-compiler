@@ -182,6 +182,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverseRoots(compiler, this, externs, root);
 
     // We transpiled away class static blocks. We always do this, regardless of language out, to

@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.OptionalChainRewriter.TmpVarNameCreator;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -53,6 +54,7 @@ final class RewriteOptionalChainingOperator implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverseRoots(compiler, new TranspilationCallback(), externs, root);
     TranspilationPasses.maybeMarkFeatureAsTranspiledAway(compiler, root, Feature.OPTIONAL_CHAINING);
   }

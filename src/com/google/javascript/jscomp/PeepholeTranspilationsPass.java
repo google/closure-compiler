@@ -78,6 +78,7 @@ class PeepholeTranspilationsPass implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverse(compiler, root, new PeepCallback());
     // Update the featureSets with all features that got transpiled.
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(

@@ -53,6 +53,7 @@ public final class Es6RewriteSpreadExpressions extends NodeTraversal.AbstractPos
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     TranspilationPasses.processTranspile(compiler, root, TRANSPILED_FEATURES, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, TRANSPILED_FEATURES);
   }

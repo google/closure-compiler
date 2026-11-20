@@ -77,6 +77,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     // All declared names are already unique post normalize, so we can safely just switch 'let' or
     // 'const' to 'var' in all non-loop cases.
     // - Gather a list of let & const variables

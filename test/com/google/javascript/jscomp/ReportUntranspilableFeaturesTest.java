@@ -40,6 +40,7 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
     super.setUp();
     languageOut = LanguageMode.ECMASCRIPT3;
     browserFeaturesetYear = null;
+    enableNormalize();
     disableTypeCheck();
     enableRunTypeCheckAfterProcessing();
   }

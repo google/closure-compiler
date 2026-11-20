@@ -394,11 +394,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
           case NAME -> {
             if (n.matchesName("arguments")) {
               n.setString(ASYNC_ARGUMENTS + asyncThisAndArgumentsContext.uniqueId);
-              if (compiler.getLifeCycleStage().isNormalized()) {
-                // TODO: b/322009741 - Stop depending on lifeCycleStage.isNormalized() to decide
-                // constness
-                n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-              }
+              n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
               asyncThisAndArgumentsContext.recordAsyncArgumentsReplacementWasDone();
               compiler.reportChangeToChangeScope(contextRootNode);
             }
@@ -505,6 +501,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, Comp
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, transpiledFeatures);
   }

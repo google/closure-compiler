@@ -44,6 +44,8 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   @Before
   public void customSetUp() throws Exception {
+    enableNormalize();
+    enableNormalizeExpectedOutput();
     setGenericNameReplacements(Es6NormalizeClasses.GENERIC_NAME_REPLACEMENTS);
   }
 
@@ -57,47 +59,16 @@ public class InlineAliasesTest extends CompilerTestCase {
   }
 
   /**
-   * Returns the number of times the pass should be run before results are verified.
-   *
-   * <p>This pass is not idempotent so we only run it once.
+   * This test only covers passes that run in the getOptimizations() phase, so we expect type->color
+   * conversion to already have rewritten @type JSDoc. This test just verifies that. (We set
+   * enableNormalize(), which by default also enables multistage compilation & type -> color
+   * conversion.)
    */
   @Test
-  public void testSimpleAliasInJSDoc_isUnchanged() {
+  public void testSimpleAliasInJSDoc_isRewrittenPreOptimizations() {
     test(
         "/** @constructor */ function Foo(){} const alias = Foo; /** @type {alias} */ var x;",
         "/** @constructor */ function Foo(){} const alias = Foo; var x;");
-
-    test(
-        """
-        var ns={};
-        /** @constructor */ function Foo(){};
-        /** @const */ ns.alias = Foo;
-        /** @type {ns.alias} */ var x;
-        """,
-        """
-        var ns={};
-        /** @constructor */ function Foo(){};
-        /** @const */ ns.alias = Foo;
-        var x;
-        """);
-
-    test(
-        """
-        /** @const */
-        var ns={};
-        /** @constructor */ function Foo(){};
-        Foo.Subfoo = class {};
-        /** @const */ ns.alias = Foo;
-        /** @type {ns.alias.Subfoo} */ var x;
-        """,
-        """
-        /** @const */
-        var ns={};
-        /** @constructor */ function Foo(){};
-        Foo.Subfoo = class {};
-        /** @const */ ns.alias = Foo;
-        var x;
-        """);
   }
 
   @Test
@@ -278,6 +249,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testAliasedEnums() {
+    disableCompareJsDoc();
     test(
         "/** @enum {number} */ var E = { A : 1 }; var /** @const */ alias = E.A; alias;",
         "/** @enum {!JSDocSerializer_placeholder_type} */ var E = { A : 1 }; var /** @const */"
@@ -304,7 +276,9 @@ public class InlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstWithTypesAreNotInlined() {
+  public void testConstWithTypesAreInlined() {
+    // We expect ConvertTypesToColors to have run before InlineAliases, so the pass does not see the
+    // type annotation. This test is leftover from a time when we did not have this guarantee.
     test(
         """
         var /** @type {number} */ n = 5

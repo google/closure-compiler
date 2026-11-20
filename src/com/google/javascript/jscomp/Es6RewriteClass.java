@@ -68,6 +68,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, CompilerPa
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     // TODO(b/171853310): This transpilation should be turned off in externs
     TranspilationPasses.processTranspile(compiler, externs, features, this);
     TranspilationPasses.processTranspile(compiler, root, features, this);

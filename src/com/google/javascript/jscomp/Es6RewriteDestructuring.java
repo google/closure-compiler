@@ -144,6 +144,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
 
   @Override
   public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     checkState(patternNestingStack.isEmpty());
     NodeTraversal.traverse(compiler, root, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, root, featuresToMarkAsRemoved);
@@ -375,8 +376,6 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
    * (the compiler only assigns $jscomp$destructuring$var[num] once)
    */
   private Node createTempVarNameNode(String name, AstFactory.Type type) {
-    // NOTE: This does not really create a constant node as this pass runs before normalization. See
-    // b/322009741.
     return astFactory.createConstantName(name, type);
   }
 
