@@ -412,6 +412,38 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testArrayAndObjectLiteralStringComparison() {
+    // Array and empty object literals become strings in ToPrimitive, so these compare as strings.
+    test("[10] < '9'", "true");
+    test("'9' > [10]", "true");
+    test("[10] >= '9'", "false");
+    test("'9' <= [10]", "false");
+    test("[2] < [10]", "false");
+    test("['a'] < 'b'", "true");
+    test("[] < 'a'", "true");
+    test("'-1' < []", "false");
+    test("({}) < 'x'", "true");
+    test("'x' > {}", "true");
+    // Array.prototype.join turns null into "" and flattens nested arrays.
+    test("[null] < 'a'", "true");
+    test("[[1, 2]] < '1,3'", "true");
+    // A number on either side still makes it a numeric comparison.
+    test("[10] < 9", "false");
+    test("9 < [10]", "true");
+    testSame("[x] < 'a'");
+    // An object literal with its own members can change what ToPrimitive returns.
+    testSame("({valueOf() { return 1 }}) < 'x'");
+    testSame("({toString() { return 'z' }}) < 'a'");
+    testSame("({[Symbol.toPrimitive]() { return 1 }}) < 'x'");
+    // Against a BigInt, the literal's string goes through StringToBigInt.
+    test("[1.5] < 2n", "false");
+    test("[1.5] >= 2n", "false");
+    test("2n > [1.5]", "false");
+    test("[1] < 2n", "true");
+    test("2n > [1]", "true");
+  }
+
+  @Test
   public void testNumberStringComparison() {
     test("1 < '2'", "true");
     test("2 > '1'", "true");
