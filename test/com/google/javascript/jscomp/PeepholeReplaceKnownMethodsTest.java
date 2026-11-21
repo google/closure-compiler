@@ -573,6 +573,12 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'abcde'.substr(2, 4294967296)");
     foldSame("x = 'abcde'.substr(Infinity, Infinity)");
 
+    // an undefined length means "to the end of the string", the same as omitting it
+    fold("x = 'abcde'.substr(1, undefined)", "x = 'bcde'");
+    fold("x = 'abcde'.substr(0, void 0)", "x = 'abcde'");
+    foldSame("x = 'abcde'.substr(1, void f())");
+    foldSame("x = 'abcde'.substr(1, undefined, 3)");
+
     // Template strings
     foldSame("x = `abcdef`.substr(0,2)");
     foldSame("x = `abc ${xyz} def`.substr(0,2)");
@@ -640,6 +646,11 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'abcde'.substring(2, 0)");
     foldSame("x = 'a'.substring(0, 2)");
 
+    // an undefined end means "to the end of the string", the same as omitting it
+    fold("x = 'abcde'.substring(0, undefined)", "x = 'abcde'");
+    fold("x = 'abcde'.substring(2, void 0)", "x = 'cde'");
+    foldSame("x = 'abcde'.substring(2, void f())");
+
     // Template strings
     foldSame("x = `abcdef`.substring(0,2)");
     foldSame("x = `abcdef ${abc}`.substring(0,2)");
@@ -657,6 +668,11 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = 'abcde'.slice(1, 2, 3)");
     foldSame("x = 'abcde'.slice(2, 0)");
     foldSame("x = 'a'.slice(0, 2)");
+
+    // an undefined end means "to the end of the string", the same as omitting it
+    fold("x = 'abcde'.slice(0, undefined)", "x = 'abcde'");
+    fold("x = 'abcde'.slice(2, void 0)", "x = 'cde'");
+    foldSame("x = 'abcde'.slice(2, void f())");
 
     // Template strings
     foldSame("x = `abcdef`.slice(0,2)");
