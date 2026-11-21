@@ -42,6 +42,12 @@ DocumentType.prototype.remove = function() {};
 Element.prototype.remove = function() {};
 
 /**
+ * @type {!NodeList<!Element>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/children
+ */
+Element.prototype.children;
+
+/**
  * @return {undefined}
  * @see https://www.w3.org/TR/domcore/#dom-childnode-remove
  */
