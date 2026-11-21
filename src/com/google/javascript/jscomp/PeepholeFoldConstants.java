@@ -1851,6 +1851,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     } else if (elem.isEmpty()) {
       elem = NodeUtil.newUndefinedNode(elem);
     } else {
+      // `[f][0]()` calls f with the array as its receiver, so the call can only be rewritten to
+      // `f()` when the element is a function that doesn't use its receiver.
+      if (NodeUtil.isInvocationTarget(n)) {
+        if (!elem.isFunction() || NodeUtil.referencesOwnReceiver(elem)) {
+          return n;
+        }
+        n.getParent().putBooleanProp(Node.FREE_CALL, true);
+      }
       elem.detach();
     }
 

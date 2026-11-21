@@ -1691,6 +1691,21 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldGetElem_invokedArrayElementKeepsReceiver() {
+    // The array literal is the receiver of the call, so these can't become plain calls.
+    testSame("[function() { return this; }][0]()");
+    testSame("[function() { return this; }, 1][0]()");
+    testSame("[x][0]()");
+    testSame("[a.b][0]()");
+    testSame("[x]?.[0]()");
+    testSame("[x][0]`str`");
+
+    test("[function() { return 1; }][0]()", "(function() { return 1; })()");
+    test("[() => this][0]()", "(() => { return this; })()");
+    test("x = [a.b][0]", "x = a.b");
+  }
+
+  @Test
   public void testFoldArrayLitSpreadGetElem() {
     numRepetitions = 1;
     test("x = [...[0]][0]", "x = 0;");
