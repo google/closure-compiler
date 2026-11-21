@@ -213,7 +213,80 @@ public class GenerateExports implements CompilerPass {
     checkArgument(memberFunction.isMemberFunctionDef(), memberFunction);
     checkArgument(!ownerName.isEmpty(), ownerName);
     String fullExport = ownerName + "." + memberFunction.getString();
-    addExportPropertyCall(ownerName, memberFunction, fullExport, memberFunction.getString());
+    Node call =
+        addExportPropertyCall(ownerName, memberFunction, fullExport, memberFunction.getString());
+
+    // This pass runs after type checking, so give the synthesized `Foo.prototype` and
+    // `Foo.prototype.method` nodes the types of the class they come from. Otherwise they end up
+    // without colors and are treated as possibly being of any type by later optimizations, e.g.
+    // `Foo.prototype.find` would be considered a possible use of the `Iterator.prototype.find`
+    // polyfill.
+    Node classNode = memberFunction.getGrandparent();
+    JSType ctorType = classNode.getJSType();
+    JSType methodType = memberFunction.getFirstChild().getJSType();
+    if (ctorType == null || !ctorType.isConstructor()) {
+      return;
+    }
+    JSType ownerType =
+        memberFunction.isStaticMember()
+            ? ctorType
+            : ctorType.toMaybeFunctionType().getPrototype();
+    Node ownerNode = call.getSecondChild();
+    Node valueNode = call.getLastChild();
+    if (memberFunction.isStaticMember()) {
+      setQNameTypes(ownerNode, ownerType);
+      setQNameTypes(valueNode, methodType, ownerType);
+    } else {
+      setQNameTypes(ownerNode, ownerType, ctorType);
+      setQNameTypes(valueNode, methodType, ownerType, ctorType);
+    }
+  }
+
+  /**
+   * Sets the given types on {@code qname} and its receivers, outermost first: e.g. for
+   * `a.b.c` the types are applied to `a.b.c`, `a.b` and `a`, in that order, as far as given.
+   */
+  private static void setQNameTypes(Node qname, @Nullable JSType... types) {
+    Node n = qname;
+    for (JSType type : types) {
+      if (n == null) {
+        return;
+      }
+      if (type != null) {
+        n.setJSType(type);
+      }
+      n = n.isGetProp() ? n.getFirstChild() : null;
+    }
+  }
+
+  /**
+   * Copies the types of the type-checked qualified name {@code typedQName} onto the synthesized,
+   * structurally identical qualified name {@code qname}.
+   */
+  private static void copyQNameTypes(@Nullable Node typedQName, Node qname) {
+    Node from = typedQName;
+    Node to = qname;
+    while (from != null
+        && (from.isGetProp() || from.isName())
+        && from.getToken() == to.getToken()
+        && from.getString().equals(to.getString())) {
+      if (from.getJSType() != null) {
+        to.setJSType(from.getJSType());
+      }
+      if (!to.isGetProp()) {
+        return;
+      }
+      from = from.getFirstChild();
+      to = to.getFirstChild();
+    }
+  }
+
+  /**
+   * Returns the type-checked qualified name that {@code context} defines, e.g. `a.prototype.b` for
+   * an exported `a.prototype.b = ...;` assignment, or null if there is none.
+   */
+  private static @Nullable Node getTypedExportedQName(Node context) {
+    return context.isAssign() ? context.getFirstChild() : null;
   }
 
   /**
@@ -254,14 +327,25 @@ public class GenerateExports implements CompilerPass {
       useExportSymbol = false;
     }
 
+    // This pass runs after type checking, so copy the types of the exported qualified name onto
+    // the synthesized references to it. Otherwise they end up without colors and are treated as
+    // possibly being of any type by later optimizations, e.g. `Foo.prototype.find` would be
+    // considered a possible use of the `Iterator.prototype.find` polyfill.
+    Node typedQName = getTypedExportedQName(context);
     if (useExportSymbol) {
-      addExportSymbolCall(export, context);
+      Node call = addExportSymbolCall(export, context);
+      copyQNameTypes(typedQName, call.getLastChild());
     } else {
-      addExportPropertyCall(methodOwnerName, context, export, propertyName);
+      Node call = addExportPropertyCall(methodOwnerName, context, export, propertyName);
+      if (typedQName != null) {
+        copyQNameTypes(typedQName.getFirstChild(), call.getSecondChild());
+      }
+      copyQNameTypes(typedQName, call.getLastChild());
     }
   }
 
-  private void addExportPropertyCall(
+  /** Returns the synthesized `exportProperty(object, publicName, symbol)` call. */
+  private Node addExportPropertyCall(
       String methodOwnerName, Node context, String export, String propertyName) {
     // JS output: exportProperty(object, publicName, symbol);
     checkNotNull(methodOwnerName);
@@ -281,9 +365,11 @@ public class GenerateExports implements CompilerPass {
     Node expression = IR.exprResult(call).srcrefTreeIfMissing(context);
 
     addStatement(context, expression);
+    return call;
   }
 
-  private void addExportSymbolCall(String export, Node context) {
+  /** Returns the synthesized `exportSymbol(publicPath, object)` call. */
+  private Node addExportSymbolCall(String export, Node context) {
     // JS output: exportSymbol(publicPath, object);
     recordExportSymbol(export);
 
@@ -300,6 +386,7 @@ public class GenerateExports implements CompilerPass {
     Node expression = IR.exprResult(call).srcrefTreeIfMissing(context);
 
     addStatement(context, expression);
+    return call;
   }
 
   private void addStatement(Node context, Node stmt) {
