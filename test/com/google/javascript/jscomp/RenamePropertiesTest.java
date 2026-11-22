@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -1090,10 +1089,10 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPrivateClassMembers_knownBug() {
-    // Expected behavior: `RenameProperties` renames private names only to other private names,
-    // and renames `#field in o` like the other uses of `#field`. A private member must stay
-    // private, and each private name in the code must be declared in its class.
+  public void testPrivateClassMembers() {
+    // Private names are renamed per declaring class in their own `#` namespace (`#a`, `#b`),
+    // separate from public properties (`check` -> `a`), and `#field in o` is renamed alongside
+    // `#field` declarations and accesses.
     String js =
         """
         class C {
@@ -1107,19 +1106,192 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         class C {
           #a = 1;
           #b() { return this.#a; }
-          c(o) { return #a in o ? this.#b() : 0; }
+          a(o) { return #a in o ? this.#b() : 0; }
         }
         """;
-    // TODO(b/236744850): Private names are renamed to public names.
-    // Current behavior: `#field` and `#method` become the public `a` and `b`, and `#field in o`
-    //   is not renamed. So `test(js, expected)` fails.
-    // Why it's a bug: `C` no longer declares `#field`, so `#field in o` is a SyntaxError, and the
-    //   whole script fails to load.
-    // In a full build: `VarCheck` and `RemoveUnusedCode` mishandle `#field in o` before this pass
-    //   runs (see their tests). Without `in`, private names still become public, so a
-    //   subclass's `#x` overwrites its base class's `#x`.
-    var ex = assertThrows(AssertionError.class, () -> test(js, expected));
-    assertThat(ex).hasMessageThat().contains("return #field in o ? this.b() : 0;");
+    test(js, expected);
+  }
+
+  @Test
+  public void testPrivateClassMembersAcrossClassesAndNested() {
+    // Unrelated classes and subclasses reuse `#a` independently, while nested classes reserve
+    // enclosing classes' `#` names so outer private accesses (`o.#a`) are never shadowed.
+    String js =
+        """
+        class A {
+          #first = 1;
+          #second() { return this.#first; }
+          pubA() { return this.#second(); }
+        }
+        class B extends A {
+          #other = 2;
+          pubB() { return this.#other; }
+        }
+        class Outer {
+          #outer = 1;
+          #base = 2;
+          make(o) {
+            return class Inner extends this.#base {
+              #inner = 3;
+              #base = 4;
+              read() { return o.#outer + this.#inner + this.#base; }
+            };
+          }
+        }
+        """;
+    String expected =
+        """
+        class A {
+          #a = 1;
+          #b() { return this.#a; }
+          b() { return this.#b(); }
+        }
+        class B extends A {
+          #a = 2;
+          c() { return this.#a; }
+        }
+        class Outer {
+          #b = 1;
+          #a = 2;
+          a(o) {
+            return class Inner extends this.#a {
+              #d = 3;
+              #c = 4;
+              d() { return o.#b + this.#d + this.#c; }
+            };
+          }
+        }
+        """;
+    test(js, expected);
+  }
+
+  @Test
+  public void testPrivateClassMembersWithPseudoNames() {
+    generatePseudoNames = true;
+    test(
+        """
+        class C {
+          #field = 1;
+          #method() { return this.#field; }
+          check(o) { return #field in o ? this.#method() : 0; }
+        }
+        """,
+        """
+        class C {
+          #$field$ = 1;
+          #$method$() { return this.#$field$; }
+          $check$(o) { return #$field$ in o ? this.#$method$() : 0; }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateClassMembers_externPrivateNamesDoNotBlockRenaming() {
+    // The extern class's `#a`, `#b`, and `#foo` are scoped to that class, so they neither keep
+    // `C`'s `#foo` from being renamed nor collide with the `#a`/`#b` names `C` renames to.
+    test(
+        externs(EXTERNS + "class Ext { #a; #b() {} #foo; }"),
+        srcs(
+            """
+            class C {
+              #foo = 1;
+              #bar = 2;
+              sum() { return this.#foo + this.#foo + this.#bar; }
+            }
+            """),
+        expected(
+            """
+            class C {
+              #a = 1;
+              #b = 2;
+              a() { return this.#a + this.#a + this.#b; }
+            }
+            """));
+  }
+
+  @Test
+  public void testPrivateClassMembers_nestedClassExtendsResolvesOuterPrivateName() {
+    // `Inner`'s `extends` clause is evaluated in `Outer`'s private scope, before `Inner`'s `#x`
+    // comes into scope.
+    test(
+        """
+        class Outer {
+          #x = 1;
+          #y = 2;
+          m() {
+            this.#y;
+            this.#y;
+            return class Inner extends (this.#x ? A : B) {
+              #x = 3;
+              read() { return this.#x; }
+            };
+          }
+        }
+        """,
+        """
+        class Outer {
+          #b = 1;
+          #a = 2;
+          a() {
+            this.#a;
+            this.#a;
+            return class Inner extends (this.#b ? A : B) {
+              #c = 3;
+              b() { return this.#c; }
+            };
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateClassMembers_privateAccessOnLhsOfInIsCountedOnce() {
+    // `this.#p in o` reads `#p` once, so `#q` is used more often than `#p` and gets `#a`.
+    test(
+        """
+        class C {
+          #p;
+          #q;
+          m(o) { return (this.#p in o) + this.#q + this.#q; }
+        }
+        """,
+        """
+        class C {
+          #b;
+          #a;
+          a(o) { return (this.#b in o) + this.#a + this.#a; }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateClassMembers_filteredOutNameIsKeptAndReservedInEnclosingClasses() {
+    // `Inner` keeps `#a`, so `Outer` can't rename `#x` to `#a`: inside `Inner`, `o.#a` would refer
+    // to `Inner`'s `#a`.
+    propertyNameFilter = (Node n) -> !n.getString().equals("#a");
+    test(
+        """
+        class Outer {
+          #x = 1;
+          make(o) {
+            return class Inner {
+              #a = 2;
+              read() { return o.#x + this.#a; }
+            };
+          }
+        }
+        """,
+        """
+        class Outer {
+          #b = 1;
+          a(o) {
+            return class Inner {
+              #a = 2;
+              b() { return o.#b + this.#a; }
+            };
+          }
+        }
+        """);
   }
 
   private Compiler compileChunks(String externs, JSChunk[] chunks) {

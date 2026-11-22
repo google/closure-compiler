@@ -16,13 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
+import org.jspecify.annotations.Nullable;
 
 /**
  * RenameProperties renames properties (including methods) of all JavaScript objects. This includes
@@ -80,6 +81,9 @@ class RenameProperties implements CompilerPass {
 
   // Map from property name to Property object
   private final Map<String, Property> propertyMap = new LinkedHashMap<>();
+
+  // Per-class scopes for `#private` properties, which have their own `#` namespace per class.
+  private final List<PrivateClassScope> privateScopesInPreOrder = new ArrayList<>();
 
   // Property names that don't get renamed
   private final Set<String> externedNames = new LinkedHashSet<>(
@@ -225,6 +229,8 @@ class RenameProperties implements CompilerPass {
       }
     }
 
+    renamePrivateProperties();
+
     // Update the call nodes.
     for (Map.Entry<Node, Node> nodeEntry : callNodeToParentMap.entrySet()) {
       Node parent = nodeEntry.getValue();
@@ -317,6 +323,69 @@ class RenameProperties implements CompilerPass {
   }
 
   /**
+   * Renames `#private` properties per declaring class in a separate `#` namespace (`#a`, `#b`,
+   * ...), reserving names used by enclosing classes so nested classes do not shadow outer `#`
+   * names.
+   */
+  private void renamePrivateProperties() {
+    // Propagate filtered-out private names up to enclosing classes so an outer class never picks
+    // a name that an inner class kept verbatim (which would shadow outer references inside inner).
+    for (PrivateClassScope scope : privateScopesInPreOrder) {
+      for (PrivateProperty prop : scope.declaredProperties.values()) {
+        if (prop.filteredOut) {
+          String baseName = prop.oldName.substring(1);
+          for (PrivateClassScope anc = scope; anc != null; anc = anc.enclosing) {
+            anc.usedBaseNames.add(baseName);
+          }
+        }
+      }
+    }
+
+    Comparator<PrivateProperty> byFreq =
+        Comparator.comparingInt((PrivateProperty p) -> p.nodesToRename.size())
+            .reversed()
+            .thenComparing(p -> p.oldName);
+
+    for (PrivateClassScope scope : privateScopesInPreOrder) {
+      if (scope.declaredProperties.isEmpty()) {
+        continue;
+      }
+      Set<PrivateProperty> propsByFreq = new TreeSet<>(byFreq);
+      for (PrivateProperty prop : scope.declaredProperties.values()) {
+        if (!prop.filteredOut && !prop.nodesToRename.isEmpty()) {
+          propsByFreq.add(prop);
+        }
+      }
+
+      if (!generatePseudoNames) {
+        Set<String> reservedBaseNames = new LinkedHashSet<>(scope.usedBaseNames);
+        for (PrivateClassScope anc = scope.enclosing; anc != null; anc = anc.enclosing) {
+          reservedBaseNames.addAll(anc.usedBaseNames);
+        }
+        nameGenerator.reset(
+            reservedBaseNames, "", this.reservedFirstCharacters, this.reservedNonFirstCharacters);
+      }
+
+      for (PrivateProperty prop : propsByFreq) {
+        String newName;
+        if (generatePseudoNames) {
+          newName = "#$" + prop.oldName.substring(1) + "$";
+        } else {
+          String baseName = nameGenerator.generateNextName();
+          newName = "#" + baseName;
+          scope.usedBaseNames.add(baseName);
+        }
+        for (Node n : prop.nodesToRename) {
+          n.setString(newName);
+          if (!newName.equals(prop.oldName)) {
+            compiler.reportChangeToEnclosingScope(n);
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Gets the property renaming map (the "answer key").
    *
    * @return A mapping from original names to new names
@@ -331,19 +400,44 @@ class RenameProperties implements CompilerPass {
     return new VariableMap(map.buildOrThrow());
   }
 
-
   // -------------------------------------------------------------------------
 
   /**
-   * A traversal callback that collects property names and counts how
-   * frequently each property name occurs.
+   * A traversal callback that collects property names and counts how frequently each property name
+   * occurs.
    */
-  private class ProcessProperties extends AbstractPostOrderCallback {
+  private class ProcessProperties implements NodeTraversal.Callback {
+    private @Nullable PrivateClassScope currentPrivateScope;
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      if (n.isClassMembers()) {
+        currentPrivateScope = new PrivateClassScope(currentPrivateScope);
+        privateScopesInPreOrder.add(currentPrivateScope);
+        for (Node member = n.getFirstChild(); member != null; member = member.getNext()) {
+          // Private names are scoped to their class, so they can't collide with extern names.
+          if (member.isPrivateIdentifier()) {
+            currentPrivateScope.declaredProperties.computeIfAbsent(
+                member.getString(), PrivateProperty::new);
+          }
+        }
+      }
+      return true;
+    }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
+        case CLASS_MEMBERS -> currentPrivateScope = checkNotNull(currentPrivateScope).enclosing;
         case GETPROP, OPTCHAIN_GETPROP, MEMBER_FIELD_DEF -> maybeMarkCandidate(n);
+        case IN -> {
+          // In `#field in obj`, the LHS is a NAME node with a private identifier that must be
+          // renamed together with the class's `#field` declaration and accesses. The LHS of
+          // `this.#field in obj` is a GETPROP, which was already visited.
+          if (n.getFirstChild().isName() && n.getFirstChild().isPrivateIdentifier()) {
+            maybeMarkCandidate(n.getFirstChild());
+          }
+        }
         case GETELEM, OPTCHAIN_GETELEM -> {
           // If this is a quoted property access (e.g. x['myprop']), we need to
           // ensure that we never rename some other property in a way that
@@ -426,13 +520,36 @@ class RenameProperties implements CompilerPass {
      */
     private void maybeMarkCandidate(Node n) {
       String name = n.getString();
-      if (!externedNames.contains(name)) {
-        if (!propertyRenameEligibilityFilter.test(n)) {
-          filteredOutNames.add(n.getString());
+      if (n.isPrivateIdentifier()) {
+        // Private names are scoped to their class, so they can't collide with extern names.
+        PrivateProperty prop = resolvePrivateProperty(name);
+        if (prop == null) {
+          return;
         }
-        stringNodesToRename.add(n);
-        countPropertyOccurrence(name);
+        if (!propertyRenameEligibilityFilter.test(n)) {
+          prop.filteredOut = true;
+        }
+        prop.nodesToRename.add(n);
+        return;
       }
+      if (externedNames.contains(name)) {
+        return;
+      }
+      if (!propertyRenameEligibilityFilter.test(n)) {
+        filteredOutNames.add(name);
+      }
+      stringNodesToRename.add(n);
+      countPropertyOccurrence(name);
+    }
+
+    private @Nullable PrivateProperty resolvePrivateProperty(String name) {
+      for (PrivateClassScope s = currentPrivateScope; s != null; s = s.enclosing) {
+        PrivateProperty prop = s.declaredProperties.get(name);
+        if (prop != null) {
+          return prop;
+        }
+      }
+      return null;
     }
 
     /**
@@ -484,6 +601,28 @@ class RenameProperties implements CompilerPass {
 
     Property(String name) {
       this.oldName = name;
+    }
+  }
+
+  /** Lexical scope of `#private` properties declared on a single `class`. */
+  private static final class PrivateClassScope {
+    final @Nullable PrivateClassScope enclosing;
+    final Map<String, PrivateProperty> declaredProperties = new LinkedHashMap<>();
+    final Set<String> usedBaseNames = new LinkedHashSet<>();
+
+    PrivateClassScope(@Nullable PrivateClassScope enclosing) {
+      this.enclosing = enclosing;
+    }
+  }
+
+  /** Encapsulates a `#private` property within its declaring `class`. */
+  private static final class PrivateProperty {
+    final String oldName;
+    final List<Node> nodesToRename = new ArrayList<>();
+    boolean filteredOut;
+
+    PrivateProperty(String oldName) {
+      this.oldName = oldName;
     }
   }
 }
