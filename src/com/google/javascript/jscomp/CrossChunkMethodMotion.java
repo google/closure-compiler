@@ -177,7 +177,11 @@ public class CrossChunkMethodMotion implements CompilerPass {
         // FUNCTION property definition as a mix-in would get the result
         // of a GET instead of the function itself.
         || valueParent.isGetterDef()
-        || valueParent.isSetterDef()) {
+        || valueParent.isSetterDef()
+        // A function or assignment referencing `#private` must stay inside the declaring class
+        // body. For `Foo.#x.prototype = {m() {}}`, the private name is only in the prototype.
+        || NodeUtil.referencesPrivateName(valueParent)
+        || NodeUtil.referencesPrivateName(prop.getPrototype())) {
       return;
     }
 
@@ -433,6 +437,8 @@ public class CrossChunkMethodMotion implements CompilerPass {
     //    or the class constructor.
     // 3) and it does not refer to `super`, which would be invalid outside of the class.
     // 4) and the class is available in the global scope.
+    // 5) and it is not private and does not refer to a private name, which would also be invalid
+    //    outside of the class.
     Var rootVar = classMemberFunction.getRootVar();
     if (rootVar == null || !rootVar.isGlobal()) {
       return;
@@ -451,9 +457,10 @@ public class CrossChunkMethodMotion implements CompilerPass {
       return;
     }
 
-    if (nameInfo.referencesSuper()) {
+    if (nameInfo.referencesSuper() || NodeUtil.referencesPrivateName(definitionNode)) {
       // Do not move methods containing `super`, because it doesn't work outside of a
-      // class method or object literal method.
+      // class method or object literal method. Private methods and methods containing a private
+      // name are valid only inside the class body.
       return;
     }
 
