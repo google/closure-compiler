@@ -19,6 +19,17 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.truth.ThrowableSubject;
+import com.google.javascript.jscomp.regex.RegExpTree.BackReference;
+import com.google.javascript.jscomp.regex.RegExpTree.CapturingGroup;
+import com.google.javascript.jscomp.regex.RegExpTree.Charset;
+import com.google.javascript.jscomp.regex.RegExpTree.Concatenation;
+import com.google.javascript.jscomp.regex.RegExpTree.Empty;
+import com.google.javascript.jscomp.regex.RegExpTree.LookbehindAssertion;
+import com.google.javascript.jscomp.regex.RegExpTree.NamedBackReference;
+import com.google.javascript.jscomp.regex.RegExpTree.NamedCaptureGroup;
+import com.google.javascript.jscomp.regex.RegExpTree.Repetition;
+import com.google.javascript.jscomp.regex.RegExpTree.Text;
+import com.google.javascript.jscomp.regex.RegExpTree.UnicodePropertyEscape;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -26,17 +37,10 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class RegExpTreeTest {
 
-  private String parseRegExpAndPrintPattern(String regex, String flags) {
-    RegExpTree tree = RegExpTree.parseRegExp(regex, flags);
-    StringBuilder sb = new StringBuilder();
-    tree.appendSourceCode(sb);
-    return sb.toString();
-  }
-
   private RuntimeException exceptionFrom(String regex, String flags) {
     try {
-      String printed = parseRegExpAndPrintPattern(regex, flags);
-      assertWithMessage("Expected exception, but none was thrown. Instead got back: %s", printed)
+      RegExpTree parsed = RegExpTree.parseRegExp(regex, flags);
+      assertWithMessage("Expected exception, but none was thrown. Instead got back: %s", parsed)
           .fail();
       throw new AssertionError(); // unreachable
     } catch (RuntimeException thrownException) {
@@ -44,24 +48,22 @@ public class RegExpTreeTest {
     }
   }
 
-  private void assertRegexCompilesTo(String regex, String flags, String expected) {
-    assertThat(parseRegExpAndPrintPattern(regex, flags)).isEqualTo(expected);
+  private void assertRegexParsesTo(String regex, String flags, RegExpTree expected) {
+    assertThat(RegExpTree.parseRegExp(regex, flags)).isEqualTo(expected);
   }
 
   private ThrowableSubject assertRegexThrowsExceptionThat(String regex, String flags) {
     return assertThat(exceptionFrom(regex, flags));
   }
 
-  private void assertRegexCompilesToSame(String regex, String flags) {
-    assertRegexCompilesTo(regex, flags, regex);
-  }
-
   @Test
   public void testValidEs2018LookbehindAssertions() {
-    assertRegexCompilesToSame("(?<=asdf)", "");
-    assertRegexCompilesToSame("(?<!asdf)", "");
-    assertRegexCompilesToSame("(?<=(?<!asdf))", "");
-    assertRegexCompilesToSame("(?<=(?<!asdf))", "");
+    assertRegexParsesTo("(?<=asdf)", "", new LookbehindAssertion(new Text("asdf"), true));
+    assertRegexParsesTo("(?<!asdf)", "", new LookbehindAssertion(new Text("asdf"), false));
+    assertRegexParsesTo(
+        "(?<=(?<!asdf))",
+        "",
+        new LookbehindAssertion(new LookbehindAssertion(new Text("asdf"), false), true));
   }
 
   @Test
@@ -73,12 +75,14 @@ public class RegExpTreeTest {
 
   @Test
   public void testValidEs2018UnicodePropertyEscapes() {
-    assertRegexCompilesToSame("\\p{Script=Greek}", "u");
-    assertRegexCompilesToSame("\\P{Script=Greek}", "u");
-    assertRegexCompilesToSame("\\p{Letter}", "u");
-    assertRegexCompilesToSame("\\P{Letter}", "u");
-    assertRegexCompilesTo("\\p", "", "p"); // Without 'u' flag, '\p' is just 'p'
-    assertRegexCompilesTo("\\P", "", "P");
+    assertRegexParsesTo(
+        "\\p{Script=Greek}", "u", new UnicodePropertyEscape("Script", "Greek", false));
+    assertRegexParsesTo(
+        "\\P{Script=Greek}", "u", new UnicodePropertyEscape("Script", "Greek", true));
+    assertRegexParsesTo("\\p{Letter}", "u", new UnicodePropertyEscape(null, "Letter", false));
+    assertRegexParsesTo("\\P{Letter}", "u", new UnicodePropertyEscape(null, "Letter", true));
+    assertRegexParsesTo("\\p", "", new Text("p")); // Without 'u' flag, '\p' is just 'p'
+    assertRegexParsesTo("\\P", "", new Text("P"));
   }
 
   @Test
@@ -110,10 +114,12 @@ public class RegExpTreeTest {
 
   @Test
   public void testValidEs2018RegexNamedCaptureGroups() {
-    assertRegexCompilesToSame("(?<name>)", "");
-    assertRegexCompilesToSame("(?<h$h1h_>)", "u");
-    assertRegexCompilesToSame("(?<$var_name>blah)", "");
-    assertRegexCompilesToSame("(?<_var_name>>>>)", "");
+    assertRegexParsesTo("(?<name>)", "", new NamedCaptureGroup(Empty.INSTANCE, "name"));
+    assertRegexParsesTo("(?<h$h1h_>)", "u", new NamedCaptureGroup(Empty.INSTANCE, "h$h1h_"));
+    assertRegexParsesTo(
+        "(?<$var_name>blah)", "", new NamedCaptureGroup(new Text("blah"), "$var_name"));
+    assertRegexParsesTo(
+        "(?<_var_name>>>>)", "", new NamedCaptureGroup(new Text(">>>"), "_var_name"));
   }
 
   @Test
@@ -134,31 +140,67 @@ public class RegExpTreeTest {
 
   @Test
   public void testNumCapturingGroups() {
-    assertRegexCompilesToSame("(h(i))\\2", "");
+    CapturingGroup nested =
+        new CapturingGroup(new Concatenation(new Text("h"), new CapturingGroup(new Text("i"))));
+    assertRegexParsesTo("(h(i))\\2", "", new Concatenation(nested, new BackReference(2)));
     // TODO(b/116048051): reference to non-existent capture group should be an error.
-    assertRegexCompilesTo("(h(i))\\3", "", "(h(i))\\x03");
+    assertRegexParsesTo("(h(i))\\3", "", new Concatenation(nested, new Text("\u0003")));
 
-    assertRegexCompilesToSame("(?<foo>.*(?<bar>))", "");
+    assertRegexParsesTo(
+        "(?<foo>.*(?<bar>))",
+        "",
+        new NamedCaptureGroup(
+            new Concatenation(
+                new Repetition(Charset.DOT, 0, Integer.MAX_VALUE, true),
+                new NamedCaptureGroup(Empty.INSTANCE, "bar")),
+            "foo"));
   }
 
   @Test
   public void testValidEs2018CaptureNameBackreferencing() {
-    assertRegexCompilesToSame("(?<name>)\\k<name>", "");
-    // Note that (?: ) only used for printing purposes to
-    // indicate the nesting structure of Concatenation nodes.
-    // It is not actually what the compiler prints out as source code.
-    assertRegexCompilesTo(
-        "(?<foo>(?<bar>))\\k<foo>\\k<bar>", "", "(?:(?<foo>(?<bar>))\\k<foo>)\\k<bar>");
-    assertRegexCompilesTo(
-        "(?<foo>(?<bar>)\\k<bar>)\\k<foo>", "", "(?<foo>(?<bar>)\\k<bar>)\\k<foo>");
+    assertRegexParsesTo(
+        "(?<name>)\\k<name>",
+        "",
+        new Concatenation(
+            new NamedCaptureGroup(Empty.INSTANCE, "name"), new NamedBackReference("name")));
+    assertRegexParsesTo(
+        "(?<foo>(?<bar>))\\k<foo>\\k<bar>",
+        "",
+        new Concatenation(
+            new Concatenation(
+                new NamedCaptureGroup(new NamedCaptureGroup(Empty.INSTANCE, "bar"), "foo"),
+                new NamedBackReference("foo")),
+            new NamedBackReference("bar")));
+    assertRegexParsesTo(
+        "(?<foo>(?<bar>)\\k<bar>)\\k<foo>",
+        "",
+        new Concatenation(
+            new NamedCaptureGroup(
+                new Concatenation(
+                    new NamedCaptureGroup(Empty.INSTANCE, "bar"), new NamedBackReference("bar")),
+                "foo"),
+            new NamedBackReference("foo")));
 
     // The below examples where the backreference comes before the definition of named groups is
     // allowed syntactically, although it is not able to reference the original group semantically
-    assertRegexCompilesToSame("\\k<foo>(?<foo>)", "");
-    assertRegexCompilesToSame("\\k<foo>(?<foo>\\k<bar>(?<bar>))", "");
+    assertRegexParsesTo(
+        "\\k<foo>(?<foo>)",
+        "",
+        new Concatenation(
+            new NamedBackReference("foo"), new NamedCaptureGroup(Empty.INSTANCE, "foo")));
+    assertRegexParsesTo(
+        "\\k<foo>(?<foo>\\k<bar>(?<bar>))",
+        "",
+        new Concatenation(
+            new NamedBackReference("foo"),
+            new NamedCaptureGroup(
+                new Concatenation(
+                    new NamedBackReference("bar"), new NamedCaptureGroup(Empty.INSTANCE, "bar")),
+                "foo")));
 
     // Backreferencing the name in the group it is defined is also allowed
-    assertRegexCompilesToSame("(?<foo>\\k<foo>)", "");
+    assertRegexParsesTo(
+        "(?<foo>\\k<foo>)", "", new NamedCaptureGroup(new NamedBackReference("foo"), "foo"));
   }
 
   @Test
@@ -182,26 +224,35 @@ public class RegExpTreeTest {
   @Test
   public void testBackreferencingTreatedAsStringIfNoGroup() {
     // Backreferencing without named group definitions is just treated as normal string
-    assertRegexCompilesTo("\\k<foo>", "", "k<foo>");
-
-    // Note that the (?: ) that is wrapped around "k<" at expected output is only used for printing
-    // purposes to indicate the nesting structure of Concatenation nodes.
-    // It is not actually what the compiler prints out as source code.
-    assertRegexCompilesTo("\\k<.", "", "(?:k<).");
+    assertRegexParsesTo("\\k<foo>", "", new Concatenation(new Text("k"), new Text("<foo>")));
+    assertRegexParsesTo(
+        "\\k<.",
+        "",
+        new Concatenation(new Concatenation(new Text("k"), new Text("<")), Charset.DOT));
 
     // Even though enclosed in (?<>), 'foo' not a capture name definition
-    // (?: ) in expected output serves same purpose as above test
-    assertRegexCompilesTo("[(?<foo>)]\\k<foo>", "", "(?:[()<>?fo]k)<foo>");
+    assertRegexParsesTo(
+        "[(?<foo>)]\\k<foo>",
+        "",
+        new Concatenation(
+            new Concatenation(new Charset("[(?<foo>)]"), new Text("k")), new Text("<foo>")));
+  }
+
+  @Test
+  public void testCharsets() {
+    assertRegexParsesTo("[a-z]", "", new Charset("[a-z]"));
+    assertRegexParsesTo("\\d", "", new Charset("\\d"));
+    assertRegexThrowsExceptionThat("[z-a]", "").hasMessageThat().isEqualTo("122 > 97");
   }
 
   @Test
   public void testValidUnicodeEscape() {
-    assertRegexCompilesTo("\\u0061", "", "a");
-    assertRegexCompilesTo("\\u10b1", "u", "\\u10b1");
-    assertRegexCompilesTo("\\u{61}", "u", "a");
-    assertRegexCompilesTo("\\u{10b1}", "u", "\\u10b1");
-    assertRegexCompilesTo("\\u{1bc}", "u", "\\u01bc");
-    assertRegexCompilesTo("\\u{100A3}", "u", "\\ud800\\udca3");
+    assertRegexParsesTo("\\u0061", "", new Text("a"));
+    assertRegexParsesTo("\\u10b1", "u", new Text("\u10b1"));
+    assertRegexParsesTo("\\u{61}", "u", new Text("a"));
+    assertRegexParsesTo("\\u{10b1}", "u", new Text("\u10b1"));
+    assertRegexParsesTo("\\u{1bc}", "u", new Text("\u01bc"));
+    assertRegexParsesTo("\\u{100A3}", "u", new Text("\ud800\udca3"));
   }
 
   @Test
@@ -221,52 +272,5 @@ public class RegExpTreeTest {
     assertRegexThrowsExceptionThat("\\u{FF00FFFF}", "u")
         .hasMessageThat()
         .isEqualTo("Cannot parse hexadecimal encoding wider than 28 bits: FF00FFFF");
-  }
-
-  @Test
-  public void testDecomposedCharsetEqualsAndHashCode() {
-    RegExpTree.DecomposedCharset empty1 =
-        new RegExpTree.DecomposedCharset(false, CharRanges.EMPTY, "");
-    RegExpTree.DecomposedCharset empty2 =
-        new RegExpTree.DecomposedCharset(false, CharRanges.EMPTY, "");
-    RegExpTree.DecomposedCharset invertedEmpty =
-        new RegExpTree.DecomposedCharset(true, CharRanges.EMPTY, "");
-
-    CharRanges rangesA = CharRanges.withMembers('a', 'b');
-    CharRanges rangesB = CharRanges.withMembers('a', 'c');
-    RegExpTree.DecomposedCharset charsetA1 =
-        new RegExpTree.DecomposedCharset(false, rangesA, "\\d");
-    RegExpTree.DecomposedCharset charsetA2 =
-        new RegExpTree.DecomposedCharset(false, rangesA, "\\d");
-    RegExpTree.DecomposedCharset charsetAInverted =
-        new RegExpTree.DecomposedCharset(true, rangesA, "\\d");
-    RegExpTree.DecomposedCharset charsetDiffRanges =
-        new RegExpTree.DecomposedCharset(false, rangesB, "\\d");
-    RegExpTree.DecomposedCharset charsetDiffGroups =
-        new RegExpTree.DecomposedCharset(false, rangesA, "\\s");
-
-    // Symmetric equality
-    assertThat(empty1).isEqualTo(empty2);
-    assertThat(empty2).isEqualTo(empty1);
-    assertThat(empty1.hashCode()).isEqualTo(empty2.hashCode());
-
-    assertThat(charsetA1).isEqualTo(charsetA2);
-    assertThat(charsetA2).isEqualTo(charsetA1);
-    assertThat(charsetA1.hashCode()).isEqualTo(charsetA2.hashCode());
-
-    // Inverted true equality
-    RegExpTree.DecomposedCharset charsetAInverted2 =
-        new RegExpTree.DecomposedCharset(true, rangesA, "\\d");
-    assertThat(charsetAInverted).isEqualTo(charsetAInverted2);
-    assertThat(charsetAInverted.hashCode()).isEqualTo(charsetAInverted2.hashCode());
-
-    // Inequality across inverted, ranges, and namedGroups
-    assertThat(empty1).isNotEqualTo(invertedEmpty);
-    assertThat(invertedEmpty).isNotEqualTo(empty1);
-    assertThat(charsetA1).isNotEqualTo(charsetAInverted);
-    assertThat(charsetAInverted).isNotEqualTo(charsetA1);
-    assertThat(charsetA1).isNotEqualTo(charsetDiffRanges);
-    assertThat(charsetA1).isNotEqualTo(charsetDiffGroups);
-    assertThat(charsetA1).isNotNull();
   }
 }
