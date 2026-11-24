@@ -892,6 +892,40 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  @Test
+  public void testReturnAwaitInInstrumentedFunction_knownBug() {
+    // TODO(b/572972084): The outer `return await` should be instrumented as
+    // `return await ᵃᶜsuspend$0(foo(...))`. As is, after `v.run('A', f)`, once
+    // `await bar()` resumes and `ᵃᶜresume$0` installs 'A', the uninstrumented `await foo(...)`
+    // leaves 'A' installed globally after the microtask checkpoint. Any task the polyfill does not
+    // wrap that runs before `foo(...)` settles (e.g. an `onclick` property handler or a custom
+    // element `connectedCallback`) then sees `v.get() === 'A'` instead of `undefined`, and the
+    // final `ᵃᶜsuspend$0()` restores the outer context captured when `await bar()` resumed, which
+    // may be stale by then.
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          return await foo(await bar());
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            return await foo(ᵃᶜresume$0(await ᵃᶜsuspend$0(bar())));
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
   // `return await` does not require any instrumentation if it's the entire arrow function
   // expression.  There is no "start" call, either, since we will never need to restore the
   // context after the await (there's no code there that would need it).
