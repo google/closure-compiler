@@ -240,6 +240,15 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     return false;
   }
 
+  private static boolean objectLiteralHasProtoKey(Node objectLiteral) {
+    for (Node child = objectLiteral.getFirstChild(); child != null; child = child.getNext()) {
+      if (child.isStringKey() && child.getString().equals("__proto__")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private boolean collectObjectProperty(Node objectLiteral, Node propertyCandidate) {
     Node assignment = propertyCandidate.getFirstChild();
     Node lhs = assignment.getFirstChild();
@@ -261,6 +270,22 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     } else if (lhs.isGetProp()) {
       propertyName = lhs.getString();
     } else {
+      return false;
+    }
+
+    // Avoid folding __proto__ assignments into object literals, since [[Set]] on __proto__ may
+    // define or overwrite an own property (e.g. on a null-prototype object or an object with an
+    // existing own __proto__ property), whereas a literal __proto__ key invokes
+    // [[SetPrototypeOf]] during PropertyDefinitionEvaluation.
+    if (propertyName.equals("__proto__")) {
+      return false;
+    }
+
+    // A non-shorthand __proto__ STRING_KEY sets [[Prototype]] during
+    // PropertyDefinitionEvaluation, so a trailing assignment may invoke an inherited setter or fail
+    // on a non-writable prototype property instead of defining an own data property.
+    // Conservatively skip shorthand `{__proto__}` as well.
+    if (objectLiteralHasProtoKey(objectLiteral)) {
       return false;
     }
 

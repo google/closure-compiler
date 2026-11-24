@@ -485,5 +485,40 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
     testSame("var a = [...spread]; a[0] = 1;");
     testSame("var a = [1, ...spread]; a[0] = 2;");
   }
+
+  @Test
+  public void testObjectProtoKeyBlocksFolding() {
+    testSame("var o = {__proto__: P}; o.foo = 1;");
+    testSame("var o = {__proto__: P}; o['foo'] = 1;");
+    testSame("var o = {__proto__: P}; o[2] = 1;");
+    testSame("var o; o = {__proto__: P}; o.foo = 1;");
+    testSame("var o = {'__proto__': P}; o.foo = 1;");
+    testSame("var o = {\\u005f_proto__: P}; o.foo = 1;");
+    testSame("var o = {foo: 1, __proto__: P}; o.foo = 2;");
+    testSame("var o = {__proto__}; o.foo = 1;");
+  }
+
+  @Test
+  public void testObjectProtoAssignmentNotFolded() {
+    testSame("var o = {}; o.__proto__ = null;");
+    testSame("var o = {}; o['__proto__'] = null;");
+    testSame("var o = {}; o.__proto__ = P; o.foo = 1;");
+    test(
+        "var o = {}; o.a = 1; o.__proto__ = P; o.b = 2;",
+        "var o = {a: 1}; o.__proto__ = P; o.b = 2;");
+    testSame("var o = {__proto__: null}; o.__proto__ = {};");
+    testSame("var o = {__proto__() {}}; o.__proto__ = null;");
+    testSame("var o = {['__proto__']: P}; o.__proto__ = 1;");
+    testSame("var o = {...c}; o.__proto__ = null;");
+  }
+
+  @Test
+  public void testObjectNonProtoSettingProtoKeysAllowUnrelatedFolding() {
+    test("var o = {['__proto__']: P}; o.foo = 1;", "var o = {['__proto__']: P, foo: 1};");
+    test("var o = {__proto__() {}}; o.foo = 1;", "var o = {__proto__() {}, foo: 1};");
+    test(
+        "var o = {get __proto__() { return 1; }}; o.foo = 1;",
+        "var o = {get __proto__() { return 1; }, foo: 1};");
+  }
 }
 
