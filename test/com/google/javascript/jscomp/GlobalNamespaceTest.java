@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static org.junit.Assert.assertThrows;
@@ -789,6 +790,152 @@ public final class GlobalNamespaceTest {
 
     Name cDotX = ns.getSlot("C.x");
     assertThat(cDotX.canCollapse()).isFalse();
+  }
+
+  @Test
+  public void testClassStaticPrivateField_recordsReferenceToClass() {
+    GlobalNamespace ns =
+        parse(
+            """
+            class C {
+              static #s = 1;
+              static getS() { return C.#s; }
+            }
+            """);
+
+    // TODO(b/236744850): `C` in `C.#s` should be recorded as a reference to `C`, and `C.#s` should
+    // not be a global name.
+    Name c = ns.getSlot("C");
+    assertThat(c.getTotalGets()).isEqualTo(0);
+    assertThat(ns.getSlot("C.#s")).isNotNull();
+  }
+
+  @Test
+  public void testClassStaticPrivateField_chainedPropertyAccessNotRecorded() {
+    GlobalNamespace ns =
+        parse(
+            """
+            class C {
+              static #state = {count: 0};
+              static inc() { C.#state.count++; }
+            }
+            """);
+
+    // TODO(b/236744850): `C` in `C.#state.count` should be recorded as a reference to `C`, while
+    // neither `C.#state` nor `C.#state.count` should be recorded as a global name.
+    Name c = ns.getSlot("C");
+    assertThat(c.getTotalGets()).isEqualTo(0);
+    assertThat(ns.getSlot("C.#state")).isNotNull();
+    assertThat(ns.getSlot("C.#state.count")).isNotNull();
+  }
+
+  @Test
+  public void testClassStaticPrivateField_membersOfAssignedValueNotRecorded() {
+    GlobalNamespace ns =
+        parse(
+            """
+            class C {
+              static #s;
+              static #t;
+              static #u;
+              static init() {
+                C.#s = class { static b() {} static c = 1; static get d() { return 1; } };
+                C.#t = {a: 1, m() {}, nested: {b: 2, n() {}}};
+                Object.defineProperties(C.#u, {p: {value: 1}});
+              }
+            }
+            """);
+
+    // TODO(b/236744850): Members of a class or an object literal assigned to a private name should
+    // not be recorded as global names.
+    Name c = ns.getSlot("C");
+    assertThat(c.props)
+        .containsExactly(
+            ns.getSlot("C.#s"), ns.getSlot("C.#t"), ns.getSlot("C.#u"), ns.getSlot("C.init"));
+    for (String name :
+        ImmutableList.of(
+            "C.#s",
+            "C.#s.b",
+            "C.#s.c",
+            "C.#s.d",
+            "C.#t",
+            "C.#t.a",
+            "C.#t.m",
+            "C.#t.nested",
+            "C.#t.nested.b",
+            "C.#t.nested.n",
+            "C.#u",
+            "C.#u.p")) {
+      assertWithMessage(name).that(ns.getSlot(name)).isNotNull();
+    }
+  }
+
+  @Test
+  public void testClassStaticPrivateField_destructuredKeysNotRecorded() {
+    GlobalNamespace ns =
+        parse(
+            """
+            class C {
+              static #s = {a: 1, b: 2};
+              static read() {
+                const {a} = C.#s;
+                let b;
+                ({b} = C.#s);
+                return a + b;
+              }
+            }
+            """);
+
+    // TODO(b/236744850): Destructuring a private name should not record `C.#s`, `C.#s.a`, or
+    // `C.#s.b` as global names.
+    assertThat(ns.getSlot("C.#s")).isNotNull();
+    assertThat(ns.getSlot("C.#s.a")).isNotNull();
+    assertThat(ns.getSlot("C.#s.b")).isNotNull();
+  }
+
+  @Test
+  public void testClassStaticMembers_withPrivateName() {
+    GlobalNamespace ns =
+        parse(
+            """
+            class C {
+              static #s = 1;
+              static x = C.#s;
+              static getS(s = C.#s) { return s; }
+            }
+            """);
+
+    // TODO(b/236744850): `C.#s` should not be a global name, and `C.x` / `C.getS` should not be
+    // collapsible because `#s` is valid only inside the body of `C`.
+    Name c = ns.getSlot("C");
+    Name cDotX = ns.getSlot("C.x");
+    Name cDotGetS = ns.getSlot("C.getS");
+    assertThat(c.props).containsExactly(ns.getSlot("C.#s"), cDotX, cDotGetS);
+    assertThat(cDotX.getGlobalSets()).isEqualTo(1);
+    assertThat(cDotX.canCollapse()).isTrue();
+    assertThat(cDotGetS.getGlobalSets()).isEqualTo(1);
+    assertThat(cDotGetS.canCollapse()).isTrue();
+  }
+
+  @Test
+  public void testClassExpressionWithPrivateField_recordsGlobalName() {
+    GlobalNamespace ns =
+        parse(
+            """
+            const C = class {
+              static #s = 1;
+              static pub() { return 2; }
+            };
+            """);
+
+    // TODO(b/236744850): `C.#s` should not be recorded as a global name.
+    Name c = ns.getSlot("C");
+    Name cDotPub = ns.getSlot("C.pub");
+    assertThat(c).isNotNull();
+    assertThat(c.getGlobalSets()).isEqualTo(1);
+    assertThat(cDotPub).isNotNull();
+    assertThat(cDotPub.canCollapse()).isTrue();
+    assertThat(ns.getSlot("C.#s")).isNotNull();
   }
 
   @Test
