@@ -309,6 +309,9 @@ public sealed interface RegExpTree {
       // parseEscape.
       private RegExpTree parseCharset() {
         checkState(pattern.charAt(pos) == '[');
+        if (flags.contains("v")) {
+          return parseVModeCharset();
+        }
         int startPos = pos;
         ++pos;
 
@@ -350,6 +353,30 @@ public sealed interface RegExpTree {
         return new Charset(pattern.substring(startPos, min(pos, limit)));
       }
 
+      // Scans a square-bracketed ClassSetExpression in ES2024 v (unicodeSets) mode by tracking
+      // nested [...] bracket depth. Because unescaped '[' and ']' are syntax characters everywhere
+      // inside a valid v-mode character class (including inside \q{...} and \p{...}), balanced
+      // bracket scanning consumes the entire class expression without needing to model set
+      // operators or string disjunctions.
+      private RegExpTree parseVModeCharset() {
+        int start = pos;
+        int depth = 0;
+        while (pos < limit) {
+          char ch = pattern.charAt(pos++);
+          if (ch == '\\') {
+            if (pos >= limit) {
+              throw new IllegalArgumentException("Trailing '\\' in character class");
+            }
+            ++pos;
+          } else if (ch == '[') {
+            ++depth;
+          } else if (ch == ']' && --depth == 0) {
+            return new Charset(pattern.substring(start, pos));
+          }
+        }
+        throw new IllegalArgumentException("Unclosed character class");
+      }
+
       // Parses an escape to a code point. Some of the characters parsed here have special meanings
       // in various contexts, so contexts must filter those instead. E.g. '\b' means a different
       // thing inside a charset than without.
@@ -362,7 +389,9 @@ public sealed interface RegExpTree {
           case 'r' -> '\r';
           case 't' -> '\t';
           case 'u' ->
-              (flags.contains("u") && pos < limit && pattern.charAt(pos) == '{')
+              ((flags.contains("u") || flags.contains("v"))
+                      && pos < limit
+                      && pattern.charAt(pos) == '{')
                   ? parseBracedUnicodeEscape()
                   : parseHex(4);
           case 'v' -> '\u000b';
@@ -398,7 +427,7 @@ public sealed interface RegExpTree {
         if (ch == 'b' || ch == 'B') {
           ++pos;
           return new WordBoundary(ch);
-        } else if ((ch == 'p' || ch == 'P') && flags.contains("u")) {
+        } else if ((ch == 'p' || ch == 'P') && (flags.contains("u") || flags.contains("v"))) {
           // handle ES2018 unicode property tests, e.g.
           // /\p{ASCII_Hex_Digit=true}/ only hex digits
           // /\P{Script=Greek}/  no greek letters

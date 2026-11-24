@@ -81,7 +81,14 @@ public class RegExpTreeTest {
         "\\P{Script=Greek}", "u", new UnicodePropertyEscape("Script", "Greek", true));
     assertRegexParsesTo("\\p{Letter}", "u", new UnicodePropertyEscape(null, "Letter", false));
     assertRegexParsesTo("\\P{Letter}", "u", new UnicodePropertyEscape(null, "Letter", true));
-    assertRegexParsesTo("\\p", "", new Text("p")); // Without 'u' flag, '\p' is just 'p'
+    assertRegexParsesTo(
+        "\\p{Script=Greek}", "v", new UnicodePropertyEscape("Script", "Greek", false));
+    assertRegexParsesTo(
+        "\\P{Script=Greek}", "v", new UnicodePropertyEscape("Script", "Greek", true));
+    assertRegexParsesTo("\\p{RGI_Emoji}", "v", new UnicodePropertyEscape(null, "RGI_Emoji", false));
+    assertRegexParsesTo(
+        "\\p{Script=Greek}", "gv", new UnicodePropertyEscape("Script", "Greek", false));
+    assertRegexParsesTo("\\p", "", new Text("p")); // Without 'u' or 'v' flag, '\p' is just 'p'
     assertRegexParsesTo("\\P", "", new Text("P"));
   }
 
@@ -253,24 +260,119 @@ public class RegExpTreeTest {
     assertRegexParsesTo("\\u{10b1}", "u", new Text("\u10b1"));
     assertRegexParsesTo("\\u{1bc}", "u", new Text("\u01bc"));
     assertRegexParsesTo("\\u{100A3}", "u", new Text("\ud800\udca3"));
+    assertRegexParsesTo("\\u{61}", "v", new Text("a"));
+    assertRegexParsesTo("\\u{61}", "iv", new Text("a"));
+    assertRegexParsesTo("\\u{100A3}", "v", new Text("\ud800\udca3"));
+  }
+
+  @Test
+  public void testValidEs2024RegexVModeCharacterClasses() {
+    // Set subtraction (--), intersection (&&), union, and nested character classes
+    assertRegexParsesTo("[a--b]", "v", new Charset("[a--b]"));
+    assertRegexParsesTo("[a--b]", "iv", new Charset("[a--b]"));
+    assertRegexParsesTo("[\\w--[a-g]]", "gv", new Charset("[\\w--[a-g]]"));
+    assertRegexParsesTo("[[a-z]--[aeiou]]", "v", new Charset("[[a-z]--[aeiou]]"));
+    assertRegexParsesTo("[[a-z]--[aeiou]]", "iv", new Charset("[[a-z]--[aeiou]]"));
+    assertRegexParsesTo(
+        "[\\p{Decimal_Number}--[0-9]]", "v", new Charset("[\\p{Decimal_Number}--[0-9]]"));
+    assertRegexParsesTo(
+        "[\\p{Script=Greek}&&\\p{Letter}]", "v", new Charset("[\\p{Script=Greek}&&\\p{Letter}]"));
+    assertRegexParsesTo("[[a-z]&&[^aeiou]]", "v", new Charset("[[a-z]&&[^aeiou]]"));
+    assertRegexParsesTo("[[[a-z]--[aeiou]]&&[a-m]]", "v", new Charset("[[[a-z]--[aeiou]]&&[a-m]]"));
+
+    // Empty and negated empty character classes
+    assertRegexParsesTo("[]", "v", new Charset("[]"));
+    assertRegexParsesTo("[^]", "v", new Charset("[^]"));
+    assertRegexParsesTo("[^^]", "v", new Charset("[^^]"));
+
+    // Isolated escape-before-bracket boundaries
+    assertRegexParsesTo("[\\\\]", "v", new Charset("[\\\\]"));
+    assertRegexParsesTo("[\\\\]a", "v", new Concatenation(new Charset("[\\\\]"), new Text("a")));
+    assertRegexParsesTo("[\\[]", "v", new Charset("[\\[]"));
+    assertRegexParsesTo("[\\]]", "v", new Charset("[\\]]"));
+
+    // Supplementary code point ranges and escaped brackets/punctuators
+    assertRegexParsesTo("[\\u{10000}-\\u{10005}]", "v", new Charset("[\\u{10000}-\\u{10005}]"));
+    assertRegexParsesTo(
+        "[\uD83D\uDE00-\uD83D\uDE4F]", "v", new Charset("[\uD83D\uDE00-\uD83D\uDE4F]"));
+    assertRegexParsesTo(
+        "[\\(\\)\\[\\]\\{\\}\\/\\-\\\\\\|]", "v", new Charset("[\\(\\)\\[\\]\\{\\}\\/\\-\\\\\\|]"));
+    assertRegexParsesTo("[a\\&\\&b]", "v", new Charset("[a\\&\\&b]"));
+
+    // Multi-character string disjunctions (\q{...}) and repetitions
+    assertRegexParsesTo("[\\q{abc|def}]", "v", new Charset("[\\q{abc|def}]"));
+    assertRegexParsesTo("[\\q{}]", "v", new Charset("[\\q{}]"));
+    assertRegexParsesTo("[\\q{a\\[b\\]c\\\\}]", "v", new Charset("[\\q{a\\[b\\]c\\\\}]"));
+    assertRegexParsesTo(
+        "[[\\q{ab|cd}]--[\\q{cd}]]+",
+        "v",
+        new Repetition(new Charset("[[\\q{ab|cd}]--[\\q{cd}]]"), 1, Integer.MAX_VALUE, true));
+    assertRegexParsesTo(
+        "(?<word>[\\w--[0-9]]+)\\k<word>",
+        "v",
+        new Concatenation(
+            new NamedCaptureGroup(
+                new Repetition(new Charset("[\\w--[0-9]]"), 1, Integer.MAX_VALUE, true), "word"),
+            new NamedBackReference("word")));
+  }
+
+  @Test
+  public void testInvalidEs2024RegexVModeCharacterClasses() {
+    // Unclosed character classes (including nested brackets and escaped closing brackets)
+    assertRegexThrowsExceptionThat("[abc", "v")
+        .hasMessageThat()
+        .isEqualTo("Unclosed character class");
+    assertRegexThrowsExceptionThat("[[a-z]", "v")
+        .hasMessageThat()
+        .isEqualTo("Unclosed character class");
+    assertRegexThrowsExceptionThat("[[a-z]", "gv")
+        .hasMessageThat()
+        .isEqualTo("Unclosed character class");
+    assertRegexThrowsExceptionThat("[[a-z]--[aeiou]", "v")
+        .hasMessageThat()
+        .isEqualTo("Unclosed character class");
+    assertRegexThrowsExceptionThat("[a\\]", "v")
+        .hasMessageThat()
+        .isEqualTo("Unclosed character class");
+
+    // Trailing backslash inside a character class
+    assertRegexThrowsExceptionThat("[abc\\", "v")
+        .hasMessageThat()
+        .isEqualTo("Trailing '\\' in character class");
+
+    // Top-level structural errors outside character classes are still caught
+    assertRegexThrowsExceptionThat("([a--b]", "v")
+        .hasMessageThat()
+        .isEqualTo("Unclosed parenthetical group: ([a--b]");
+    assertRegexThrowsExceptionThat("(?<foo>[a--b])\\k<bar>", "v")
+        .hasMessageThat()
+        .isEqualTo("Invalid named capture referenced: \\k<bar>");
+    assertRegexThrowsExceptionThat("\\p{", "v")
+        .hasMessageThat()
+        .isEqualTo("Malformed Unicode Property Escape: expected '=' or '}' after \\p{");
+    assertRegexThrowsExceptionThat("\\p{", "iv")
+        .hasMessageThat()
+        .isEqualTo("Malformed Unicode Property Escape: expected '=' or '}' after \\p{");
   }
 
   @Test
   public void testInvalidUnicodeEscape() {
-    assertRegexThrowsExceptionThat("\\u{a012", "u")
-        .hasMessageThat()
-        .isEqualTo("Malformed unicode escape: expected '}' after {a012");
-    assertRegexThrowsExceptionThat("\\u{}", "u") //
-        .hasMessageThat()
-        .isEqualTo("Empty unicode escape");
-    assertRegexThrowsExceptionThat("\\u{10za}", "u") //
-        .hasMessageThat()
-        .isEqualTo("za}");
-    assertRegexThrowsExceptionThat("\\u{FFFFFF}", "u")
-        .hasMessageThat()
-        .isEqualTo("Unicode must be at most 0x10FFFF: FFFFFF");
-    assertRegexThrowsExceptionThat("\\u{FF00FFFF}", "u")
-        .hasMessageThat()
-        .isEqualTo("Cannot parse hexadecimal encoding wider than 28 bits: FF00FFFF");
+    for (String flags : new String[] {"u", "v", "iv"}) {
+      assertRegexThrowsExceptionThat("\\u{a012", flags)
+          .hasMessageThat()
+          .isEqualTo("Malformed unicode escape: expected '}' after {a012");
+      assertRegexThrowsExceptionThat("\\u{}", flags) //
+          .hasMessageThat()
+          .isEqualTo("Empty unicode escape");
+      assertRegexThrowsExceptionThat("\\u{10za}", flags) //
+          .hasMessageThat()
+          .isEqualTo("za}");
+      assertRegexThrowsExceptionThat("\\u{FFFFFF}", flags)
+          .hasMessageThat()
+          .isEqualTo("Unicode must be at most 0x10FFFF: FFFFFF");
+      assertRegexThrowsExceptionThat("\\u{FF00FFFF}", flags)
+          .hasMessageThat()
+          .isEqualTo("Cannot parse hexadecimal encoding wider than 28 bits: FF00FFFF");
+    }
   }
 }
