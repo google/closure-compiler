@@ -514,6 +514,203 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  @Test
+  public void testAwaitInsideCatchWithoutFinallyOfNestedTry_knownBug() {
+    // TODO(b/586787047): The outer finally block should start with `ᵃᶜresume$0();`, and the inner
+    // catch block does not need one (nothing in the inner try suspends). Today the await in the
+    // inner catch instruments its own try's catch block instead of the outer try's finally block,
+    // so if `b(e)` rejects, `c()` runs without the function's context.
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          try {
+            try {
+              a();
+            } catch (e) {
+              await b(e);
+            }
+          } finally {
+            c();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            try {
+              try {
+                a();
+              } catch (e) {
+                ᵃᶜresume$0();
+                ᵃᶜresume$0(await ᵃᶜsuspend$0(b(e)));
+              }
+            } finally {
+              c();
+            }
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testForAwaitReturnInsideTryCatchFinally_knownBug() {
+    // TODO(b/586787047): The outer finally block should also start with `ᵃᶜresume$0();`. Returning
+    // from inside the for-await body runs its synthesized `finally { ᵃᶜsuspend$0(); }`, skipping
+    // both the post-loop `ᵃᶜresume$0()` and `catch (e)` and entering `cleanup()` with the context
+    // suspended.
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs) {
+          try {
+            for await (const x of xs) {
+              if (x) return x;
+            }
+          } catch (e) {
+            use(e);
+          } finally {
+            cleanup();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs) {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            try {
+              for await (const x of ᵃᶜsuspend$0(xs)) {
+                ᵃᶜresume$0();
+                try {
+                  if (x) {
+                    return x;
+                  }
+                } finally {
+                  ᵃᶜsuspend$0();
+                }
+              }
+              ᵃᶜresume$0();
+            } catch (e) {
+              ᵃᶜresume$0();
+              use(e);
+            } finally {
+              cleanup();
+            }
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testGeneratorTryCatchFinallyAbruptReturn_knownBug() {
+    // TODO(b/586787047): The finally block should also start with `ᵃᶜresume$0();`. Calling
+    // `it.return()` while the generator is suspended at `yield 1` performs an abrupt return
+    // completion that skips both `ᵃᶜresume$0(yield ...)` and `catch`, entering `finally` directly
+    // with the caller's context active.
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* g() {
+          try {
+            yield 1;
+          } catch (e) {
+            use(e);
+          } finally {
+            cleanup();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function g() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          return function*() {
+            ᵃᶜresume$0();
+            try {
+              try {
+                ᵃᶜresume$0(yield ᵃᶜsuspend$0(1));
+              } catch (e) {
+                ᵃᶜresume$0();
+                use(e);
+              } finally {
+                cleanup();
+              }
+            } finally {
+              ᵃᶜsuspend$0();
+            }
+          }();
+        }
+        """);
+  }
+
+  @Test
+  public void testGeneratorNestedTryCatchInsideTryFinally_knownBug() {
+    // TODO(b/586787047): The outer finally block should also start with `ᵃᶜresume$0();`. Calling
+    // `it.return()` while suspended at `yield 1` skips the inner `catch` block and unwinds directly
+    // into the outer `finally` block with the caller's context active.
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* g() {
+          try {
+            try {
+              yield 1;
+            } catch (e) {
+              use(e);
+            }
+          } finally {
+            cleanup();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function g() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          return function*() {
+            ᵃᶜresume$0();
+            try {
+              try {
+                try {
+                  ᵃᶜresume$0(yield ᵃᶜsuspend$0(1));
+                } catch (e) {
+                  ᵃᶜresume$0();
+                  use(e);
+                }
+              } finally {
+                cleanup();
+              }
+            } finally {
+              ᵃᶜsuspend$0();
+            }
+          }();
+        }
+        """);
+  }
+
   // `return await` does not require any instrumentation if it's not inside a try block.
   @Test
   public void testReturnAwait() {
