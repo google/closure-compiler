@@ -562,4 +562,435 @@ public final class OptimizeConstructorsTest extends CompilerTestCase {
         let a = new A();
         """);
   }
+
+  @Test
+  public void testInlineClassSuper_explicitConstructor() {
+    // TODO(b/581492887): Remove redundant subclass constructor for inline class superclasses.
+    testSame(
+        """
+        class C extends (class {
+          constructor() {
+            this.a = 1;
+          }
+        }) {
+          constructor() {
+            super();
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends (class {
+          constructor(a, b) {
+            this.a = a;
+            this.b = b;
+          }
+        }) {
+          constructor(a, b) {
+            super(a, b);
+          }
+        }
+        """);
+    testSame(
+        """
+        let C = class extends (class {
+          constructor(a) {
+            this.a = a;
+          }
+        }) {
+          constructor(a) {
+            super(a);
+          }
+        };
+        """);
+  }
+
+  @Test
+  public void testInlineClassSuper_implicitEmptyConstructor() {
+    // TODO(b/581492887): Remove redundant subclass constructor for inline root class {}.
+    testSame(
+        """
+        class C extends class {} {
+          constructor() {
+            super();
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends class {} {
+          constructor(...a) {
+            super(...a);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testInlineFunctionSuper() {
+    // TODO(b/581492887): Remove redundant subclass constructor for inline function superclasses.
+    testSame(
+        """
+        class C extends function(a, b) {
+          this.a = a;
+        } {
+          constructor(a, b) {
+            super(a, b);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends function() {
+          this.a = 1;
+        } {
+          constructor() {
+            super();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testInlineSuper_restForwarding() {
+    // TODO(b/581492887): Remove redundant subclass constructor when forwarding ...rest.
+    testSame(
+        """
+        class C extends class {
+          constructor(...a) {
+            this.a = a;
+          }
+        } {
+          constructor(...a) {
+            super(...a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends function(...a) {
+          this.a = a;
+        } {
+          constructor(...a) {
+            super(...a);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testInlineSuper_commaAndCastWrapped() {
+    // TODO(b/581492887): Remove redundant subclass constructor for COMMA/CAST-wrapped inline
+    // supers.
+    testSame(
+        """
+        class C extends (0, class {
+          constructor() {
+            this.a = 1;
+          }
+        }) {
+          constructor() {
+            super();
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends (0, function(a) {
+          this.a = a;
+        }) {
+          constructor(a) {
+            super(a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends /** @type {?} */ (class {
+          constructor() {
+            this.a = 1;
+          }
+        }) {
+          constructor() {
+            super();
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends /** @type {?} */ (function(a) {
+          this.a = a;
+        }) {
+          constructor(a) {
+            super(a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends /** @type {?} */ (0, class {
+          constructor(a) {
+            this.a = a;
+          }
+        }) {
+          constructor(a) {
+            super(a);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testNoOptimize_inlineClassSuper_nestedImplicitConstructor() {
+    testSame(
+        externs(SourceFile.fromCode("externs", "/** @constructor */ function Top(opt_a) {}")),
+        srcs(
+            """
+            class C extends (class extends Top {}) {
+              constructor() {
+                super();
+              }
+            }
+            """));
+    testSame(
+        """
+        class Top {
+          constructor(opt_a) {
+            this.a = 1;
+          }
+        }
+        class C extends (class extends Top {}) {
+          constructor() {
+            super();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testNoOptimize_inlineSuper_parameterMismatch() {
+    testSame(
+        """
+        class C extends class {
+          constructor(a = undefined) {
+            use(a);
+          }
+        } {
+          constructor() {
+            super();
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends class {
+          constructor(a, b) {
+            this.a = a;
+            this.b = b;
+          }
+        } {
+          constructor() {
+            super();
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends function(a, b) {
+          this.a = a;
+        } {
+          constructor(a) {
+            super(a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends class {
+          constructor(a) {
+            this.a = a;
+          }
+        } {
+          constructor(a, b) {
+            super(a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends function(a) {
+          this.a = a;
+        } {
+          constructor(a, b) {
+            super(a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends class {
+          constructor(a, b) {
+            this.a = a;
+            this.b = b;
+          }
+        } {
+          constructor(a, b) {
+            super(b, a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends function(a, b) {
+          this.a = a;
+          this.b = b;
+        } {
+          constructor(a, b) {
+            super(b, a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends class {} {
+          constructor(a) {
+            super(a);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testNoOptimize_inlineSuper_restAndArgumentsMismatch() {
+    testSame(
+        """
+        class C extends class {
+          constructor(...a) {
+            this.a = a;
+          }
+        } {
+          constructor(a) {
+            super(a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends function(...a) {
+          this.a = a;
+        } {
+          constructor(a) {
+            super(a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends class {
+          constructor() {
+            use(arguments);
+          }
+        } {
+          constructor() {
+            super();
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends function() {
+          use(arguments);
+        } {
+          constructor() {
+            super();
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends class {
+          constructor(...a) {
+            this.a = a;
+          }
+        } {
+          constructor(...a) {
+            super(a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends function(...a) {
+          this.a = a;
+        } {
+          constructor(...a) {
+            super(a);
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testNoOptimize_inlineSuper_nonLiteralExtends() {
+    testSame(
+        """
+        class C extends (use() ? class {} : class {}) {
+          constructor() {
+            super();
+          }
+        }
+        """);
+    testSame(
+        """
+        function f() {
+          return class {};
+        }
+        class C extends f() {
+          constructor() {
+            super();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testNoOptimize_inlineSuper_extraConstructorStatements() {
+    testSame(
+        """
+        class C extends class {
+          constructor(a) {
+            this.a = a;
+          }
+        } {
+          constructor(a) {
+            use(a);
+            super(a);
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends class {
+          constructor() {
+            this.a = 1;
+          }
+        } {
+          constructor() {
+            super();
+            this.b = 2;
+          }
+        }
+        """);
+    testSame(
+        """
+        class C extends function(a) {
+          this.a = a;
+        } {
+          constructor(a) {
+            use(a);
+            super(a);
+          }
+        }
+        """);
+  }
 }
