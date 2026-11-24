@@ -541,6 +541,9 @@ public class TranspilationPasses {
     if (options.needsTranspilationOf(Feature.REGEXP_FLAG_D)) {
       featuresToMarkRemoved = featuresToMarkRemoved.with(Feature.REGEXP_FLAG_D);
     }
+    if (options.needsTranspilationOf(Feature.REGEXP_FLAG_V)) {
+      featuresToMarkRemoved = featuresToMarkRemoved.with(Feature.REGEXP_FLAG_V);
+    }
     if (options.needsTranspilationOf(Feature.BIGINT)) {
       featuresToMarkRemoved = featuresToMarkRemoved.with(Feature.BIGINT);
     }

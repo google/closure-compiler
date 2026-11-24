@@ -269,6 +269,43 @@ public class ReportUntranspilableFeaturesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEs2024RegexFlagV() {
+    languageOut = LanguageMode.ECMASCRIPT_NEXT;
+    testSame("const a = /asdf/v;");
+    testSame("const a = /[\\w--[a-g]]/v;");
+    testSame("const a = /[\\p{Script=Greek}&&\\p{Letter}]/v;");
+    testSame("const a = /[\\q{abc|def}]/v;");
+
+    languageOut = LanguageMode.ECMASCRIPT_2022;
+    testError(
+        "const a = /asdf/v;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        """
+        Cannot convert feature "RegExp flag 'v'" to targeted output language. Feature requires at \
+        minimum ES_NEXT. Consider targeting a more modern output.\
+        """);
+    testError(
+        "const a = /[\\w--[a-g]]/v;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        """
+        Cannot convert feature "RegExp flag 'v'" to targeted output language. Feature requires at \
+        minimum ES_NEXT. Consider targeting a more modern output.\
+        """);
+  }
+
+  @Test
+  public void testEs2024RegexFlagV_usingBrowserFeaturesetYear() {
+    browserFeaturesetYear = BrowserFeaturesetYear.YEAR_2026;
+    testError(
+        "const a = /asdf/v;",
+        UNTRANSPILABLE_FEATURE_PRESENT,
+        """
+        Cannot convert feature "RegExp flag 'v'" to targeted output language. Feature requires at \
+        minimum ES_NEXT, which is not yet supported by any browser featureset year.\
+        """);
+  }
+
+  @Test
   public void testEs2022TopLevelAwait() {
     Runnable testTopLevelAwaitUnsupported =
         () ->

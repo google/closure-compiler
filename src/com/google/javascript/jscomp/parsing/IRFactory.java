@@ -2814,11 +2814,6 @@ class IRFactory {
 
     Node processRegExpLiteral(LiteralExpressionTree literalTree) {
       LiteralToken token = literalTree.literalToken.asLiteral();
-      Node literalStringNode = newStringNode(normalizeRegex(token));
-      // TODO(johnlenz): fix the source location.
-      setSourceInfo(literalStringNode, token);
-      Node node = newNode(Token.REGEXP, literalStringNode);
-
       String rawRegex = token.value;
       int lastSlash = rawRegex.lastIndexOf('/');
       String flags = "";
@@ -2826,6 +2821,11 @@ class IRFactory {
         flags = rawRegex.substring(lastSlash + 1);
       }
       validateRegExpFlags(literalTree, flags);
+
+      Node literalStringNode = newStringNode(normalizeRegex(token, flags));
+      // TODO(johnlenz): fix the source location.
+      setSourceInfo(literalStringNode, token);
+      Node node = newNode(Token.REGEXP, literalStringNode);
 
       if (!flags.isEmpty()) {
         Node flagsNode = newStringNode(flags);
@@ -2837,6 +2837,13 @@ class IRFactory {
     }
 
     private void validateRegExpFlags(LiteralExpressionTree tree, String flags) {
+      if (flags.contains("u") && flags.contains("v")) {
+        errorReporter.error(
+            "Invalid RegExp flags: cannot specify both 'u' and 'v'",
+            sourceName,
+            lineno(tree),
+            charno(tree));
+      }
       for (char flag : Lists.charactersOf(flags)) {
         switch (flag) {
           case 'g', 'i', 'm' -> {}
@@ -2846,6 +2853,7 @@ class IRFactory {
           }
           case 's' -> maybeWarnForFeature(tree, Feature.REGEXP_FLAG_S);
           case 'd' -> maybeWarnForFeature(tree, Feature.REGEXP_FLAG_D);
+          case 'v' -> maybeWarnForFeature(tree, Feature.REGEXP_FLAG_V);
           default ->
               errorReporter.error(
                   "Invalid RegExp flag '" + flag + "'", sourceName, lineno(tree), charno(tree));
@@ -3857,7 +3865,7 @@ class IRFactory {
     }
   }
 
-  String normalizeRegex(LiteralToken token) {
+  String normalizeRegex(LiteralToken token, String flags) {
     String value = token.value;
     final int lastSlash = value.lastIndexOf('/');
     int cur = value.indexOf('\\');
@@ -3865,6 +3873,7 @@ class IRFactory {
       return value.substring(1, lastSlash);
     }
 
+    boolean isUnicodeSets = flags.indexOf('v') != -1;
     StringBuilder result = new StringBuilder();
     int start = 1;
     while (cur != -1) {
@@ -3873,6 +3882,26 @@ class IRFactory {
       cur++; // skip the escape char.
       char c = value.charAt(cur);
       switch (c) {
+        // Characters for which the backslash is semantically important only in ES2024 /v mode.
+        case 'q': // 2024 unicodeSets string disjunctions
+        case '&': // 2024 unicodeSets ClassSetReservedPunctuator
+        case '!':
+        case '#':
+        case '%':
+        case ',':
+        case ':':
+        case ';':
+        case '<':
+        case '=':
+        case '>':
+        case '@':
+        case '`':
+        case '~':
+          if (isUnicodeSets) {
+            result.append('\\');
+          }
+          result.append(c);
+          break;
         // Characters for which the backslash is semantically important.
         case '^':
         case '$':

@@ -867,6 +867,17 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testBreakRegExps() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT;
+
+    assertPrint("/<!--/", "/\\x3c!--/");
+    // An escaped `<` (preserved in /v mode) is broken without leaving its backslash in front.
+    assertPrint("/[\\<!--]/v", "/[\\x3c!--]/v");
+    // An escaped backslash before `<!--` must keep both backslashes.
+    assertPrint("/\\\\<!--/", "/\\\\\\x3c!--/");
+  }
+
+  @Test
   public void testBreakUntrustedTemplateLiterals() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     trustedStrings = false;

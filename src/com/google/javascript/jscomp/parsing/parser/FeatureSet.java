@@ -191,8 +191,12 @@ public final class FeatureSet implements Serializable {
     ES2020,
     ES2021,
     ES2022,
+    // ES_NEXT: Features that are fully supported, but part of a language version that is not yet
+    // fully supported
     ES_NEXT,
+    // ES_UNSTABLE: Features fully supported in checks, but not fully supported everywhere else
     ES_UNSTABLE,
+    // ES_UNSUPPORTED: Features that we can parse, but not yet supported in all checks
     ES_UNSUPPORTED,
     TYPESCRIPT,
     ;
@@ -316,25 +320,22 @@ public final class FeatureSet implements Serializable {
     // not make sense as we don't emit ES6 modules so top-level await cannot be used in the output.
     TOP_LEVEL_AWAIT("Top-level await", LangVersion.ES_UNSUPPORTED),
 
-    // ES_NEXT: Features that are fully supported, but part of a language version that is not yet
-    // fully supported
+    // ES 2022 adds https://github.com/tc39/proposal-class-fields
+    PRIVATE_ELEMENTS("Private elements", LangVersion.ES_UNSUPPORTED),
+
+    // ES 2024 adds https://github.com/tc39/proposal-regexp-v-flag
+    // Note: Untranspilable.
+    REGEXP_FLAG_V("RegExp flag 'v'", LangVersion.ES_NEXT),
 
     // Polyfill implementations can target "es_next" as their fromLang so we need to ensure that
     // the "es_next" version name is distinct from the latest dated version so we don't incorrectly
     // prune those polyfills.
     ES_NEXT_RUNTIME("es_next runtime", LangVersion.ES_NEXT),
 
-    // ES_UNSTABLE: Features fully supported in checks, but not fully supported everywhere else
-
     // Polyfill implementations can target "es_unstable" as their fromLang so we need to ensure that
     // the "es_unstable" version name is distinct from the latest dated version so we don't
     // incorrectly prune those polyfills.
     ES_UNSTABLE_RUNTIME("es_unstable runtime", LangVersion.ES_UNSTABLE),
-
-    // ES_UNSUPPORTED: Features that we can parse, but not yet supported in all checks
-
-    // ES 2022 adds https://github.com/tc39/proposal-class-fields
-    PRIVATE_ELEMENTS("Private elements", LangVersion.ES_UNSUPPORTED),
 
     // TypeScript type syntax that will never be implemented in browsers. Only used as an indicator
     // to the CodeGenerator that it should handle type syntax.

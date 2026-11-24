@@ -2013,8 +2013,11 @@ public class CodeGenerator {
       String dollarEscape,
       boolean isRegexp) {
     StringBuilder sb = new StringBuilder(s.length() + 2);
+    // For regexps, output index of a backslash that starts an escape sequence, or -1.
+    int escapeStart = -1;
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
+      int start = sb.length();
       switch (c) {
         case '\0' -> sb.append("\\x00");
         case '\u000B' -> {
@@ -2075,6 +2078,18 @@ public class CodeGenerator {
             // so we play it safe and Unicode escape them.
             Util.appendHexJavaScriptRepresentation(sb, c);
           }
+        }
+      }
+      if (isRegexp) {
+        if (escapeStart >= 0) {
+          // If the escaped character was escaped again (e.g. `\<!--` -> `\\x3c!--`), drop the
+          // leading backslash so it does not escape the new sequence's backslash.
+          if (sb.length() - start > 1) {
+            sb.deleteCharAt(escapeStart);
+          }
+          escapeStart = -1;
+        } else if (c == '\\') {
+          escapeStart = start;
         }
       }
     }

@@ -5935,6 +5935,37 @@ public final class ParserTest extends BaseJSTypeTestCase {
         requiresLanguageModeMessage(Feature.REGEXP_FLAG_D));
   }
 
+  /** New RegExp flag 'v' added in ES2024. */
+  @Test
+  public void testES2024RegExpFlagV() {
+    expectFeatures(Feature.REGEXP_FLAG_V);
+    parse("/a/v");
+    assertNodeEquality(parse("/[\\q{abc|def}]/v"), script(expr(regex("[\\q{abc|def}]", "v"))));
+    assertNodeEquality(parse("/[a\\&\\&b]/v"), script(expr(regex("[a\\&\\&b]", "v"))));
+    assertNodeEquality(parse("/[\\#]/v"), script(expr(regex("[\\#]", "v"))));
+    parseError("/a/uv", "Invalid RegExp flags: cannot specify both 'u' and 'v'");
+    parseError("/a/vu", "Invalid RegExp flags: cannot specify both 'u' and 'v'");
+
+    // Without the 'v' flag, redundant escapes before \q and v-mode punctuators are still stripped.
+    expectFeatures();
+    assertNodeEquality(parse("/\\#/g"), script(expr(regex("#", "g"))));
+    assertNodeEquality(parse("/\\&/g"), script(expr(regex("&", "g"))));
+    assertNodeEquality(parse("/\\q/"), script(expr(regex("q"))));
+
+    mode = LanguageMode.ECMASCRIPT_2022;
+    expectFeatures(Feature.REGEXP_FLAG_V);
+    parseWarning("/a/v", requiresLanguageModeMessage(Feature.REGEXP_FLAG_V));
+    parseWarning(
+        "/a/dv", // 'd' added in es2022
+        requiresLanguageModeMessage(Feature.REGEXP_FLAG_V));
+
+    mode = LanguageMode.ECMASCRIPT_2021;
+    parseWarning(
+        "/a/dv", // 'd' added in es2022
+        requiresLanguageModeMessage(Feature.REGEXP_FLAG_D),
+        requiresLanguageModeMessage(Feature.REGEXP_FLAG_V));
+  }
+
   @Test
   public void testDefaultParameters() {
     strictMode = SLOPPY;

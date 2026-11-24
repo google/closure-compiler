@@ -84,12 +84,16 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
   private static final FeatureSet UNTRANSPILABLE_2022_FEATURES =
       FeatureSet.BARE_MINIMUM.with(Feature.REGEXP_FLAG_D, Feature.TOP_LEVEL_AWAIT);
 
+  private static final FeatureSet UNTRANSPILABLE_2024_FEATURES =
+      FeatureSet.BARE_MINIMUM.with(Feature.REGEXP_FLAG_V);
+
   private static final FeatureSet ALL_UNTRANSPILABLE_FEATURES =
       FeatureSet.BARE_MINIMUM
           .union(UNTRANSPILABLE_ES5_FEATURES)
           .union(UNTRANSPILABLE_2018_FEATURES)
           .union(UNTRANSPILABLE_2019_FEATURES)
           .union(UNTRANSPILABLE_2022_FEATURES)
+          .union(UNTRANSPILABLE_2024_FEATURES)
           .union(UNTRANSPILABLE_2020_FEATURES);
 
   private final AbstractCompiler compiler;
@@ -155,6 +159,9 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
         }
         if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_D)) {
           checkForRegExpDFlag(root);
+        }
+        if (untranspilableFeaturesToRemove.contains(Feature.REGEXP_FLAG_V)) {
+          checkForRegExpVFlag(root);
         }
       }
       case BIGINT -> {
@@ -249,6 +256,14 @@ public final class ReportUntranspilableFeatures extends AbstractPeepholeTranspil
     String flags = regexpNode.hasTwoChildren() ? regexpNode.getLastChild().getString() : "";
     if (flags.contains("d")) {
       reportUntranspilable(Feature.REGEXP_FLAG_D, regexpNode);
+    }
+  }
+
+  private void checkForRegExpVFlag(Node regexpNode) {
+    checkArgument(regexpNode.isRegExp());
+    String flags = regexpNode.hasTwoChildren() ? regexpNode.getLastChild().getString() : "";
+    if (flags.contains("v")) {
+      reportUntranspilable(Feature.REGEXP_FLAG_V, regexpNode);
     }
   }
 
