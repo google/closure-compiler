@@ -65,6 +65,8 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   private final Map<Node, FunctionContext> needsInstrumentation = new LinkedHashMap<>();
   private final Set<Node> alreadyInstrumented = new LinkedHashSet<>();
   private final Set<Node> hasSuper = new LinkedHashSet<>();
+  // Catch and finally blocks that need a resume() call prepended.
+  private final Set<Node> blocksNeedingResume = new LinkedHashSet<>();
 
   public InstrumentAsyncContext(AbstractCompiler compiler, boolean shouldInstrumentAwait) {
     this.compiler = compiler;
@@ -168,9 +170,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     FunctionContext functionContext =
         needsInstrumentation.computeIfAbsent(
             enclosingFunction, (unused) -> createNewFunctionContext(t.getInput()));
-    if (enclosingTry != null) {
-      needsInstrumentation.put(enclosingTry, functionContext);
-    }
+    markBlocksToResume(n, functionContext);
 
     if (n.isForAwaitOf()) {
       instrumentForAwaitOf(t, n, parent, functionContext);
@@ -235,18 +235,69 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   }
 
   void instrumentTry(Node n, FunctionContext functionContext) {
-    // Find either a catch or a finally block (if there is no catch).
-    Node block = n.getSecondChild();
-    if (block.hasChildren()) {
-      // There's a catch block: descend into the actual block
-      block = block.getFirstChild().getSecondChild();
-    } else {
-      // Look for a finally block instead
-      block = block.getNext();
+    // Prepend an empty resume call (ᵃᶜresume()) to each catch or finally block that may be entered
+    // after a reentrance (see markBlocksToResume).
+    Node catchWrapper = n.getSecondChild();
+    if (catchWrapper.hasChildren()) {
+      maybeAddResume(catchWrapper.getFirstChild().getSecondChild(), functionContext);
     }
-    checkState(block.isBlock());
-    // Prepend an empty resume call: ᵃᶜresume()
-    block.addChildToFront(IR.exprResult(functionContext.resume().srcrefTreeIfMissing(block)));
+    if (n.hasXChildren(3)) {
+      maybeAddResume(n.getLastChild(), functionContext);
+    }
+  }
+
+  private void maybeAddResume(Node block, FunctionContext functionContext) {
+    checkState(block.isBlock(), block);
+    if (blocksNeedingResume.remove(block)) {
+      block.addChildToFront(IR.exprResult(functionContext.resume().srcrefTreeIfMissing(block)));
+    }
+  }
+
+  /**
+   * Marks every catch or finally block that needs a {@code ᵃᶜresume()} call because it may be
+   * entered after the given reentrance suspends without its {@code ᵃᶜresume(...)} wrapper having
+   * run.
+   *
+   * <p>A reentrance in a {@code try} block marks that {@code try}'s {@code catch} block (if no
+   * inner handler has already resumed on throw) as well as its {@code finally} block, if any: an
+   * abrupt {@code return} or {@code break} completion (such as {@code generator.return()} at a
+   * {@code yield}, or returning out of a {@code for await} loop) skips {@code catch} and enters
+   * {@code finally} directly. For the same reason, walking continues through all enclosing {@code
+   * try} statements up to the function boundary to mark every outer {@code finally} block (and the
+   * first unhandled outer {@code catch} block when a reentrance in a {@code catch} or {@code
+   * finally} block has no inner handler).
+   */
+  private void markBlocksToResume(Node n, FunctionContext functionContext) {
+    boolean needsCatchResume = true;
+    for (Node child = n, parent = n.getParent();
+        parent != null && !child.isFunction();
+        child = parent, parent = parent.getParent()) {
+      if (!parent.isTry()) {
+        continue;
+      }
+      Node catchWrapper = parent.getSecondChild();
+      if (child.isFirstChildOf(parent)) {
+        if (needsCatchResume && catchWrapper.hasChildren()) {
+          markBlockForResume(
+              catchWrapper.getFirstChild().getSecondChild(), parent, functionContext);
+          needsCatchResume = false;
+        }
+        if (parent.hasXChildren(3)) {
+          markBlockForResume(parent.getLastChild(), parent, functionContext);
+          needsCatchResume = false;
+        }
+      } else if (child == catchWrapper) {
+        if (parent.hasXChildren(3)) {
+          markBlockForResume(parent.getLastChild(), parent, functionContext);
+          needsCatchResume = false;
+        }
+      }
+    }
+  }
+
+  private void markBlockForResume(Node block, Node tryNode, FunctionContext functionContext) {
+    blocksNeedingResume.add(block);
+    needsInstrumentation.put(tryNode, functionContext);
   }
 
   void instrumentGeneratorFunction(NodeTraversal t, Node f, FunctionContext functionContext) {

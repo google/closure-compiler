@@ -390,12 +390,12 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   // BEFORE: try { ... } catch { BODY1 } finally { BODY2 }
-  //  AFTER: try { ... } catch { resume(); BODY1 } finally { BODY2 }
+  //  AFTER: try { ... } catch { resume(); BODY1 } finally { resume(); BODY2 }
   //
   // Explanation:
-  //   * If there is both a "catch" and a "finally", then only the former needs a resume call.
-  //   * The "finally" block will _only_ run if the "catch" block terminates normally, so we can
-  //     guarantee that the context will have resumeed before we reach it.
+  //   * Both "catch" and "finally" get a resume call (`ᵃᶜresume()` is idempotent; an abrupt
+  //     `return` or `break` completion such as `generator.return()` or returning out of a
+  //     `for await` loop skips `catch` and enters `finally` directly).
   @Test
   public void testAwaitInsideTryCatchFinally() {
     test(
@@ -426,6 +426,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
               ᵃᶜresume$0();
               console.log(e);
             } finally {
+              ᵃᶜresume$0();
               console.log('finally');
             }
           } finally {
@@ -472,11 +473,14 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  // BEFORE: try { await ... } catch { await ... } finally { BODY }
+  //  AFTER: try { ... } catch { resume(); ... } finally { resume(); BODY }
+  //
+  // Explanation:
+  //   * If the await in the catch block rejects, the finally block runs without the catch block's
+  //     resume() wrapper having run, so it needs its own resume call.
   @Test
-  public void testAwaitInsideTryAndCatchWithFinally_knownBug() {
-    // TODO(b/586787047): The finally block should start with `ᵃᶜresume$0();`. If the await in the
-    // catch block rejects, the `ᵃᶜresume$0(...)` wrapper around it never runs, so the finally block
-    // runs without the function's context. Only the catch block gets a resume call today.
+  public void testAwaitInsideTryAndCatchWithFinally() {
     test(
         """
         const v = new AsyncContext.Variable();
@@ -505,6 +509,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
               ᵃᶜresume$0();
               ᵃᶜresume$0(await ᵃᶜsuspend$0(b(e)));
             } finally {
+              ᵃᶜresume$0();
               c();
             }
           } finally {
@@ -514,12 +519,103 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  // BEFORE: try { ... } catch { await ... } finally { BODY }
+  //  AFTER: try { ... } catch { ... } finally { resume(); BODY }
+  //
+  // Explanation:
+  //   * The catch block can only be entered with the context active (nothing in the try block
+  //     suspended), so only the finally block needs a resume call.
   @Test
-  public void testAwaitInsideCatchWithoutFinallyOfNestedTry_knownBug() {
-    // TODO(b/586787047): The outer finally block should start with `ᵃᶜresume$0();`, and the inner
-    // catch block does not need one (nothing in the inner try suspends). Today the await in the
-    // inner catch instruments its own try's catch block instead of the outer try's finally block,
-    // so if `b(e)` rejects, `c()` runs without the function's context.
+  public void testAwaitInsideCatchWithFinally() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          try {
+            a();
+          } catch (e) {
+            await b(e);
+          } finally {
+            c();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            try {
+              a();
+            } catch (e) {
+              ᵃᶜresume$0(await ᵃᶜsuspend$0(b(e)));
+            } finally {
+              ᵃᶜresume$0();
+              c();
+            }
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  // BEFORE: try { try { ... } finally { await ... } } catch { BODY }
+  //  AFTER: try { try { ... } finally { ... } } catch { resume(); BODY }
+  //
+  // Explanation:
+  //   * An await in a finally block (or in a catch block with no finally) is protected by the next
+  //     enclosing try, not by the try that owns the block.
+  @Test
+  public void testAwaitInsideFinallyOfNestedTry() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          try {
+            try {
+              a();
+            } finally {
+              await b();
+            }
+          } catch (e) {
+            c(e);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            try {
+              try {
+                a();
+              } finally {
+                ᵃᶜresume$0(await ᵃᶜsuspend$0(b()));
+              }
+            } catch (e) {
+              ᵃᶜresume$0();
+              c(e);
+            }
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  // An await in a catch block without its own finally is protected by the outer try's finally.
+  @Test
+  public void testAwaitInsideCatchWithoutFinallyOfNestedTry() {
     test(
         """
         const v = new AsyncContext.Variable();
@@ -548,10 +644,10 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
               try {
                 a();
               } catch (e) {
-                ᵃᶜresume$0();
                 ᵃᶜresume$0(await ᵃᶜsuspend$0(b(e)));
               }
             } finally {
+              ᵃᶜresume$0();
               c();
             }
           } finally {
@@ -561,12 +657,10 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  // Returning from inside a for-await body runs its synthesized `finally { suspend(); }`, skipping
+  // both the post-loop `resume()` and `catch`, so the enclosing `finally` needs its own `resume()`.
   @Test
-  public void testForAwaitReturnInsideTryCatchFinally_knownBug() {
-    // TODO(b/586787047): The outer finally block should also start with `ᵃᶜresume$0();`. Returning
-    // from inside the for-await body runs its synthesized `finally { ᵃᶜsuspend$0(); }`, skipping
-    // both the post-loop `ᵃᶜresume$0()` and `catch (e)` and entering `cleanup()` with the context
-    // suspended.
+  public void testForAwaitReturnInsideTryCatchFinally() {
     test(
         """
         const v = new AsyncContext.Variable();
@@ -607,6 +701,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
               ᵃᶜresume$0();
               use(e);
             } finally {
+              ᵃᶜresume$0();
               cleanup();
             }
           } finally {
@@ -616,12 +711,9 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  // Calling `it.return()` while suspended at `yield` skips `catch` and enters `finally` directly.
   @Test
-  public void testGeneratorTryCatchFinallyAbruptReturn_knownBug() {
-    // TODO(b/586787047): The finally block should also start with `ᵃᶜresume$0();`. Calling
-    // `it.return()` while the generator is suspended at `yield 1` performs an abrupt return
-    // completion that skips both `ᵃᶜresume$0(yield ...)` and `catch`, entering `finally` directly
-    // with the caller's context active.
+  public void testGeneratorTryCatchFinallyAbruptReturn() {
     test(
         """
         const v = new AsyncContext.Variable();
@@ -652,6 +744,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
                 ᵃᶜresume$0();
                 use(e);
               } finally {
+                ᵃᶜresume$0();
                 cleanup();
               }
             } finally {
@@ -662,11 +755,10 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  // Calling `it.return()` while suspended at an inner `yield` unwinds through every enclosing
+  // `finally` block up to the function boundary.
   @Test
-  public void testGeneratorNestedTryCatchInsideTryFinally_knownBug() {
-    // TODO(b/586787047): The outer finally block should also start with `ᵃᶜresume$0();`. Calling
-    // `it.return()` while suspended at `yield 1` skips the inner `catch` block and unwinds directly
-    // into the outer `finally` block with the caller's context active.
+  public void testGeneratorNestedTryCatchInsideTryFinally() {
     test(
         """
         const v = new AsyncContext.Variable();
@@ -701,6 +793,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
                   use(e);
                 }
               } finally {
+                ᵃᶜresume$0();
                 cleanup();
               }
             } finally {
@@ -941,6 +1034,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
                 ᵃᶜresume$0();
                 ᵃᶜresume$0(yield ᵃᶜsuspend$0(2));
               } finally {
+                ᵃᶜresume$0();
                 ᵃᶜresume$0(yield ᵃᶜsuspend$0(3));
               }
             } finally {
