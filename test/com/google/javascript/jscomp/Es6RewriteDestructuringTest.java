@@ -1683,12 +1683,8 @@ function f(first, ...$jscomp$destructuring$var0) {
           })(foo(yield b(), yield c())), yield zzz();
         }
         """);
-    // A yield in the LHS is explicitly unsupported, for now. We could also provide it as an
-    // argument, but it's more complicated than just providing the entire RHS, and we haven't seen
-    // any actual instances of someone trying to put yield here.
-    // Additionally, the compiler actually refuses to parse yield in a destructuring pattern default
-    // value, e.g. `function *g() { const {x = yield 0} = {}; }`. The edge case of someone
-    // using yield in either a computed key, or as the assignment target, seems very very unlikely.
+    // A yield in the LHS of a nested destructuring assignment expression (computed keys,
+    // assignment targets, or default values) is explicitly unsupported for now (b/475296868).
     var ex =
         assertThrows(
             RuntimeException.class,
@@ -1702,6 +1698,23 @@ function f(first, ...$jscomp$destructuring$var0) {
                     """
                     """));
     assertThat(ex)
+        .hasMessageThat()
+        .contains(
+            "Cannot transpile yet: destructuring assignment referencing await or yield in lhs");
+    var exDefault =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                test(
+                    """
+                    function *g() {
+                      let a;
+                      return ({a = yield 0} = foo());
+                    }
+                    """,
+                    """
+                    """));
+    assertThat(exDefault)
         .hasMessageThat()
         .contains(
             "Cannot transpile yet: destructuring assignment referencing await or yield in lhs");

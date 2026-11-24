@@ -3888,10 +3888,68 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("function f() { yield 3; }", "primary expression expected");
     parseError("function f(x = yield 3) { return x }", "primary expression expected");
     parseError(
-        "function *f(x = yield 3) { return x }", "`yield` is illegal in parameter default value.");
+        "function *f(x = yield 3) { return x }", IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
     parseError(
         "function *f() { return function*(x = yield 1) { return x; } }",
-        "`yield` is illegal in parameter default value.");
+        IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "function* f(x = yield) { return x; }", IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "function* f({ a = yield 1 }) { return a; }", IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "function* f([a = yield 1]) { return a; }", IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "function* f({ a: { b = yield 1 } }) { return b; }",
+        IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "function* f(x = ({ a = yield 1 } = o)) { return x; }",
+        IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "function* f(x = class extends (yield 1) {}) {}",
+        IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError("async function* f(x = yield 1) {}", IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError("class C { *m(x = yield 1) {} }", IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError("function* f({ [yield 1]: x }) { return x; }", IRFactory.YIELD_NOT_ALLOWED_IN_PARAM);
+    parseError(
+        "function* f({ [yield 1]: x } = {}) { return x; }", IRFactory.YIELD_NOT_ALLOWED_IN_PARAM);
+    parseError(
+        "function* f({ [({ a = yield 1 } = o)]: x }) { return x; }",
+        IRFactory.YIELD_NOT_ALLOWED_IN_PARAM);
+    parseError(
+        "function* f({ [({ a = yield 1 } = o)]: x } = {}) { return x; }",
+        IRFactory.YIELD_NOT_ALLOWED_IN_PARAM);
+    parseError(
+        "function* f(x = { [({ a = yield 1 } = o)]: 1 }) { return x; }",
+        IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError("function* f() { return (x = yield 1) => x; }", UNEXPECTED_YIELD);
+    parseError("function* f() { return (x = yield) => x; }", UNEXPECTED_YIELD);
+    parseError("function* f() { return ({ [yield 1]: x }) => x; }", UNEXPECTED_YIELD);
+    parseError("function* f() { return async (x = yield 1) => x; }", UNEXPECTED_YIELD);
+    parseError("function* f() { return { get x() { yield 1; } }; }", UNEXPECTED_YIELD);
+    parseError("function* f() { return { set x(v = yield 1) {} }; }", UNEXPECTED_YIELD);
+    // validateYield stops at CLASS_MEMBERS before reaching PARAM_LIST.
+    parseError("function* f(x = class { [yield 1]() {} }) {}", UNEXPECTED_YIELD);
+    parseError(
+        "function* f(x = yield 1, y = yield 2) {}",
+        IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM,
+        IRFactory.YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM);
+  }
+
+  @Test
+  public void testYield_inDestructuringDefaults() {
+    expectFeatures(Feature.GENERATORS);
+    parse("function* f(xs) { for (const { a = yield 1 } of xs) use(a); }");
+    parse("function* f(xs) { for (const [a = yield 1] of xs) use(a); }");
+    parse("function* f(xs) { for ({ a = yield 1 } of xs) use(a); }");
+    parse("function* f(o) { const { a = yield 1 } = o; }");
+    parse("function* f(o) { const [a = yield 1] = o; }");
+    parse("function* f(o) { let { k: a = yield 1 } = o; }");
+    parse("function* f(o) { let { [k]: a = yield 1 } = o; }");
+    parse("function* f(o) { ({ a = yield 1 } = o); }");
+    parse("function* f(o) { [a = yield 1] = o; }");
+    parse("function* f() { try {} catch ({ a = yield 1 }) {} }");
+    parse("function* f() { return { set [yield 1](v) {} }; }");
+    parse("function* f(x = function*() { const { a = yield 1 } = o; }) {}");
   }
 
   @Test
@@ -7858,10 +7916,152 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testAwait_inDestructuringDefaults() {
+    expectFeatures(Feature.ASYNC_FUNCTIONS, Feature.FOR_AWAIT_OF);
+    parse("async function f(xs) { for await (const { a = await g() } of xs) use(a); }");
+    parse("async function f(xs) { for await (const { k: a = await g() } of xs) use(a); }");
+    parse("async function f(xs) { for await (const { [k]: a = await g() } of xs) use(a); }");
+    parse("async function f(xs) { for await (const [a = await g()] of xs) use(a); }");
+    parse("async function f(xs) { for await ({ a = await g() } of xs) use(a); }");
+    expectFeatures(Feature.ASYNC_GENERATORS, Feature.FOR_AWAIT_OF);
+    parse(
+        "async function* f(xs) { for await (const { a = await g(), b = yield 1 } of xs) use(a, b);"
+            + " }");
+
+    expectFeatures(Feature.ASYNC_FUNCTIONS);
+    parse("async function f(xs) { for (const { a = await g() } of xs) use(a); }");
+    parse("async function f(xs) { for (const [a = await g()] of xs) use(a); }");
+    parse("async function f(xs) { for ({ a = await g() } of xs) use(a); }");
+    parse("async function f(o) { for (let { a = await g() } = o; ; ) break; }");
+    parse("async function f(o) { const { a = await g() } = o; }");
+    parse("async function f(o) { const [a = await g()] = o; }");
+    parse("async function f(o) { let { k: { a = await g() } = {} } = o; }");
+    parse("async function f(o) { ({ a = await g() } = o); }");
+    parse("async function f(o) { [a = await g()] = o; }");
+    parse("async function f() { try {} catch ({ a = await g() }) {} }");
+    parse("const f = async (o) => { const { a = await g() } = o; };");
+    parse("async function f(x = async () => { const { a = await g() } = o; }) {}");
+    parse("function f(x = async () => { const { a = await g() } = o; }) {}");
+    parse("async function f(x = class { async m() { const { a = await g() } = o; } }) {}");
+    parse("async function f({ [(async (o) => { const { a = await g() } = o; })]: x }) {}");
+
+    expectFeatures(Feature.TOP_LEVEL_AWAIT);
+    parse("export const { a = await g() } = o;");
+    parse("export const [a = await g()] = o;");
+    expectFeatures(Feature.TOP_LEVEL_AWAIT, Feature.FOR_AWAIT_OF);
+    parse("export {}; for await (const { a = await g() } of xs) use(a);");
+  }
+
+  @Test
   public void testAwait_invalid_defaultParameter() {
     parseError(
         "async function f(x = await 15) { return x; }",
-        "`await` is illegal in parameter default value.");
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f({ a = await 15 }) { return a; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f([a = await 15]) { return a; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f({ a: { b = await 15 } }) { return b; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f({ a: [b = await 15] }) { return b; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f({ a = 1 } = { b: await 15 }) { return a; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f(a = { [await 1]: 2 }) { return a; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f(x = ({ a = await 15 } = o)) { return x; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f(x = { [({ a = await 1 } = o)]: 1 }) { return x; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError("async (x = await 15) => x;", IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError("async ({ a = await 15 }) => a;", IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError("async function* f(x = await 15) {}", IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "class C { async m(x = await 15) {} }", IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "const o = { async m(x = await 15) {} };", IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f(x = (await a) + (await b)) {}",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM,
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "export async function f(x = await 1) {}", IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError("function f(x = await 15) { return x; }", UNEXPECTED_AWAIT);
+    parseError("export function f(x = await 1) {}", UNEXPECTED_AWAIT);
+    parseError("async function f() { return function(x = await 15) {}; }", UNEXPECTED_AWAIT);
+    parseError("async function f() { return (x = await 15) => x; }", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testAwait_invalid_defaultParameter_ideMode() {
+    // KEEP_GOING (IDE mode) smoke check on truncated inputs: should not throw NPE.
+    isIdeMode = true;
+    parseError(
+        "async function f(x = await",
+        "primary expression expected",
+        "',' expected",
+        "')' expected",
+        "'{' expected",
+        "'}' expected",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+  }
+
+  @Test
+  public void testAwait_invalid_computedParameterKey() {
+    parseError(
+        "async function f({ [await 2]: x }) { return x; }", IRFactory.AWAIT_NOT_ALLOWED_IN_PARAM);
+    parseError(
+        "async function f({ [await 2]: x = 1 }) { return x; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_PARAM);
+    parseError(
+        "async function f({ [await 2]: x } = {}) { return x; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_PARAM);
+    parseError("async ({ [await 2]: x }) => x;", IRFactory.AWAIT_NOT_ALLOWED_IN_PARAM);
+    parseError(
+        "async function f({ [({ a = await 1 } = o)]: x }) { return x; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_PARAM);
+    parseError(
+        "async function f({ [({ a = await 1 } = o)]: x } = {}) { return x; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_PARAM);
+    parseError(
+        "async function f({ [([a = await 1] = o)]: x }) { return x; }",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_PARAM);
+    parseError("async function f() { return ({ [await 2]: x }) => x; }", UNEXPECTED_AWAIT);
+  }
+
+  @Test
+  public void testAwait_invalid_classInDefaultParameter() {
+    parseError(
+        "async function f(x = class extends (await y) {}) {}",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f(x = class { [await y]() {} }) {}",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError(
+        "async function f(x = class { [await y] = 1; }) {}",
+        IRFactory.AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM);
+    parseError("async function f(x = class { f = await y; }) {}", UNEXPECTED_AWAIT);
+    parseError("async function f(x = class { [k] = await y; }) {}", UNEXPECTED_AWAIT);
+    parseError("async function f(x = class { static { await y; } }) {}", UNEXPECTED_AWAIT);
+    parseError(
+        "async function f(x = class { static { for await (const y of xs) {} } }) {}",
+        UNEXPECTED_FOR_AWAIT_OF);
+  }
+
+  @Test
+  public void testAwait_invalid_destructuringDefaultOutsideAsync() {
+    parseError("async function f(x = () => { const { a = await g() } = o; }) {}", UNEXPECTED_AWAIT);
+    parseError("function f(o) { const { a = await g() } = o; }", UNEXPECTED_AWAIT);
+    parseError("const { a = await g() } = o;", UNEXPECTED_AWAIT);
+    parseError("goog.module('a.b'); const { a = await g() } = o;", UNEXPECTED_AWAIT);
   }
 
   @Test
@@ -7881,10 +8081,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("class C { static f = await 1; }", UNEXPECTED_AWAIT);
     parseError("async function f() { class C { static f = await 1; } }", UNEXPECTED_AWAIT);
     parseError("async () => { class C { static f = await 1; } }", UNEXPECTED_AWAIT);
+    parseError("class C { [k] = await 1; }", UNEXPECTED_AWAIT);
+    parseError("async function f() { class C { [k] = await 1; } }", UNEXPECTED_AWAIT);
+    parseError("async function f() { class C { static [k] = await 1; } }", UNEXPECTED_AWAIT);
+    parseError("export class C { [k] = await 1; }", UNEXPECTED_AWAIT);
 
     // Double check that await in this position nested within an async function is valid.
     parse("class C { static f = async function f() { await 1; } }");
     parse("class C { static f = async () => { await 1; } }");
+    parse("class C { [k] = async () => { await 1; }; }");
   }
 
   @Test

@@ -140,7 +140,6 @@ import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -192,7 +191,13 @@ class IRFactory {
 
   static final String UNEXPECTED_RETURN = "return must be inside function";
   static final String UNEXPECTED_YIELD = "yield must be inside generator function";
+  static final String YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM =
+      "`yield` is not allowed in parameter default value.";
+  static final String YIELD_NOT_ALLOWED_IN_PARAM = "`yield` is not allowed in formal parameter.";
   static final String UNEXPECTED_AWAIT = "await must be inside asynchronous function";
+  static final String AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM =
+      "`await` is not allowed in parameter default value.";
+  static final String AWAIT_NOT_ALLOWED_IN_PARAM = "`await` is not allowed in formal parameter.";
   static final String UNEXPECTED_FOR_AWAIT_OF =
       "'for-await-of' used in a non-async function context";
   static final String UNEXPECTED_NEW_DOT_TARGET = "new.target must be inside a function";
@@ -506,12 +511,35 @@ class IRFactory {
       return;
     }
 
-    Node parent = n;
-    while ((parent = parent.getParent()) != null) {
+    boolean inDefaultValue = false;
+    Node child = n;
+    for (Node parent = n.getParent(); parent != null; child = parent, parent = parent.getParent()) {
       // The await is in a class static block or a field initializer.
-      // e.g. `class C { static { await y; } }` or `class C { x = await y; }`
-      if ((parent.isBlock() || parent.isMemberFieldDef()) && parent.getParent().isClassMembers()) {
+      // e.g. `class C { static { await y; } }`, `class C { x = await y; }`,
+      // or `class C { [k] = await y; }`
+      if (parent.isMemberFieldDef()
+          || (parent.isComputedFieldDef() && child.isSecondChildOf(parent))
+          || (parent.isClassMembers() && child.isBlock())) {
         errorReporter.error(errorMsg, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
+      if (parent.isComputedProp() && child.isFirstChildOf(parent)) {
+        // Leaving a computed property key expression: any inner destructuring default does not make
+        // the enclosing formal parameter position a parameter default value.
+        inDefaultValue = false;
+      } else if (parent.isDefaultValue() && child.isSecondChildOf(parent)) {
+        inDefaultValue = true;
+      }
+      if (parent.isParamList()) {
+        if (n.isAwait() && parent.getParent().isAsyncFunction()) {
+          errorReporter.error(
+              inDefaultValue ? AWAIT_NOT_ALLOWED_IN_DEFAULT_PARAM : AWAIT_NOT_ALLOWED_IN_PARAM,
+              sourceName,
+              n.getLineno(),
+              n.getCharno());
+        } else {
+          errorReporter.error(errorMsg, sourceName, n.getLineno(), n.getCharno());
+        }
         return;
       }
       if (parent.isAsyncFunction()) {
@@ -538,18 +566,43 @@ class IRFactory {
       return;
     }
 
-    Node parent = n;
-    while ((parent = parent.getParent()) != null) {
-      // The yield is in a class static block.
+    boolean inDefaultValue = false;
+    Node child = n;
+    for (Node parent = n.getParent(); parent != null; child = parent, parent = parent.getParent()) {
+      // Reject yield in class members (static blocks, field initializers, and computed keys).
       // e.g. `class C { static { yield; } }`
       if (parent.isClassMembers()) {
         errorReporter.error(UNEXPECTED_YIELD, sourceName, n.getLineno(), n.getCharno());
         return;
       }
+      if (parent.isComputedProp() && child.isFirstChildOf(parent)) {
+        // Leaving a computed property key expression: any inner destructuring default does not make
+        // the enclosing formal parameter position a parameter default value.
+        inDefaultValue = false;
+      } else if (parent.isDefaultValue() && child.isSecondChildOf(parent)) {
+        inDefaultValue = true;
+      }
+      if (parent.isParamList()) {
+        if (parent.getParent().isGeneratorFunction()) {
+          errorReporter.error(
+              inDefaultValue ? YIELD_NOT_ALLOWED_IN_DEFAULT_PARAM : YIELD_NOT_ALLOWED_IN_PARAM,
+              sourceName,
+              n.getLineno(),
+              n.getCharno());
+        } else {
+          errorReporter.error(UNEXPECTED_YIELD, sourceName, n.getLineno(), n.getCharno());
+        }
+        return;
+      }
       if (parent.isGeneratorFunction()) {
         return;
       }
+      if (parent.isFunction()) {
+        errorReporter.error(UNEXPECTED_YIELD, sourceName, n.getLineno(), n.getCharno());
+        return;
+      }
     }
+    errorReporter.error(UNEXPECTED_YIELD, sourceName, n.getLineno(), n.getCharno());
   }
 
   private void validateReturn(Node n) {
@@ -2267,7 +2320,6 @@ class IRFactory {
       }
       final Node defaultValueExpression = transform(tree.defaultValue);
       Node defaultValueNode = newNode(Token.DEFAULT_VALUE, targetNode, defaultValueExpression);
-      reportErrorIfYieldOrAwaitInDefaultValue(defaultValueNode);
       setSourceInfo(defaultValueNode, tree);
       return defaultValueNode;
     }
@@ -3803,46 +3855,6 @@ class IRFactory {
       }
       return processIllegalToken(node);
     }
-  }
-
-  private void reportErrorIfYieldOrAwaitInDefaultValue(Node defaultValueNode) {
-    Node yieldNode = findNodeTypeInExpression(defaultValueNode, Token.YIELD);
-    if (yieldNode != null) {
-      errorReporter.error(
-          "`yield` is illegal in parameter default value.",
-          yieldNode.getSourceFileName(),
-          yieldNode.getLineno(),
-          yieldNode.getCharno());
-    }
-    Node awaitNode = findNodeTypeInExpression(defaultValueNode, Token.AWAIT);
-    if (awaitNode != null) {
-      errorReporter.error(
-          "`await` is illegal in parameter default value.",
-          awaitNode.getSourceFileName(),
-          awaitNode.getLineno(),
-          awaitNode.getCharno());
-    }
-  }
-
-  /**
-   * Tries to find a node with the given token in the given expression. Returns the first one found
-   * in pre-order traversal or `null` if none found. Will not traverse into function or class
-   * expressions.
-   */
-  private static @Nullable Node findNodeTypeInExpression(Node expressionNode, Token token) {
-    Deque<Node> worklist = new ArrayDeque<>();
-    worklist.add(expressionNode);
-    while (!worklist.isEmpty()) {
-      Node node = worklist.remove();
-      if (node.getToken() == token) {
-        return node;
-      } else if (!node.isFunction() && !node.isClass()) {
-        for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
-          worklist.add(child);
-        }
-      }
-    }
-    return null;
   }
 
   String normalizeRegex(LiteralToken token) {

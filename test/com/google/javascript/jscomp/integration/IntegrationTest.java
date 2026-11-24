@@ -55,6 +55,7 @@ import com.google.javascript.jscomp.StrictWarningsGuard;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.js.RuntimeJsLibManager.RuntimeLibraryMode;
+import com.google.javascript.jscomp.testing.CodeSubTree;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -6555,6 +6556,182 @@ async function abc() {
           }
         };
         """);
+  }
+
+  @Test
+  public void testAwaitInDestructuringDefault_whitespaceOnly() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.WHITESPACE_ONLY.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+
+    testSame(
+        options,
+        """
+        async function f(xs) {
+          for await (const {a = await g()} of xs) {
+            use(a);
+          }
+          for (const {b = await g()} of xs) {
+            use(b);
+          }
+          for (const [c = await g()] of xs) {
+            use(c);
+          }
+          const {d = await g()} = xs;
+          return d;
+        }
+        """);
+  }
+
+  @Test
+  public void testAwaitInForAwaitDestructuringDefault_advancedOptimizations() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+
+    test(
+        options,
+        """
+        async function g() {
+          return 1;
+        }
+        async function f(xs) {
+          let sum = 0;
+          for await (const {a = await g()} of xs) {
+            sum += a;
+          }
+          return sum;
+        }
+        window['f'] = f;
+        """,
+        """
+        async function b() {
+          return 1;
+        }
+        window.f = async function(c) {
+          var a = 0;
+          for await (let {a: d = await b()} of c) {
+            a += d;
+          }
+          return a;
+        };
+        """);
+  }
+
+  @Test
+  public void testAwaitInForAwaitDestructuringDefault_transpileToEs5() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDevMode(DevMode.EVERY_PASS);
+
+    Compiler compiler =
+        compile(
+            options,
+            """
+            async function f(xs, g, use) {
+              for await (const {a = await g()} of xs) {
+                use(a);
+              }
+              for (const [b = await g()] of xs) {
+                use(b);
+              }
+              const {c = await g()} = xs;
+              use(c);
+            }
+            function* gen(xs, use) {
+              for (const {a = yield 1} of xs) {
+                use(a);
+              }
+            }
+            """);
+
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+    ImmutableSet<Token> untranspiledTokens =
+        ImmutableSet.of(Token.AWAIT, Token.YIELD, Token.FOR_AWAIT_OF, Token.DEFAULT_VALUE);
+    assertThat(
+            CodeSubTree.findNodesAllowEmpty(
+                compiler.getRoot().getLastChild(),
+                node -> untranspiledTokens.contains(node.getToken())))
+        .isEmpty();
+    String output = compiler.toSource();
+    assertThat(output).contains("function f(");
+    assertThat(output).contains("function gen(");
+    assertThat(output).contains("asyncExecutePromiseGeneratorProgram");
+    assertThat(output).contains("createGenerator");
+  }
+
+  @Test
+  public void testAwaitInForAwaitDestructuringDefault_instrumentAsyncContext() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setInstrumentAsyncContext(true);
+    options.setDevMode(DevMode.EVERY_PASS);
+
+    Compiler compiler =
+        compile(
+            options,
+            """
+            async function f(xs, g, use) {
+              for await (const {a = await g()} of xs) {
+                use(a);
+              }
+            }
+            """);
+
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+    // Verifies the parser accepts `await` inside the `for await` destructuring default and that
+    // `InstrumentAsyncContext` instruments the function without failing `DevMode.EVERY_PASS`
+    // (avoiding exact loop-head lowering details tracked under b/586787233).
+    assertThat(CodeSubTree.findNodesAllowEmpty(compiler.getRoot().getLastChild(), Node::isAwait))
+        .isNotEmpty();
+    String output = compiler.toSource();
+    assertThat(output).contains("asyncContextStart");
+    assertThat(output).contains("await");
+  }
+
+  @Test
+  public void testAwaitAndYieldInComputedParamProperty_reportsParseError() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDevMode(DevMode.EVERY_PASS);
+
+    test(
+        options,
+        new String[] {"async function f({[await 2]: x}) { return x; }"},
+        null,
+        DiagnosticGroups.PARSING);
+    assertThat(lastCompiler.getErrors().get(0).description())
+        .contains("`await` is not allowed in formal parameter.");
+
+    test(
+        options,
+        new String[] {"function* f({[yield 2]: x}) { return x; }"},
+        null,
+        DiagnosticGroups.PARSING);
+    assertThat(lastCompiler.getErrors().get(0).description())
+        .contains("`yield` is not allowed in formal parameter.");
+  }
+
+  @Test
+  public void testAwaitInComputedClassFieldInitializer_reportsParseError() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setDevMode(DevMode.EVERY_PASS);
+
+    test(
+        options,
+        new String[] {"async function f(k, y) { class C { [k] = await y; } return C; }"},
+        null,
+        DiagnosticGroups.PARSING);
+    assertThat(lastCompiler.getErrors().get(0).description())
+        .contains("await must be inside asynchronous function");
   }
 }
 
