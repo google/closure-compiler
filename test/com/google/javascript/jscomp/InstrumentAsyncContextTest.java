@@ -340,6 +340,45 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   @Test
+  public void testForAwaitWithDestructuringHead_knownBug() {
+    // TODO(b/586787233): The destructuring `const {a = g()}` should be moved into the loop body
+    // after `ᵃᶜresume$0()`. Today `g()` runs in the loop head, between `ᵃᶜsuspend$0` and
+    // `ᵃᶜresume$0`, so it runs with the function's context suspended.
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs) {
+          for await (const {a = g()} of xs) {
+            use(a);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs) {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            for await (const {a = g()} of ᵃᶜsuspend$0(xs)) {
+              ᵃᶜresume$0();
+              try {
+                use(a);
+              } finally {
+                ᵃᶜsuspend$0();
+              }
+            }
+            ᵃᶜresume$0();
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  @Test
   public void testForAwaitMixedWithAwait() {
     test(
         """
