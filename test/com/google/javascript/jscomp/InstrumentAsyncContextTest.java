@@ -260,6 +260,85 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   // Await nodes within the for-await should also be instrumented appropriately.
+  // Labels stay attached to the loop, and the resume call goes after the labeled statement.
+  @Test
+  public void testLabeledForAwait() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          loop: for await (const x of gen()) {
+            if (x) break loop;
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            loop: for await (const x of ᵃᶜsuspend$0(gen())) {
+              ᵃᶜresume$0();
+              try {
+                if (x) {
+                  break loop;
+                }
+              } finally {
+                ᵃᶜsuspend$0();
+              }
+            }
+            ᵃᶜresume$0();
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  // Same, with multiple labels and a labeled statement that is not a direct child of a block.
+  @Test
+  public void testMultiplyLabeledForAwaitNotInBlock() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          if (1) a: b: for await (const x of gen()) { if (x) continue b; break a; }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            if (1) {
+              a: b: for await (const x of ᵃᶜsuspend$0(gen())) {
+                ᵃᶜresume$0();
+                try {
+                  if (x) {
+                    continue b;
+                  }
+                  break a;
+                } finally {
+                  ᵃᶜsuspend$0();
+                }
+              }
+              ᵃᶜresume$0();
+            }
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
   @Test
   public void testForAwaitMixedWithAwait() {
     test(

@@ -279,7 +279,12 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
                 body, //
                 IR.block(IR.exprResult(functionContext.suspend().srcrefTreeIfMissing(arg))))));
 
-    // Add resume call after for-await-of
+    // Add resume call after for-await-of, including any labels: the labels must stay directly
+    // attached to the loop, and `break label;` must still reach the resume call.
+    while (parent.isLabel()) {
+      n = parent;
+      parent = n.getParent();
+    }
     if (!parent.isBlock()) {
       // NOTE: if the for-await-of is _not_ the child of a block, we could be in trouble.
       Node block = IR.block();
