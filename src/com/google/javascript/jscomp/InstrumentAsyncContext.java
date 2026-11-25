@@ -116,7 +116,10 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     if (n.isName() && n.getString().startsWith(FACTORY)) {
       alreadyInstrumented.add(t.getEnclosingFunction());
     } else if (n.isSuper()) {
-      hasSuper.add(t.getEnclosingFunction());
+      Node superFunction = findSuperBindingFunction(n);
+      if (superFunction != null) {
+        hasSuper.add(superFunction);
+      }
     } else if (isReentrance(n)) {
       instrumentReentrance(t, n, parent);
     } else if (n.equals(tryFunctionStack.peek())) {
@@ -147,6 +150,26 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
         instrumentAsyncFunction(n, t.getInput(), context);
       }
     }
+  }
+
+  /**
+   * Returns the non-arrow function whose {@code super} binding the given {@code super} node uses,
+   * or null if it is bound by a class field initializer instead.
+   */
+  private static @Nullable Node findSuperBindingFunction(Node superNode) {
+    for (Node child = superNode, parent = superNode.getParent();
+        parent != null;
+        child = parent, parent = parent.getParent()) {
+      // Es6NormalizeClasses always transpiles away class static blocks before this pass runs.
+      checkState(!NodeUtil.isClassStaticBlock(parent), parent);
+      if (parent.isFunction() && !parent.isArrowFunction()) {
+        return parent;
+      } else if (parent.isMemberFieldDef()
+          || (parent.isComputedFieldDef() && child == parent.getSecondChild())) {
+        return null;
+      }
+    }
+    return null;
   }
 
   // When we see a reentrance node, we need to do several things:

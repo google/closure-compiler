@@ -15,9 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
-
 import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +47,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
           "PARAM", "jscomp$param$");
 
   private boolean instrumentAwait = true;
+  private boolean normalizeClasses = false;
 
   private static final boolean SUPPORT_TOP_LEVEL_AWAIT = false;
 
@@ -98,6 +96,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     instrumentAwait = true;
+    normalizeClasses = false;
     enableNormalize();
     setGenericNameReplacements(SPECIAL_VARIABLES_MAP);
   }
@@ -111,6 +110,9 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
             (c) ->
                 new InjectTranspilationRuntimeLibraries(
                     compiler, /* shouldInstrumentAsyncContext= */ true)));
+    if (normalizeClasses) {
+      optimizer.addOneTimePass(makePassFactory("es6NormalizeClasses", Es6NormalizeClasses::new));
+    }
     optimizer.addOneTimePass(
         makePassFactory(
             "instrumentAsyncContext",
@@ -2244,29 +2246,214 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  // `super` inside an arrow function belongs to the enclosing method, so the generator method still
+  // needs to be split rather than moved into an IIFE.
   @Test
-  public void testSuperInFieldInitializerInsideGeneratorFunction_knownBug() {
+  public void testAsyncGeneratorMethodSuperInArrow() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo extends Bar {
+          async *f() {
+            const fn = () => super.f();
+            yield await fn();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo extends Bar {
+          f() {
+            var ᵃᶜfactory$2 = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$1(ᵃᶜfactory$2);
+          }
+          async *f$jscomp$m1146332801$1(ᵃᶜfactory$0) {
+            var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+            var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+            ᵃᶜresume$0();
+            try {
+              const fn = () => {
+                return super.f();
+              };
+              ᵃᶜresume$0(yield ᵃᶜsuspend$0(ᵃᶜresume$0(await ᵃᶜsuspend$0(fn()))));
+            } finally {
+              ᵃᶜsuspend$0();
+            }
+          }
+        }
+        """);
+  }
+
+  // `super` inside a class field initializer belongs to the field, not to the enclosing generator,
+  // so a non-method generator is still moved into an IIFE.
+  @Test
+  public void testSuperInFieldInitializerInsideGeneratorFunction() {
     setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
-    // TODO(b/571957977): This should compile, moving the generator body into a generator IIFE.
-    // Instead, the `super` in the nested class's field initializer is attributed to the enclosing
-    // generator function, so the generator is split as if it were a method. That inserts a
-    // MEMBER_FUNCTION_DEF under the CONST declaration and the AST is invalid.
-    IllegalStateException e =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                testSame(
-                    """
-                    const v = new AsyncContext.Variable();
-                    v.run(100, () => {});
-                    const f = function*() {
-                      class D extends B {
-                        x = super.prop;
-                      }
-                      yield new D().x;
-                    };
-                    """));
-    assertThat(e).hasMessageThat().contains("Invalid child for CONST node");
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        const f = function*() {
+          class D extends B {
+            x = super.prop;
+          }
+          yield new D().x;
+        };
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        const f = function() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          return (function*() {
+            ᵃᶜresume$0();
+            try {
+              class D extends B {
+                x = super.prop;
+              }
+              ᵃᶜresume$0(yield ᵃᶜsuspend$0(new D().x));
+            } finally {
+              ᵃᶜsuspend$0();
+            }
+          })();
+        };
+        """);
+  }
+
+  // Same as above, for an async generator and a computed field.
+  @Test
+  public void testSuperInComputedFieldInitializerInsideAsyncGeneratorFunction() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function* f() {
+          class Inner extends Base {
+            ['field'] = super.x;
+          }
+          yield await new Inner().field;
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          return (async function*() {
+            ᵃᶜresume$0();
+            try {
+              class Inner extends Base {
+                ['field'] = super.x;
+              }
+              ᵃᶜresume$0(yield ᵃᶜsuspend$0(ᵃᶜresume$0(await ᵃᶜsuspend$0(new Inner().field))));
+            } finally {
+              ᵃᶜsuspend$0();
+            }
+          })();
+        }
+        """);
+  }
+
+  // A computed field's *key* is evaluated in the enclosing scope (unlike its initializer), so
+  // `super` in `[super.x] = 1` belongs to the enclosing generator method, which must be split.
+  @Test
+  public void testGeneratorMethodSuperInComputedFieldKey() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo extends Bar {
+          *f() {
+            class Inner {
+              [super.x] = 1;
+            }
+            yield new Inner();
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo extends Bar {
+          f() {
+            var ᵃᶜfactory$2 = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$1(ᵃᶜfactory$2);
+          }
+          *f$jscomp$m1146332801$1(ᵃᶜfactory$0) {
+            var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+            var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+            ᵃᶜresume$0();
+            try {
+              class Inner {
+                [super.x] = 1;
+              }
+              ᵃᶜresume$0(yield ᵃᶜsuspend$0(new Inner()));
+            } finally {
+              ᵃᶜsuspend$0();
+            }
+          }
+        }
+        """);
+  }
+
+  // In production, Es6NormalizeClasses always runs before InstrumentAsyncContext and lowers class
+  // static blocks containing `super` into static methods (`enableNormalize()` in CompilerTestCase
+  // only runs Normalize, not Es6NormalizeClasses). Verify that with Es6NormalizeClasses enabled,
+  // `super` in a static block is scoped to that static method and does not leak to the generator.
+  @Test
+  public void testSuperInClassStaticBlockInsideGeneratorFunction() {
+    normalizeClasses = true;
+    // Keep `super.prop` intact (as in transpile-only mode) rather than rewriting it to `B.prop`,
+    // so Es6NormalizeClasses moves the static block into a synthesized static method and
+    // InstrumentAsyncContext still visits the `super` node.
+    setAssumeStaticInheritanceIsNotUsed(false);
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function* f() {
+          class D extends B {
+            static {
+              use(super.prop);
+            }
+          }
+          yield new D();
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function f() {
+          var ᵃᶜfactory$1 = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend$1 = ᵃᶜfactory$1();
+          var ᵃᶜresume$1 = ᵃᶜfactory$1(1);
+          return (function*() {
+            ᵃᶜresume$1();
+            try {
+              class D extends B {
+                static $jscomp$staticInit$m1146332801$0() {
+                  {
+                    use(super.prop);
+                  }
+                }
+              }
+              D.$jscomp$staticInit$m1146332801$0();
+              ᵃᶜresume$1(yield ᵃᶜsuspend$1(new D()));
+            } finally {
+              ᵃᶜsuspend$1();
+            }
+          })();
+        }
+        """);
   }
 
   @Test
