@@ -479,6 +479,11 @@ $jscomp.AsyncGeneratorWrapper.prototype.runDelegateFrame_ = function() {
  */
 $jscomp.AsyncGeneratorWrapper.prototype.handleDelegateResult_ = function(
     record) {
+  if (Object(record) !== record) {
+    this.handleDelegateError_(
+        new TypeError('Iterator result is not an object'));
+    return;
+  }
   var frame = this.executionQueue_.first();
   if (record.done === true) {
     // Delegate is done. Its return value becomes the value of the `yield*`
