@@ -1315,7 +1315,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
     ValueType rightValueType = NodeUtil.getKnownValueType(right);
     // First, check for a string comparison.
-    if (leftValueType == ValueType.STRING && rightValueType == ValueType.STRING) {
+    if (toPrimitiveIsKnownString(left, leftValueType)
+        && toPrimitiveIsKnownString(right, rightValueType)) {
       String lvStr = peepholeOptimization.getSideEffectFreeStringValue(left);
       String rvStr = peepholeOptimization.getSideEffectFreeStringValue(right);
       if (lvStr != null && rvStr != null) {
@@ -1339,9 +1340,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // Per ECMA-262, comparing a BigInt with a String converts the String to a BigInt via
     // StringToBigInt(string). If StringToBigInt returns undefined (invalid BigInt syntax like
     // "foo", "1e2", "1.5"), all relational comparisons (<, >, <=, >=) return false.
-    if (leftValueType == ValueType.BIGINT && rightValueType == ValueType.STRING) {
+    if (leftValueType == ValueType.BIGINT && toPrimitiveIsKnownString(right, rightValueType)) {
       String rvStr = peepholeOptimization.getSideEffectFreeStringValue(right);
       if (rvStr != null) {
+        // getStringBigIntValue returns null for \v (ambiguous whitespace across browsers), not just
+        // invalid BigInt syntax, so bail out rather than miscompiling to false.
+        if (rvStr.indexOf('\u000B') != -1) {
+          return Tri.UNKNOWN;
+        }
         BigInteger rvBig = NodeUtil.getStringBigIntValue(rvStr);
         if (rvBig == null) {
           return Tri.forBoolean(willNegate);
@@ -1353,9 +1359,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
       return Tri.UNKNOWN;
     }
-    if (leftValueType == ValueType.STRING && rightValueType == ValueType.BIGINT) {
+    if (toPrimitiveIsKnownString(left, leftValueType) && rightValueType == ValueType.BIGINT) {
       String lvStr = peepholeOptimization.getSideEffectFreeStringValue(left);
       if (lvStr != null) {
+        // getStringBigIntValue returns null for \v (ambiguous whitespace across browsers), not just
+        // invalid BigInt syntax, so bail out rather than miscompiling to false.
+        if (lvStr.indexOf('\u000B') != -1) {
+          return Tri.UNKNOWN;
+        }
         BigInteger lvBig = NodeUtil.getStringBigIntValue(lvStr);
         if (lvBig == null) {
           return Tri.forBoolean(willNegate);
@@ -1404,6 +1415,17 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     return Tri.UNKNOWN;
+  }
+
+  /**
+   * Whether ToPrimitive(n, number) is known to produce a string: either n is already a string, or
+   * it is an array literal or an empty object literal. For those literals valueOf returns the
+   * object itself, so ToPrimitive falls back to toString and {@code [10] < '9'} compares "10" with
+   * "9". An object literal with its own members may define valueOf, toString or
+   * [Symbol.toPrimitive], so it is not included.
+   */
+  private static boolean toPrimitiveIsKnownString(Node n, ValueType valueType) {
+    return valueType == ValueType.STRING || n.isArrayLit() || (n.isObjectLit() && !n.hasChildren());
   }
 
   private static Tri bigintLessThanDouble(
