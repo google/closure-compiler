@@ -579,6 +579,16 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getStringValue(parseExpr("1.2323919403474454e+21")))
           .isEqualTo("1.2323919403474454e+21");
 
+      // Subnormal numbers whose upper 32-bit word is zero or shifts to zero in DToA.d2b.
+      // Pins existing buggy behavior ahead of the DToA fix.
+      assertThat(NodeUtil.getStringValue(parseExpr("3.5e-323"))).isEqualTo("0.035e-321");
+      Node n = parseExpr("1.060997895e-314");
+      assertThrows(ArithmeticException.class, () -> NodeUtil.getStringValue(n));
+      assertThat(NodeUtil.getStringValue(parseExpr("1.0609978955e-314")))
+          .isEqualTo((char) 0x009a + ".09978955e-316");
+      assertThat(NodeUtil.getStringValue(parseExpr("3.1829936864e-314")))
+          .isEqualTo((char) 0x016e + ".29936864e-316");
+
       assertThat(NodeUtil.getStringValue(parseExpr("'0'"))).isEqualTo("0");
       assertThat(NodeUtil.getStringValue(parseExpr("/a/"))).isNull();
       assertThat(NodeUtil.getStringValue(parseExpr("{}"))).isEqualTo("[object Object]");
