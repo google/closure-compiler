@@ -25,9 +25,11 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -67,6 +69,9 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   private final Set<Node> hasSuper = new LinkedHashSet<>();
   // Catch and finally blocks that need a resume() call prepended.
   private final Set<Node> blocksNeedingResume = new LinkedHashSet<>();
+  // `return await` nodes outside of any try, keyed by enclosing function. These only need to be
+  // instrumented if the function is instrumented for some other reason.
+  private final Map<Node, List<Node>> deferredReturnAwaits = new LinkedHashMap<>();
 
   public InstrumentAsyncContext(AbstractCompiler compiler, boolean shouldInstrumentAwait) {
     this.compiler = compiler;
@@ -124,8 +129,14 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
               ? needsInstrumentation.computeIfAbsent(
                   n, (unused) -> createNewFunctionContext(t.getInput()))
               : needsInstrumentation.get(n);
+      List<Node> returnAwaits = deferredReturnAwaits.remove(n);
       if (context == null) {
         return;
+      }
+      if (returnAwaits != null) {
+        for (Node returnAwait : returnAwaits) {
+          wrapReentrance(returnAwait, context);
+        }
       }
       if (n.isTry()) {
         instrumentTry(n, context);
@@ -139,10 +150,11 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   }
 
   // When we see a reentrance node, we need to do several things:
-  //  1. replace `await EXPR` with `ᵃᶜresume(await ᵃᶜsuspend(EXPR))`
+  //  1. replace `await EXPR` with `ᵃᶜresume(await ᵃᶜsuspend(EXPR))` (or `await ᵃᶜsuspend(EXPR)`
+  //     when directly under `return`)
   //  2. ensure the enclosing function has been instrumented with `$jscomp.asyncContextStart` and a
   //     `try`-`finally`
-  //  3. look for an immediately-enclosing `try` block and instrument it with `ᵃᶜresume`
+  //  3. look for enclosing `try` blocks and instrument their `catch`/`finally` with `ᵃᶜresume`
   private void instrumentReentrance(NodeTraversal t, Node n, Node parent) {
     Node enclosingTry = tryFunctionStack.peek();
     if (enclosingTry != null && !enclosingTry.isTry()) {
@@ -160,8 +172,17 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     } else if (parent.isFunction()) {
       // `async (...) => await ...` - no reentrance, so no instrumentation needed.
       return;
-    } else if (parent.isReturn() && enclosingTry == null) {
-      // `return await ...` - no reentrance unless we're inside a `try`.
+    } else if (parent.isReturn() && n.isAwait() && enclosingTry == null) {
+      // `return await ...` - no code in this function runs after it settles unless we're inside a
+      // `try`, so an otherwise-uninstrumented async function needs no instrumentation at all (its
+      // operand runs synchronously before the first suspension).  If the function is instrumented
+      // for another reason, the await must still suspend the function's context so it doesn't leak
+      // while the promise is pending.  Defer until the whole function has been visited.
+      // (`return yield ...` cannot be skipped even if it is the only yield: calling a generator
+      // returns a suspended iterator without running its body, so the generator is always
+      // instrumented to restore its creation context on the first `.next()`, and `return yield`
+      // must suspend back to the caller's context before pausing.)
+      deferredReturnAwaits.computeIfAbsent(enclosingFunction, unused -> new ArrayList<>()).add(n);
       return;
     }
 
@@ -176,7 +197,17 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       instrumentForAwaitOf(t, n, parent, functionContext);
       return;
     }
+    wrapReentrance(n, functionContext);
+  }
 
+  /**
+   * Replaces {@code await EXPR} with {@code ᵃᶜresume(await ᵃᶜsuspend(EXPR))} (and likewise for
+   * {@code yield}), omitting the outer {@code ᵃᶜresume(...)} when directly under {@code return}
+   * since nothing in the function runs after it settles except enclosing {@code catch}/{@code
+   * finally} blocks (which resume themselves) and the function-level {@code finally { ᵃᶜsuspend();
+   * }} (a no-op when already suspended).
+   */
+  private static void wrapReentrance(Node n, FunctionContext functionContext) {
     // Wrap yielded/awaited expression with a ᵃᶜsuspend(...) call
     Node placeholder = IR.empty();
     Node arg = n.getFirstChild();
@@ -187,9 +218,11 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       placeholder.replaceWith(functionContext.suspend(arg).srcrefTreeIfMissing(arg));
     }
 
-    // Wrap the entire yield/await with a ᵃᶜresume(...) call
-    n.replaceWith(placeholder);
-    placeholder.replaceWith(functionContext.resume(n).srcrefTreeIfMissing(n));
+    if (!n.getParent().isReturn()) {
+      // Wrap the entire yield/await with a ᵃᶜresume(...) call
+      n.replaceWith(placeholder);
+      placeholder.replaceWith(functionContext.resume(n).srcrefTreeIfMissing(n));
+    }
   }
 
   void instrumentForAwaitOf(NodeTraversal t, Node n, Node parent, FunctionContext functionContext) {

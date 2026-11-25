@@ -818,8 +818,9 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
   }
 
   // `return await` does not require any instrumentation if it's not inside a try block.
-  // But if there's a catch block, then the function context may still get resumeed after the
-  // await, if the awaited promise is rejected.  So this should be instrumented normally.
+  // If there's a catch block, the function context must be resumed in `catch` if the awaited
+  // promise is rejected.  The `return await` itself only needs `suspend()` (no `resume()` wrapper)
+  // because nothing in the `try` block runs after it settles, and `catch` resumes on its own.
   @Test
   public void testReturnAwaitInsideTryCatch() {
     test(
@@ -843,7 +844,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
           var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
           try {
             try {
-              return ᵃᶜresume$0(await ᵃᶜsuspend$0(1));
+              return await ᵃᶜsuspend$0(1);
             } catch (e) {
               ᵃᶜresume$0();
               console.log(e);
@@ -855,8 +856,8 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
-  // `return await` does not require any instrumentation if it's not inside a try block.
-  // But if there's a finally, then the function context will still get resumeed after the await.
+  // `return await` inside a try-finally suspends before the await; no `resume()` wrapper is needed
+  // around the await because the `finally` block has its own `resume()` call.
   @Test
   public void testReturnAwaitInsideTryFinally() {
     test(
@@ -880,7 +881,7 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
           var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
           try {
             try {
-              return ᵃᶜresume$0(await ᵃᶜsuspend$0(1));
+              return await ᵃᶜsuspend$0(1);
             } finally {
               ᵃᶜresume$0();
               console.log('finally');
@@ -892,16 +893,18 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  // `return await` outside a try block still needs `suspend()` if the function is instrumented for
+  // another reason (no `resume()` wrapper is needed because nothing in the function runs after it
+  // settles except the synthesized `finally { suspend(); }`, which is a no-op when already
+  // suspended). Without `suspend()` before the outer await, the function's context stays installed
+  // globally while the returned promise is pending: after `v.run('A', f)`, once `await bar()`
+  // resumes and installs 'A', an uninstrumented `await foo(...)` would leave 'A' installed after
+  // the microtask checkpoint. Any task the polyfill does not wrap that runs before `foo(...)`
+  // settles (e.g. a MessageChannel `onmessage` or `onclick` property handler) would then see
+  // `v.get() === 'A'` instead of `undefined`, and the final `suspend()` would restore the outer
+  // context captured when `await bar()` resumed, which may be stale by then.
   @Test
-  public void testReturnAwaitInInstrumentedFunction_knownBug() {
-    // TODO(b/572972084): The outer `return await` should be instrumented as
-    // `return await ᵃᶜsuspend$0(foo(...))`. As is, after `v.run('A', f)`, once
-    // `await bar()` resumes and `ᵃᶜresume$0` installs 'A', the uninstrumented `await foo(...)`
-    // leaves 'A' installed globally after the microtask checkpoint. Any task the polyfill does not
-    // wrap that runs before `foo(...)` settles (e.g. an `onclick` property handler or a custom
-    // element `connectedCallback`) then sees `v.get() === 'A'` instead of `undefined`, and the
-    // final `ᵃᶜsuspend$0()` restores the outer context captured when `await bar()` resumed, which
-    // may be stale by then.
+  public void testReturnAwaitInInstrumentedFunction() {
     test(
         """
         const v = new AsyncContext.Variable();
@@ -918,10 +921,81 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
           var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
           var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
           try {
-            return await foo(ᵃᶜresume$0(await ᵃᶜsuspend$0(bar())));
+            return await ᵃᶜsuspend$0(foo(ᵃᶜresume$0(await ᵃᶜsuspend$0(bar()))));
           } finally {
             ᵃᶜsuspend$0();
           }
+        }
+        """);
+  }
+
+  // Same as above, but where the instrumentation is triggered by a later await.
+  @Test
+  public void testReturnAwaitBeforeOtherAwait() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(x) {
+          if (x) {
+            return await foo();
+          }
+          await bar();
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(x) {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            if (x) {
+              return await ᵃᶜsuspend$0(foo());
+            }
+            ᵃᶜresume$0(await ᵃᶜsuspend$0(bar()));
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  // Unlike `async function f() { return await getValue(); }` (where `getValue()` runs synchronously
+  // during `v.run('A', f)` before `f` suspends), calling a generator returns a suspended iterator
+  // without running its body.  So even when `return yield` is the only suspension in a generator,
+  // the generator function must still be instrumented so the first `.next()` restores 'A' for
+  // `getValue()`, and `return yield` must still call `suspend()` before pausing at `yield` so it
+  // does not leave 'A' installed in the caller's context.  No `resume()` wrapper is needed around
+  // `yield`, since nothing in the generator runs after it resumes except enclosing
+  // `catch`/`finally`
+  // blocks (which resume themselves) and the synthesized `finally { suspend(); }` (a no-op).
+  @Test
+  public void testReturnYieldInAsyncGenerator() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function* g() {
+          return yield getValue();
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        function g() {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart(1);
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          return (async function*() {
+            ᵃᶜresume$0();
+            try {
+              return yield ᵃᶜsuspend$0(getValue());
+            } finally {
+              ᵃᶜsuspend$0();
+            }
+          })();
         }
         """);
   }
