@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
+
 import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -2239,6 +2242,31 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
           }
         }
         """);
+  }
+
+  @Test
+  public void testSuperInFieldInitializerInsideGeneratorFunction_knownBug() {
+    setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT_2022);
+    // TODO(b/571957977): This should compile, moving the generator body into a generator IIFE.
+    // Instead, the `super` in the nested class's field initializer is attributed to the enclosing
+    // generator function, so the generator is split as if it were a method. That inserts a
+    // MEMBER_FUNCTION_DEF under the CONST declaration and the AST is invalid.
+    IllegalStateException e =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                testSame(
+                    """
+                    const v = new AsyncContext.Variable();
+                    v.run(100, () => {});
+                    const f = function*() {
+                      class D extends B {
+                        x = super.prop;
+                      }
+                      yield new D().x;
+                    };
+                    """));
+    assertThat(e).hasMessageThat().contains("Invalid child for CONST node");
   }
 
   @Test
