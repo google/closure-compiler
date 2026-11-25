@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -47,6 +48,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
   private static final String FACTORY = "ᵃᶜfactory";
   private static final String SUSPEND = "ᵃᶜsuspend";
   private static final String RESUME = "ᵃᶜresume";
+  private static final String FOR_AWAIT_VALUE = "$jscomp$forAwait$";
 
   private final AbstractCompiler compiler;
   private final AstFactory astFactory;
@@ -262,6 +264,20 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     //   }
     // }
     // resume();
+    //
+    // Any loop head other than a plain name is moved into the body, after the resume() call, since
+    // destructuring defaults and assignment targets would otherwise be evaluated while the
+    // function's context is suspended:
+    // for await (const {a = f()} of expr()) { use(a); }
+    //     becomes
+    // for await (const $jscomp$forAwait$0 of suspend(expr())) {
+    //   resume();
+    //   try {
+    //     const {a = f()} = $jscomp$forAwait$0;
+    //     use(a);
+    //   } finally { ... }
+    // }
+    Node headStatement = moveForAwaitHeadIntoStatement(t, n);
 
     // First wrap the iterator argument
     Node placeholder = IR.empty();
@@ -276,7 +292,8 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
         IR.block(
             IR.exprResult(functionContext.resume().srcrefTreeIfMissing(arg)),
             IR.tryFinally(
-                body, //
+                // Keep the original body nested, since it may shadow names declared in the head.
+                headStatement != null ? IR.block(headStatement, body).srcref(body) : body,
                 IR.block(IR.exprResult(functionContext.suspend().srcrefTreeIfMissing(arg))))));
 
     // Add resume call after for-await-of, including any labels: the labels must stay directly
@@ -293,6 +310,34 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
       n = block;
     }
     IR.exprResult(functionContext.resume().srcrefTreeIfMissing(arg)).insertAfter(n);
+  }
+
+  /**
+   * If the head of the given {@code for await} loop is anything other than a plain name, replaces
+   * it with a fresh constant and returns a statement that assigns that constant to the original
+   * head. Otherwise returns null.
+   */
+  private @Nullable Node moveForAwaitHeadIntoStatement(NodeTraversal t, Node forAwait) {
+    Node head = forAwait.getFirstChild();
+    if (head.isName() || (NodeUtil.isNameDeclaration(head) && head.getFirstChild().isName())) {
+      return null;
+    }
+    Node value =
+        astFactory.createNameWithUnknownType(
+            FOR_AWAIT_VALUE + uniqueIdSupplier.getUniqueId(t.getInput()));
+    value.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    head.replaceWith(IR.declaration(value.cloneNode(), Token.CONST).srcrefTreeIfMissing(head));
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
+    Node statement;
+    if (NodeUtil.isNameDeclaration(head)) {
+      // `const {a = f()} of ...` (the only child is a DESTRUCTURING_LHS without a value)
+      Node pattern = head.getOnlyChild().getOnlyChild().detach();
+      statement = IR.declaration(pattern, value, head.getToken());
+    } else {
+      // `o[k()] of ...` or `[a, b] of ...`
+      statement = IR.exprResult(astFactory.createAssign(head, value));
+    }
+    return statement.srcrefTreeIfMissing(head);
   }
 
   void instrumentTry(Node n, FunctionContext functionContext) {

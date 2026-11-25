@@ -44,7 +44,8 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
           "ᵃᶜresume", "ᵃᶜresume",
           "THIS", "$jscomp$this$",
           "ARGUMENTS", "$jscomp$arguments$",
-          "PARAM", "jscomp$param$");
+          "PARAM", "jscomp$param$",
+          "FOR_AWAIT", "$jscomp$forAwait$");
 
   private boolean instrumentAwait = true;
   private boolean normalizeClasses = false;
@@ -339,11 +340,10 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  // A for-await head other than a plain name is moved into the loop body, after the resume() call,
+  // so that destructuring defaults and assignment targets are evaluated in the function's context.
   @Test
-  public void testForAwaitWithDestructuringHead_knownBug() {
-    // TODO(b/586787233): The destructuring `const {a = g()}` should be moved into the loop body
-    // after `ᵃᶜresume$0()`. Today `g()` runs in the loop head, between `ᵃᶜsuspend$0` and
-    // `ᵃᶜresume$0`, so it runs with the function's context suspended.
+  public void testForAwaitWithDestructuringHead() {
     test(
         """
         const v = new AsyncContext.Variable();
@@ -362,10 +362,172 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
           var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
           var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
           try {
-            for await (const {a = g()} of ᵃᶜsuspend$0(xs)) {
+            for await (const FOR_AWAIT$1 of ᵃᶜsuspend$0(xs)) {
               ᵃᶜresume$0();
               try {
-                use(a);
+                const {a = g()} = FOR_AWAIT$1;
+                {
+                  use(a);
+                }
+              } finally {
+                ᵃᶜsuspend$0();
+              }
+            }
+            ᵃᶜresume$0();
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  // The original body may shadow names declared in the head.
+  @Test
+  public void testForAwaitWithDestructuringHeadShadowedInBody() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs) {
+          for await (const {a = g()} of xs) {
+            const a = 1;
+            use(a);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs) {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            for await (const FOR_AWAIT$1 of ᵃᶜsuspend$0(xs)) {
+              ᵃᶜresume$0();
+              try {
+                const {a = g()} = FOR_AWAIT$1;
+                {
+                  const a$jscomp$1 = 1;
+                  use(a$jscomp$1);
+                }
+              } finally {
+                ᵃᶜsuspend$0();
+              }
+            }
+            ᵃᶜresume$0();
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testForAwaitWithLetArrayPatternHead() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs) {
+          for await (let [a = g()] of xs) {
+            use(a);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs) {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            for await (const FOR_AWAIT$1 of ᵃᶜsuspend$0(xs)) {
+              ᵃᶜresume$0();
+              try {
+                let [a = g()] = FOR_AWAIT$1;
+                {
+                  use(a);
+                }
+              } finally {
+                ᵃᶜsuspend$0();
+              }
+            }
+            ᵃᶜresume$0();
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  @Test
+  public void testForAwaitWithAssignmentTargetHead() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs, o) {
+          for await (o[k()] of xs) {
+            use(o);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs, o) {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            for await (const FOR_AWAIT$1 of ᵃᶜsuspend$0(xs)) {
+              ᵃᶜresume$0();
+              try {
+                o[k()] = FOR_AWAIT$1;
+                {
+                  use(o);
+                }
+              } finally {
+                ᵃᶜsuspend$0();
+              }
+            }
+            ᵃᶜresume$0();
+          } finally {
+            ᵃᶜsuspend$0();
+          }
+        }
+        """);
+  }
+
+  // A plain name in the head is left alone.
+  @Test
+  public void testForAwaitWithNameTargetHead() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs) {
+          let x;
+          for await (x of xs) {
+            use(x);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        async function f(xs) {
+          var ᵃᶜfactory$0 = $jscomp.asyncContextStart();
+          var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+          var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+          try {
+            let x;
+            for await (x of ᵃᶜsuspend$0(xs)) {
+              ᵃᶜresume$0();
+              try {
+                use(x);
               } finally {
                 ᵃᶜsuspend$0();
               }
