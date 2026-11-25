@@ -16,10 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Iterables;
-import com.google.javascript.jscomp.graph.GraphvizGraph;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-
 /** Pass factories and meta-data for native Compiler passes. */
 public abstract class PassConfig {
 
@@ -70,36 +66,6 @@ public abstract class PassConfig {
    * its final form for output.
    */
   protected abstract PassListBuilder getFinalizations();
-
-  /** Gets a graph of the passes run. For debugging. */
-  GraphvizGraph getPassGraph() {
-    LinkedDirectedGraph<String, String> graph = LinkedDirectedGraph.createWithoutAnnotations();
-    Iterable<PassFactory> allPasses =
-        Iterables.concat(getChecks().build(), getOptimizations().build());
-    String lastPass = null;
-    String loopStart = null;
-    for (PassFactory pass : allPasses) {
-      String passName = pass.getName();
-      int i = 1;
-      while (graph.hasNode(passName)) {
-        passName = pass.getName() + (i++);
-      }
-      graph.createNode(passName);
-
-      if (loopStart == null && pass.isRunInFixedPointLoop()) {
-        loopStart = passName;
-      } else if (loopStart != null && !pass.isRunInFixedPointLoop()) {
-        graph.connect(lastPass, "loop", loopStart);
-        loopStart = null;
-      }
-
-      if (lastPass != null) {
-        graph.connect(lastPass, "", passName);
-      }
-      lastPass = passName;
-    }
-    return graph;
-  }
 
   /** Find the first pass provider that does not have a delegate. */
   final PassConfig getBasePassConfig() {
