@@ -1149,6 +1149,69 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         .containsExactly("es6/array/values");
   }
 
+  // https://github.com/google/closure-compiler/issues/4401
+  @Test
+  public void testExportedEs6MethodNamedLikeIteratorHelperDoesNotInjectIteratorPolyfill() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setGenerateExports(true);
+    options.setRewritePolyfills(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
+
+    compile(
+        options,
+        new String[] {
+          """
+          class Foo {
+            constructor() { /** @const {!Array<number>} */ this.a = [1, 2]; }
+            /** @param {number} i @return {number} @export */
+            find(i) { return this.a[i]; }
+            /** @param {number} i @return {number} @export */
+            static some(i) { return i; }
+          }
+          window['makeFoo'] = () => new Foo();
+          """
+        });
+
+    assertThat(lastCompiler.getResult().errors).isEmpty();
+    assertThat(lastCompiler.toSource()).contains("\"find\", a.prototype.find");
+    assertThat(lastCompiler.getRuntimeJsLibManager().getInjectedLibraries())
+        .containsNoneOf("es6/iterator/find", "es6/iterator/some");
+  }
+
+  // https://github.com/google/closure-compiler/issues/4401
+  @Test
+  public void testExportedEs5MethodNamedLikeIteratorHelperDoesNotInjectIteratorPolyfill() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setGenerateExports(true);
+    options.setRewritePolyfills(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setRuntimeLibraryMode(RuntimeJsLibManager.RuntimeLibraryMode.RECORD_ONLY);
+
+    compile(
+        options,
+        new String[] {
+          """
+          /** @constructor */
+          function Foo() { /** @const {!Array<number>} */ this.a = [1, 2]; }
+          /** @param {number} i @return {number} @export */
+          Foo.prototype.find = function(i) { return this.a[i]; };
+          /** @param {number} i @return {number} @export */
+          Foo.some = function(i) { return i; };
+          window['makeFoo'] = function() { return new Foo(); };
+          """
+        });
+
+    assertThat(lastCompiler.getResult().errors).isEmpty();
+    assertThat(lastCompiler.toSource()).contains("\"find\", a.prototype.find");
+    assertThat(lastCompiler.getRuntimeJsLibManager().getInjectedLibraries())
+        .containsNoneOf("es6/iterator/find", "es6/iterator/some");
+  }
+
   @Test
   public void testWindowIsTypedEs6() {
     CompilerOptions options = createCompilerOptions();
