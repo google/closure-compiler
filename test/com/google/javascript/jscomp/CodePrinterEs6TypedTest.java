@@ -16,14 +16,25 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.TypeDeclarationsIR.anyType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.arrayType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.booleanType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.functionType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.namedType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.numberType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.optionalParameter;
 import static com.google.javascript.rhino.TypeDeclarationsIR.parameterizedType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.recordType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.stringType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.undefinedType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.unionType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.voidType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.LinkedHashMap;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -166,5 +177,53 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
     lhs.setDeclaredTypeExpression(type);
     Node var = IR.var(lhs);
     assertPrettyPrint(var, "var x: my.parameterized.Type<ns.A, ns.B>;");
+    assertThat(parameterizedType(namedType("ns.Plain"), ImmutableList.of()).getToken())
+        .isEqualTo(Token.NAMED_TYPE);
+  }
+
+  @Test
+  public void testTypeDeclarationsIrBuiltinRecordUnionAndFunctionTypes() {
+    Node s = IR.name("s");
+    s.setDeclaredTypeExpression(stringType());
+    assertPrettyPrint(IR.var(s), "var s: string;");
+
+    Node n = IR.name("n");
+    n.setDeclaredTypeExpression(numberType());
+    assertPrettyPrint(IR.var(n), "var n: number;");
+
+    Node b = IR.name("b");
+    b.setDeclaredTypeExpression(booleanType());
+    assertPrettyPrint(IR.var(b), "var b: boolean;");
+
+    Node a = IR.name("a");
+    a.setDeclaredTypeExpression(anyType());
+    assertPrettyPrint(IR.var(a), "var a: any;");
+
+    Node v = IR.name("v");
+    v.setDeclaredTypeExpression(voidType());
+    assertPrettyPrint(IR.var(v), "var v: void;");
+
+    assertThat(undefinedType().getToken()).isEqualTo(Token.UNDEFINED_TYPE);
+    assertThat(optionalParameter(stringType()).getToken()).isEqualTo(Token.OPTIONAL_PARAMETER);
+
+    LinkedHashMap<String, Node> props = new LinkedHashMap<>();
+    props.put("count", numberType());
+    props.put("label", stringType());
+    Node rec = IR.name("rec");
+    rec.setDeclaredTypeExpression(recordType(props));
+    assertPrettyPrint(IR.var(rec), "var rec: {count:number, label:string};");
+
+    Node union = IR.name("u");
+    union.setDeclaredTypeExpression(unionType(stringType(), numberType()));
+    assertPrettyPrint(IR.var(union), "var u: string | number;");
+
+    LinkedHashMap<String, Node> required = new LinkedHashMap<>();
+    required.put("x", numberType());
+    LinkedHashMap<String, Node> optional = new LinkedHashMap<>();
+    optional.put("y", stringType());
+    Node fn = IR.name("fn");
+    fn.setDeclaredTypeExpression(
+        functionType(booleanType(), required, optional, "rest", arrayType(numberType())));
+    assertPrettyPrint(IR.var(fn), "var fn: (x: number, y?: string, ...rest: number[]) => boolean;");
   }
 }

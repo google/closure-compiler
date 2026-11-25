@@ -6733,5 +6733,34 @@ async function abc() {
     assertThat(lastCompiler.getErrors().get(0).description())
         .contains("await must be inside asynchronous function");
   }
+
+  @Test
+  public void testPropertyRenamingOnlyCompilationMode() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPropertyRenamingOnlyCompilationMode(true);
+    options.setClosurePass(true);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRewriteGlobalDeclarationsForTryCatchWrapping(true);
+    options.setRenamePrefixNamespace("_");
+
+    test(
+        options,
+        """
+        var ns = {};
+        ns.helper = function(localParam) {
+          var unrenamedLocal = {longPropertyName: localParam};
+          return unrenamedLocal.longPropertyName;
+        };
+        window['run'] = ns.helper;
+        """,
+        """
+        _.ns$helper = function(localParam) {
+          var unrenamedLocal = {a:localParam};
+          return unrenamedLocal.a;
+        };
+        window["run"] = _.ns$helper;
+        """);
+  }
 }
 

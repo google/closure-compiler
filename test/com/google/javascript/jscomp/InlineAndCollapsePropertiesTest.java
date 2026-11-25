@@ -4617,6 +4617,107 @@ use(Foo$Bar$baz$A);
   }
 
   @Test
+  public void testDestructuringGlobalNameExtractor_letDeclarationAndMultipleKeys() {
+    // `let` destructuring is not rewritten ahead of time by `RewriteSimpleDestructuringAliases`,
+    // and `@enum` allows CollapseProperties despite the destructuring ALIASING_GET on `ns`.
+    test(
+        """
+        /** @enum {number} */
+        const ns = {a: 1, b: 2};
+        let {a, b, c} = ns;
+        use(a, b, c);
+        """,
+        """
+        var ns$a = 1;
+        var ns$b = 2;
+        /** @enum {!JSDocSerializer_placeholder_type} */
+        const ns = {a:ns$a, b:ns$b};
+        let a = ns$a;
+        let b = ns$b;
+        let {c} = ns;
+        use(a, b, c);
+        """);
+  }
+
+  @Test
+  public void testDestructuringGlobalNameExtractor_assignmentExpression() {
+    test(
+        """
+        /** @enum {number} */
+        const ns = {foo: 1};
+        var foo, bar;
+        ({foo, bar} = ns);
+        use(foo, bar);
+        """,
+        """
+        var ns$foo = 1;
+        /** @enum {!JSDocSerializer_placeholder_type} */
+        const ns = {foo:ns$foo};
+        var foo, bar;
+        foo = ns$foo, ({bar} = ns);
+        use(foo, bar);
+        """);
+  }
+
+  @Test
+  public void testDestructuringGlobalNameExtractor_defaultValue() {
+    test(
+        """
+        /** @enum {number} */
+        const ns = {foo: 1};
+        const {foo = 2} = ns;
+        use(foo);
+        """,
+        """
+        var ns$foo = 1;
+        /** @enum {!JSDocSerializer_placeholder_type} */
+        const ns = {foo:ns$foo};
+        const {} = ns;
+        const foo = void 0 === ns$foo ? 2 : ns$foo;
+        use(foo);
+        """);
+  }
+
+  @Test
+  public void testDestructuringGlobalNameExtractor_objectRest() {
+    test(
+        """
+        /** @enum {number} */
+        const ns = {foo: 1};
+        const {foo, ...rest} = ns;
+        use(foo, rest);
+        """,
+        """
+        var ns$foo = 1;
+        /** @enum {!JSDocSerializer_placeholder_type} */
+        const ns = {foo:ns$foo};
+        const foo = ns$foo;
+        const {...rest} = ns;
+        use(foo, rest);
+        """);
+  }
+
+  @Test
+  public void testDestructuringGlobalNameExtractor_forLoopDeclaration() {
+    test(
+        """
+        /** @enum {number} */
+        const ns = {foo: 1};
+        for (let {foo, bar} = ns; foo < 2; foo++) {
+          use(bar);
+        }
+        """,
+        """
+        var ns$foo = 1;
+        /** @enum {!JSDocSerializer_placeholder_type} */
+        const ns = {foo:ns$foo};
+        for (let foo = ns$foo, {bar} = ns; foo < 2; foo++) {
+          use(bar);
+        }
+        """);
+  }
+
+  @Test
   public void testConcretizeStaticInheritanceForInlining() {
     test(
         "class A {} class B extends A {} B.foo = 1;",

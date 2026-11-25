@@ -1926,4 +1926,50 @@ public final class AstValidatorTest extends CompilerTestCase {
         /** @requireInlining */ myFunction\
         """);
   }
+
+  @Test
+  public void testTypeScriptDeclarations() {
+    typeInfoValidationMode = TypeInfoValidation.NONE;
+
+    Node interfaceNode =
+        new Node(
+            Token.INTERFACE,
+            IR.name("Foo"),
+            new Node(Token.INTERFACE_EXTENDS, new Node(Token.NAMED_TYPE, IR.name("Base"))),
+            new Node(Token.INTERFACE_MEMBERS, Node.newString(Token.MEMBER_VARIABLE_DEF, "bar")));
+    setTestSourceLocationForTree(interfaceNode);
+    expectValid(interfaceNode, Check.STATEMENT);
+
+    Node invalidInterfaceMember =
+        new Node(
+            Token.INTERFACE,
+            IR.name("Foo"),
+            IR.empty(),
+            new Node(Token.INTERFACE_MEMBERS, IR.block()));
+    setTestSourceLocationForTree(invalidInterfaceMember);
+    expectInvalid(
+        invalidInterfaceMember,
+        Check.STATEMENT,
+        "Interface contained member of invalid type BLOCK");
+
+    Node enumNode =
+        new Node(Token.ENUM, IR.name("Color"), new Node(Token.ENUM_MEMBERS, IR.stringKey("RED")));
+    setTestSourceLocationForTree(enumNode);
+    expectValid(enumNode, Check.STATEMENT);
+
+    Node typeAlias = Node.newString(Token.TYPE_ALIAS, "Id");
+    typeAlias.addChildToBack(new Node(Token.STRING_TYPE));
+    setTestSourceLocationForTree(typeAlias);
+    expectValid(typeAlias, Check.STATEMENT);
+
+    Node ambientNamespace =
+        new Node(
+            Token.DECLARE,
+            new Node(
+                Token.NAMESPACE,
+                IR.name("ns"),
+                new Node(Token.NAMESPACE_ELEMENTS, IR.var(IR.name("x")))));
+    setTestSourceLocationForTree(ambientNamespace);
+    expectValid(ambientNamespace, Check.STATEMENT);
+  }
 }
