@@ -114,6 +114,27 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testExportsDeclaredAsVarAndUsedWithComputedProperty() {
+    // Previously crashed with a NullPointerException in NodeUtil.getRValueOfLValue.
+    testModules(
+        "test.js",
+        """
+        var exports = {};
+        function itFails(name) {
+          exports[name] = 'anything';
+        }
+        module.exports = exports;
+        """,
+        """
+        /** @const */ var module$test = {default: {}};
+        module$test.default = {};
+        function itFails$$module$test(name) {
+          module$test.default[name] = 'anything';
+        }
+        """);
+  }
+
+  @Test
   public void testExportsInExpression() {
     testModules(
         "test.js",

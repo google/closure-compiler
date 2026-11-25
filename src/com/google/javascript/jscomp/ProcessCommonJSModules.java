@@ -1456,6 +1456,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      * = foo or a property assignment: module.exports.foo = foo; exports.foo = foo;
      */
     private void visitExport(NodeTraversal t, ExportInfo export) {
+      if (!export.node.hasParent()) {
+        // The node was already replaced when its name was rewritten, e.g. the "exports" in
+        // "exports[name] = value".
+        return;
+      }
       Node root = getBaseQualifiedNameNode(export.node);
       Node rValue = NodeUtil.getRValueOfLValue(root);
 
@@ -1932,6 +1937,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       for (ExportInfo export : this.exports) {
         Node exportBase = getBaseQualifiedNameNode(export.node);
+        if (!exportBase.hasParent()) {
+          // This export was already rewritten and removed from the AST, e.g. the "exports" in
+          // "exports[name] = value".
+          continue;
+        }
         Node exportRValue = NodeUtil.getRValueOfLValue(exportBase);
 
         if (exportRValue == null) {
