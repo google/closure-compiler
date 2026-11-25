@@ -15,9 +15,11 @@
  */
 
 /**
- * @fileoverview Brings in all ES2025 Iterator helper method polyfills.
+ * @fileoverview Brings in all ES2025 and ES2026 Iterator helper method
+ * polyfills.
  * @suppress {uselessCode}
  */
+'require es6/iterator/concat';
 'require es6/iterator/drop';
 'require es6/iterator/every';
 'require es6/iterator/filter';
