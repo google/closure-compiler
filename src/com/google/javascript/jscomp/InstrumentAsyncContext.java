@@ -439,7 +439,9 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     // arguments.
     Node argumentsParam = null;
     Node argumentsReference = null;
-    ArgumentsRenamer renamer = new ArgumentsRenamer();
+    // Default parameter initializers stay on the inner method, so they need renaming as well.
+    ArgumentsRenamer renamer = new ArgumentsRenamer(t.getInput());
+    NodeTraversal.traverse(compiler, innerParams, renamer);
     NodeTraversal.traverse(compiler, generatorBody, renamer);
     if (renamer.argumentsName != null) {
       argumentsReference = astFactory.createArgumentsReference();
@@ -568,7 +570,13 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
 
   // Renames all instances of `arguments` with a new unique name.
   private class ArgumentsRenamer implements NodeTraversal.Callback {
+    // NOTE: innerParams is detached when traversed, so the input can't come from the traversal.
+    private final CompilerInput input;
     String argumentsName = null;
+
+    ArgumentsRenamer(CompilerInput input) {
+      this.input = input;
+    }
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, @Nullable Node parent) {
@@ -579,7 +587,7 @@ public class InstrumentAsyncContext implements CompilerPass, NodeTraversal.Callb
     public void visit(NodeTraversal t, Node n, @Nullable Node parent) {
       if (n.isName() && n.getString().equals("arguments")) {
         if (argumentsName == null) {
-          argumentsName = "$jscomp$arguments$" + uniqueIdSupplier.getUniqueId(t.getInput());
+          argumentsName = "$jscomp$arguments$" + uniqueIdSupplier.getUniqueId(input);
         }
         n.setString(argumentsName);
         if (compiler.getOptions().preservesDetailedSourceInfo()) {

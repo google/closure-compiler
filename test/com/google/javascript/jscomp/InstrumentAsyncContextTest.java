@@ -1758,6 +1758,42 @@ public final class InstrumentAsyncContextTest extends CompilerTestCase {
         """);
   }
 
+  // `arguments` in a default parameter initializer must also refer to the outer method's arguments,
+  // since the inner method has an extra ᵃᶜfactory parameter.
+  @Test
+  public void testGeneratorMethodSuperWithDefaultParameterReadingArguments() {
+    test(
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo extends Bar {
+          async *f(a = arguments[0]) {
+            yield await super.m(a);
+          }
+        }
+        """,
+        """
+        const v = new AsyncContext.Variable();
+        v.run(100, () => {});
+        class Foo extends Bar {
+          f(a$PARAM$4) {
+            var ᵃᶜfactory$2 = $jscomp.asyncContextStart(1);
+            return this.f$jscomp$m1146332801$1(ᵃᶜfactory$2, arguments, a$PARAM$4);
+          }
+          async *f$jscomp$m1146332801$1(ᵃᶜfactory$0, ARGUMENTS$3, a = ARGUMENTS$3[0]) {
+            var ᵃᶜsuspend$0 = ᵃᶜfactory$0();
+            var ᵃᶜresume$0 = ᵃᶜfactory$0(1);
+            ᵃᶜresume$0();
+            try {
+              ᵃᶜresume$0(yield ᵃᶜsuspend$0(ᵃᶜresume$0(await ᵃᶜsuspend$0(super.m(a)))));
+            } finally {
+              ᵃᶜsuspend$0();
+            }
+          }
+        }
+        """);
+  }
+
   // Destructurd parameters are also retained on the inner method, for similar reasons to defaults.
   @Test
   public void testGeneratorMethodSuperWithDestructuredParameters() {
