@@ -20,9 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.google.javascript.jscomp.AstValidator;
+import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.js.RuntimeJsLibManager.RuntimeLibraryMode;
 import org.jspecify.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
@@ -141,6 +143,36 @@ public final class TranspileOnlyIntegrationTest extends IntegrationTestCase {
         };
         $jscomp.inherits(Foo, $jscomp$classExtends$98447280$0);
         Foo.x = void 0
+        """);
+  }
+
+  @Test
+  public void instrumentAsyncContext_awaitInClassExtends() {
+    CompilationLevel.WHITESPACE_ONLY.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.UNSTABLE);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setInstrumentAsyncContext(true);
+    options.setRuntimeLibraryMode(RuntimeLibraryMode.RECORD_ONLY);
+
+    test(
+        options,
+        "async function f() { return class extends (await base()) {}; }",
+        """
+        async function f() {
+          return await (async () => {
+            var ᵃᶜfactory98447280$2 = $jscomp.asyncContextStart();
+            var ᵃᶜsuspend98447280$2 = ᵃᶜfactory98447280$2();
+            var ᵃᶜresume98447280$2 = ᵃᶜfactory98447280$2(1);
+            try {
+              const $jscomp$classExtends$98447280$0 =
+                  ᵃᶜresume98447280$2(await ᵃᶜsuspend98447280$2(base()));
+              const $jscomp$classDecl$98447280$1 = class extends $jscomp$classExtends$98447280$0 {};
+              return $jscomp$classDecl$98447280$1;
+            } finally {
+              ᵃᶜsuspend98447280$2();
+            }
+          })();
+        }
         """);
   }
 }

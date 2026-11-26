@@ -16,9 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
-
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -373,22 +370,51 @@ public final class Es6RewriteClassExtendsExpressionsTest extends CompilerTestCas
   }
 
   @Test
-  public void testAwaitInExtends_wrappedInAsyncIife_knownBug() {
+  public void testAwaitInExtends_wrappedInAsyncIife() {
+    // Regression test for an `await` being moved into a non-async arrow function IIFE.
     disableTypeCheck();
     disableTypeInfoValidation();
-    // TODO(b/586787351): This should produce `return await (async () => { ... })();`. Instead the
-    // class is wrapped in a non-async arrow function IIFE, which moves the enclosing function's
-    // `await` into it. The AST is invalid (and InstrumentAsyncContext crashes on it).
-    IllegalStateException e =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                testSame(
-                    """
-                    async function f() {
-                      return class extends (await base()) {};
-                    }
-                    """));
-    assertThat(e).hasMessageThat().contains("'await' expression is not within an async function");
+
+    test(
+        """
+        async function f() {
+          return class extends (await base()) {};
+        }
+        """,
+        """
+        async function f() {
+          return await (async () => {
+            const CLASS_EXTENDS$0 = await base();
+            const CLASS_DECL$1 = class extends CLASS_EXTENDS$0 {};
+            return CLASS_DECL$1;
+          })();
+        }
+        """);
+  }
+
+  @Test
+  public void testAwaitInNestedAsyncArrowInExtends_notAwaited() {
+    // An `await` inside a nested async function belongs to that function, so the IIFE does not
+    // need to be async.
+    disableTypeCheck();
+    disableTypeInfoValidation();
+
+    test(
+        """
+        async function f() {
+          return class extends mixin(async () => await base()) {};
+        }
+        """,
+        """
+        async function f() {
+          return (() => {
+            const CLASS_EXTENDS$0 = mixin(async () => {
+              return await base();
+            });
+            const CLASS_DECL$1 = class extends CLASS_EXTENDS$0 {};
+            return CLASS_DECL$1;
+          })();
+        }
+        """);
   }
 }

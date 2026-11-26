@@ -354,13 +354,26 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     t.reportCodeChange(classNode);
   }
 
-  /** Replaces a node with an IIFE that returns that node. */
+  /**
+   * Replaces a node with an IIFE that returns that node.
+   *
+   * <p>If the node contains an {@code await} belonging to the enclosing async function (e.g. {@code
+   * class extends (await base()) {}}), the IIFE is made async and its result awaited, since an
+   * {@code await} is not allowed inside a non-async arrow function.
+   */
   private void pushDownNodeIntoNewIife(Node n) {
+    // TODO(sdh): A `yield` belonging to the enclosing generator has the same problem, but cannot be
+    // moved into an arrow function at all.
+    boolean containsAwait = NodeUtil.has(n, Node::isAwait, c -> !c.isFunction());
     // Create the shell of the IIFE.
     Node functionBody = IR.block();
     Node arrowFn = IR.arrowFunction(IR.name(""), IR.paramList(), functionBody).srcref(n);
     arrowFn.setColor(StandardColors.UNKNOWN);
+    arrowFn.setIsAsyncFunction(containsAwait);
     Node iife = astFactory.createCallWithUnknownType(arrowFn).srcrefTreeIfMissing(n);
+    if (containsAwait) {
+      iife = astFactory.createAwait(type(n), iife).srcref(n);
+    }
 
     // This replaces n with the IIFE and detaches n from the AST.
     n.replaceWith(iife);
