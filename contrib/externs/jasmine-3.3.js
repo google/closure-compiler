@@ -18,8 +18,6 @@
  * @fileoverview Externs for Jasmine 3.3 (not backwards compatible with 1.3,
  * but should be backwards compatible with 2.0).
  *
- * TODO: Missing externs for real type support for defining matchers.
- *
  * @see https://jasmine.github.io/api/3.3/global
  * @externs
  */
@@ -30,15 +28,116 @@ var jasmine = {};
 
 
 /**
- * @param {Object} matchers
+ * A function that decides whether two values are equal. It returns undefined
+ * to leave the decision to Jasmine's default equality check.
+ * @typedef {function(?, ?): (boolean|undefined)}
+ */
+jasmine.CustomEqualityTester;
+
+
+/**
+ * The result of a custom matcher's compare function.
+ * @record
+ */
+jasmine.CustomMatcherResult = function() {};
+
+/** @type {boolean} */
+jasmine.CustomMatcherResult.prototype.pass;
+
+/** @type {(string|undefined)} */
+jasmine.CustomMatcherResult.prototype.message;
+
+
+/**
+ * @record
+ */
+jasmine.CustomMatcher = function() {};
+
+/**
+ * @param {?} actual
+ * @param {...?} expected
+ * @return {!jasmine.CustomMatcherResult}
+ */
+jasmine.CustomMatcher.prototype.compare = function(actual, expected) {};
+
+/**
+ * Optional. Used for `.not` expectations instead of negating the result of
+ * `compare`.
+ * @param {?} actual
+ * @param {...?} expected
+ * @return {!jasmine.CustomMatcherResult}
+ */
+jasmine.CustomMatcher.prototype.negativeCompare = function(actual, expected) {};
+
+
+/**
+ * Equality and failure message helpers that Jasmine passes to custom matcher
+ * factories.
+ * @interface
+ */
+jasmine.MatchersUtil = function() {};
+
+/**
+ * @param {?} a
+ * @param {?} b
+ * @param {!Array<!jasmine.CustomEqualityTester>=} customTesters
+ * @return {boolean}
+ */
+jasmine.MatchersUtil.prototype.equals = function(a, b, customTesters) {};
+
+/**
+ * @param {?} haystack
+ * @param {?} needle
+ * @param {!Array<!jasmine.CustomEqualityTester>=} customTesters
+ * @return {boolean}
+ */
+jasmine.MatchersUtil.prototype.contains = function(
+    haystack, needle, customTesters) {};
+
+/**
+ * @param {string} matcherName
+ * @param {boolean} isNot
+ * @param {?} actual
+ * @param {...?} expected
+ * @return {string}
+ */
+jasmine.MatchersUtil.prototype.buildFailureMessage = function(
+    matcherName, isNot, actual, expected) {};
+
+
+/**
+ * Creates the matcher for one matcher name.
+ * @typedef {function(!jasmine.MatchersUtil,
+ *     !Array<!jasmine.CustomEqualityTester>): !jasmine.CustomMatcher}
+ */
+jasmine.CustomMatcherFactory;
+
+
+/**
+ * Maps matcher names to the factories that create them.
+ * @typedef {!Object<string, !jasmine.CustomMatcherFactory>}
+ */
+jasmine.CustomMatcherFactories;
+
+
+/**
+ * @param {!jasmine.CustomMatcherFactories} matchers
  */
 jasmine.addMatchers = function(matchers) {};
 
 
 /**
- * @param {function(?, ?): (boolean|undefined)} tester
+ * @param {!jasmine.CustomEqualityTester} tester
  */
 jasmine.addCustomEqualityTester = function(tester) {};
+
+
+/**
+ * Pretty prints a value the way Jasmine does in failure messages.
+ * @param {?} value
+ * @return {string}
+ */
+jasmine.pp = function(value) {};
 
 
 /**
