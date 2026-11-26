@@ -58,6 +58,11 @@ final class PolymerPassErrors {
       "JSC_POLYMER_UNANNOTATED_BEHAVIOR",
       "Behavior declarations must be annotated with @polymerBehavior.");
 
+  static final DiagnosticType POLYMER_PROPERTIES_INVALID =
+      DiagnosticType.error(
+          "JSC_POLYMER_PROPERTIES_INVALID",
+          "The Polymer element 'properties' must be an object literal.");
+
   static final DiagnosticType POLYMER_CLASS_PROPERTIES_INVALID =
       DiagnosticType.error(
           "JSC_POLYMER_CLASS_PROPERTIES_INVALID",
