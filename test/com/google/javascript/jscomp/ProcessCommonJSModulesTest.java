@@ -135,6 +135,23 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testExportsDeclaredAsVarAndPropertyAssignedFromLocalVar() {
+    testModules(
+        "test.js",
+        """
+        var exports = {};
+        var x = 1;
+        exports.foo = x;
+        module.exports = exports;
+        """,
+        """
+        /** @const */ var module$test = {default: {}};
+        module$test.default = {};
+        module$test.default.foo = 1;
+        """);
+  }
+
+  @Test
   public void testExportsInExpression() {
     testModules(
         "test.js",

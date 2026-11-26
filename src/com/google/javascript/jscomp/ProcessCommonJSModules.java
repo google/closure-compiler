@@ -29,8 +29,10 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -1257,6 +1259,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     private final List<Node> functionsToHoist = new ArrayList<>();
     private final boolean defaultExportIsConst;
 
+    /**
+     * Export reference nodes that were replaced while their names were rewritten, mapped to the
+     * node that took their place.
+     */
+    private final Map<Node, Node> replacedExportNodes = new IdentityHashMap<>();
+
     RewriteModule(
         boolean allowFullRewrite,
         ImmutableCollection<ExportInfo> exports,
@@ -1457,9 +1465,14 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      */
     private void visitExport(NodeTraversal t, ExportInfo export) {
       if (!export.node.hasParent()) {
-        // The node was already replaced when its name was rewritten, e.g. the "exports" in
-        // "exports[name] = value".
-        return;
+        // The node was replaced when its name was rewritten, e.g. the "exports" in
+        // "exports.foo = x". Continue with the node that took its place, so that statements which
+        // are now redundant are still removed.
+        Node replacement = replacedExportNodes.get(export.node);
+        if (replacement == null || !replacement.hasParent()) {
+          return;
+        }
+        export = new ExportInfo(replacement, export.scope);
       }
       Node root = getBaseQualifiedNameNode(export.node);
       Node rValue = NodeUtil.getRValueOfLValue(root);
@@ -1491,7 +1504,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       // has already handled this case. Remove the export.
       Var rValueVar = null;
       if (rValue != null && rValue.isQualifiedName()) {
-        rValueVar = export.scope.getVar(rValue.getQualifiedName());
+        // The reference may have been renamed already (x -> x$$module$test); look the variable up
+        // by its original name.
+        String rValueName =
+            rValue.isName() && rValue.getOriginalName() != null
+                ? rValue.getOriginalName()
+                : rValue.getQualifiedName();
+        rValueVar = export.scope.getVar(rValueName);
       }
 
       if (root.getParent().isAssign()
@@ -1912,6 +1931,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             }
             name.srcrefTree(nameRef);
             nameRef.replaceWith(name);
+            replacedExportNodes.put(nameRef, name);
             if (nameRef.hasChildren()) {
               name.addChildrenToFront(nameRef.removeChildren());
             }
