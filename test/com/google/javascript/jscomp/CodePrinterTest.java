@@ -819,6 +819,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // begin an HTML comment when they see this.
     assertPrint("'<!-- I am a string -->'", "\"\\x3c!-- I am a string --\\x3e\"");
 
+    // In a regex the '<' may be lookbehind syntax, so break <!-- at its second '-'.
+    assertPrint("/(?<!--)x/", "/(?<!-\\x2d)x/");
+    assertPrint("/a<!--b|[<!--]/", "/a<!-\\x2db|[<!-\\x2d]/");
+
     assertPrint("'<=&>'", "\"<=&>\"");
   }
 
@@ -843,6 +847,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     assertPrint("'<=&>'", "\"\\x3c\\x3d\\x26\\x3e\"");
     assertPrint("/(?=x)/", "/(?=x)/");
+    assertPrint("/(?<!--)x/", "/(?<!-\\x2d)x/");
   }
 
   @Test
