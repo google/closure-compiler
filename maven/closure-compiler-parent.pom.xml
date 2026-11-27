@@ -141,4 +141,42 @@
         </plugin>
       </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>oss-exit-gate</id>
+      <distributionManagement>
+        <repository>
+          <id>oss-exit-gate</id>
+          <url>https://us-maven.pkg.dev/oss-exit-gate-prod/closure-compiler--mavencentral</url>
+        </repository>
+      </distributionManagement>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.8.0</version>
+            <configuration>
+              <skipPublishing>true</skipPublishing>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <version>3.1.3</version>
+            <executions>
+              <execution>
+                <id>deploy-to-oss-exit-gate</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>deploy</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
