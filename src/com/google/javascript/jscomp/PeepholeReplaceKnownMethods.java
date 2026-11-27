@@ -1103,7 +1103,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (arg2 != null) {
       Double maybeLength = getSideEffectFreeNumberValue(arg2);
       if (maybeLength != null) {
-        length = maybeLength.intValue();
+        // An undefined length means "to the end of the string", the same as omitting it.
+        length =
+            NodeUtil.isUndefined(arg2) ? stringAsString.length() - start : maybeLength.intValue();
       } else {
         return n;
       }
@@ -1157,7 +1159,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (arg2 != null) {
       Double maybeEnd = getSideEffectFreeNumberValue(arg2);
       if (maybeEnd != null) {
-        end = maybeEnd.intValue();
+        // An undefined end means "to the end of the string", the same as omitting it.
+        end = NodeUtil.isUndefined(arg2) ? stringAsString.length() : maybeEnd.intValue();
       } else {
         return n;
       }
