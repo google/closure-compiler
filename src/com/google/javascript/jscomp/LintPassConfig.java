@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckExtraRequires;
+import com.google.javascript.jscomp.lint.CheckGoogFunctionsConstant;
 import com.google.javascript.jscomp.lint.CheckGoogModuleTypeScriptName;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
@@ -92,6 +93,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                           new CheckEmptyStatements(compiler),
                           new CheckEnums(compiler),
                           new CheckExtraRequires(compiler, options.getUnusedImportsToRemove()),
+                          new CheckGoogFunctionsConstant(compiler),
                           new CheckGoogModuleTypeScriptName(compiler),
                           new CheckJSDocStyle(compiler),
                           new CheckJSDoc(compiler),
