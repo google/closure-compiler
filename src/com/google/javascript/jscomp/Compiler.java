@@ -125,6 +125,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -2766,7 +2767,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
           // Check whether there is any license information that should be emitted.
           for (String license : licenseTracker.emitLicenses()) {
-            cb.append("/*\n").append(license).append("*/\n");
+            cb.append("/*\n").append(escapeLicenseText(license)).append("*/\n");
           }
 
           // Check whether there's any actual code to emit.
@@ -2820,10 +2821,26 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     ScriptNodeLicensesOnlyTracker lt = new ScriptNodeLicensesOnlyTracker(this);
     String code = toSourceAndMappings(n, false, lt).source;
     for (String license : lt.emitLicenses()) {
-      sb.append("/*\n").append(license).append("*/\n");
+      sb.append("/*\n").append(escapeLicenseText(license)).append("*/\n");
     }
     sb.append(code);
     return sb.toString();
+  }
+
+  private static final Pattern LICENSE_HTML_SEQUENCE =
+      Pattern.compile("<(?=/script|/style|!--)", Pattern.CASE_INSENSITIVE);
+
+  /**
+   * Breaks {@code </script}, {@code </style} and {@code <!--} in license text into {@code
+   * <\/script}, {@code <\/style} and {@code <\!--}, the same sequences CodeGenerator breaks in
+   * string literals, so a preserved license comment can't close or change the parsing of an
+   * enclosing script element when the output is inlined in HTML.
+   */
+  static String escapeLicenseText(String license) {
+    if (license.indexOf('<') < 0) {
+      return license;
+    }
+    return LICENSE_HTML_SEQUENCE.matcher(license).replaceAll("<\\\\");
   }
 
   /**
