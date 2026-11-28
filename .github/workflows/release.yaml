@@ -91,6 +91,9 @@ jobs:
     runs-on: ubuntu-latest
     # Only publish if tests passed.
     needs: [tag_release_version_id, run-tests]
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Check secrets are provided
@@ -101,8 +104,6 @@ jobs:
               exit 1
             fi
           }
-          check_secret "SONATYPE_USERNAME_TOKEN" "${{ secrets.SONATYPE_USERNAME_TOKEN }}"
-          check_secret "SONATYPE_PASSWORD_TOKEN" "${{ secrets.SONATYPE_PASSWORD_TOKEN }}"
           check_secret "MAVEN_GPG_PRIVATE_KEY" "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}"
           check_secret "MAVEN_GPG_PASSPHRASE" "${{ secrets.MAVEN_GPG_PASSPHRASE }}"
 
@@ -121,12 +122,10 @@ jobs:
           java-package: jdk
           # This will trigger the import of the private key in the GPG secret keyring.
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-          # This will create the maven settings.xml file needed for deploying to Sonatype.
-          server-id: central
-          # Configure Maven settings to use environment variables. These environment variables are
-          # populated from GitHub secrets in the publication steps.
-          server-username: SONATYPE_USERNAME_TOKEN
-          server-password: SONATYPE_PASSWORD_TOKEN
+          # Create Maven settings.xml for staging artifacts to OSS Exit Gate Artifact Registry.
+          server-id: oss-exit-gate
+          server-username: AR_USERNAME
+          server-password: AR_ACCESS_TOKEN
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
       # https://github.com/bazel-contrib/setup-bazel
@@ -139,11 +138,64 @@ jobs:
           # Share repository cache between workflows
           repository-cache: true
 
-      - name: Upload and Publish to Sonatype
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: 'projects/305452601764/locations/global/workloadIdentityPools/builders/providers/github'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+
+      - name: Clean up prior staged artifacts in OSS Exit Gate repository
         run: |
-          ./release.sh --sonatype-auto-publish
+          set -euo pipefail
+          EXISTING_PKGS="$(gcloud artifacts packages list \
+            --project=oss-exit-gate-prod \
+            --location=us \
+            --repository=closure-compiler--mavencentral \
+            --format='value(name)' 2>/dev/null || true)"
+          for pkg in ${EXISTING_PKGS}; do
+            gcloud artifacts packages delete "${pkg}" \
+              --project=oss-exit-gate-prod \
+              --location=us \
+              --repository=closure-compiler--mavencentral \
+              --quiet || true
+          done
+
+      - name: Stage signed Maven artifacts to OSS Exit Gate
+        run: |
+          set -euo pipefail
+          set +x
+          export AR_USERNAME="oauth2accesstoken"
+          export AR_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          ./release.sh --oss-exit-gate
+          unset AR_ACCESS_TOKEN
         env:
           RELEASE_NUM: ${{ needs.tag_release_version_id.outputs.tag }}
-          SONATYPE_USERNAME_TOKEN: ${{ secrets.SONATYPE_USERNAME_TOKEN }}
-          SONATYPE_PASSWORD_TOKEN: ${{ secrets.SONATYPE_PASSWORD_TOKEN }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+
+      - name: Trigger OSS Exit Gate Maven Central release
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          cat <<'EOF' > manifest.json
+          {
+            "publish_all": false,
+            "publishing_groups": [
+              {
+                "namespace": "com.google.javascript",
+                "packages": [
+                  { "name": "closure-compiler" },
+                  { "name": "closure-compiler-externs" },
+                  { "name": "closure-compiler-main" },
+                  { "name": "closure-compiler-parent" },
+                  { "name": "closure-compiler-unshaded" }
+                ]
+              }
+            ]
+          }
+          EOF
+          gcloud storage cp manifest.json \
+            "gs://oss-exit-gate-prod-projects-bucket/closure-compiler/mavencentral/manifests/manifest-${RUN_ID}-${RUN_ATTEMPT}.json"

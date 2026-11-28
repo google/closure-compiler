@@ -20,6 +20,7 @@ readonly MAVEN_PROJECTS="parent main shaded unshaded externs"
 
 deploy_to_sonatype=true
 sonatype_auto_publish=false
+deploy_to_exit_gate=false
 bazel_executable=""
 bazel_bin=$(pwd)/bazel-bin
 bazel_define_flag=""
@@ -28,12 +29,13 @@ usage() {
   echo ""
   echo "${SCRIPT_NAME}: Build and release script for Closure Compiler."
   echo ""
-  echo "Usage: ${SCRIPT_NAME} [--no-deploy] [--sonatype-auto-publish] [--help]"
+  echo "Usage: ${SCRIPT_NAME} [--no-deploy] [--sonatype-auto-publish] [--oss-exit-gate] [--help]"
   echo ""
   echo "Options:"
   echo "  --help                    Print this help output and exit."
   echo "  --no-deploy               Prepare all the maven artifacts but skip the deployment to Sonatype."
   echo "  --sonatype-auto-publish   Automatically publish the staging repository to Sonatype after deployment."
+  echo "  --oss-exit-gate           Stage signed Maven artifacts to OSS Exit Gate Artifact Registry instead of Sonatype."
   echo ""
   echo "Use the environment variable RELEASE_NUM to specify the release number:"
   echo "  RELEASE_NUM=v1234567890 ./${SCRIPT_NAME}"
@@ -48,6 +50,10 @@ parse_arguments() {
         ;;
       --sonatype-auto-publish)
         sonatype_auto_publish=true
+        shift
+        ;;
+      --oss-exit-gate)
+        deploy_to_exit_gate=true
         shift
         ;;
       --help)
@@ -129,7 +135,11 @@ build_and_prepare() {
 package_and_deploy() {
   cd "${mvn_temp_wd}"
 
-  if [[ "${deploy_to_sonatype}" == true ]]; then
+  if [[ "${deploy_to_exit_gate}" == true ]]; then
+    echo "Staging signed Maven artifacts to OSS Exit Gate Artifact Registry..."
+    mvn -f closure-compiler-parent.pom.xml deploy -Poss-exit-gate -DskipPublishing=true
+    rm -rf "${mvn_temp_wd}"
+  elif [[ "${deploy_to_sonatype}" == true ]]; then
     echo "Deploying Maven artifacts to Sonatype..."
     # Maven 3.10+ uses Resolver's EnhancedLocalRepositoryManager for staging repos,
     # writing maven-metadata-local.xml, _remote.repositories, and .locks/ into
